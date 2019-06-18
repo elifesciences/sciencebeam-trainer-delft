@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  # the main delft image that we are going to push
+  delft:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        delft_repo: ${DELFT_REPO}
+        delft_tag: ${DELFT_TAG}
+    image: elifesciences/sciencebeam-trainer-delft:${IMAGE_TAG}
+    volumes:
+      - data:/data
+
+volumes:
+  data:

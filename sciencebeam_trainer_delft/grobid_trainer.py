@@ -26,9 +26,9 @@ def train(
         max_epoch=100, **kwargs): 
     print('Loading data...')
     if input_path is None:
-        x_all, y_all, f_all = load_data_and_labels_crf_file('data/sequenceLabelling/grobid/'+model+'/'+model+'-060518.train')
+        x_all, y_all, _ = load_data_and_labels_crf_file('data/sequenceLabelling/grobid/'+model+'/'+model+'-060518.train')
     else:
-        x_all, y_all, f_all = load_data_and_labels_crf_file(input_path)
+        x_all, y_all, _ = load_data_and_labels_crf_file(input_path)
     x_train, x_valid, y_train, y_valid = train_test_split(x_all, y_all, test_size=0.1)
 
     print(len(x_train), 'train sequences')
@@ -69,9 +69,9 @@ def train_eval(
         fold_count=1, max_epoch=100, batch_size=20, **kwargs):
     print('Loading data...')
     if input_path is None:
-        x_all, y_all, f_all = load_data_and_labels_crf_file('data/sequenceLabelling/grobid/'+model+'/'+model+'-060518.train')
+        x_all, y_all, _ = load_data_and_labels_crf_file('data/sequenceLabelling/grobid/'+model+'/'+model+'-060518.train')
     else:
-        x_all, y_all, f_all = load_data_and_labels_crf_file(input_path)
+        x_all, y_all, _ = load_data_and_labels_crf_file(input_path)
 
     x_train_all, x_eval, y_train_all, y_eval = train_test_split(x_all, y_all, test_size=0.1)
     x_train, x_valid, y_train, y_valid = train_test_split(x_train_all, y_train_all, test_size=0.1)

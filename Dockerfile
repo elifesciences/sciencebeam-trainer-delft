@@ -22,4 +22,10 @@ RUN mkdir -p data/db/glove-6B-50d \
   | gunzip - \
   > "data/db/glove-6B-50d/data.mdb"
 
-ADD sciencebeam_trainer_delft ./sciencebeam_trainer_delft
+ARG install_dev
+COPY requirements.dev.txt /opt/sciencebeam-trainer-delft/
+RUN if [ "${install_dev}" = "y" ]; then pip install -r /opt/sciencebeam-trainer-delft/requirements.dev.txt; fi
+
+COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
+
+COPY .pylintrc ./

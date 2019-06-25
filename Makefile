@@ -33,12 +33,19 @@ shell:
 	$(DOCKER_COMPOSE) run --rm delft bash
 
 
+pylint:
+	$(DOCKER_COMPOSE) run --rm delft pylint sciencebeam_trainer_delft
+
+
+test: pylint
+
+
 grobid-train-header:
 	$(DOCKER_COMPOSE) run --rm delft python -m sciencebeam_trainer_delft.grobid_trainer header train
 
 
 ci-build-and-test:
-	make DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build test
 
 
 ci-clean:

@@ -14,3 +14,12 @@ WORKDIR /opt/delft
 
 ENV PATH=/root/.local/bin:${PATH}
 RUN pip install --user -r requirements.txt
+RUN pip install --user -r requirements.cpu.txt
+
+RUN mkdir -p data/db/glove-6B-50d \
+  && curl --progress-bar --location \
+  "https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove-6B-50d.mdb.gz" \
+  | gunzip - \
+  > "data/db/glove-6B-50d/data.mdb"
+
+ADD sciencebeam_trainer_delft ./sciencebeam_trainer_delft

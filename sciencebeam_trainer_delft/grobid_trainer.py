@@ -12,6 +12,8 @@ from delft.sequenceLabelling.reader import (
     load_data_and_labels_crf_file
 )
 
+from sciencebeam_trainer_delft.cloud_support import patch_cloud_support
+
 
 MODELS = [
     'affiliation-address', 'citation', 'date', 'header',
@@ -219,4 +221,6 @@ def main():
 
 if __name__ == "__main__":
     logging.basicConfig(level='INFO')
+    patch_cloud_support()
+
     main()

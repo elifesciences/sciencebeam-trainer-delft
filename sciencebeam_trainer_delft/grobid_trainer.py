@@ -18,6 +18,8 @@ MODELS = [
     'name-citation', 'name-header', 'software'
 ]
 
+ARCHITECTURES = ['BidLSTM_CRF', 'BidLSTM_CNN', 'BidLSTM_CNN_CRF', 'BidGRU-CRF']
+
 
 # train a GROBID model with all available data
 def train(
@@ -131,24 +133,44 @@ def train_eval(
         model.save()
 
 
-def main():
+def parse_args():
     parser = argparse.ArgumentParser(
         description="Trainer for GROBID models"
     )
-
-    actions = ['train', 'tag', 'train_eval', 'eval']
-    architectures = ['BidLSTM_CRF', 'BidLSTM_CNN', 'BidLSTM_CNN_CRF', 'BidGRU-CRF']
 
     parser.add_argument("model")
     parser.add_argument("action")
     parser.add_argument("--fold-count", type=int, default=1)
     parser.add_argument("--architecture", default='BidLSTM_CRF',
-                        help="type of model architecture to be used, one of " + str(architectures))
+                        help="type of model architecture to be used, one of " + str(ARCHITECTURES))
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
     parser.add_argument("--output", help="directory where to save a trained model")
+    parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
     parser.add_argument("--input", help="provided training file")
+    parser.add_argument(
+        "--embedding", default="glove-6B-50d",
+        help="name of word embedding"
+    )
+    parser.add_argument(
+        "--batch-size", type=int, default=10,
+        help="batch size"
+    )
+    parser.add_argument(
+        "--max-sequence-length", type=int, default=500,
+        help="maximum sequence length"
+    )
+    parser.add_argument(
+        "--max-epoch", type=int, default=10,
+        help="max epoch to train to"
+    )
 
     args = parser.parse_args()
+    return args
+
+
+def run(args):
+    actions = ['train', 'tag', 'train_eval', 'eval']
+    architectures = ['BidLSTM_CRF', 'BidLSTM_CNN', 'BidLSTM_CNN_CRF', 'BidGRU-CRF']
 
     model = args.model
     if not model in MODELS:
@@ -161,37 +183,38 @@ def main():
     use_ELMo = args.use_ELMo
     architecture = args.architecture
     if architecture not in architectures:
-        print('unknown model architecture, must be one of ' + str(architectures))
+        print('unknown model architecture, must be one of ' + str(ARCHITECTURES))
 
-    output = args.output
-    input_path = args.input
-
-    # change bellow for the desired pre-trained word embeddings using their descriptions in the file
-    # embedding-registry.json
-    # be sure to use here the same name as in the registry
-    # e.g. 'glove-840B', 'fasttext-crawl', 'word2vec',
-    # and that the path in the registry to the embedding file is correct on your system
-    embeddings_name = "glove-6B-50d"
-    default_args = dict(batch_size=1, max_sequence_length=50, max_epoch=1)
+    train_args = dict(
+        model=model,
+        embeddings_name=args.embedding,
+        architecture=architecture, use_ELMo=use_ELMo,
+        input_path=args.input,
+        output_path=args.output,
+        log_dir=args.checkpoint,
+        batch_size=args.batch_size,
+        max_sequence_length=args.max_sequence_length,
+        max_epoch=args.max_epoch
+    )
 
     if action == 'train':
-        train(
-            model, embeddings_name, architecture=architecture, use_ELMo=use_ELMo,
-            input_path=input_path, output_path=output,
-            **default_args
-        )
+        train(**train_args)
 
     if action == 'train_eval':
         if args.fold_count < 1:
             raise ValueError("fold-count should be equal or more than 1")
         train_eval(
-            model, embeddings_name, architecture=architecture, use_ELMo=use_ELMo,
-            input_path=input_path, output_path=output, fold_count=args.fold_count,
-            **default_args
+            fold_count=args.fold_count,
+            **train_args
         )
 
     # see https://github.com/tensorflow/tensorflow/issues/3388
     K.clear_session()
+
+
+def main():
+    args = parse_args()
+    run(args)
 
 
 if __name__ == "__main__":

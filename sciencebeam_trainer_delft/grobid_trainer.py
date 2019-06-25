@@ -121,30 +121,6 @@ def train_eval(
         model.save()
 
 
-# annotate a list of texts, this is relevant only of models taking only text as input 
-# (so not text with layout information) 
-def annotate_text(texts, model, output_format, use_ELMo=False):
-    annotations = []
-
-    # load model
-    model_name = 'grobid-'+model
-    if use_ELMo:
-        model_name += '-with_ELMo'
-    model = Sequence(model_name)
-    model.load()
-
-    start_time = time.time()
-
-    annotations = model.tag(texts, output_format)
-    runtime = round(time.time() - start_time, 3)
-
-    if output_format is 'json':
-        annotations["runtime"] = runtime
-    else:
-        print("runtime: %s seconds " % (runtime))
-    return annotations
-
-
 if __name__ == "__main__":
     logging.basicConfig(level='INFO')
     # patch_cloud_support()

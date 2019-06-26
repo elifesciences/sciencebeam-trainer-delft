@@ -6,6 +6,12 @@ VENV = venv
 PIP = $(VENV)/bin/pip
 PYTHON = $(VENV)/bin/python
 
+BATCH_SIZE = 10
+MAX_EPOCH = 1
+MAX_SEQUENCE_LENGTH = 500
+MODEL_OUTPUT =
+CHECKPOINT_OUTPUT =
+
 
 venv-clean:
 	@if [ -d "$(VENV)" ]; then \
@@ -41,7 +47,14 @@ test: pylint
 
 
 grobid-train-header:
-	$(DOCKER_COMPOSE) run --rm delft python -m sciencebeam_trainer_delft.grobid_trainer header train
+	$(DOCKER_COMPOSE) run --rm delft \
+		python -m sciencebeam_trainer_delft.grobid_trainer \
+		header train \
+		--batch-size="$(BATCH_SIZE)" \
+		--max-sequence-length="$(MAX_SEQUENCE_LENGTH)" \
+		--max-epoch="$(MAX_EPOCH)" \
+		--output="$(MODEL_OUTPUT)" \
+		--checkpoint="$(CHECKPOINT_OUTPUT)"
 
 
 ci-build-and-test:

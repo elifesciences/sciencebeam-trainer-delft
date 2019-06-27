@@ -28,4 +28,4 @@ RUN if [ "${install_dev}" = "y" ]; then pip install -r /opt/sciencebeam-trainer-
 
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
 
-COPY .pylintrc ./
+COPY .flake8 .pylintrc ./

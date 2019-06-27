@@ -43,7 +43,11 @@ pylint:
 	$(DOCKER_COMPOSE) run --rm delft pylint sciencebeam_trainer_delft
 
 
-test: pylint
+flake8:
+	$(DOCKER_COMPOSE) run --rm delft flake8 sciencebeam_trainer_delft
+
+
+test: flake8 pylint
 
 
 grobid-train-header:

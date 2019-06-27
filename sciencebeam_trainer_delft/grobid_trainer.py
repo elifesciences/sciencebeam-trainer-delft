@@ -175,7 +175,7 @@ def run(args):
     architectures = ['BidLSTM_CRF', 'BidLSTM_CNN', 'BidLSTM_CNN_CRF', 'BidGRU-CRF']
 
     model = args.model
-    if not model in MODELS:
+    if model not in MODELS:
         print('invalid model, should be one of', MODELS)
 
     action = args.action

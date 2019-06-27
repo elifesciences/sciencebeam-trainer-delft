@@ -71,7 +71,8 @@ def _cloud_location_as_temp_context(filepath):
 
 def wrap_get_callbacks(get_callbacks_fn: callable):
     @wraps(get_callbacks_fn)
-    def wrapped_get_callbacks(log_dir=None, *args, **kwargs):  # pylint: disable=keyword-arg-before-vararg
+    def wrapped_get_callbacks(  # pylint: disable=keyword-arg-before-vararg
+            log_dir=None, *args, **kwargs):
         LOGGER.info('log_dir: %s', log_dir)
         if log_dir is None or not _is_cloud_location(log_dir):
             return get_callbacks_fn(log_dir, *args, **kwargs)

@@ -14,5 +14,14 @@ services:
     volumes:
       - data:/data
 
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+    image: elifesciences/sciencebeam-trainer-delft-jupyter:${IMAGE_TAG}
+    command: start-notebook.sh --NotebookApp.token=''
+    ports:
+      - "${SCIENCEBEAM_JUPYTER_PORT}:8888"
+
 volumes:
   data:

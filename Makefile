@@ -12,6 +12,14 @@ MAX_SEQUENCE_LENGTH = 500
 MODEL_OUTPUT =
 CHECKPOINT_OUTPUT =
 
+JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
+JUPYTER_RUN = $(JUPYTER_DOCKER_COMPOSE) run --rm jupyter
+
+NOTEBOOK_OUTPUT_FILE =
+
+NB_UID = $(shell id -u)
+NB_GID = $(shell id -g)
+
 
 venv-clean:
 	@if [ -d "$(VENV)" ]; then \
@@ -61,8 +69,39 @@ grobid-train-header:
 		--checkpoint="$(CHECKPOINT_OUTPUT)"
 
 
+update-test-notebook:
+	$(JUPYTER_RUN) update-notebook-and-check-no-errors.sh \
+		test.ipynb "$(NOTEBOOK_OUTPUT_FILE)"
+
+
+update-test-notebook-temp:
+	$(MAKE) NOTEBOOK_OUTPUT_FILE="/tmp/dummy.ipynb" update-test-notebook
+
+
+jupyter-build:
+	@if [ "$(NO_BUILD)" != "y" ]; then \
+		$(JUPYTER_DOCKER_COMPOSE) build jupyter; \
+	fi
+
+
+jupyter-shell: jupyter-build
+	$(JUPYTER_RUN) bash
+
+
+jupyter-start: jupyter-build
+	$(JUPYTER_DOCKER_COMPOSE) up -d jupyter
+
+
+jupyter-logs:
+	$(JUPYTER_DOCKER_COMPOSE) logs -f jupyter
+
+
+jupyter-stop:
+	$(JUPYTER_DOCKER_COMPOSE) down
+
+
 ci-build-and-test:
-	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build test
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build test jupyter-build update-test-notebook-temp
 
 
 ci-clean:

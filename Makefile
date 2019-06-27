@@ -12,6 +12,10 @@ MAX_SEQUENCE_LENGTH = 500
 MODEL_OUTPUT =
 CHECKPOINT_OUTPUT =
 
+PROJECT_FOLDER = /opt/sciencebeam-trainer-delft
+
+DELFT_RUN = $(DOCKER_COMPOSE) run --rm delft
+
 JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
 JUPYTER_RUN = $(JUPYTER_DOCKER_COMPOSE) run --rm jupyter
 
@@ -44,18 +48,25 @@ build:
 
 
 shell:
-	$(DOCKER_COMPOSE) run --rm delft bash
+	$(DELFT_RUN) bash
 
 
 pylint:
-	$(DOCKER_COMPOSE) run --rm delft pylint sciencebeam_trainer_delft
+	$(DELFT_RUN) pylint sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
 
 
 flake8:
-	$(DOCKER_COMPOSE) run --rm delft flake8 sciencebeam_trainer_delft
+	$(DELFT_RUN) flake8 sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
 
 
-test: flake8 pylint
+test-setup-install:
+	$(DELFT_RUN) python "$(PROJECT_FOLDER)/setup.py" install
+
+
+test: \
+	flake8 \
+	pylint \
+	test-setup-install
 
 
 grobid-train-header:

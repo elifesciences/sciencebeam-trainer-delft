@@ -23,9 +23,13 @@ RUN mkdir -p data/db/glove-6B-50d \
   > "data/db/glove-6B-50d/data.mdb"
 
 ARG install_dev
-COPY requirements.dev.txt /opt/sciencebeam-trainer-delft/
-RUN if [ "${install_dev}" = "y" ]; then pip install -r /opt/sciencebeam-trainer-delft/requirements.dev.txt; fi
+ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
+COPY requirements.dev.txt "${PROJECT_FOLDER}/"
+RUN if [ "${install_dev}" = "y" ]; then pip install -r "${PROJECT_FOLDER}/requirements.dev.txt"; fi
 
-COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
+COPY sciencebeam_trainer_delft "${PROJECT_FOLDER}/sciencebeam_trainer_delft"
+COPY setup.py "${PROJECT_FOLDER}/"
+
+RUN ln -s "${PROJECT_FOLDER}/sciencebeam_trainer_delft" ./sciencebeam_trainer_delft
 
 COPY .flake8 .pylintrc ./

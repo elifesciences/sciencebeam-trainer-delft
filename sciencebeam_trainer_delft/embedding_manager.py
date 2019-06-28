@@ -17,6 +17,7 @@ LOGGER = logging.getLogger(__name__)
 
 DEFAULT_EMBEDDING_REGISTRY = 'embedding-registry.json'
 DEFAULT_DOWNLOAD_DIR = 'data/download'
+DEFAULT_EMBEDDING_LMDB_PATH = 'data/db'
 
 
 def _find_embedding_index(embedding_list: List[dict], name: str) -> int:
@@ -54,9 +55,11 @@ def _get_embedding_config_for_filename(filename: str) -> str:
 class EmbeddingManager:
     def __init__(
             self, path: str = DEFAULT_EMBEDDING_REGISTRY,
-            download_dir: str = DEFAULT_DOWNLOAD_DIR):
+            download_dir: str = DEFAULT_DOWNLOAD_DIR,
+            default_embedding_lmdb_path: str = DEFAULT_EMBEDDING_LMDB_PATH):
         self.path = path
         self.download_dir = download_dir
+        self.default_embedding_lmdb_path = default_embedding_lmdb_path
 
     def _load(self) -> dict:
         return json.loads(Path(self.path).read_text())
@@ -83,6 +86,8 @@ class EmbeddingManager:
             embedding_list.append(embedding_config)
         else:
             embedding_list[index] = embedding_config
+        if 'embedding-lmdb-path' not in registry_data:
+            registry_data['embedding-lmdb-path'] = self.default_embedding_lmdb_path
         self._save(registry_data)
 
     def get_embedding_config(self, embedding_name: str) -> dict:

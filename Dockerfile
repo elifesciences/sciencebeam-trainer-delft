@@ -33,3 +33,4 @@ COPY setup.py "${PROJECT_FOLDER}/"
 RUN ln -s "${PROJECT_FOLDER}/sciencebeam_trainer_delft" ./sciencebeam_trainer_delft
 
 COPY .flake8 .pylintrc ./
+COPY tests ./tests

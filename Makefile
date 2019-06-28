@@ -59,6 +59,10 @@ flake8:
 	$(DELFT_RUN) flake8 sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
 
 
+pytest:
+	$(DELFT_RUN) pytest
+
+
 test-setup-install:
 	$(DELFT_RUN) python "$(PROJECT_FOLDER)/setup.py" install
 
@@ -66,6 +70,7 @@ test-setup-install:
 test: \
 	flake8 \
 	pylint \
+	pytest \
 	test-setup-install
 
 

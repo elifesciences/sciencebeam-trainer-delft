@@ -193,6 +193,7 @@ def run(args):
     embedding_name = embedding_manager.download_and_install_embedding_if_url(
         args.embedding
     )
+    embedding_manager.validate_embedding(embedding_name)
 
     train_args = dict(
         model=model,

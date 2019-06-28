@@ -100,8 +100,11 @@ class EmbeddingManager:
         download_file = os.path.join(self.download_dir, filename)
         embedding_config = _get_embedding_config_for_filename(filename)
         embedding_name = embedding_config['name']
-        LOGGER.info('copying %s to %s', embedding_url, download_file)
-        copy_file(embedding_url, download_file)
+        if os.path.exists(download_file):
+            LOGGER.info('file already exists: %s', download_file)
+        else:
+            LOGGER.info('copying %s to %s', embedding_url, download_file)
+            copy_file(embedding_url, download_file)
         self.add_embedding_config({
             **embedding_config,
             'path': str(download_file)

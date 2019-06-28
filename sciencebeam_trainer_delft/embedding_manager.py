@@ -66,7 +66,7 @@ class EmbeddingManager:
 
     def _save(self, registry_data: dict):
         LOGGER.debug('saving registry data: %s', registry_data)
-        return Path(self.path).write_text(json.dumps(registry_data))
+        return Path(self.path).write_text(json.dumps(registry_data, indent=4))
 
     def _get_registry_data(self) -> dict:
         try:

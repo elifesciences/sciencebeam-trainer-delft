@@ -2,6 +2,7 @@
 import logging
 import argparse
 import time
+from typing import List
 
 from sklearn.model_selection import train_test_split
 import keras.backend as K
@@ -135,7 +136,7 @@ def train_eval(
         model.save()
 
 
-def parse_args():
+def parse_args(argv: List[str] = None):
     parser = argparse.ArgumentParser(
         description="Trainer for GROBID models"
     )
@@ -166,7 +167,7 @@ def parse_args():
         help="max epoch to train to"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     return args
 
 
@@ -214,8 +215,8 @@ def run(args):
     K.clear_session()
 
 
-def main():
-    args = parse_args()
+def main(argv: List[str] = None):
+    args = parse_args(argv)
     run(args)
 
 

@@ -1,5 +1,8 @@
 venv
+build
 
 .ipynb_checkpoints
+.pytest_cache
 
 *.pyc
+**/*.pyc

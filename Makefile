@@ -59,6 +59,14 @@ flake8:
 	$(DELFT_RUN) flake8 sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
 
 
+pytest:
+	$(DELFT_RUN) bash -c 'cd "$(PROJECT_FOLDER)" && PYTHONDONTWRITEBYTECODE=1 pytest -p no:cacheprovider'
+
+
+watch:
+	$(DELFT_RUN) bash -c 'cd "$(PROJECT_FOLDER)" && PYTHONDONTWRITEBYTECODE=1 pytest-watch -- -p no:cacheprovider'
+
+
 test-setup-install:
 	$(DELFT_RUN) python "$(PROJECT_FOLDER)/setup.py" install
 
@@ -66,6 +74,7 @@ test-setup-install:
 test: \
 	flake8 \
 	pylint \
+	pytest \
 	test-setup-install
 
 

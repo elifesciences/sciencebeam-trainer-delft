@@ -6,7 +6,6 @@ from py._path.local import LocalPath
 
 import sciencebeam_trainer_delft.embedding_manager as embedding_manager_module
 from sciencebeam_trainer_delft.embedding_manager import (
-    is_external_url,
     EmbeddingManager
 )
 
@@ -37,18 +36,7 @@ def _download_dir(data_dir):
     return data_dir.join('download')
 
 
-class TestIsExternalUrl:
-    def test_should_return_false_for_name(self):
-        assert not is_external_url('name')
-
-    def test_should_return_true_for_url(self):
-        assert is_external_url('http://name')
-
-
 class TestEmbeddingManager:
-    def test_(self):
-        pass
-
     def test_should_download_and_install_embedding(
             self,
             copy_file_mock: MagicMock,

@@ -60,11 +60,11 @@ flake8:
 
 
 pytest:
-	$(DELFT_RUN) pytest
+	$(DELFT_RUN) bash -c 'cd "$(PROJECT_FOLDER)" && PYTHONDONTWRITEBYTECODE=1 pytest -p no:cacheprovider'
 
 
 watch:
-	$(DELFT_RUN) bash -c 'cd "$(PROJECT_FOLDER)" && pytest-watch'
+	$(DELFT_RUN) bash -c 'cd "$(PROJECT_FOLDER)" && PYTHONDONTWRITEBYTECODE=1 pytest-watch -- -p no:cacheprovider'
 
 
 test-setup-install:

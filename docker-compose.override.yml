@@ -3,6 +3,8 @@ version: '3'
 services:
   delft:
     volumes:
+      - ./sciencebeam_trainer_delft:/opt/sciencebeam-trainer-delft/sciencebeam_trainer_delft
+      - ./tests:/opt/sciencebeam-trainer-delft/tests
       - ~/.config/gcloud:/root/.config/gcloud
 
   jupyter:

@@ -30,7 +30,8 @@ RUN if [ "${install_dev}" = "y" ]; then pip install -r "${PROJECT_FOLDER}/requir
 COPY sciencebeam_trainer_delft "${PROJECT_FOLDER}/sciencebeam_trainer_delft"
 COPY setup.py "${PROJECT_FOLDER}/"
 
-RUN ln -s "${PROJECT_FOLDER}/sciencebeam_trainer_delft" ./sciencebeam_trainer_delft
+RUN ln -s "${PROJECT_FOLDER}/sciencebeam_trainer_delft" ./sciencebeam_trainer_delft \
+  && ln -s /opt/delft/delft "${PROJECT_FOLDER}/delft"
 
 COPY .flake8 .pylintrc ./
-COPY tests ./tests
+COPY tests "${PROJECT_FOLDER}/tests"

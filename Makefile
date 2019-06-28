@@ -63,6 +63,10 @@ pytest:
 	$(DELFT_RUN) pytest
 
 
+watch:
+	$(DELFT_RUN) bash -c 'cd "$(PROJECT_FOLDER)" && pytest-watch'
+
+
 test-setup-install:
 	$(DELFT_RUN) python "$(PROJECT_FOLDER)/setup.py" install
 

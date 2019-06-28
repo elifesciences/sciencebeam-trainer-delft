@@ -4,4 +4,7 @@ build
 .ipynb_checkpoints
 .pytest_cache
 
+notebooks/data
+notebooks/embedding-registry.json
+
 *.pyc

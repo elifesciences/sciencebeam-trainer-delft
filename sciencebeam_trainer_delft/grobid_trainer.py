@@ -14,6 +14,7 @@ from delft.sequenceLabelling.reader import (
 )
 
 from sciencebeam_trainer_delft.cloud_support import patch_cloud_support
+from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
 
 
 MODELS = [
@@ -188,9 +189,14 @@ def run(args):
     if architecture not in architectures:
         print('unknown model architecture, must be one of ' + str(ARCHITECTURES))
 
+    embedding_manager = EmbeddingManager()
+    embedding_name = embedding_manager.download_and_install_embedding_if_url(
+        args.embedding
+    )
+
     train_args = dict(
         model=model,
-        embeddings_name=args.embedding,
+        embeddings_name=embedding_name,
         architecture=architecture, use_ELMo=use_ELMo,
         input_path=args.input,
         output_path=args.output,

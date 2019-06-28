@@ -118,4 +118,4 @@ class EmbeddingManager:
 
     def validate_embedding(self, embedding_name):
         if not self.get_embedding_config(embedding_name):
-            raise ValueError('invalid embedding name: %s')
+            raise ValueError('invalid embedding name: %s' % embedding_name)

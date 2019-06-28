@@ -4,19 +4,15 @@ from functools import wraps
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory, mkdtemp
 from pathlib import Path
-from shutil import copyfileobj
 
-from six import string_types, text_type
+from six import string_types
 
 import keras
 
 import delft
 import delft.sequenceLabelling.trainer
 
-try:
-    from tensorflow.python.lib.io import file_io as tf_file_io
-except ImportError:
-    tf_file_io = None
+from sciencebeam_trainer_delft.utils import copy_file
 
 
 LOGGER = logging.getLogger(__name__)
@@ -27,14 +23,7 @@ def _is_cloud_location(filepath):
 
 
 def _copy_file_to_cloud(source_filepath, target_filepath, overwrite=True):
-    if tf_file_io is None:
-        raise ImportError('Cloud storage file transfer requires TensorFlow.')
-    if not overwrite and tf_file_io.file_exists(target_filepath):
-        LOGGER.info('skipping already existing file: %s', target_filepath)
-        return
-    with tf_file_io.FileIO(text_type(source_filepath), mode='rb') as source_fp:
-        with tf_file_io.FileIO(text_type(target_filepath), mode='wb') as target_fp:
-            copyfileobj(source_fp, target_fp)
+    copy_file(source_filepath, target_filepath, overwrite=overwrite)
 
 
 def _copy_directory_to_cloud(source_filepath, target_filepath, overwrite=True):

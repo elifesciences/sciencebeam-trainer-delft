@@ -24,6 +24,11 @@ NOTEBOOK_OUTPUT_FILE =
 NB_UID = $(shell id -u)
 NB_GID = $(shell id -g)
 
+EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz
+
+
+.PHONY: build
+
 
 venv-clean:
 	@if [ -d "$(VENV)" ]; then \
@@ -84,6 +89,7 @@ grobid-train-header:
 		header train \
 		--batch-size="$(BATCH_SIZE)" \
 		--max-sequence-length="$(MAX_SEQUENCE_LENGTH)" \
+		--embedding="$(EMBEDDING)" \
 		--max-epoch="$(MAX_EPOCH)" \
 		--output="$(MODEL_OUTPUT)" \
 		--checkpoint="$(CHECKPOINT_OUTPUT)"

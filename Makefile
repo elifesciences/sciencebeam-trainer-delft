@@ -27,6 +27,9 @@ NB_GID = $(shell id -g)
 EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz
 
 
+.PHONY: build
+
+
 venv-clean:
 	@if [ -d "$(VENV)" ]; then \
 		rm -rf "$(VENV)"; \

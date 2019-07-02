@@ -18,7 +18,7 @@ from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
 from sciencebeam_trainer_delft.models import get_model_names, patch_get_model
 
 
-MODELS = [
+GROBID_MODEL_NAMES = [
     'affiliation-address', 'citation', 'date', 'header',
     'name-citation', 'name-header', 'software'
 ]
@@ -141,7 +141,7 @@ def parse_args(argv: List[str] = None):
         description="Trainer for GROBID models"
     )
 
-    parser.add_argument("model")
+    parser.add_argument("model", choices=GROBID_MODEL_NAMES)
     parser.add_argument("action")
     parser.add_argument("--fold-count", type=int, default=1)
     parser.add_argument(
@@ -178,8 +178,6 @@ def run(args):
     actions = ['train', 'tag', 'train_eval', 'eval']
 
     model = args.model
-    if model not in MODELS:
-        print('invalid model, should be one of', MODELS)
 
     action = args.action
     if action not in actions:

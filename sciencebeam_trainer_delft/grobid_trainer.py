@@ -142,7 +142,7 @@ def parse_args(argv: List[str] = None):
     )
 
     parser.add_argument("model", choices=GROBID_MODEL_NAMES)
-    parser.add_argument("action", choices=['train', 'tag', 'train_eval', 'eval'])
+    parser.add_argument("action", choices=['train', 'train_eval'])
     parser.add_argument("--fold-count", type=int, default=1)
     parser.add_argument(
         "--architecture", default='BidLSTM_CRF',

@@ -142,7 +142,7 @@ def parse_args(argv: List[str] = None):
     )
 
     parser.add_argument("model", choices=GROBID_MODEL_NAMES)
-    parser.add_argument("action")
+    parser.add_argument("action", choices=['train', 'tag', 'train_eval', 'eval'])
     parser.add_argument("--fold-count", type=int, default=1)
     parser.add_argument(
         "--architecture", default='BidLSTM_CRF',
@@ -175,13 +175,8 @@ def parse_args(argv: List[str] = None):
 
 
 def run(args):
-    actions = ['train', 'tag', 'train_eval', 'eval']
-
     model = args.model
-
     action = args.action
-    if action not in actions:
-        print('action not specified, must be one of ' + str(actions))
 
     use_ELMo = args.use_ELMo
     architecture = args.architecture

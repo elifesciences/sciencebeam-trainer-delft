@@ -28,15 +28,20 @@ def get_default_training_data(model: str) -> str:
     return 'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
 
 
+def load_data_and_labels(model: str, input_path: str = None):
+    if input_path is None:
+        input_path = get_default_training_data(model)
+    print('Loading data...')
+    x_all, y_all, f_all = load_data_and_labels_crf_file(input_path)
+    return x_all, y_all, f_all
+
+
 # train a GROBID model with all available data
 def train(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_path=None, output_path=None,
         max_epoch=100, **kwargs):
-    print('Loading data...')
-    if input_path is None:
-        input_path = get_default_training_data(model)
-    x_all, y_all, _ = load_data_and_labels_crf_file(input_path)
+    x_all, y_all, _ = load_data_and_labels(model=model, input_path=input_path)
     x_train, x_valid, y_train, y_valid = train_test_split(x_all, y_all, test_size=0.1)
 
     print(len(x_train), 'train sequences')
@@ -79,10 +84,7 @@ def train_eval(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_path=None, output_path=None,
         fold_count=1, max_epoch=100, batch_size=20, **kwargs):
-    print('Loading data...')
-    if input_path is None:
-        input_path = get_default_training_data(model)
-    x_all, y_all, _ = load_data_and_labels_crf_file(input_path)
+    x_all, y_all, _ = load_data_and_labels(model=model, input_path=input_path)
 
     x_train_all, x_eval, y_train_all, y_eval = train_test_split(x_all, y_all, test_size=0.1)
     x_train, x_valid, y_train, y_valid = train_test_split(x_train_all, y_train_all, test_size=0.1)

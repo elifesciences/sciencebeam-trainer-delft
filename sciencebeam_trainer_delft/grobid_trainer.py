@@ -9,13 +9,13 @@ import keras.backend as K
 
 from delft.sequenceLabelling import Sequence
 
-from delft.sequenceLabelling.reader import (
-    load_data_and_labels_crf_file
-)
-
 from sciencebeam_trainer_delft.cloud_support import patch_cloud_support
 from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
 from sciencebeam_trainer_delft.models import get_model_names, patch_get_model
+from sciencebeam_trainer_delft.data import load_data_and_labels_crf_file
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 GROBID_MODEL_NAMES = [
@@ -24,18 +24,31 @@ GROBID_MODEL_NAMES = [
 ]
 
 
+def get_default_training_data(model: str) -> str:
+    return 'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
+
+
+def load_data_and_labels(
+        model: str, input_path: str = None,
+        limit: int = None):
+    if input_path is None:
+        input_path = get_default_training_data(model)
+    LOGGER.info('loading data from: %s', input_path)
+    x_all, y_all, f_all = load_data_and_labels_crf_file(
+        input_path, limit=limit
+    )
+    return x_all, y_all, f_all
+
+
 # train a GROBID model with all available data
 def train(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_path=None, output_path=None,
+        limit: int = None,
         max_epoch=100, **kwargs):
-    print('Loading data...')
-    if input_path is None:
-        x_all, y_all, _ = load_data_and_labels_crf_file(
-            'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
-        )
-    else:
-        x_all, y_all, _ = load_data_and_labels_crf_file(input_path)
+    x_all, y_all, _ = load_data_and_labels(
+        model=model, input_path=input_path, limit=limit
+    )
     x_train, x_valid, y_train, y_valid = train_test_split(x_all, y_all, test_size=0.1)
 
     print(len(x_train), 'train sequences')
@@ -77,14 +90,11 @@ def train(
 def train_eval(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_path=None, output_path=None,
+        limit: int = None,
         fold_count=1, max_epoch=100, batch_size=20, **kwargs):
-    print('Loading data...')
-    if input_path is None:
-        x_all, y_all, _ = load_data_and_labels_crf_file(
-            'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
-        )
-    else:
-        x_all, y_all, _ = load_data_and_labels_crf_file(input_path)
+    x_all, y_all, _ = load_data_and_labels(
+        model=model, input_path=input_path, limit=limit
+    )
 
     x_train_all, x_eval, y_train_all, y_eval = train_test_split(x_all, y_all, test_size=0.1)
     x_train, x_valid, y_train, y_valid = train_test_split(x_train_all, y_train_all, test_size=0.1)
@@ -153,6 +163,7 @@ def parse_args(argv: List[str] = None):
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
     parser.add_argument("--input", help="provided training file")
+    parser.add_argument("--limit", type=int, help="limit the number of training samples")
     parser.add_argument(
         "--embedding", default="glove-6B-50d",
         help="name of word embedding"
@@ -193,6 +204,7 @@ def run(args):
         architecture=architecture, use_ELMo=use_ELMo,
         input_path=args.input,
         output_path=args.output,
+        limit=args.limit,
         log_dir=args.checkpoint,
         batch_size=args.batch_size,
         max_sequence_length=args.max_sequence_length,

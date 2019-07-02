@@ -1,6 +1,5 @@
 import logging
 import re
-from pathlib import Path
 from itertools import islice
 from typing import Iterable, Tuple
 
@@ -66,6 +65,7 @@ def load_data_and_labels_crf_lines(
         labels.append(tags)
         featureSets.append(features)
     return np.asarray(sents), np.asarray(labels), np.asarray(featureSets)
+
 
 def load_data_and_labels_crf_file(
         filepath: str,

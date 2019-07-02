@@ -1,16 +1,4 @@
-import os
-
-import pytest
-
 from sciencebeam_trainer_delft.data import load_data_and_labels_crf_file
-
-
-@pytest.fixture(name='sample_train_file')
-def _sample_train_file():
-    return os.path.join(
-        os.path.dirname(__file__),
-        'test_data/test-header.train'
-    )
 
 
 class TestLoadDataAndLabelsCrfFile:

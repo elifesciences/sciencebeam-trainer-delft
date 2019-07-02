@@ -15,6 +15,7 @@ CHECKPOINT_OUTPUT =
 PROJECT_FOLDER = /opt/sciencebeam-trainer-delft
 
 DELFT_RUN = $(DOCKER_COMPOSE) run --rm delft
+DELFT_PROJECT_FOLDER_RUN = $(DOCKER_COMPOSE) run --rm --workdir="$(PROJECT_FOLDER)" -e PYTHONDONTWRITEBYTECODE=1 delft
 
 JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
 JUPYTER_RUN = $(JUPYTER_DOCKER_COMPOSE) run --rm jupyter
@@ -27,6 +28,8 @@ NB_GID = $(shell id -g)
 LIMIT = 10000
 ARCHITECTURE = BidLSTM_CRF
 EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz
+
+PYTEST_ARGS =
 
 
 .PHONY: build
@@ -67,11 +70,19 @@ flake8:
 
 
 pytest:
-	$(DELFT_RUN) bash -c 'cd "$(PROJECT_FOLDER)" && PYTHONDONTWRITEBYTECODE=1 pytest -p no:cacheprovider'
+	$(DELFT_PROJECT_FOLDER_RUN) pytest -p no:cacheprovider $(PYTEST_ARGS)
+
+
+.watch:
+	$(DELFT_PROJECT_FOLDER_RUN) pytest-watch -- -p no:cacheprovider $(PYTEST_ARGS)
+
+
+watch-slow:
+	@$(MAKE) .watch
 
 
 watch:
-	$(DELFT_RUN) bash -c 'cd "$(PROJECT_FOLDER)" && PYTHONDONTWRITEBYTECODE=1 pytest-watch -- -p no:cacheprovider'
+	@$(MAKE) PYTEST_ARGS="$(PYTEST_ARGS) -m 'not slow'" .watch
 
 
 test-setup-install:

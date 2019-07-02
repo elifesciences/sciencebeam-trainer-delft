@@ -15,14 +15,13 @@ from delft.sequenceLabelling.reader import (
 
 from sciencebeam_trainer_delft.cloud_support import patch_cloud_support
 from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
+from sciencebeam_trainer_delft.models import get_model_names, patch_get_model
 
 
-MODELS = [
+GROBID_MODEL_NAMES = [
     'affiliation-address', 'citation', 'date', 'header',
     'name-citation', 'name-header', 'software'
 ]
-
-ARCHITECTURES = ['BidLSTM_CRF', 'BidLSTM_CNN', 'BidLSTM_CNN_CRF', 'BidGRU-CRF']
 
 
 # train a GROBID model with all available data
@@ -142,11 +141,14 @@ def parse_args(argv: List[str] = None):
         description="Trainer for GROBID models"
     )
 
-    parser.add_argument("model")
-    parser.add_argument("action")
+    parser.add_argument("model", choices=GROBID_MODEL_NAMES)
+    parser.add_argument("action", choices=['train', 'train_eval'])
     parser.add_argument("--fold-count", type=int, default=1)
-    parser.add_argument("--architecture", default='BidLSTM_CRF',
-                        help="type of model architecture to be used, one of " + str(ARCHITECTURES))
+    parser.add_argument(
+        "--architecture", default='BidLSTM_CRF',
+        choices=get_model_names(),
+        help="type of model architecture to be used"
+    )
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
@@ -173,21 +175,11 @@ def parse_args(argv: List[str] = None):
 
 
 def run(args):
-    actions = ['train', 'tag', 'train_eval', 'eval']
-    architectures = ['BidLSTM_CRF', 'BidLSTM_CNN', 'BidLSTM_CNN_CRF', 'BidGRU-CRF']
-
     model = args.model
-    if model not in MODELS:
-        print('invalid model, should be one of', MODELS)
-
     action = args.action
-    if action not in actions:
-        print('action not specified, must be one of ' + str(actions))
 
     use_ELMo = args.use_ELMo
     architecture = args.architecture
-    if architecture not in architectures:
-        print('unknown model architecture, must be one of ' + str(ARCHITECTURES))
 
     embedding_manager = EmbeddingManager()
     embedding_name = embedding_manager.download_and_install_embedding_if_url(
@@ -230,5 +222,6 @@ def main(argv: List[str] = None):
 if __name__ == "__main__":
     logging.basicConfig(level='INFO')
     patch_cloud_support()
+    patch_get_model()
 
     main()

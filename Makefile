@@ -30,6 +30,7 @@ ARCHITECTURE = BidLSTM_CRF
 EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz
 
 PYTEST_ARGS =
+NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 
 
 .PHONY: build
@@ -73,6 +74,10 @@ pytest:
 	$(DELFT_PROJECT_FOLDER_RUN) pytest -p no:cacheprovider $(PYTEST_ARGS)
 
 
+pytest-not-slow:
+	@$(MAKE) PYTEST_ARGS="$(PYTEST_ARGS) $(NOT_SLOW_PYTEST_ARGS)" pytest
+
+
 .watch:
 	$(DELFT_PROJECT_FOLDER_RUN) pytest-watch -- -p no:cacheprovider $(PYTEST_ARGS)
 
@@ -82,7 +87,7 @@ watch-slow:
 
 
 watch:
-	@$(MAKE) PYTEST_ARGS="$(PYTEST_ARGS) -m 'not slow'" .watch
+	@$(MAKE) PYTEST_ARGS="$(PYTEST_ARGS) $(NOT_SLOW_PYTEST_ARGS)" .watch
 
 
 test-setup-install:

@@ -20,6 +20,7 @@ class CustomModel(BaseModel):
         self.use_crf = use_crf
 
 
+# renamed copy of BidLSTM_CRF to demonstrate a custom model
 class CustomBidLSTM_CRF(CustomModel):
     """
     A Keras implementation of BidLSTM-CRF for sequence labelling.

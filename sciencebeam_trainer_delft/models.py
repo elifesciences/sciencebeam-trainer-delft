@@ -1,3 +1,5 @@
+import logging
+import json
 from typing import Dict, List, Type
 
 from keras.models import Model
@@ -11,6 +13,9 @@ import delft.sequenceLabelling.wrapper
 from delft.utilities.layers import ChainCRF
 from delft.sequenceLabelling.models import BaseModel
 from delft.sequenceLabelling.models import get_model as _get_model
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class CustomModel(BaseModel):
@@ -88,9 +93,15 @@ def register_model(name: str, model_class: Type[CustomModel]):
 
 
 def get_model(config, preprocessor, ntags=None):
+    LOGGER.debug(
+        'get_model, config: %s, preprocessor=%s, ntags=%s',
+        json.dumps(vars(config), indent=4), json.dumps(vars(preprocessor), indent=4), ntags
+    )
+
     model_class = MODEL_MAP.get(config.model_type)
     if not model_class:
         return _get_model(config, preprocessor, ntags=ntags)
+
     model: CustomModel = model_class(config, ntags=ntags)
     config.use_crf = model.use_crf
     preprocessor.require_casing = model.require_casing

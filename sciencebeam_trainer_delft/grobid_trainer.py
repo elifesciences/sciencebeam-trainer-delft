@@ -7,7 +7,7 @@ from typing import List
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 
-from delft.sequenceLabelling import Sequence
+from sciencebeam_trainer_delft.wrapper import Sequence
 
 from sciencebeam_trainer_delft.cloud_support import patch_cloud_support
 from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager

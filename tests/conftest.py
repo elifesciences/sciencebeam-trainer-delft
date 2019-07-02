@@ -10,6 +10,7 @@ from .test_data import TEST_DATA_PATH
 def setup_logging():
     logging.root.handlers = []
     logging.basicConfig(level='INFO')
+    logging.getLogger('tests').setLevel('DEBUG')
     logging.getLogger('sciencebeam_trainer_delft').setLevel('DEBUG')
 
 

@@ -24,6 +24,7 @@ NOTEBOOK_OUTPUT_FILE =
 NB_UID = $(shell id -u)
 NB_GID = $(shell id -g)
 
+LIMIT = 10000
 ARCHITECTURE = BidLSTM_CRF
 EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz
 
@@ -94,6 +95,7 @@ grobid-train-header:
 		--architecture="$(ARCHITECTURE)" \
 		--max-epoch="$(MAX_EPOCH)" \
 		--output="$(MODEL_OUTPUT)" \
+		--limit="$(LIMIT)" \
 		--checkpoint="$(CHECKPOINT_OUTPUT)"
 
 

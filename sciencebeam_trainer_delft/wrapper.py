@@ -1,8 +1,8 @@
 import numpy as np
 
-from delft.sequenceLabelling.trainer import Trainer
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 
+from sciencebeam_trainer_delft.trainer import Trainer
 from sciencebeam_trainer_delft.models import get_model
 from sciencebeam_trainer_delft.preprocess import WordPreprocessor
 

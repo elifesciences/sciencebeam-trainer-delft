@@ -53,6 +53,10 @@ def train(
 
     print(len(x_train), 'train sequences')
     print(len(x_valid), 'validation sequences')
+    LOGGER.info('x_all: %s', x_all[:3])
+    LOGGER.info('x_all.shape: %s (%s)', x_all.shape, type(x_all))
+    LOGGER.info('x_train: %s', x_train[:3])
+    LOGGER.info('x_train.shape: %s (%s)', x_train.shape, x_train.dtype)
 
     if output_path:
         model_name = model
@@ -173,6 +177,10 @@ def parse_args(argv: List[str] = None):
         help="batch size"
     )
     parser.add_argument(
+        "--word-lstm-units", type=int, default=100,
+        help="number of words in lstm units"
+    )
+    parser.add_argument(
         "--max-sequence-length", type=int, default=500,
         help="maximum sequence length"
     )
@@ -207,6 +215,7 @@ def run(args):
         limit=args.limit,
         log_dir=args.checkpoint,
         batch_size=args.batch_size,
+        word_lstm_units=args.word_lstm_units,
         max_sequence_length=args.max_sequence_length,
         max_epoch=args.max_epoch
     )

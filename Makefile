@@ -28,6 +28,7 @@ NB_GID = $(shell id -g)
 LIMIT = 10000
 ARCHITECTURE = BidLSTM_CRF
 EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz
+WORD_LSTM_UNITS = 100
 
 PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
@@ -106,6 +107,7 @@ grobid-train-header:
 		python -m sciencebeam_trainer_delft.grobid_trainer \
 		header train \
 		--batch-size="$(BATCH_SIZE)" \
+		--word-lstm-units="$(WORD_LSTM_UNITS)" \
 		--max-sequence-length="$(MAX_SEQUENCE_LENGTH)" \
 		--embedding="$(EMBEDDING)" \
 		--architecture="$(ARCHITECTURE)" \

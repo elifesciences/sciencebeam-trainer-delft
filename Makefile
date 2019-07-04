@@ -80,7 +80,7 @@ pytest-not-slow:
 
 
 .watch:
-	$(DELFT_PROJECT_FOLDER_RUN) pytest-watch -- -p no:cacheprovider $(PYTEST_ARGS)
+	$(DELFT_PROJECT_FOLDER_RUN) pytest-watch -- -p no:cacheprovider -p no:warnings $(PYTEST_ARGS)
 
 
 watch-slow:

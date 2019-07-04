@@ -8,6 +8,8 @@ from delft.sequenceLabelling.preprocess import (
 )
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
 
+from sciencebeam_trainer_delft.preprocess import WordPreprocessor
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +20,7 @@ class DataGenerator(keras.utils.Sequence):
     def __init__(
             self, x, y,
             batch_size=24,
-            preprocessor=None,
+            preprocessor: WordPreprocessor = None,
             char_embed_size=25,
             embeddings=None,
             max_sequence_length=None,
@@ -71,10 +73,10 @@ class DataGenerator(keras.utils.Sequence):
 
     def __data_generation(self, index):
         'Generates data containing batch_size samples'
-        max_iter = min(self.batch_size, len(self.x)-self.batch_size*index)
+        max_iter = min(self.batch_size, len(self.x) - self.batch_size * index)
 
         # restrict data to index window
-        sub_x = self.x[(index*self.batch_size):(index*self.batch_size)+max_iter]
+        sub_x = self.x[(index * self.batch_size):(index * self.batch_size) + max_iter]
 
         # tokenize texts in self.x if not already done
         max_length_x = 0
@@ -139,6 +141,11 @@ class DataGenerator(keras.utils.Sequence):
         inputs = [batch_x, batch_c]
         if self.preprocessor.return_casing:
             inputs.append(batch_a)
+        if self.preprocessor.return_features:
+            batch_features = self.features[
+                (index * self.batch_size):(index * self.batch_size) + max_iter
+            ]
+            inputs.append(batch_features)
         inputs.append(batch_l)
 
         return inputs, batch_y

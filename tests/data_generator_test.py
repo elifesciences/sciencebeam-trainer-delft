@@ -20,6 +20,11 @@ WORD_2 = 'word_b'
 
 SENTENCE_TOKENS_1 = [WORD_1, WORD_2]
 
+TRANSFORMED_FEATURE_1 = np.asarray([1, 0, 0, 1])
+TRANSFORMED_FEATURE_2 = np.asarray([2, 0, 0, 2])
+
+SENTENCE_FEATURES_1 = [TRANSFORMED_FEATURE_1, TRANSFORMED_FEATURE_2]
+
 LABEL_1 = 'label1'
 
 EMBEDDING_MAP = {
@@ -141,4 +146,23 @@ class TestDataGenerator:
         assert all_close(x[2], [
             to_casing_single(SENTENCE_TOKENS_1, maxlen=len(SENTENCE_TOKENS_1))
         ])
+        assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])
+
+    def test_should_return_features(self, preprocessor, embeddings):
+        preprocessor.return_features = True
+        item = DataGenerator(
+            np.asarray([SENTENCE_TOKENS_1]),
+            np.asarray([[LABEL_1]]),
+            features=np.asarray([SENTENCE_FEATURES_1]),
+            preprocessor=preprocessor,
+            embeddings=embeddings,
+            **DEFAULT_ARGS
+        )[0]
+        LOGGER.debug('item: %s', item)
+        assert len(item) == 2
+        x, labels = item
+        assert all_close(labels, get_label_indices([LABEL_1]))
+        assert all_close(x[0], get_word_vectors(SENTENCE_TOKENS_1))
+        assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
+        assert all_close(x[2], [SENTENCE_FEATURES_1])
         assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])

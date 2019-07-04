@@ -59,6 +59,8 @@ class DataGenerator(keras.utils.Sequence):
         self.shuffle = shuffle
         self.tokenize = tokenize
         self.max_sequence_length = max_sequence_length
+        if preprocessor.return_features and self.features is None:
+            raise ValueError('features required')
         self.on_epoch_end()
 
     def __len__(self):

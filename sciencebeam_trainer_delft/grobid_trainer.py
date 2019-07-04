@@ -4,6 +4,7 @@ import argparse
 import time
 from typing import List
 
+import numpy as np
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 
@@ -49,7 +50,10 @@ def train(
     x_all, y_all, _ = load_data_and_labels(
         model=model, input_path=input_path, limit=limit
     )
-    x_train, x_valid, y_train, y_valid = train_test_split(x_all, y_all, test_size=0.1)
+    features_all = np.zeros((len(x_all), 5))
+    x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
+        x_all, y_all, features_all, test_size=0.1
+    )
 
     print(len(x_train), 'train sequences')
     print(len(x_valid), 'validation sequences')
@@ -78,7 +82,10 @@ def train(
     # model.save = wrap_save(model.save)
 
     start_time = time.time()
-    model.train(x_train, y_train, x_valid, y_valid)
+    model.train(
+        x_train, y_train, x_valid, y_valid,
+        features_train=features_train, features_valid=features_valid
+    )
     runtime = round(time.time() - start_time, 3)
     print("training runtime: %s seconds " % (runtime))
 
@@ -99,9 +106,14 @@ def train_eval(
     x_all, y_all, _ = load_data_and_labels(
         model=model, input_path=input_path, limit=limit
     )
+    features_all = np.zeros((len(x_all), 5))
 
-    x_train_all, x_eval, y_train_all, y_eval = train_test_split(x_all, y_all, test_size=0.1)
-    x_train, x_valid, y_train, y_valid = train_test_split(x_train_all, y_train_all, test_size=0.1)
+    x_train_all, x_eval, y_train_all, y_eval, features_train_all, features_eval = train_test_split(
+        x_all, y_all, features_all, test_size=0.1
+    )
+    x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
+        x_train_all, y_train_all, features_train_all, test_size=0.1
+    )
 
     print(len(x_train), 'train sequences')
     print(len(x_valid), 'validation sequences')
@@ -132,16 +144,23 @@ def train_eval(
     start_time = time.time()
 
     if fold_count == 1:
-        model.train(x_train, y_train, x_valid, y_valid)
+        model.train(
+            x_train, y_train, x_valid, y_valid,
+            features_train=features_train, features_valid=features_valid
+        )
     else:
-        model.train_nfold(x_train, y_train, x_valid, y_valid, fold_number=fold_count)
+        model.train_nfold(
+            x_train, y_train, x_valid, y_valid,
+            features_train=features_train, features_valid=features_valid,
+            fold_number=fold_count
+        )
 
     runtime = round(time.time() - start_time, 3)
     print("training runtime: %s seconds " % (runtime))
 
     # evaluation
     print("\nEvaluation:")
-    model.eval(x_eval, y_eval)
+    model.eval(x_eval, y_eval, features=features_eval)
 
     # saving the model
     if output_path:

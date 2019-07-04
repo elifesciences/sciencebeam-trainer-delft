@@ -105,10 +105,12 @@ def all_close(a, b):
 
 
 class TestDataGenerator:
-    def test_should_be_able_to_instantiate(self):
+    def test_should_be_able_to_instantiate(self, preprocessor, embeddings):
         DataGenerator(
             np.asarray([[WORD_1, WORD_2]]),
             np.asarray([[LABEL_1]]),
+            preprocessor=preprocessor,
+            embeddings=embeddings,
             **DEFAULT_ARGS
         )
 
@@ -166,3 +168,14 @@ class TestDataGenerator:
         assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
         assert all_close(x[2], [SENTENCE_FEATURES_1])
         assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])
+
+    def test_should_not_fail_on_shuffle_dataset(self, preprocessor, embeddings):
+        data_generator = DataGenerator(
+            np.asarray([SENTENCE_TOKENS_1]),
+            np.asarray([[LABEL_1]]),
+            features=np.asarray([SENTENCE_FEATURES_1]),
+            preprocessor=preprocessor,
+            embeddings=embeddings,
+            **DEFAULT_ARGS
+        )
+        data_generator._shuffle_dataset()  # pylint: disable=protected-access

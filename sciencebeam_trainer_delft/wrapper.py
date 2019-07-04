@@ -14,7 +14,10 @@ def prepare_preprocessor(X, y, model_config):
 
 
 class Sequence(_Sequence):
-    def train(self, x_train, y_train, x_valid=None, y_valid=None):
+    def train(  # pylint: disable=arguments-differ
+            self, x_train, y_train, x_valid=None, y_valid=None,
+            features_train: np.array = None,
+            features_valid: np.array = None):
         # TBD if valid is None, segment train to get one
         x_all = np.concatenate((x_train, x_valid), axis=0)
         y_all = np.concatenate((y_train, y_valid), axis=0)
@@ -32,7 +35,10 @@ class Sequence(_Sequence):
             checkpoint_path=self.log_dir,
             preprocessor=self.p
         )
-        trainer.train(x_train, y_train, x_valid, y_valid)
+        trainer.train(
+            x_train, y_train, x_valid, y_valid,
+            features_train=features_train, features_valid=features_valid
+        )
         if self.embeddings.use_ELMo:
             self.embeddings.clean_ELMo_cache()
         if self.embeddings.use_BERT:

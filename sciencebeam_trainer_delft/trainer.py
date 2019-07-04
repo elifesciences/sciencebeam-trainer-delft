@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 from delft.sequenceLabelling.trainer import Trainer as _Trainer
@@ -6,11 +8,45 @@ from delft.sequenceLabelling.trainer import get_callbacks
 from sciencebeam_trainer_delft.data_generator import DataGenerator
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 class Trainer(_Trainer):
-    """ parameter model local_model must be compiled before calling this method
-        this model will be returned with trained weights """
-    def train_model(self, local_model, x_train, y_train, x_valid=None, y_valid=None, max_epoch=50):
+    def train(  # pylint: disable=arguments-differ
+            self, x_train, y_train, x_valid, y_valid,
+            features_train: np.array = None,
+            features_valid: np.array = None):
+        self.model.summary()
+
+        if self.model_config.use_crf:
+            self.model.compile(
+                loss=self.model.crf.loss,
+                optimizer='adam'
+            )
+        else:
+            self.model.compile(
+                loss='categorical_crossentropy',
+                optimizer='adam'
+            )
+        self.model = self.train_model(
+            self.model, x_train, y_train, x_valid, y_valid,
+            self.training_config.max_epoch,
+            features_train=features_train, features_valid=features_valid
+        )
+
+    def train_model(  # pylint: disable=arguments-differ
+            self, local_model,
+            x_train, y_train,
+            x_valid=None, y_valid=None,
+            max_epoch: int = 50,
+            features_train: np.array = None,
+            features_valid: np.array = None):
+        """ parameter model local_model must be compiled before calling this method
+            this model will be returned with trained weights """
         # todo: if valid set if None, create it as random segment of the shuffled train set
+
+        if self.preprocessor.return_features and features_train is None:
+            raise ValueError('features required')
 
         if self.training_config.early_stop:
             training_generator = DataGenerator(
@@ -18,7 +54,8 @@ class Trainer(_Trainer):
                 batch_size=self.training_config.batch_size, preprocessor=self.preprocessor,
                 char_embed_size=self.model_config.char_embedding_size,
                 max_sequence_length=self.model_config.max_sequence_length,
-                embeddings=self.embeddings, shuffle=True
+                embeddings=self.embeddings, shuffle=True,
+                features=features_train
             )
 
             validation_generator = DataGenerator(
@@ -26,7 +63,8 @@ class Trainer(_Trainer):
                 batch_size=self.training_config.batch_size, preprocessor=self.preprocessor,
                 char_embed_size=self.model_config.char_embedding_size,
                 max_sequence_length=self.model_config.max_sequence_length,
-                embeddings=self.embeddings, shuffle=False
+                embeddings=self.embeddings, shuffle=False,
+                features=features_valid
             )
 
             callbacks = get_callbacks(log_dir=self.checkpoint_path,
@@ -35,12 +73,16 @@ class Trainer(_Trainer):
         else:
             x_train = np.concatenate((x_train, x_valid), axis=0)
             y_train = np.concatenate((y_train, y_valid), axis=0)
+            features_all = None
+            if features_train is not None:
+                features_all = np.concatenate((features_train, features_valid), axis=0)
             training_generator = DataGenerator(
                 x_train, y_train,
                 batch_size=self.training_config.batch_size, preprocessor=self.preprocessor,
                 char_embed_size=self.model_config.char_embedding_size,
                 max_sequence_length=self.model_config.max_sequence_length,
-                embeddings=self.embeddings, shuffle=True
+                embeddings=self.embeddings, shuffle=True,
+                features=features_all
             )
 
             callbacks = get_callbacks(log_dir=self.checkpoint_path,

@@ -19,10 +19,15 @@ LOGGER = logging.getLogger(__name__)
 
 
 class CustomModel(BaseModel):
-    def __init__(self, config, ntags, require_casing: bool = False, use_crf: bool = False):
+    def __init__(
+            self, config, ntags,
+            require_casing: bool = False,
+            use_crf: bool = False,
+            use_features: bool = False):
         super().__init__(config, ntags)
         self.require_casing = require_casing
         self.use_crf = use_crf
+        self.use_features = use_features
 
 
 # renamed copy of BidLSTM_CRF to demonstrate a custom model
@@ -37,8 +42,11 @@ class CustomBidLSTM_CRF(CustomModel):
     https://arxiv.org/abs/1603.01360
     """
 
-    def __init__(self, config, ntags=None):
-        super().__init__(config, ntags, require_casing=False, use_crf=True)
+    def __init__(self, config, ntags=None, use_features=True):
+        super().__init__(
+            config, ntags,
+            require_casing=False, use_crf=True, use_features=use_features
+        )
 
         # build input, directly feed with word embedding by the data generator
         word_input = Input(shape=(None, config.word_embedding_size), name='word_input')
@@ -75,7 +83,13 @@ class CustomBidLSTM_CRF(CustomModel):
         self.crf = ChainCRF()
         pred = self.crf(x)
 
-        self.model = Model(inputs=[word_input, char_input, length_input], outputs=[pred])
+        inputs = [word_input, char_input]
+        if use_features:
+            LOGGER.info('use features')
+            features_input = Input(batch_shape=(None, None), dtype='int32', name='features_input')
+            inputs.append(features_input)
+        inputs.append(length_input)
+        self.model = Model(inputs=inputs, outputs=[pred])
         self.config = config
 
 
@@ -104,7 +118,8 @@ def get_model(config, preprocessor, ntags=None):
 
     model: CustomModel = model_class(config, ntags=ntags)
     config.use_crf = model.use_crf
-    preprocessor.require_casing = model.require_casing
+    preprocessor.return_casing = model.require_casing
+    preprocessor.return_features = model.use_features
     return model
 
 

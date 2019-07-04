@@ -50,7 +50,9 @@ venv-create:
 
 dev-install:
 	$(PIP) install -r requirements.txt
+	$(PIP) install -r requirements.cpu.txt
 	$(PIP) install -r requirements.dev.txt
+	$(PIP) install -r requirements.delft.txt --no-deps
 
 
 dev-venv: venv-create dev-install

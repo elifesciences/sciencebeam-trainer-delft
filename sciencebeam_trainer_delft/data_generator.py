@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import keras
 from delft.sequenceLabelling.preprocess import (
@@ -5,6 +7,9 @@ from delft.sequenceLabelling.preprocess import (
     to_vector_simple_with_elmo, to_vector_simple_with_bert
 )
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 # generate batch of data to feed sequence labelling model, both for training and prediction
@@ -48,12 +53,7 @@ class DataGenerator(keras.utils.Sequence):
     def __getitem__(self, index):
         'Generate one batch of data'
         # generate data for the current batch index
-        if self.preprocessor.return_casing:
-            batch_x, batch_c, batch_a, batch_l, batch_y = self.__data_generation(index)
-            return [batch_x, batch_c, batch_a, batch_l], batch_y
-        else:
-            batch_x, batch_c, batch_l, batch_y = self.__data_generation(index)
-            return [batch_x, batch_c, batch_l], batch_y
+        return self.__data_generation(index)
 
     def shuffle_pair(self, a, b):
         # generate permutation index array
@@ -137,6 +137,6 @@ class DataGenerator(keras.utils.Sequence):
         batch_l = batches[1]
 
         if self.preprocessor.return_casing:
-            return batch_x, batch_c, batch_a, batch_l, batch_y
+            return [batch_x, batch_c, batch_a, batch_l], batch_y
         else:
-            return batch_x, batch_c, batch_l, batch_y
+            return [batch_x, batch_c, batch_l], batch_y

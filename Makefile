@@ -16,6 +16,7 @@ PROJECT_FOLDER = /opt/sciencebeam-trainer-delft
 
 DELFT_RUN = $(DOCKER_COMPOSE) run --rm delft
 DELFT_PROJECT_FOLDER_RUN = $(DOCKER_COMPOSE) run --rm --workdir="$(PROJECT_FOLDER)" -e PYTHONDONTWRITEBYTECODE=1 delft
+PYTEST_WATCH = $(DELFT_PROJECT_FOLDER_RUN) pytest-watch
 
 JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
 JUPYTER_RUN = $(JUPYTER_DOCKER_COMPOSE) run --rm jupyter
@@ -80,7 +81,7 @@ pytest-not-slow:
 
 
 .watch:
-	$(DELFT_PROJECT_FOLDER_RUN) pytest-watch -- -p no:cacheprovider -p no:warnings $(PYTEST_ARGS)
+	$(PYTEST_WATCH) -- -p no:cacheprovider -p no:warnings $(PYTEST_ARGS)
 
 
 watch-slow:

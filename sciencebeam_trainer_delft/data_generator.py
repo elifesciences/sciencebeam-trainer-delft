@@ -136,7 +136,9 @@ class DataGenerator(keras.utils.Sequence):
 
         batch_l = batches[1]
 
+        inputs = [batch_x, batch_c]
         if self.preprocessor.return_casing:
-            return [batch_x, batch_c, batch_a, batch_l], batch_y
-        else:
-            return [batch_x, batch_c, batch_l], batch_y
+            inputs.append(batch_a)
+        inputs.append(batch_l)
+
+        return inputs, batch_y

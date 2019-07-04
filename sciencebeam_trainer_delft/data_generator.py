@@ -14,6 +14,23 @@ from sciencebeam_trainer_delft.preprocess import WordPreprocessor
 LOGGER = logging.getLogger(__name__)
 
 
+# https://stackoverflow.com/a/51526109/8676953
+def shuffle_arrays(arrays, set_seed=-1):
+    """Shuffles arrays in-place, in the same order, along axis=0
+
+    Parameters:
+    -----------
+    arrays : List of NumPy arrays.
+    set_seed : Seed value if int >= 0, else seed is random.
+    """
+    assert all(len(arr) == len(arrays[0]) for arr in arrays)
+    seed = np.random.randint(0, 2**(32 - 1) - 1) if set_seed < 0 else set_seed
+
+    for arr in arrays:
+        rstate = np.random.RandomState(seed)  # pylint: disable=no-member
+        rstate.shuffle(arr)
+
+
 # generate batch of data to feed sequence labelling model, both for training and prediction
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -57,19 +74,18 @@ class DataGenerator(keras.utils.Sequence):
         # generate data for the current batch index
         return self.__data_generation(index)
 
-    def shuffle_pair(self, a, b):
-        # generate permutation index array
-        permutation = np.random.permutation(a.shape[0])
-        # shuffle the two arrays
-        return a[permutation], b[permutation]
+    def _shuffle_dataset(self):
+        arrays_to_shuffle = [self.x]
+        if self.y is not None:
+            arrays_to_shuffle.append(self.y)
+        if self.features is not None:
+            arrays_to_shuffle.append(self.features)
+        shuffle_arrays(arrays_to_shuffle)
 
     def on_epoch_end(self):
         # shuffle dataset at each epoch
         if self.shuffle:
-            if self.y is None:
-                np.random.shuffle(self.x)
-            else:
-                self.shuffle_pair(self.x, self.y)
+            self._shuffle_dataset()
 
     def __data_generation(self, index):
         'Generates data containing batch_size samples'

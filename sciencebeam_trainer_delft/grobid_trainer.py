@@ -266,6 +266,7 @@ def main(argv: List[str] = None):
 
 
 if __name__ == "__main__":
+    logging.root.handlers = []
     logging.basicConfig(level='INFO')
     patch_cloud_support()
     patch_get_model()

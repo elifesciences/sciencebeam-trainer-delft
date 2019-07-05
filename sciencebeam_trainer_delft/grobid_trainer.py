@@ -46,11 +46,12 @@ def train(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_path=None, output_path=None,
         limit: int = None,
+        max_sequence_length: int = 100,
         max_epoch=100, **kwargs):
     x_all, y_all, _ = load_data_and_labels(
         model=model, input_path=input_path, limit=limit
     )
-    features_all = np.zeros((len(x_all), 5))
+    features_all = np.zeros((len(x_all), max_sequence_length, 7))
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
         x_all, y_all, features_all, test_size=0.1
     )
@@ -75,6 +76,7 @@ def train(
         max_epoch=max_epoch,
         recurrent_dropout=0.50,
         embeddings_name=embeddings_name,
+        max_sequence_length=max_sequence_length,
         model_type=architecture,
         use_ELMo=use_ELMo,
         **kwargs
@@ -102,11 +104,12 @@ def train_eval(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_path=None, output_path=None,
         limit: int = None,
+        max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20, **kwargs):
     x_all, y_all, _ = load_data_and_labels(
         model=model, input_path=input_path, limit=limit
     )
-    features_all = np.zeros((len(x_all), 5))
+    features_all = np.zeros((len(x_all), max_sequence_length, 7))
 
     x_train_all, x_eval, y_train_all, y_eval, features_train_all, features_eval = train_test_split(
         x_all, y_all, features_all, test_size=0.1
@@ -134,6 +137,7 @@ def train_eval(
         max_epoch=max_epoch,
         recurrent_dropout=0.50,
         embeddings_name=embeddings_name,
+        max_sequence_length=max_sequence_length,
         model_type=architecture,
         use_ELMo=use_ELMo,
         batch_size=batch_size,

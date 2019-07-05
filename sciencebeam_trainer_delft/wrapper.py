@@ -1,10 +1,16 @@
+import logging
+
 import numpy as np
 
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 
+from sciencebeam_trainer_delft.config import ModelConfig
 from sciencebeam_trainer_delft.trainer import Trainer
 from sciencebeam_trainer_delft.models import get_model
 from sciencebeam_trainer_delft.preprocess import WordPreprocessor
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def prepare_preprocessor(X, y, model_config):
@@ -14,6 +20,11 @@ def prepare_preprocessor(X, y, model_config):
 
 
 class Sequence(_Sequence):
+    def __init__(self, *args, **kwargs):
+        LOGGER.info('Sequence, args=%s, kwargs=%s', args, kwargs)
+        super().__init__(*args, **kwargs)
+        self.model_config = ModelConfig(**vars(self.model_config))
+
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid=None, y_valid=None,
             features_train: np.array = None,
@@ -24,6 +35,12 @@ class Sequence(_Sequence):
         self.p = prepare_preprocessor(x_all, y_all, self.model_config)
         self.model_config.char_vocab_size = len(self.p.vocab_char)
         self.model_config.case_vocab_size = len(self.p.vocab_case)
+
+        if features_train is not None:
+            LOGGER.info('x_train.shape: %s', x_train.shape)
+            LOGGER.info('features_train.shape: %s', features_train.shape)
+            self.model_config.max_feature_size = features_train.shape[-1]
+            LOGGER.info('max_feature_size: %s', self.model_config.max_feature_size)
 
         self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
         trainer = Trainer(

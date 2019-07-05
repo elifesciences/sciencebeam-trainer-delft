@@ -69,7 +69,20 @@ class CustomBidLSTM_CRF(CustomModel):
         length_input = Input(batch_shape=(None, 1), dtype='int32', name='length_input')
 
         # combine characters and word embeddings
-        x = Concatenate()([word_input, chars])
+        if use_features:
+            LOGGER.info('model using features')
+            assert config.max_feature_size > 0
+            features_input = Input(
+                batch_shape=(None, None, config.max_feature_size), name='features_input'
+            )
+            features = features_input
+            LOGGER.info(
+                'word_input=%s, charts=%s, features_input=%s',
+                word_input, chars, features
+            )
+            x = Concatenate()([word_input, chars, features_input])
+        else:
+            x = Concatenate()([word_input, chars])
         x = Dropout(config.dropout)(x)
 
         x = Bidirectional(LSTM(
@@ -85,8 +98,6 @@ class CustomBidLSTM_CRF(CustomModel):
 
         inputs = [word_input, char_input]
         if use_features:
-            LOGGER.info('use features')
-            features_input = Input(batch_shape=(None, None), dtype='int32', name='features_input')
             inputs.append(features_input)
         inputs.append(length_input)
         self.model = Model(inputs=inputs, outputs=[pred])

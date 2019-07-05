@@ -8,7 +8,10 @@ import numpy as np
 
 from delft.sequenceLabelling.preprocess import to_casing_single
 
-from sciencebeam_trainer_delft.data_generator import DataGenerator
+from sciencebeam_trainer_delft.data_generator import (
+    left_pad_batch_values,
+    DataGenerator
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -20,12 +23,16 @@ WORD_2 = 'word_b'
 
 SENTENCE_TOKENS_1 = [WORD_1, WORD_2]
 
+LONG_SENTENCE_TOKENS = SENTENCE_TOKENS_1 + SENTENCE_TOKENS_1 + SENTENCE_TOKENS_1
+SHORT_SENTENCE_TOKENS = SENTENCE_TOKENS_1
+
 TRANSFORMED_FEATURE_1 = np.asarray([1, 0, 0, 1])
 TRANSFORMED_FEATURE_2 = np.asarray([2, 0, 0, 2])
 
 SENTENCE_FEATURES_1 = [TRANSFORMED_FEATURE_1, TRANSFORMED_FEATURE_2]
 
 LABEL_1 = 'label1'
+LABEL_2 = 'label2'
 
 EMBEDDING_MAP = {
     WORD_1: [1, 1, 1],
@@ -40,7 +47,8 @@ WORD_INDEX_MAP = {
 
 
 LABEL_INDEX_MAP = {
-    LABEL_1: 1
+    LABEL_1: 1,
+    LABEL_2: 2
 }
 
 
@@ -78,6 +86,10 @@ def preprocess_transform(X, y=None, extend=False):
     return (x_words_transformed, x_lengths_transformed), y_transformed
 
 
+def get_lengths(a):
+    return [len(x) for x in a]
+
+
 @pytest.fixture(name='preprocessor')
 def _preprocessor():
     preprocessor = MagicMock(name='preprocessor')
@@ -102,6 +114,38 @@ def all_close(a, b):
     LOGGER.debug('a: %s', a)
     LOGGER.debug('b: %s', b)
     return np.allclose(a, b)
+
+
+class TestLeftPadBatchValues:
+    def test_should_left_pad_values(self):
+        all_close(
+            left_pad_batch_values(
+                np.asarray([
+                    [[1, 1], [2, 2]],
+                    [[1, 1]]
+                ]),
+                2,
+                dtype='float32'
+            ), np.asarray([
+                [[1, 1], [2, 2]],
+                [[1, 1], [0, 0]]
+            ])
+        )
+
+    def test_should_truncate_values(self):
+        all_close(
+            left_pad_batch_values(
+                np.asarray([
+                    [[1, 1], [2, 2], [3, 3]],
+                    [[1, 1]]
+                ]),
+                2,
+                dtype='float32'
+            ), np.asarray([
+                [[1, 1], [2, 2]],
+                [[1, 1], [0, 0]]
+            ])
+        )
 
 
 class TestDataGenerator:
@@ -168,6 +212,37 @@ class TestDataGenerator:
         assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
         assert all_close(x[2], [SENTENCE_FEATURES_1])
         assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])
+
+    def test_should_return_left_pad_batch_values(self, preprocessor, embeddings):
+        preprocessor.return_features = True
+        batch_size = 2
+        batch = DataGenerator(
+            np.asarray([
+                LONG_SENTENCE_TOKENS,
+                SHORT_SENTENCE_TOKENS
+            ]),
+            np.asarray([
+                [LABEL_1] * len(LONG_SENTENCE_TOKENS),
+                [LABEL_2] * len(SHORT_SENTENCE_TOKENS)
+            ]),
+            features=np.asarray([
+                np.asarray([TRANSFORMED_FEATURE_1] * len(LONG_SENTENCE_TOKENS)),
+                np.asarray([TRANSFORMED_FEATURE_2] * len(SHORT_SENTENCE_TOKENS))
+            ]),
+            preprocessor=preprocessor,
+            embeddings=embeddings,
+            **{
+                **DEFAULT_ARGS,
+                'batch_size': batch_size
+            }
+        )[0]
+        LOGGER.debug('batch: %s', batch)
+        assert len(batch) == 2
+        inputs, _ = batch
+        batch_x = inputs[0]
+        batch_features = inputs[2]
+        assert get_lengths(batch_x) == [len(LONG_SENTENCE_TOKENS)] * batch_size
+        assert get_lengths(batch_features) == [len(LONG_SENTENCE_TOKENS)] * batch_size
 
     def test_should_not_fail_on_shuffle_dataset(self, preprocessor, embeddings):
         data_generator = DataGenerator(

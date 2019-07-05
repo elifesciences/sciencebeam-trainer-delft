@@ -31,6 +31,20 @@ def shuffle_arrays(arrays, set_seed=-1):
         rstate.shuffle(arr)
 
 
+def left_pad_batch_values(batch_values: np.array, max_sequence_length: int, dtype=None):
+    if dtype is None:
+        dtype = batch_values.dtype
+    batch_size = len(batch_values)
+    value_dimension = len(batch_values[0][0])
+    result = np.zeros((batch_size, max_sequence_length, value_dimension), dtype=dtype)
+    for batch_index in range(batch_size):
+        values = batch_values[batch_index]
+        if len(values) > max_sequence_length:
+            values = values[:max_sequence_length]
+        result[batch_index, :len(values)] = values
+    return result
+
+
 # generate batch of data to feed sequence labelling model, both for training and prediction
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -160,9 +174,12 @@ class DataGenerator(keras.utils.Sequence):
         if self.preprocessor.return_casing:
             inputs.append(batch_a)
         if self.preprocessor.return_features:
-            batch_features = self.features[
-                (index * self.batch_size):(index * self.batch_size) + max_iter
-            ]
+            batch_features = left_pad_batch_values(
+                self.features[
+                    (index * self.batch_size):(index * self.batch_size) + max_iter
+                ],
+                max_length_x
+            )
             inputs.append(batch_features)
         inputs.append(batch_l)
 

@@ -12,6 +12,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Trainer(_Trainer):
+    def __init__(self, *args, multiprocessing: bool = True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.multiprocessing = multiprocessing
+
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid, y_valid,
             features_train: np.array = None,
@@ -88,7 +92,7 @@ class Trainer(_Trainer):
             callbacks = get_callbacks(log_dir=self.checkpoint_path,
                                       eary_stopping=False)
         nb_workers = 6
-        multiprocessing = True
+        multiprocessing = self.multiprocessing
         # multiple workers will not work with ELMo due to GPU memory limit (with GTX 1080Ti 11GB)
         if self.embeddings and (self.embeddings.use_ELMo or self.embeddings.use_BERT):
             # worker at 0 means the training will be executed in the main thread

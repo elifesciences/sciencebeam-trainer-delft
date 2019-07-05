@@ -4,6 +4,9 @@ import argparse
 import time
 from typing import List
 
+import sciencebeam_trainer_delft.no_warn_if_disabled  # noqa, pylint: disable=unused-import
+# pylint: disable=wrong-import-order, ungrouped-imports
+
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 

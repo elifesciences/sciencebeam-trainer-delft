@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 import numpy as np
 
@@ -33,11 +34,17 @@ class Sequence(_Sequence):
     def __init__(
             self, *args,
             use_features: bool = False,
+            feature_indices: List[int] = None,
             multiprocessing: bool = False,
             **kwargs):
         LOGGER.info('Sequence, args=%s, kwargs=%s', args, kwargs)
         super().__init__(*args, **kwargs)
-        self.model_config = ModelConfig(**vars(self.model_config), use_features=use_features)
+        LOGGER.info('use_features=%s', use_features)
+        self.model_config = ModelConfig(
+            **vars(self.model_config),
+            use_features=use_features,
+            feature_indices=feature_indices
+        )
         self.multiprocessing = multiprocessing
 
     def train(  # pylint: disable=arguments-differ

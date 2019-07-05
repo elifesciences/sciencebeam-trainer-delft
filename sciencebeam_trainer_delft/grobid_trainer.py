@@ -12,6 +12,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 
+from sciencebeam_trainer_delft.utils import parse_number_ranges
 from sciencebeam_trainer_delft.wrapper import Sequence
 
 from sciencebeam_trainer_delft.cloud_support import patch_cloud_support
@@ -195,6 +196,11 @@ def parse_args(argv: List[str] = None):
     )
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
     parser.add_argument("--use-features", action="store_true", help="Use features")
+    parser.add_argument(
+        "--feature-indices",
+        type=parse_number_ranges,
+        help="The feature indices to use. e.g. 7:10. If blank, all of the features will be used."
+    )
     parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
@@ -251,6 +257,7 @@ def run(args):
         max_sequence_length=args.max_sequence_length,
         max_epoch=args.max_epoch,
         use_features=args.use_features,
+        feature_indices=args.feature_indices,
         multiprocessing=args.multiprocessing
     )
 

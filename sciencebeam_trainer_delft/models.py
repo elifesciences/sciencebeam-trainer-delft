@@ -69,6 +69,7 @@ class CustomBidLSTM_CRF(CustomModel):
         length_input = Input(batch_shape=(None, 1), dtype='int32', name='length_input')
 
         # combine characters and word embeddings
+        LOGGER.warning('model, config.use_features: %s', config.use_features)
         if config.use_features:
             LOGGER.info('model using features')
             assert config.max_feature_size > 0
@@ -132,7 +133,7 @@ def get_model(config, preprocessor, ntags=None):
     config.use_crf = model.use_crf
     preprocessor.return_casing = model.require_casing
     if config.use_features and not model.supports_features:
-        LOGGER.warn('features enabled but not supported by model (disabling)')
+        LOGGER.warning('features enabled but not supported by model (disabling)')
         config.use_features = False
     preprocessor.return_features = config.use_features
     return model

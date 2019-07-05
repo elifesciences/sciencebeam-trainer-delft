@@ -35,6 +35,8 @@ WORD_LSTM_UNITS = 100
 PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 
+ARGS =
+
 
 .PHONY: build
 
@@ -117,7 +119,8 @@ grobid-train-header:
 		--max-epoch="$(MAX_EPOCH)" \
 		--output="$(MODEL_OUTPUT)" \
 		--limit="$(LIMIT)" \
-		--checkpoint="$(CHECKPOINT_OUTPUT)"
+		--checkpoint="$(CHECKPOINT_OUTPUT)" \
+		$(ARGS)
 
 
 update-test-notebook:

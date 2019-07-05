@@ -30,10 +30,14 @@ def prepare_preprocessor(X, y, model_config, features: np.array = None):
 
 
 class Sequence(_Sequence):
-    def __init__(self, *args, multiprocessing: bool = False, **kwargs):
+    def __init__(
+            self, *args,
+            use_features: bool = False,
+            multiprocessing: bool = False,
+            **kwargs):
         LOGGER.info('Sequence, args=%s, kwargs=%s', args, kwargs)
         super().__init__(*args, **kwargs)
-        self.model_config = ModelConfig(**vars(self.model_config))
+        self.model_config = ModelConfig(**vars(self.model_config), use_features=use_features)
         self.multiprocessing = multiprocessing
 
     def train(  # pylint: disable=arguments-differ

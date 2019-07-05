@@ -22,7 +22,9 @@ def _model_config():
 
 class TestCustomBidLSTM_CRF:
     def test_should_be_able_to_build_without_features(self, model_config):
-        CustomBidLSTM_CRF(model_config, ntags=5, use_features=False)
+        model_config.use_features = False
+        CustomBidLSTM_CRF(model_config, ntags=5)
 
     def test_should_be_able_to_build_with_features(self, model_config):
-        CustomBidLSTM_CRF(model_config, ntags=5, use_features=True)
+        model_config.use_features = True
+        CustomBidLSTM_CRF(model_config, ntags=5)

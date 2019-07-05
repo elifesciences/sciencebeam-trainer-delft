@@ -23,11 +23,11 @@ class CustomModel(BaseModel):
             self, config, ntags,
             require_casing: bool = False,
             use_crf: bool = False,
-            use_features: bool = False):
+            supports_features: bool = False):
         super().__init__(config, ntags)
         self.require_casing = require_casing
         self.use_crf = use_crf
-        self.use_features = use_features
+        self.supports_features = supports_features
 
 
 # renamed copy of BidLSTM_CRF to demonstrate a custom model
@@ -42,10 +42,10 @@ class CustomBidLSTM_CRF(CustomModel):
     https://arxiv.org/abs/1603.01360
     """
 
-    def __init__(self, config, ntags=None, use_features=True):
+    def __init__(self, config, ntags=None):
         super().__init__(
             config, ntags,
-            require_casing=False, use_crf=True, use_features=use_features
+            require_casing=False, use_crf=True, supports_features=True
         )
 
         # build input, directly feed with word embedding by the data generator
@@ -69,7 +69,7 @@ class CustomBidLSTM_CRF(CustomModel):
         length_input = Input(batch_shape=(None, 1), dtype='int32', name='length_input')
 
         # combine characters and word embeddings
-        if use_features:
+        if config.use_features:
             LOGGER.info('model using features')
             assert config.max_feature_size > 0
             features_input = Input(
@@ -97,7 +97,7 @@ class CustomBidLSTM_CRF(CustomModel):
         pred = self.crf(x)
 
         inputs = [word_input, char_input]
-        if use_features:
+        if config.use_features:
             inputs.append(features_input)
         inputs.append(length_input)
         self.model = Model(inputs=inputs, outputs=[pred])
@@ -131,7 +131,10 @@ def get_model(config, preprocessor, ntags=None):
     model: CustomModel = model_class(config, ntags=ntags)
     config.use_crf = model.use_crf
     preprocessor.return_casing = model.require_casing
-    preprocessor.return_features = model.use_features
+    if config.use_features and not model.supports_features:
+        LOGGER.warn('features enabled but not supported by model (disabling)')
+        config.use_features = False
+    preprocessor.return_features = config.use_features
     return model
 
 

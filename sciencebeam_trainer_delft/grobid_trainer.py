@@ -194,6 +194,7 @@ def parse_args(argv: List[str] = None):
         help="type of model architecture to be used"
     )
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
+    parser.add_argument("--use-features", action="store_true", help="Use features")
     parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
@@ -249,6 +250,7 @@ def run(args):
         word_lstm_units=args.word_lstm_units,
         max_sequence_length=args.max_sequence_length,
         max_epoch=args.max_epoch,
+        use_features=args.use_features,
         multiprocessing=args.multiprocessing
     )
 

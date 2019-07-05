@@ -182,6 +182,5 @@ class DataGenerator(keras.utils.Sequence):
             )
             inputs.append(batch_features)
         inputs.append(batch_l)
-        LOGGER.info('inputs: %s', inputs)
 
         return inputs, batch_y

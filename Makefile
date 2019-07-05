@@ -17,6 +17,7 @@ PROJECT_FOLDER = /opt/sciencebeam-trainer-delft
 DELFT_RUN = $(DOCKER_COMPOSE) run --rm delft
 DELFT_PROJECT_FOLDER_RUN = $(DOCKER_COMPOSE) run --rm --workdir="$(PROJECT_FOLDER)" -e PYTHONDONTWRITEBYTECODE=1 delft
 PYTEST_WATCH = $(DELFT_PROJECT_FOLDER_RUN) pytest-watch
+PYTHON = $(DELFT_RUN) python
 
 JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
 JUPYTER_RUN = $(JUPYTER_DOCKER_COMPOSE) run --rm jupyter
@@ -106,8 +107,7 @@ test: \
 
 
 grobid-train-header:
-	$(DOCKER_COMPOSE) run --rm delft \
-		python -m sciencebeam_trainer_delft.grobid_trainer \
+	$(PYTHON) -m sciencebeam_trainer_delft.grobid_trainer \
 		header train \
 		--batch-size="$(BATCH_SIZE)" \
 		--word-lstm-units="$(WORD_LSTM_UNITS)" \

@@ -15,6 +15,9 @@ from delft.sequenceLabelling.models import BaseModel
 from delft.sequenceLabelling.models import get_model as _get_model
 
 
+from sciencebeam_trainer_delft.config import ModelConfig
+
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -42,7 +45,7 @@ class CustomBidLSTM_CRF(CustomModel):
     https://arxiv.org/abs/1603.01360
     """
 
-    def __init__(self, config, ntags=None):
+    def __init__(self, config: ModelConfig, ntags=None):
         super().__init__(
             config, ntags,
             require_casing=False, use_crf=True, supports_features=True
@@ -77,11 +80,16 @@ class CustomBidLSTM_CRF(CustomModel):
                 batch_shape=(None, None, config.max_feature_size), name='features_input'
             )
             features = features_input
+            if config.feature_embedding_size:
+                features = TimeDistributed(Dense(
+                    config.feature_embedding_size,
+                    name='feature_embeddings_dense'
+                ), name='feature_embeddings')(features)
             LOGGER.info(
-                'word_input=%s, charts=%s, features_input=%s',
+                'word_input=%s, charts=%s, features=%s',
                 word_input, chars, features
             )
-            x = Concatenate()([word_input, chars, features_input])
+            x = Concatenate()([word_input, chars, features])
         else:
             x = Concatenate()([word_input, chars])
         x = Dropout(config.dropout)(x)
@@ -119,10 +127,10 @@ def register_model(name: str, model_class: Type[CustomModel]):
 
 
 def get_model(config, preprocessor, ntags=None):
-    LOGGER.debug(
-        'get_model, config: %s, preprocessor=%s, ntags=%s',
+    LOGGER.info(
+        'get_model, config: %s, ntags=%s',
         json.dumps(vars(config), indent=4),
-        preprocessor, ntags
+        ntags
     )
 
     model_class = MODEL_MAP.get(config.model_type)

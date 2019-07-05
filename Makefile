@@ -32,6 +32,7 @@ ARCHITECTURE = CustomBidLSTM_CRF
 EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz
 WORD_LSTM_UNITS = 100
 FEATURE_INDICES =
+FEATURE_EMBEDDING_SIZE = 0
 
 PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
@@ -118,6 +119,7 @@ grobid-train-header:
 		--embedding="$(EMBEDDING)" \
 		--architecture="$(ARCHITECTURE)" \
 		--feature-indices="$(FEATURE_INDICES)" \
+		--feature-embedding-size="$(FEATURE_EMBEDDING_SIZE)" \
 		--max-epoch="$(MAX_EPOCH)" \
 		--output="$(MODEL_OUTPUT)" \
 		--limit="$(LIMIT)" \

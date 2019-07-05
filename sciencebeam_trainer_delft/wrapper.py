@@ -35,6 +35,7 @@ class Sequence(_Sequence):
             self, *args,
             use_features: bool = False,
             feature_indices: List[int] = None,
+            feature_embedding_size: int = None,
             multiprocessing: bool = False,
             **kwargs):
         LOGGER.info('Sequence, args=%s, kwargs=%s', args, kwargs)
@@ -43,7 +44,8 @@ class Sequence(_Sequence):
         self.model_config = ModelConfig(
             **vars(self.model_config),
             use_features=use_features,
-            feature_indices=feature_indices
+            feature_indices=feature_indices,
+            feature_embedding_size=feature_embedding_size
         )
         self.multiprocessing = multiprocessing
 

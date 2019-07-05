@@ -201,6 +201,10 @@ def parse_args(argv: List[str] = None):
         type=parse_number_ranges,
         help="The feature indices to use. e.g. 7:10. If blank, all of the features will be used."
     )
+    parser.add_argument(
+        "--feature-embedding-size", type=int,
+        help="size of feature embedding, use 0 to disable embedding"
+    )
     parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
@@ -258,6 +262,7 @@ def run(args):
         max_epoch=args.max_epoch,
         use_features=args.use_features,
         feature_indices=args.feature_indices,
+        feature_embedding_size=args.feature_embedding_size,
         multiprocessing=args.multiprocessing
     )
 

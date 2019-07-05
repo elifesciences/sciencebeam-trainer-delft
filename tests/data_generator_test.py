@@ -26,10 +26,15 @@ SENTENCE_TOKENS_1 = [WORD_1, WORD_2]
 LONG_SENTENCE_TOKENS = SENTENCE_TOKENS_1 + SENTENCE_TOKENS_1 + SENTENCE_TOKENS_1
 SHORT_SENTENCE_TOKENS = SENTENCE_TOKENS_1
 
-TRANSFORMED_FEATURE_1 = np.asarray([1, 0, 0, 1])
-TRANSFORMED_FEATURE_2 = np.asarray([2, 0, 0, 2])
+WORD_FEATURES_1 = ('feature1-1', 'feature1-2')
+WORD_FEATURES_2 = ('feature2-1', 'feature2-2')
 
-SENTENCE_FEATURES_1 = [TRANSFORMED_FEATURE_1, TRANSFORMED_FEATURE_2]
+FEATURE_MAP = {
+    WORD_FEATURES_1: np.asarray([1, 0, 0, 1]),
+    WORD_FEATURES_2: np.asarray([2, 0, 0, 2])
+}
+
+SENTENCE_FEATURES_1 = [WORD_FEATURES_1, WORD_FEATURES_2]
 
 LABEL_1 = 'label1'
 LABEL_2 = 'label2'
@@ -75,6 +80,14 @@ def get_label_indices(labels: List[str]):
     return np.asarray([LABEL_INDEX_MAP[label] for label in labels])
 
 
+def get_transformed_feature(word_features: str):
+    return np.asarray(FEATURE_MAP[tuple(word_features)])
+
+
+def get_transformed_features(sentence_features: List[str]):
+    return np.stack([get_transformed_feature(feature) for feature in sentence_features])
+
+
 def preprocess_transform(X, y=None, extend=False):
     assert not extend
     x_words_transformed = [get_word_indices(sentence_tokens) for sentence_tokens in X]
@@ -84,6 +97,10 @@ def preprocess_transform(X, y=None, extend=False):
         return x_words_transformed, x_lengths_transformed
     y_transformed = [get_label_indices(sentence_labels) for sentence_labels in y]
     return (x_words_transformed, x_lengths_transformed), y_transformed
+
+
+def preprocess_transform_features(features_batch):
+    return np.asarray([get_transformed_features(features) for features in features_batch])
 
 
 def get_lengths(a):
@@ -97,6 +114,7 @@ def _preprocessor():
     preprocessor.return_lengths = False
     preprocessor.return_features = False
     preprocessor.transform.side_effect = preprocess_transform
+    preprocessor.transform_features.side_effect = preprocess_transform_features
     return preprocessor
 
 
@@ -210,7 +228,7 @@ class TestDataGenerator:
         assert all_close(labels, get_label_indices([LABEL_1]))
         assert all_close(x[0], get_word_vectors(SENTENCE_TOKENS_1))
         assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
-        assert all_close(x[2], [SENTENCE_FEATURES_1])
+        assert all_close(x[2], [get_transformed_features(SENTENCE_FEATURES_1)])
         assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])
 
     def test_should_return_left_pad_batch_values(self, preprocessor, embeddings):
@@ -226,8 +244,8 @@ class TestDataGenerator:
                 [LABEL_2] * len(SHORT_SENTENCE_TOKENS)
             ]),
             features=np.asarray([
-                np.asarray([TRANSFORMED_FEATURE_1] * len(LONG_SENTENCE_TOKENS)),
-                np.asarray([TRANSFORMED_FEATURE_2] * len(SHORT_SENTENCE_TOKENS))
+                np.asarray([WORD_FEATURES_1] * len(LONG_SENTENCE_TOKENS)),
+                np.asarray([WORD_FEATURES_2] * len(SHORT_SENTENCE_TOKENS))
             ]),
             preprocessor=preprocessor,
             embeddings=embeddings,

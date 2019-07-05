@@ -8,7 +8,7 @@ from delft.sequenceLabelling.preprocess import (
 )
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
 
-from sciencebeam_trainer_delft.preprocess import WordPreprocessor
+from sciencebeam_trainer_delft.preprocess import Preprocessor
 
 
 LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class DataGenerator(keras.utils.Sequence):
     def __init__(
             self, x, y,
             batch_size=24,
-            preprocessor: WordPreprocessor = None,
+            preprocessor: Preprocessor = None,
             char_embed_size=25,
             embeddings=None,
             max_sequence_length=None,
@@ -175,12 +175,13 @@ class DataGenerator(keras.utils.Sequence):
             inputs.append(batch_a)
         if self.preprocessor.return_features:
             batch_features = left_pad_batch_values(
-                self.features[
+                self.preprocessor.transform_features(self.features[
                     (index * self.batch_size):(index * self.batch_size) + max_iter
-                ],
+                ]),
                 max_length_x
             )
             inputs.append(batch_features)
         inputs.append(batch_l)
+        LOGGER.info('inputs: %s', inputs)
 
         return inputs, batch_y

@@ -7,23 +7,34 @@ from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from sciencebeam_trainer_delft.config import ModelConfig
 from sciencebeam_trainer_delft.trainer import Trainer
 from sciencebeam_trainer_delft.models import get_model
-from sciencebeam_trainer_delft.preprocess import WordPreprocessor
+from sciencebeam_trainer_delft.preprocess import Preprocessor, FeaturesPreprocessor
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-def prepare_preprocessor(X, y, model_config):
-    p = WordPreprocessor(max_char_length=model_config.max_char_length)
-    p.fit(X, y)
-    return p
+def prepare_preprocessor(X, y, model_config, features: np.array = None):
+    feature_preprocessor = None
+    if features is not None:
+        feature_preprocessor = FeaturesPreprocessor(
+            feature_indices=model_config.feature_indices
+        )
+    preprocessor = Preprocessor(
+        max_char_length=model_config.max_char_length,
+        feature_preprocessor=feature_preprocessor
+    )
+    preprocessor.fit(X, y)
+    if features is not None:
+        preprocessor.fit_features(features)
+    return preprocessor
 
 
 class Sequence(_Sequence):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, multiprocessing: bool = False, **kwargs):
         LOGGER.info('Sequence, args=%s, kwargs=%s', args, kwargs)
         super().__init__(*args, **kwargs)
         self.model_config = ModelConfig(**vars(self.model_config))
+        self.multiprocessing = multiprocessing
 
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid=None, y_valid=None,
@@ -32,14 +43,19 @@ class Sequence(_Sequence):
         # TBD if valid is None, segment train to get one
         x_all = np.concatenate((x_train, x_valid), axis=0)
         y_all = np.concatenate((y_train, y_valid), axis=0)
-        self.p = prepare_preprocessor(x_all, y_all, self.model_config)
+        self.p = prepare_preprocessor(
+            x_all, y_all,
+            features=features_train,
+            model_config=self.model_config
+        )
         self.model_config.char_vocab_size = len(self.p.vocab_char)
         self.model_config.case_vocab_size = len(self.p.vocab_case)
 
         if features_train is not None:
             LOGGER.info('x_train.shape: %s', x_train.shape)
             LOGGER.info('features_train.shape: %s', features_train.shape)
-            self.model_config.max_feature_size = features_train.shape[-1]
+            sample_transformed_features = self.p.transform_features(features_train[:1])
+            self.model_config.max_feature_size = sample_transformed_features.shape[-1]
             LOGGER.info('max_feature_size: %s', self.model_config.max_feature_size)
 
         self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
@@ -49,6 +65,7 @@ class Sequence(_Sequence):
             self.embeddings,
             self.model_config,
             self.training_config,
+            multiprocessing=self.multiprocessing,
             checkpoint_path=self.log_dir,
             preprocessor=self.p
         )

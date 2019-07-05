@@ -30,5 +30,5 @@ def sample_train_file():
 def tf_eager_mode():
     try:
         tf.compat.v1.enable_eager_execution()
-    except ValueError as e:
+    except (ValueError, AttributeError) as e:
         LOGGER.debug('failed to switch to eager mode due to %s', e)

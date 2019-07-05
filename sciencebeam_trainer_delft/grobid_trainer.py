@@ -4,7 +4,6 @@ import argparse
 import time
 from typing import List
 
-import numpy as np
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 
@@ -48,10 +47,9 @@ def train(
         limit: int = None,
         max_sequence_length: int = 100,
         max_epoch=100, **kwargs):
-    x_all, y_all, _ = load_data_and_labels(
+    x_all, y_all, features_all = load_data_and_labels(
         model=model, input_path=input_path, limit=limit
     )
-    features_all = np.zeros((len(x_all), max_sequence_length, 7))
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
         x_all, y_all, features_all, test_size=0.1
     )
@@ -106,10 +104,9 @@ def train_eval(
         limit: int = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20, **kwargs):
-    x_all, y_all, _ = load_data_and_labels(
+    x_all, y_all, features_all = load_data_and_labels(
         model=model, input_path=input_path, limit=limit
     )
-    features_all = np.zeros((len(x_all), max_sequence_length, 7))
 
     x_train_all, x_eval, y_train_all, y_eval, features_train_all, features_eval = train_test_split(
         x_all, y_all, features_all, test_size=0.1
@@ -187,6 +184,7 @@ def parse_args(argv: List[str] = None):
         help="type of model architecture to be used"
     )
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
+    parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
     parser.add_argument("--input", help="provided training file")
@@ -240,7 +238,8 @@ def run(args):
         batch_size=args.batch_size,
         word_lstm_units=args.word_lstm_units,
         max_sequence_length=args.max_sequence_length,
-        max_epoch=args.max_epoch
+        max_epoch=args.max_epoch,
+        multiprocessing=args.multiprocessing
     )
 
     if action == 'train':

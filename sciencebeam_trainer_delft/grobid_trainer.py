@@ -7,6 +7,8 @@ from typing import List
 import sciencebeam_trainer_delft.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 # pylint: disable=wrong-import-order, ungrouped-imports
 
+import numpy as np
+
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 
@@ -31,6 +33,14 @@ def get_default_training_data(model: str) -> str:
     return 'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
 
 
+def log_data_info(x: np.array, y: np.array, features: np.array):
+    LOGGER.info('x sample: %s (y: %s)', x[:1][:10], y[:1][:1])
+    LOGGER.info(
+        'feature dimensions of first sample, word: %s',
+        [{index: value for index, value in enumerate(features[0][0])}]
+    )
+
+
 def load_data_and_labels(
         model: str, input_path: str = None,
         limit: int = None):
@@ -40,6 +50,7 @@ def load_data_and_labels(
     x_all, y_all, f_all = load_data_and_labels_crf_file(
         input_path, limit=limit
     )
+    log_data_info(x_all, y_all, f_all)
     return x_all, y_all, f_all
 
 
@@ -59,10 +70,6 @@ def train(
 
     print(len(x_train), 'train sequences')
     print(len(x_valid), 'validation sequences')
-    LOGGER.info('x_all: %s', x_all[:3])
-    LOGGER.info('x_all.shape: %s (%s)', x_all.shape, type(x_all))
-    LOGGER.info('x_train: %s', x_train[:3])
-    LOGGER.info('x_train.shape: %s (%s)', x_train.shape, x_train.dtype)
 
     if output_path:
         model_name = model

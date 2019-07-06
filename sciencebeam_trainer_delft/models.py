@@ -72,7 +72,7 @@ class CustomBidLSTM_CRF(CustomModel):
         length_input = Input(batch_shape=(None, 1), dtype='int32', name='length_input')
 
         # combine characters and word embeddings
-        LOGGER.warning('model, config.use_features: %s', config.use_features)
+        LOGGER.debug('model, config.use_features: %s', config.use_features)
         if config.use_features:
             LOGGER.info('model using features')
             assert config.max_feature_size > 0

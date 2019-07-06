@@ -61,11 +61,12 @@ class CustomBidLSTM_CRF(CustomModel):
             output_dim=config.char_embedding_size,
             # mask_zero=True,
             # embeddings_initializer=RandomUniform(minval=-0.5, maxval=0.5),
-            name='char_embeddings'
-        ))(char_input)
+            name='char_embeddings_embedding'
+        ), name='char_embeddings')(char_input)
 
         chars = TimeDistributed(
-            Bidirectional(LSTM(config.num_char_lstm_units, return_sequences=False))
+            Bidirectional(LSTM(config.num_char_lstm_units, return_sequences=False)),
+            name='char_lstm'
         )(char_embeddings)
 
         # length of sequence not used for the moment (but used for f1 communication)
@@ -101,7 +102,7 @@ class CustomBidLSTM_CRF(CustomModel):
         ))(x)
         x = Dropout(config.dropout)(x)
         x = Dense(config.num_word_lstm_units, activation='tanh')(x)
-        x = Dense(ntags)(x)
+        x = Dense(ntags, name='dense_ntags')(x)
         self.crf = ChainCRF()
         pred = self.crf(x)
 

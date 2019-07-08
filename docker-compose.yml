@@ -7,8 +7,6 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        delft_repo: ${DELFT_REPO}
-        delft_tag: ${DELFT_TAG}
         install_dev: y
     image: elifesciences/sciencebeam-trainer-delft:${IMAGE_TAG}
     volumes:

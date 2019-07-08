@@ -12,11 +12,9 @@ MAX_SEQUENCE_LENGTH = 500
 MODEL_OUTPUT =
 CHECKPOINT_OUTPUT =
 
-PROJECT_FOLDER = /opt/sciencebeam-trainer-delft
-
 DELFT_RUN = $(DOCKER_COMPOSE) run --rm delft
-DELFT_PROJECT_FOLDER_RUN = $(DOCKER_COMPOSE) run --rm --workdir="$(PROJECT_FOLDER)" -e PYTHONDONTWRITEBYTECODE=1 delft
-PYTEST_WATCH = $(DELFT_PROJECT_FOLDER_RUN) pytest-watch
+DELFT_DEV_RUN = $(DELFT_RUN)
+PYTEST_WATCH = $(DELFT_RUN) pytest-watch
 PYTHON = $(DELFT_RUN) python
 
 JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
@@ -74,15 +72,15 @@ shell:
 
 
 pylint:
-	$(DELFT_PROJECT_FOLDER_RUN) pylint sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
+	$(DELFT_DEV_RUN) pylint sciencebeam_trainer_delft setup.py
 
 
 flake8:
-	$(DELFT_PROJECT_FOLDER_RUN) flake8 sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
+	$(DELFT_DEV_RUN) flake8 sciencebeam_trainer_delft setup.py
 
 
 pytest:
-	$(DELFT_PROJECT_FOLDER_RUN) pytest -p no:cacheprovider $(PYTEST_ARGS)
+	$(DELFT_DEV_RUN) pytest -p no:cacheprovider $(PYTEST_ARGS)
 
 
 pytest-not-slow:
@@ -102,7 +100,7 @@ watch:
 
 
 test-setup-install:
-	$(DELFT_RUN) python "$(PROJECT_FOLDER)/setup.py" install
+	$(DELFT_RUN) python setup.py install
 
 
 test: \

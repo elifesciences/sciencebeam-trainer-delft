@@ -109,3 +109,75 @@ class Trainer(_Trainer):
         )
 
         return local_model
+
+    def train_nfold(  # pylint: disable=arguments-differ
+            self, x_train, y_train, x_valid=None, y_valid=None,
+            features_train: np.array = None,
+            features_valid: np.array = None):
+        """ n-fold training for the instance model
+            the n models are stored in self.models, and self.model left unset at this stage """
+        fold_count = len(self.models)
+        fold_size = len(x_train) // fold_count
+
+        for fold_id in range(0, fold_count):
+            print(
+                '\n------------------------ fold %s--------------------------------------'
+                % fold_id
+            )
+
+            if x_valid is None:
+                # segment train and valid
+                fold_start = fold_size * fold_id
+                fold_end = fold_start + fold_size
+
+                if fold_id == fold_size - 1:
+                    fold_end = len(x_train)
+
+                train_x = np.concatenate([x_train[:fold_start], x_train[fold_end:]])
+                train_y = np.concatenate([y_train[:fold_start], y_train[fold_end:]])
+
+                val_x = x_train[fold_start:fold_end]
+                val_y = y_train[fold_start:fold_end]
+
+                if features_train is None:
+                    train_features = np.concatenate(
+                        [features_train[:fold_start], features_train[fold_end:]]
+                    )
+                    val_features = features_train[fold_start:fold_end]
+                else:
+                    train_features = None
+                    val_features = None
+            else:
+                # reuse given segmentation
+                train_x = x_train
+                train_y = y_train
+                train_features = features_train
+
+                val_x = x_valid
+                val_y = y_valid
+                val_features = features_valid
+
+            foldModel = self.models[fold_id]
+            foldModel.summary()
+            if self.model_config.use_crf:
+                foldModel.compile(
+                    loss=foldModel.crf.loss,
+                    optimizer='adam'
+                )
+            else:
+                foldModel.compile(
+                    loss='categorical_crossentropy',
+                    optimizer='adam'
+                )
+
+            foldModel = self.train_model(
+                foldModel,
+                train_x,
+                train_y,
+                val_x,
+                val_y,
+                features_train=train_features,
+                features_valid=val_features,
+                max_epoch=self.training_config.max_epoch
+            )
+            self.models[fold_id] = foldModel

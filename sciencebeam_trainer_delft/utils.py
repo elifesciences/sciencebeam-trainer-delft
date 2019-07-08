@@ -8,6 +8,8 @@ from typing import List
 
 from six import string_types, text_type
 
+import numpy as np
+
 try:
     from tensorflow.python.lib.io import file_io as tf_file_io
 except ImportError:
@@ -89,3 +91,9 @@ def parse_number_ranges(expr: str) -> List[int]:
     for fragment in expr.split(','):
         numbers.extend(parse_number_range(fragment))
     return numbers
+
+
+def concatenate_or_none(arrays: List[np.array], **kwargs) -> np.array:
+    if arrays[0] is None:
+        return None
+    return np.concatenate(arrays, **kwargs)

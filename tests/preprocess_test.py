@@ -48,6 +48,16 @@ class TestWordPreprocessor:
         y_inverse = preprocessor.inverse_transform(y_transformed[0])
         assert y_inverse == y[0]
 
+    def test_should_transform_unseen_label(self):
+        preprocessor = WordPreprocessor(return_lengths=False, padding=False)
+        X_train = [['Word1']]
+        y_train = [['label1']]
+        X_test = [['Word1', 'Word1']]
+        y_test = [['label1', 'label2']]
+        preprocessor.fit(X_train, y_train)
+        _, y_transformed = preprocessor.transform(X_test, y_test)
+        assert y_transformed == [[1, 0]]
+
 
 def _to_dense(a: np.array):
     try:

@@ -1,31 +1,26 @@
 FROM python:3.6.8-stretch
 
-ARG delft_repo=kermitt2/delft
-ARG delft_tag=master
+ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
 
-RUN curl --progress-bar --location \
-  "https://github.com/${delft_repo}/archive/${delft_tag}.tar.gz" \
-  --output "/tmp/${delft_tag}.tar.gz" \
-  && tar -C "/opt" -xvf "/tmp/${delft_tag}.tar.gz" \
-  && rm "/tmp/${delft_tag}.tar.gz" \
-  && ln -s "/opt/delft-${delft_tag}" "/opt/delft"
-
-WORKDIR /opt/delft
+WORKDIR ${PROJECT_FOLDER}
 
 ENV PATH=/root/.local/bin:${PATH}
+
+COPY requirements.txt ./
 RUN pip install --user -r requirements.txt
+
+COPY requirements.cpu.txt ./
 RUN pip install --user -r requirements.cpu.txt
 
+COPY requirements.delft.txt ./
+RUN pip install --user -r requirements.delft.txt --no-deps
+
 ARG install_dev
-ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
-COPY requirements.dev.txt "${PROJECT_FOLDER}/"
-RUN if [ "${install_dev}" = "y" ]; then pip install -r "${PROJECT_FOLDER}/requirements.dev.txt"; fi
+COPY requirements.dev.txt ./
+RUN if [ "${install_dev}" = "y" ]; then pip install -r requirements.dev.txt; fi
 
-COPY sciencebeam_trainer_delft "${PROJECT_FOLDER}/sciencebeam_trainer_delft"
-COPY setup.py "${PROJECT_FOLDER}/"
+COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
+COPY setup.py ./
 
-RUN ln -s "${PROJECT_FOLDER}/sciencebeam_trainer_delft" ./sciencebeam_trainer_delft \
-  && ln -s /opt/delft/delft "${PROJECT_FOLDER}/delft"
-
-COPY .flake8 .pylintrc pytest.ini "${PROJECT_FOLDER}"/
-COPY tests "${PROJECT_FOLDER}/tests"
+COPY .flake8 .pylintrc pytest.ini ./
+COPY tests ./tests

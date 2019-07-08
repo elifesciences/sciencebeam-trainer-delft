@@ -10,7 +10,8 @@ from delft.utilities.Embeddings import Embeddings
 
 from sciencebeam_trainer_delft.grobid_trainer import (
     parse_args,
-    train
+    train,
+    train_eval
 )
 
 from .test_data import TEST_DATA_PATH
@@ -63,4 +64,19 @@ class TestGrobidTrainer:
                 model='header',
                 embeddings_name=EMBEDDING_NAME_1,
                 input_path=sample_train_file
+            )
+
+        def test_should_be_able_to_train_eval(self, sample_train_file: str):
+            train_eval(
+                model='header',
+                embeddings_name=EMBEDDING_NAME_1,
+                input_path=sample_train_file
+            )
+
+        def test_should_be_able_to_train_eval_nfold(self, sample_train_file: str):
+            train_eval(
+                model='header',
+                embeddings_name=EMBEDDING_NAME_1,
+                input_path=sample_train_file,
+                fold_count=2
             )

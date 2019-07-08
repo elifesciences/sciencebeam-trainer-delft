@@ -12,6 +12,7 @@ import keras
 import delft
 import delft.sequenceLabelling.trainer
 
+import sciencebeam_trainer_delft.trainer
 from sciencebeam_trainer_delft.utils import copy_file
 
 
@@ -130,4 +131,7 @@ def patch_cloud_support():
     )
     delft.sequenceLabelling.trainer.get_callbacks = wrap_get_callbacks(
         delft.sequenceLabelling.trainer.get_callbacks
+    )
+    sciencebeam_trainer_delft.trainer.get_callbacks = wrap_get_callbacks(
+        sciencebeam_trainer_delft.trainer.get_callbacks
     )

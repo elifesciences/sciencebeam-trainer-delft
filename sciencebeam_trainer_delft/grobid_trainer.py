@@ -4,10 +4,16 @@ import argparse
 import time
 from typing import List
 
+import sciencebeam_trainer_delft.no_warn_if_disabled  # noqa, pylint: disable=unused-import
+# pylint: disable=wrong-import-order, ungrouped-imports
+
+import numpy as np
+
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 
-from delft.sequenceLabelling import Sequence
+from sciencebeam_trainer_delft.utils import parse_number_ranges
+from sciencebeam_trainer_delft.wrapper import Sequence
 
 from sciencebeam_trainer_delft.cloud_support import patch_cloud_support
 from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
@@ -28,6 +34,14 @@ def get_default_training_data(model: str) -> str:
     return 'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
 
 
+def log_data_info(x: np.array, y: np.array, features: np.array):
+    LOGGER.info('x sample: %s (y: %s)', x[:1][:10], y[:1][:1])
+    LOGGER.info(
+        'feature dimensions of first sample, word: %s',
+        [{index: value for index, value in enumerate(features[0][0])}]
+    )
+
+
 def load_data_and_labels(
         model: str, input_path: str = None,
         limit: int = None):
@@ -37,6 +51,7 @@ def load_data_and_labels(
     x_all, y_all, f_all = load_data_and_labels_crf_file(
         input_path, limit=limit
     )
+    log_data_info(x_all, y_all, f_all)
     return x_all, y_all, f_all
 
 
@@ -45,11 +60,14 @@ def train(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_path=None, output_path=None,
         limit: int = None,
+        max_sequence_length: int = 100,
         max_epoch=100, **kwargs):
-    x_all, y_all, _ = load_data_and_labels(
+    x_all, y_all, features_all = load_data_and_labels(
         model=model, input_path=input_path, limit=limit
     )
-    x_train, x_valid, y_train, y_valid = train_test_split(x_all, y_all, test_size=0.1)
+    x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
+        x_all, y_all, features_all, test_size=0.1
+    )
 
     print(len(x_train), 'train sequences')
     print(len(x_valid), 'validation sequences')
@@ -67,6 +85,7 @@ def train(
         max_epoch=max_epoch,
         recurrent_dropout=0.50,
         embeddings_name=embeddings_name,
+        max_sequence_length=max_sequence_length,
         model_type=architecture,
         use_ELMo=use_ELMo,
         **kwargs
@@ -74,7 +93,10 @@ def train(
     # model.save = wrap_save(model.save)
 
     start_time = time.time()
-    model.train(x_train, y_train, x_valid, y_valid)
+    model.train(
+        x_train, y_train, x_valid, y_valid,
+        features_train=features_train, features_valid=features_valid
+    )
     runtime = round(time.time() - start_time, 3)
     print("training runtime: %s seconds " % (runtime))
 
@@ -91,13 +113,18 @@ def train_eval(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_path=None, output_path=None,
         limit: int = None,
+        max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20, **kwargs):
-    x_all, y_all, _ = load_data_and_labels(
+    x_all, y_all, features_all = load_data_and_labels(
         model=model, input_path=input_path, limit=limit
     )
 
-    x_train_all, x_eval, y_train_all, y_eval = train_test_split(x_all, y_all, test_size=0.1)
-    x_train, x_valid, y_train, y_valid = train_test_split(x_train_all, y_train_all, test_size=0.1)
+    x_train_all, x_eval, y_train_all, y_eval, features_train_all, features_eval = train_test_split(
+        x_all, y_all, features_all, test_size=0.1
+    )
+    x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
+        x_train_all, y_train_all, features_train_all, test_size=0.1
+    )
 
     print(len(x_train), 'train sequences')
     print(len(x_valid), 'validation sequences')
@@ -118,6 +145,7 @@ def train_eval(
         max_epoch=max_epoch,
         recurrent_dropout=0.50,
         embeddings_name=embeddings_name,
+        max_sequence_length=max_sequence_length,
         model_type=architecture,
         use_ELMo=use_ELMo,
         batch_size=batch_size,
@@ -128,16 +156,23 @@ def train_eval(
     start_time = time.time()
 
     if fold_count == 1:
-        model.train(x_train, y_train, x_valid, y_valid)
+        model.train(
+            x_train, y_train, x_valid, y_valid,
+            features_train=features_train, features_valid=features_valid
+        )
     else:
-        model.train_nfold(x_train, y_train, x_valid, y_valid, fold_number=fold_count)
+        model.train_nfold(
+            x_train, y_train, x_valid, y_valid,
+            features_train=features_train, features_valid=features_valid,
+            fold_number=fold_count
+        )
 
     runtime = round(time.time() - start_time, 3)
     print("training runtime: %s seconds " % (runtime))
 
     # evaluation
     print("\nEvaluation:")
-    model.eval(x_eval, y_eval)
+    model.eval(x_eval, y_eval, features=features_eval)
 
     # saving the model
     if output_path:
@@ -160,6 +195,17 @@ def parse_args(argv: List[str] = None):
         help="type of model architecture to be used"
     )
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
+    parser.add_argument("--use-features", action="store_true", help="Use features")
+    parser.add_argument(
+        "--feature-indices",
+        type=parse_number_ranges,
+        help="The feature indices to use. e.g. 7:10. If blank, all of the features will be used."
+    )
+    parser.add_argument(
+        "--feature-embedding-size", type=int,
+        help="size of feature embedding, use 0 to disable embedding"
+    )
+    parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
     parser.add_argument("--input", help="provided training file")
@@ -171,6 +217,10 @@ def parse_args(argv: List[str] = None):
     parser.add_argument(
         "--batch-size", type=int, default=10,
         help="batch size"
+    )
+    parser.add_argument(
+        "--word-lstm-units", type=int, default=100,
+        help="number of words in lstm units"
     )
     parser.add_argument(
         "--max-sequence-length", type=int, default=500,
@@ -207,8 +257,13 @@ def run(args):
         limit=args.limit,
         log_dir=args.checkpoint,
         batch_size=args.batch_size,
+        word_lstm_units=args.word_lstm_units,
         max_sequence_length=args.max_sequence_length,
-        max_epoch=args.max_epoch
+        max_epoch=args.max_epoch,
+        use_features=args.use_features,
+        feature_indices=args.feature_indices,
+        feature_embedding_size=args.feature_embedding_size,
+        multiprocessing=args.multiprocessing
     )
 
     if action == 'train':
@@ -232,6 +287,7 @@ def main(argv: List[str] = None):
 
 
 if __name__ == "__main__":
+    logging.root.handlers = []
     logging.basicConfig(level='INFO')
     patch_cloud_support()
     patch_get_model()

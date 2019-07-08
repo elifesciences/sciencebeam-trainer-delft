@@ -16,6 +16,8 @@ PROJECT_FOLDER = /opt/sciencebeam-trainer-delft
 
 DELFT_RUN = $(DOCKER_COMPOSE) run --rm delft
 DELFT_PROJECT_FOLDER_RUN = $(DOCKER_COMPOSE) run --rm --workdir="$(PROJECT_FOLDER)" -e PYTHONDONTWRITEBYTECODE=1 delft
+PYTEST_WATCH = $(DELFT_PROJECT_FOLDER_RUN) pytest-watch
+PYTHON = $(DELFT_RUN) python
 
 JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
 JUPYTER_RUN = $(JUPYTER_DOCKER_COMPOSE) run --rm jupyter
@@ -26,11 +28,16 @@ NB_UID = $(shell id -u)
 NB_GID = $(shell id -g)
 
 LIMIT = 10000
-ARCHITECTURE = BidLSTM_CRF
+ARCHITECTURE = CustomBidLSTM_CRF
 EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz
+WORD_LSTM_UNITS = 100
+FEATURE_INDICES =
+FEATURE_EMBEDDING_SIZE = 0
 
 PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
+
+ARGS =
 
 
 .PHONY: build
@@ -48,7 +55,9 @@ venv-create:
 
 dev-install:
 	$(PIP) install -r requirements.txt
+	$(PIP) install -r requirements.cpu.txt
 	$(PIP) install -r requirements.dev.txt
+	$(PIP) install -r requirements.delft.txt --no-deps
 
 
 dev-venv: venv-create dev-install
@@ -63,11 +72,11 @@ shell:
 
 
 pylint:
-	$(DELFT_RUN) pylint sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
+	$(DELFT_PROJECT_FOLDER_RUN) pylint sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
 
 
 flake8:
-	$(DELFT_RUN) flake8 sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
+	$(DELFT_PROJECT_FOLDER_RUN) flake8 sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
 
 
 pytest:
@@ -79,7 +88,7 @@ pytest-not-slow:
 
 
 .watch:
-	$(DELFT_PROJECT_FOLDER_RUN) pytest-watch -- -p no:cacheprovider $(PYTEST_ARGS)
+	$(PYTEST_WATCH) -- -p no:cacheprovider -p no:warnings $(PYTEST_ARGS)
 
 
 watch-slow:
@@ -102,17 +111,20 @@ test: \
 
 
 grobid-train-header:
-	$(DOCKER_COMPOSE) run --rm delft \
-		python -m sciencebeam_trainer_delft.grobid_trainer \
+	$(PYTHON) -m sciencebeam_trainer_delft.grobid_trainer \
 		header train \
 		--batch-size="$(BATCH_SIZE)" \
+		--word-lstm-units="$(WORD_LSTM_UNITS)" \
 		--max-sequence-length="$(MAX_SEQUENCE_LENGTH)" \
 		--embedding="$(EMBEDDING)" \
 		--architecture="$(ARCHITECTURE)" \
+		--feature-indices="$(FEATURE_INDICES)" \
+		--feature-embedding-size="$(FEATURE_EMBEDDING_SIZE)" \
 		--max-epoch="$(MAX_EPOCH)" \
 		--output="$(MODEL_OUTPUT)" \
 		--limit="$(LIMIT)" \
-		--checkpoint="$(CHECKPOINT_OUTPUT)"
+		--checkpoint="$(CHECKPOINT_OUTPUT)" \
+		$(ARGS)
 
 
 update-test-notebook:

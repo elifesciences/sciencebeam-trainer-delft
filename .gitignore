@@ -1,10 +1,15 @@
 venv
 build
+data
 
 .ipynb_checkpoints
 .pytest_cache
 
 notebooks/data
 notebooks/embedding-registry.json
+
+embedding-registry.json
+
+launch_*.py
 
 *.pyc

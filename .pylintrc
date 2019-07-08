@@ -3,4 +3,9 @@ disable=
     missing-docstring,
     invalid-name,
     too-many-arguments,
-    too-many-locals
+    too-many-locals,
+    too-many-branches,
+    too-many-instance-attributes,
+    no-else-return,
+    no-self-use,
+    fixme

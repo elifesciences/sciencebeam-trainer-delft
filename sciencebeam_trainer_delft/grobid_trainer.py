@@ -254,7 +254,7 @@ def run(args):
 
     download_manager = DownloadManager()
 
-    embedding_manager = EmbeddingManager()
+    embedding_manager = EmbeddingManager(download_manager=download_manager)
     embedding_name = embedding_manager.download_and_install_embedding_if_url(
         args.embedding
     )

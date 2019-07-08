@@ -72,11 +72,11 @@ shell:
 
 
 pylint:
-	$(DELFT_RUN) pylint sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
+	$(DELFT_PROJECT_FOLDER_RUN) pylint sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
 
 
 flake8:
-	$(DELFT_RUN) flake8 sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
+	$(DELFT_PROJECT_FOLDER_RUN) flake8 sciencebeam_trainer_delft "$(PROJECT_FOLDER)/setup.py"
 
 
 pytest:

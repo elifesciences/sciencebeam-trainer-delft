@@ -27,5 +27,5 @@ COPY setup.py "${PROJECT_FOLDER}/"
 RUN ln -s "${PROJECT_FOLDER}/sciencebeam_trainer_delft" ./sciencebeam_trainer_delft \
   && ln -s /opt/delft/delft "${PROJECT_FOLDER}/delft"
 
-COPY .flake8 .pylintrc pytest.ini ./
+COPY .flake8 .pylintrc pytest.ini "${PROJECT_FOLDER}"/
 COPY tests "${PROJECT_FOLDER}/tests"

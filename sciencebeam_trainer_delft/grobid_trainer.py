@@ -19,6 +19,7 @@ from sciencebeam_trainer_delft.cloud_support import patch_cloud_support
 from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
 from sciencebeam_trainer_delft.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.data import load_data_and_labels_crf_file
+from sciencebeam_trainer_delft.download_manager import DownloadManager
 
 
 LOGGER = logging.getLogger(__name__)
@@ -44,12 +45,15 @@ def log_data_info(x: np.array, y: np.array, features: np.array):
 
 def load_data_and_labels(
         model: str, input_path: str = None,
-        limit: int = None):
+        limit: int = None,
+        download_manager: DownloadManager = None):
+    assert download_manager
     if input_path is None:
         input_path = get_default_training_data(model)
     LOGGER.info('loading data from: %s', input_path)
     x_all, y_all, f_all = load_data_and_labels_crf_file(
-        input_path, limit=limit
+        download_manager.download_if_url(input_path),
+        limit=limit
     )
     log_data_info(x_all, y_all, f_all)
     return x_all, y_all, f_all
@@ -61,9 +65,12 @@ def train(
         input_path=None, output_path=None,
         limit: int = None,
         max_sequence_length: int = 100,
-        max_epoch=100, **kwargs):
+        max_epoch=100,
+        download_manager: DownloadManager = None,
+        **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_path=input_path, limit=limit
+        model=model, input_path=input_path, limit=limit,
+        download_manager=download_manager
     )
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
         x_all, y_all, features_all, test_size=0.1
@@ -114,9 +121,12 @@ def train_eval(
         input_path=None, output_path=None,
         limit: int = None,
         max_sequence_length: int = 100,
-        fold_count=1, max_epoch=100, batch_size=20, **kwargs):
+        fold_count=1, max_epoch=100, batch_size=20,
+        download_manager: DownloadManager = None,
+        **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_path=input_path, limit=limit
+        model=model, input_path=input_path, limit=limit,
+        download_manager=download_manager
     )
 
     x_train_all, x_eval, y_train_all, y_eval, features_train_all, features_eval = train_test_split(
@@ -242,6 +252,8 @@ def run(args):
     use_ELMo = args.use_ELMo
     architecture = args.architecture
 
+    download_manager = DownloadManager()
+
     embedding_manager = EmbeddingManager()
     embedding_name = embedding_manager.download_and_install_embedding_if_url(
         args.embedding
@@ -263,7 +275,8 @@ def run(args):
         use_features=args.use_features,
         feature_indices=args.feature_indices,
         feature_embedding_size=args.feature_embedding_size,
-        multiprocessing=args.multiprocessing
+        multiprocessing=args.multiprocessing,
+        download_manager=download_manager
     )
 
     if action == 'train':

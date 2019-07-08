@@ -9,14 +9,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import FunctionTransformer
 
-from delft.sequenceLabelling.preprocess import WordPreprocessor as _WordPreprocessor
+from delft.sequenceLabelling.preprocess import WordPreprocessor
 
 
 LOGGER = logging.getLogger(__name__)
-
-
-class WordPreprocessor(_WordPreprocessor):
-    pass
 
 
 def to_dict(value_list_batch: List[list], feature_indices: Set[int] = None):

@@ -11,6 +11,7 @@ from sciencebeam_trainer_delft.data_generator import DataGenerator
 from sciencebeam_trainer_delft.trainer import Trainer
 from sciencebeam_trainer_delft.models import get_model
 from sciencebeam_trainer_delft.preprocess import Preprocessor, FeaturesPreprocessor
+from sciencebeam_trainer_delft.utils import concatenate_or_none
 
 
 LOGGER = logging.getLogger(__name__)
@@ -58,9 +59,10 @@ class Sequence(_Sequence):
         # TBD if valid is None, segment train to get one
         x_all = np.concatenate((x_train, x_valid), axis=0)
         y_all = np.concatenate((y_train, y_valid), axis=0)
+        features_all = concatenate_or_none((features_train, features_valid), axis=0)
         self.p = prepare_preprocessor(
             x_all, y_all,
-            features=features_train,
+            features=features_all,
             model_config=self.model_config
         )
         self.model_config.char_vocab_size = len(self.p.vocab_char)
@@ -100,9 +102,10 @@ class Sequence(_Sequence):
         if x_valid is not None and y_valid is not None:
             x_all = np.concatenate((x_train, x_valid), axis=0)
             y_all = np.concatenate((y_train, y_valid), axis=0)
+            features_all = concatenate_or_none((features_train, features_valid), axis=0)
             self.p = prepare_preprocessor(
                 x_all, y_all,
-                features=features_train,
+                features=features_all,
                 model_config=self.model_config
             )
         else:

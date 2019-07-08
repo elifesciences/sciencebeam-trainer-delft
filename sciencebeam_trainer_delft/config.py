@@ -1,4 +1,3 @@
-
 from typing import List
 
 from delft.sequenceLabelling.config import ModelConfig as _ModelConfig

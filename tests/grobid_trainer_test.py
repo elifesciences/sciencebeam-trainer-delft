@@ -59,11 +59,20 @@ class TestGrobidTrainer:
 
     @pytest.mark.slow
     class TestEndToEnd:
-        def test_should_be_able_to_train(self, sample_train_file: str):
+        def test_should_be_able_to_train_without_features(self, sample_train_file: str):
             train(
                 model='header',
                 embeddings_name=EMBEDDING_NAME_1,
-                input_path=sample_train_file
+                input_path=sample_train_file,
+                use_features=False
+            )
+
+        def test_should_be_able_to_train_with_features(self, sample_train_file: str):
+            train(
+                model='header',
+                embeddings_name=EMBEDDING_NAME_1,
+                input_path=sample_train_file,
+                use_features=True
             )
 
         def test_should_be_able_to_train_eval(self, sample_train_file: str):

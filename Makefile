@@ -30,6 +30,7 @@ NB_GID = $(shell id -g)
 LIMIT = 10000
 ARCHITECTURE = CustomBidLSTM_CRF
 EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz
+INPUT_PATH = https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-header-060518.train.gz
 WORD_LSTM_UNITS = 100
 FEATURE_INDICES =
 FEATURE_EMBEDDING_SIZE = 0
@@ -122,6 +123,7 @@ grobid-train-header:
 		--feature-indices="$(FEATURE_INDICES)" \
 		--feature-embedding-size="$(FEATURE_EMBEDDING_SIZE)" \
 		--max-epoch="$(MAX_EPOCH)" \
+		--input="$(INPUT_PATH)" \
 		--output="$(MODEL_OUTPUT)" \
 		--limit="$(LIMIT)" \
 		--checkpoint="$(CHECKPOINT_OUTPUT)" \

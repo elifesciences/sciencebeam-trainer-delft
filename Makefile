@@ -33,6 +33,7 @@ EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/downloa
 WORD_LSTM_UNITS = 100
 FEATURE_INDICES =
 FEATURE_EMBEDDING_SIZE = 0
+GROBID_TRAIN_ACTION = train
 
 PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
@@ -112,7 +113,7 @@ test: \
 
 grobid-train-header:
 	$(PYTHON) -m sciencebeam_trainer_delft.grobid_trainer \
-		header train \
+		header $(GROBID_TRAIN_ACTION) \
 		--batch-size="$(BATCH_SIZE)" \
 		--word-lstm-units="$(WORD_LSTM_UNITS)" \
 		--max-sequence-length="$(MAX_SEQUENCE_LENGTH)" \

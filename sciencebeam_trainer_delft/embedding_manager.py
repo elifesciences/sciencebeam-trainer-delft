@@ -4,12 +4,9 @@ import os
 from pathlib import Path
 from typing import List
 
-from sciencebeam_trainer_delft.utils import (
-    copy_file,
-    is_external_location,
-    is_gzip_filename,
-    strip_gzip_filename_ext
-)
+from sciencebeam_trainer_delft.download_manager import DownloadManager
+
+from sciencebeam_trainer_delft.utils import is_external_location
 
 
 LOGGER = logging.getLogger(__name__)
@@ -55,9 +52,12 @@ def _get_embedding_config_for_filename(filename: str) -> str:
 class EmbeddingManager:
     def __init__(
             self, path: str = DEFAULT_EMBEDDING_REGISTRY,
+            download_manager: DownloadManager = None,
             download_dir: str = DEFAULT_DOWNLOAD_DIR,
             default_embedding_lmdb_path: str = DEFAULT_EMBEDDING_LMDB_PATH):
+        assert download_manager
         self.path = path
+        self.download_manager = download_manager
         self.download_dir = download_dir
         self.default_embedding_lmdb_path = default_embedding_lmdb_path
 
@@ -99,17 +99,10 @@ class EmbeddingManager:
         return embedding_list[index]
 
     def download_and_install_embedding(self, embedding_url: str) -> str:
-        filename = os.path.basename(embedding_url)
-        if is_gzip_filename(filename):
-            filename = strip_gzip_filename_ext(filename)
-        download_file = os.path.join(self.download_dir, filename)
+        download_file = self.download_manager.download_if_url(embedding_url)
+        filename = os.path.basename(download_file)
         embedding_config = _get_embedding_config_for_filename(filename)
         embedding_name = embedding_config['name']
-        if os.path.exists(download_file):
-            LOGGER.info('file already exists: %s', download_file)
-        else:
-            LOGGER.info('copying %s to %s', embedding_url, download_file)
-            copy_file(embedding_url, download_file)
         self.add_embedding_config({
             **embedding_config,
             'path': str(download_file)

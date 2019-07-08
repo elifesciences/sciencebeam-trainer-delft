@@ -1,7 +1,7 @@
 import json
 import os
 from functools import partial
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 from py._path.local import LocalPath
@@ -51,6 +51,18 @@ def _embedding_class(embedding_registry_path: str):
         yield mock
 
 
+@pytest.fixture(name='default_args')
+def _default_args(sample_train_file: str):
+    download_manager = MagicMock(name='download_manager')
+    download_manager.download_if_url.return_value = str(sample_train_file)
+    return dict(
+        model='header',
+        embeddings_name=EMBEDDING_NAME_1,
+        input_path=sample_train_file,
+        download_manager=download_manager
+    )
+
+
 class TestGrobidTrainer:
     class TestParseArgs:
         def test_should_require_arguments(self):
@@ -59,33 +71,25 @@ class TestGrobidTrainer:
 
     @pytest.mark.slow
     class TestEndToEnd:
-        def test_should_be_able_to_train_without_features(self, sample_train_file: str):
+        def test_should_be_able_to_train_without_features(self, default_args: dict):
             train(
-                model='header',
-                embeddings_name=EMBEDDING_NAME_1,
-                input_path=sample_train_file,
-                use_features=False
+                use_features=False,
+                **default_args
             )
 
-        def test_should_be_able_to_train_with_features(self, sample_train_file: str):
+        def test_should_be_able_to_train_with_features(self, default_args: dict):
             train(
-                model='header',
-                embeddings_name=EMBEDDING_NAME_1,
-                input_path=sample_train_file,
-                use_features=True
+                use_features=True,
+                **default_args
             )
 
-        def test_should_be_able_to_train_eval(self, sample_train_file: str):
+        def test_should_be_able_to_train_eval(self, default_args: dict):
             train_eval(
-                model='header',
-                embeddings_name=EMBEDDING_NAME_1,
-                input_path=sample_train_file
+                **default_args
             )
 
-        def test_should_be_able_to_train_eval_nfold(self, sample_train_file: str):
+        def test_should_be_able_to_train_eval_nfold(self, default_args: dict):
             train_eval(
-                model='header',
-                embeddings_name=EMBEDDING_NAME_1,
-                input_path=sample_train_file,
-                fold_count=2
+                fold_count=2,
+                **default_args
             )

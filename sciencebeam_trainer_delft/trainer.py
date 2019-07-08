@@ -118,7 +118,6 @@ class Trainer(_Trainer):
             the n models are stored in self.models, and self.model left unset at this stage """
         fold_count = len(self.models)
         fold_size = len(x_train) // fold_count
-        #roc_scores = []
 
         for fold_id in range(0, fold_count):
             print(

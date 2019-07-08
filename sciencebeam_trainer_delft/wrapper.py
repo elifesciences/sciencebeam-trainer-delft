@@ -118,7 +118,6 @@ class Sequence(_Sequence):
         self.model_config.case_vocab_size = len(self.p.vocab_case)
         self.p.return_lengths = True
 
-        #self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
         self.models = []
 
         for _ in range(0, fold_number):

@@ -31,7 +31,8 @@ class WordPreprocessor(_WordPreprocessor):
     def transform(self, X, y=None, extend=False):
         """
         transforms input into sequence
-        the optional boolean `extend` indicates that we need to avoid sequence of length 1 alone in a batch 
+        the optional boolean `extend` indicates that we need to avoid sequence
+        of length 1 alone in a batch
         (which would cause an error with tf)
 
         Args:
@@ -39,7 +40,8 @@ class WordPreprocessor(_WordPreprocessor):
             y: list of list of tags
 
         Returns:
-            numpy array: sentences with char sequences, and optionally length, casing and custom features  
+            numpy array: sentences with char sequences, and optionally length,
+            casing and custom features
             numpy array: sequence of tags
         """
         chars = []

@@ -34,6 +34,13 @@ FEATURE_INDICES =
 FEATURE_EMBEDDING_SIZE = 0
 GROBID_TRAIN_ACTION = train
 
+GCLOUD = gcloud
+GCLOUD_JOB_NAME = sciencebeam_$(GROBID_TRAIN_ACTION)_$(ARCHITECTURE)_$(LIMIT)_$(shell date +%s -u)
+GCLOUD_JOB_DIR =
+# see https://cloud.google.com/ml-engine/docs/tensorflow/runtime-version-list
+GCLOUD_AI_PLATFORM_RUNTIME = 1.13
+GCLOUD_AI_PLATFORM_PYTHON_VERSION = 3.5
+
 PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 
@@ -110,8 +117,8 @@ test: \
 	test-setup-install
 
 
-grobid-train-header:
-	$(PYTHON) -m sciencebeam_trainer_delft.grobid_trainer \
+.grobid-train-header-args:
+	$(eval _GROBID_TRAIN_ARGS = \
 		header $(GROBID_TRAIN_ACTION) \
 		--batch-size="$(BATCH_SIZE)" \
 		--word-lstm-units="$(WORD_LSTM_UNITS)" \
@@ -125,7 +132,44 @@ grobid-train-header:
 		--output="$(MODEL_OUTPUT)" \
 		--limit="$(LIMIT)" \
 		--checkpoint="$(CHECKPOINT_OUTPUT)" \
-		$(ARGS)
+		$(ARGS) \
+	)
+
+
+grobid-train-header:
+	$(PYTHON) -m sciencebeam_trainer_delft.grobid_trainer \
+		$(_GROBID_TRAIN_ARGS)
+
+
+gcloud-ai-platform-local-grobid-train-header: .grobid-train-header-args
+	@echo "_GROBID_TRAIN_ARGS=$(_GROBID_TRAIN_ARGS)"
+	$(GCLOUD) ai-platform local train \
+		--module-name sciencebeam_trainer_delft.grobid_trainer \
+		--package-path sciencebeam_trainer_delft \
+		-- \
+		$(_GROBID_TRAIN_ARGS)
+
+
+.require-GCLOUD_JOB_DIR:
+	@if [ -z "$(GCLOUD_JOB_DIR)" ]; then \
+		echo "GCLOUD_JOB_DIR required"; \
+		exit 1; \
+	fi
+
+
+gcloud-ai-platform-cloud-grobid-train-header: .grobid-train-header-args .require-GCLOUD_JOB_DIR
+	@echo "_GROBID_TRAIN_ARGS=$(_GROBID_TRAIN_ARGS)"
+	@echo "GCLOUD_JOB_NAME=$(GCLOUD_JOB_NAME)"
+	$(GCLOUD) ai-platform jobs submit training \
+		"$(GCLOUD_JOB_NAME)" \
+		--stream-logs \
+		--job-dir "$(GCLOUD_JOB_DIR)" \
+		--runtime-version "$(GCLOUD_AI_PLATFORM_RUNTIME)" \
+		--python-version "$(GCLOUD_AI_PLATFORM_PYTHON_VERSION)" \
+		--module-name sciencebeam_trainer_delft.grobid_trainer \
+		--package-path sciencebeam_trainer_delft \
+		-- \
+		$(_GROBID_TRAIN_ARGS)
 
 
 update-test-notebook:

@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 from sciencebeam_trainer_delft.utils import (
     copy_file,
@@ -17,15 +18,15 @@ DEFAULT_DOWNLOAD_DIR = 'data/download'
 
 class DownloadManager:
     def __init__(self, download_dir: str = DEFAULT_DOWNLOAD_DIR):
-        self.download_dir = download_dir
+        self.download_dir = Path(download_dir)
 
     def get_local_file(self, file_url: str, auto_uncompress: bool = True) -> str:
         filename = os.path.basename(file_url)
         if auto_uncompress and is_gzip_filename(filename):
             filename = strip_gzip_filename_ext(filename)
-        return os.path.join(self.download_dir, filename)
+        return str(self.download_dir.joinpath(filename))
 
-    def is_downloaded(self, file_url: str, auto_uncompress: bool = True) -> str:
+    def is_downloaded(self, file_url: str, auto_uncompress: bool = True) -> bool:
         download_file = self.get_local_file(file_url, auto_uncompress=auto_uncompress)
         return os.path.exists(download_file)
 

@@ -30,8 +30,3 @@ class TestLoadDataAndLabelsCrfFile:
         assert x_all.tolist() == [[UNICODE_VALUE_1]]
         assert y_all.tolist() == [[UNICODE_VALUE_1]]
         assert f_all.tolist() == [[[UNICODE_VALUE_1] * 10]]
-        import os
-        LOGGER.debug('PYTHONIOENCODING=%s', os.environ.get('PYTHONIOENCODING'))
-        import sys
-        LOGGER.debug('sys.getdefaultencoding=%s', sys.getdefaultencoding())
-        assert False

@@ -14,7 +14,7 @@ CHECKPOINT_OUTPUT =
 
 DELFT_RUN = $(DOCKER_COMPOSE) run --rm delft
 DELFT_DEV_RUN = $(DELFT_RUN)
-PYTEST_WATCH = $(DELFT_RUN) pytest-watch
+PYTEST_WATCH = $(DELFT_DEV_RUN) pytest-watch
 PYTHON = $(DELFT_RUN) python
 
 JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
@@ -76,6 +76,10 @@ build:
 
 shell:
 	$(DELFT_RUN) bash
+
+
+shell-dev:
+	$(DELFT_DEV_RUN) bash
 
 
 pylint:

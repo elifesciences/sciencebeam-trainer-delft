@@ -20,6 +20,7 @@ from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
 from sciencebeam_trainer_delft.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.data import load_data_and_labels_crf_file
 from sciencebeam_trainer_delft.download_manager import DownloadManager
+from sciencebeam_trainer_delft.utils import get_tf_info
 
 
 LOGGER = logging.getLogger(__name__)
@@ -287,6 +288,8 @@ def run(args):
         multiprocessing=args.multiprocessing,
         download_manager=download_manager
     )
+
+    LOGGER.info('get_tf_info: %s', get_tf_info())
 
     if action == 'train':
         train(**train_args)

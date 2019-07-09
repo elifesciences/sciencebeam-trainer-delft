@@ -1,6 +1,9 @@
 venv
 build
 data
+*.egg-info
+
+MANIFEST
 
 .ipynb_checkpoints
 .pytest_cache

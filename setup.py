@@ -37,8 +37,8 @@ def _run_command(command):
 
 def _is_delft_installed():
     try:
-        import delft  # pylint: disable=unused-import
-        return  True
+        import delft  # noqa pylint: disable=unused-import
+        return True
     except ImportError:
         return False
 

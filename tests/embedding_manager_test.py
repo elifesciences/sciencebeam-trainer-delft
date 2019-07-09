@@ -27,6 +27,16 @@ def _download_manager():
 
 
 class TestEmbeddingManager:
+    def test_should_disable_lmdb_cache(
+            self,
+            download_manager: MagicMock,
+            embedding_registry_path: Path):
+        embedding_manager = EmbeddingManager(
+            embedding_registry_path, download_manager=download_manager
+        )
+        embedding_manager.disable_embedding_lmdb_cache()
+        assert embedding_manager.get_embedding_lmdb_path() is None
+
     def test_should_download_and_install_embedding(
             self,
             download_manager: MagicMock,

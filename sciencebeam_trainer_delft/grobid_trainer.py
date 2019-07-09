@@ -241,6 +241,11 @@ def parse_args(argv: List[str] = None):
         help="max epoch to train to"
     )
 
+    parser.add_argument(
+        "--no-use-lmdb", action="store_true",
+        help="Do not use LMDB embedding cache (load embeddings into memory instead)"
+    )
+
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
 
     args = parser.parse_args(argv)
@@ -257,6 +262,8 @@ def run(args):
     download_manager = DownloadManager()
 
     embedding_manager = EmbeddingManager(download_manager=download_manager)
+    if args.no_use_lmdb:
+        embedding_manager.disable_embedding_lmdb_cache()
     embedding_name = embedding_manager.download_and_install_embedding_if_url(
         args.embedding
     )

@@ -74,6 +74,15 @@ class EmbeddingManager:
         except FileNotFoundError:
             return {}
 
+    def get_embedding_lmdb_path(self):
+        registry_data = self._get_registry_data()
+        return registry_data.get('embedding-lmdb-path')
+
+    def disable_embedding_lmdb_cache(self):
+        registry_data = self._get_registry_data()
+        registry_data['embedding-lmdb-path'] = None
+        self._save(registry_data)
+
     def add_embedding_config(self, embedding_config: dict):
         LOGGER.debug('adding config: %s', embedding_config)
         embedding_name = embedding_config['name']

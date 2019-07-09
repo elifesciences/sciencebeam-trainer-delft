@@ -241,6 +241,8 @@ def parse_args(argv: List[str] = None):
         help="max epoch to train to"
     )
 
+    parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
+
     args = parser.parse_args(argv)
     return args
 

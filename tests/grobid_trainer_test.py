@@ -1,10 +1,10 @@
 import json
 import os
 from functools import partial
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 import pytest
-from py._path.local import LocalPath
 
 from delft.utilities.Embeddings import Embeddings
 
@@ -30,12 +30,12 @@ EMBEDDING_1 = {
 
 
 @pytest.fixture(name='embedding_registry_path')
-def _embedding_registry_path(tmpdir: LocalPath):
-    return tmpdir.join('embedding-registry.json')
+def _embedding_registry_path(temp_dir: Path):
+    return temp_dir.joinpath('embedding-registry.json')
 
 
 @pytest.fixture(name='embedding_registry', autouse=True)
-def _embedding_registry(embedding_registry_path: LocalPath):
+def _embedding_registry(embedding_registry_path: Path):
     embedding_registry_path.write_text(json.dumps({
         'embedding-lmdb-path': None,
         'embeddings': [EMBEDDING_1],
@@ -44,8 +44,8 @@ def _embedding_registry(embedding_registry_path: LocalPath):
 
 
 @pytest.fixture(autouse=True)
-def _embedding_class(embedding_registry_path: str):
-    embedding_class_with_defaults = partial(Embeddings, path=embedding_registry_path)
+def _embedding_class(embedding_registry_path: Path):
+    embedding_class_with_defaults = partial(Embeddings, path=str(embedding_registry_path))
     target = 'delft.sequenceLabelling.wrapper.Embeddings'
     with patch(target, new=embedding_class_with_defaults) as mock:
         yield mock

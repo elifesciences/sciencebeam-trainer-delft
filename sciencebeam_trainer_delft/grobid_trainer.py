@@ -20,6 +20,7 @@ from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
 from sciencebeam_trainer_delft.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.data import load_data_and_labels_crf_file
 from sciencebeam_trainer_delft.download_manager import DownloadManager
+from sciencebeam_trainer_delft.utils import get_tf_info
 
 
 LOGGER = logging.getLogger(__name__)
@@ -241,6 +242,13 @@ def parse_args(argv: List[str] = None):
         help="max epoch to train to"
     )
 
+    parser.add_argument(
+        "--no-use-lmdb", action="store_true",
+        help="Do not use LMDB embedding cache (load embeddings into memory instead)"
+    )
+
+    parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
+
     args = parser.parse_args(argv)
     return args
 
@@ -255,6 +263,8 @@ def run(args):
     download_manager = DownloadManager()
 
     embedding_manager = EmbeddingManager(download_manager=download_manager)
+    if args.no_use_lmdb:
+        embedding_manager.disable_embedding_lmdb_cache()
     embedding_name = embedding_manager.download_and_install_embedding_if_url(
         args.embedding
     )
@@ -278,6 +288,8 @@ def run(args):
         multiprocessing=args.multiprocessing,
         download_manager=download_manager
     )
+
+    LOGGER.info('get_tf_info: %s', get_tf_info())
 
     if action == 'train':
         train(**train_args)

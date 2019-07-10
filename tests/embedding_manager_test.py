@@ -1,7 +1,7 @@
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from py._path.local import LocalPath
 
 from sciencebeam_trainer_delft.embedding_manager import (
     EmbeddingManager
@@ -15,8 +15,8 @@ DOWNLOAD_PATH_1 = '/path/to/download/%s.txt' % EMBEDDING_NAME_1
 
 
 @pytest.fixture(name='embedding_registry_path')
-def _embedding_registry_path(tmpdir: LocalPath):
-    return tmpdir.join('embedding-registry.json')
+def _embedding_registry_path(temp_dir: Path):
+    return temp_dir.joinpath('embedding-registry.json')
 
 
 @pytest.fixture(name='download_manager')
@@ -27,10 +27,20 @@ def _download_manager():
 
 
 class TestEmbeddingManager:
+    def test_should_disable_lmdb_cache(
+            self,
+            download_manager: MagicMock,
+            embedding_registry_path: Path):
+        embedding_manager = EmbeddingManager(
+            embedding_registry_path, download_manager=download_manager
+        )
+        embedding_manager.disable_embedding_lmdb_cache()
+        assert embedding_manager.get_embedding_lmdb_path() is None
+
     def test_should_download_and_install_embedding(
             self,
             download_manager: MagicMock,
-            embedding_registry_path: LocalPath):
+            embedding_registry_path: Path):
         embedding_manager = EmbeddingManager(
             embedding_registry_path, download_manager=download_manager
         )
@@ -45,7 +55,7 @@ class TestEmbeddingManager:
     def test_should_unzip_embedding(
             self,
             download_manager: MagicMock,
-            embedding_registry_path: LocalPath):
+            embedding_registry_path: Path):
         embedding_manager = EmbeddingManager(
             embedding_registry_path, download_manager=download_manager
         )

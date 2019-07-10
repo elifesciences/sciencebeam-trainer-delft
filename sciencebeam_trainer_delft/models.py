@@ -1,6 +1,6 @@
 import logging
 import json
-from typing import Dict, List, Type
+from typing import List, Type
 
 from keras.models import Model
 from keras.layers.merge import Concatenate
@@ -118,13 +118,20 @@ DEFAULT_MODEL_NAMES = [
     'BidLSTM_CRF', 'BidLSTM_CNN', 'BidLSTM_CNN_CRF', 'BidGRU_CRF', 'BidLSTM_CRF_CASING'
 ]
 
-MODEL_MAP: Dict[str, Type[CustomModel]] = {
+MODEL_MAP = {
     'CustomBidLSTM_CRF': CustomBidLSTM_CRF
 }
 
 
 def register_model(name: str, model_class: Type[CustomModel]):
     MODEL_MAP[name] = model_class
+
+
+def _create_model(
+        model_class: Type[CustomModel],
+        config: ModelConfig,
+        ntags=None) -> CustomModel:
+    return model_class(config, ntags=ntags)
 
 
 def get_model(config, preprocessor, ntags=None):
@@ -138,7 +145,7 @@ def get_model(config, preprocessor, ntags=None):
     if not model_class:
         return _get_model(config, preprocessor, ntags=ntags)
 
-    model: CustomModel = model_class(config, ntags=ntags)
+    model = _create_model(model_class, config, ntags=ntags)
     config.use_crf = model.use_crf
     preprocessor.return_casing = model.require_casing
     if config.use_features and not model.supports_features:

@@ -13,7 +13,7 @@ import delft
 import delft.sequenceLabelling.trainer
 
 import sciencebeam_trainer_delft.trainer
-from sciencebeam_trainer_delft.utils import copy_file
+from sciencebeam_trainer_delft.utils import copy_file, path_join
 
 
 LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def _copy_directory_to_cloud(source_filepath, target_filepath, overwrite=True):
         if not temp_file_path.is_file():
             continue
         relative_filename = temp_file_path.relative_to(source_filepath)
-        cloud_path = os.path.join(target_filepath, relative_filename)
+        cloud_path = path_join(target_filepath, relative_filename)
         LOGGER.info('copying %s to %s', temp_file_path, cloud_path)
         _copy_file_to_cloud(temp_file_path, cloud_path, overwrite=overwrite)
 
@@ -72,7 +72,7 @@ def wrap_get_callbacks(get_callbacks_fn: callable):
         for callback in callbacks:
             if isinstance(callback, keras.callbacks.ModelCheckpoint):
                 # revert back the filepath to a cloud location since we patched save_weights
-                callback.filepath = os.path.join(
+                callback.filepath = path_join(
                     log_dir, Path(callback.filepath).relative_to(local_log_dir)
                 )
                 LOGGER.info('callback.filepath: %s', callback.filepath)

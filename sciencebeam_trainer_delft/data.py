@@ -70,5 +70,5 @@ def load_data_and_labels_crf_lines(
 def load_data_and_labels_crf_file(
         filepath: str,
         limit: int = None) -> Tuple[np.array, np.array, np.array]:
-    with open(filepath, 'r') as fp:
+    with open(filepath, 'r', encoding='utf-8') as fp:
         return load_data_and_labels_crf_lines(fp, limit=limit)

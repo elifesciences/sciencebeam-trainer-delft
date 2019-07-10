@@ -1,7 +1,9 @@
 import logging
 import os
+from pathlib import Path
 
 import pytest
+from py._path.local import LocalPath
 
 import tensorflow as tf
 
@@ -25,6 +27,13 @@ def sample_train_file():
         TEST_DATA_PATH,
         'test-header.train'
     )
+
+
+@pytest.fixture
+def temp_dir(tmpdir: LocalPath):
+    # convert to standard Path
+    return Path(str(tmpdir))
+
 
 @pytest.fixture(scope='session', autouse=True)
 def tf_eager_mode():

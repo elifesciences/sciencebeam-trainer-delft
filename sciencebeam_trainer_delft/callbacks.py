@@ -5,7 +5,6 @@ import numpy as np
 
 from keras.callbacks import Callback
 
-from sciencebeam_trainer_delft.cloud_support import auto_upload_from_local_path
 from sciencebeam_trainer_delft.saving import ModelSaver
 
 LOGGER = logging.getLogger(__name__)

@@ -10,11 +10,13 @@ from sciencebeam_trainer_delft.preprocess import Preprocessor
 LOGGER = logging.getLogger(__name__)
 
 
-class ModelSaver:
+class _BaseModelSaverLoader:
     config_file = 'config.json'
     weight_file = 'model_weights.hdf5'
     preprocessor_file = 'preprocessor.pkl'
 
+
+class ModelSaver(_BaseModelSaverLoader):
     def __init__(
             self,
             preprocessor: Preprocessor,
@@ -39,3 +41,29 @@ class ModelSaver:
         self._save_preprocessor(self.preprocessor, os.path.join(directory, self.preprocessor_file))
         self._save_model_config(self.model_config, os.path.join(directory, self.config_file))
         self._save_model(model, os.path.join(directory, self.weight_file))
+
+
+class ModelLoader(_BaseModelSaverLoader):
+    def load_preprocessor_from_directory(self, directory: str):
+        return self.load_preprocessor_from_file(os.path.join(directory, self.preprocessor_file))
+
+    def load_preprocessor_from_file(self, filepath: str):
+        LOGGER.info('loading preprocessor from %s', filepath)
+        return Preprocessor.load(filepath)
+
+    def load_model_config_from_directory(self, directory: str):
+        return self.load_model_config_from_file(os.path.join(directory, self.config_file))
+
+    def load_model_config_from_file(self, filepath: str):
+        LOGGER.info('loading model config from %s', filepath)
+        return ModelConfig.load(filepath)
+
+    def load_model_from_directory(self, directory: str, model: Model):
+        return self.load_model_from_file(
+            os.path.join(directory, self.weight_file),
+            model=model
+        )
+
+    def load_model_from_file(self, filepath: str, model: Model):
+        LOGGER.info('loading model from %s', filepath)
+        model.load(filepath)

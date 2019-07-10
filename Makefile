@@ -9,6 +9,7 @@ PYTHON = $(VENV)/bin/python
 BATCH_SIZE = 10
 MAX_EPOCH = 1
 MAX_SEQUENCE_LENGTH = 500
+MODEL_PATH =
 MODEL_OUTPUT =
 CHECKPOINT_OUTPUT =
 
@@ -134,6 +135,7 @@ test: \
 		--feature-embedding-size="$(FEATURE_EMBEDDING_SIZE)" \
 		--max-epoch="$(MAX_EPOCH)" \
 		--input="$(INPUT_PATH)" \
+		--model-path="$(MODEL_PATH)" \
 		--output="$(MODEL_OUTPUT)" \
 		--limit="$(LIMIT)" \
 		--checkpoint="$(CHECKPOINT_OUTPUT)" \
@@ -144,6 +146,10 @@ test: \
 grobid-train-header: .grobid-train-header-args
 	$(PYTHON) -m sciencebeam_trainer_delft.grobid_trainer \
 		$(_GROBID_TRAIN_ARGS)
+
+
+grobid-eval-header:
+	$(MAKE) GROBID_TRAIN_ACTION=eval grobid-train-header
 
 
 gcloud-ai-platform-local-grobid-train-header: .grobid-train-header-args

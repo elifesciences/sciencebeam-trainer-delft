@@ -28,11 +28,13 @@ class ModelSaver(_BaseModelSaverLoader):
         self.model_config = model_config
 
     def _save_preprocessor(self, preprocessor: Preprocessor, filepath: str):
-        preprocessor.save(filepath)
+        with open_file(filepath, 'wb') as fp:
+            preprocessor.save(fp)
         LOGGER.info('preprocessor saved to %s', filepath)
 
     def _save_model_config(self, model_config: ModelConfig, filepath: str):
-        model_config.save(filepath)
+        with open_file(filepath, 'w') as fp:
+            model_config.save(fp)
         LOGGER.info('model config file saved to %s', filepath)
 
     def _save_model(self, model: Model, filepath: str):

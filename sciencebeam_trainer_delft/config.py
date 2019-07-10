@@ -21,6 +21,9 @@ class ModelConfig(_ModelConfig):
         for key, val in kwargs.items():
             setattr(self, key, val)
 
+    def save(self, file):
+        json.dump(vars(self), file, sort_keys=False, indent=4)
+
     @classmethod
     def load(cls, file):
         variables = json.load(file)

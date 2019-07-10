@@ -99,10 +99,8 @@ class ModelWithMetadataCheckpoint(ModelSaverCallback):
 
     def _save_model(self, epoch: int, logs: dict, **_):
         base_path = self.base_path.format(epoch=epoch + 1, **logs)
-        with auto_upload_from_local_path(base_path) as local_path:
-            LOGGER.info('local_path: %s', local_path)
-            self.model_saver.save_to(local_path, model=self.model)
-            if self.add_checkpoint_meta:
-                self.model_saver.add_checkpoint_meta(
-                    local_path, epoch=epoch
-                )
+        self.model_saver.save_to(base_path, model=self.model)
+        if self.add_checkpoint_meta:
+            self.model_saver.add_checkpoint_meta(
+                base_path, epoch=epoch
+            )

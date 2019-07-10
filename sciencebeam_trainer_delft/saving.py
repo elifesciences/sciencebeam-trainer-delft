@@ -18,6 +18,7 @@ class _BaseModelSaverLoader(ABC):
     config_file = 'config.json'
     weight_file = 'model_weights.hdf5'
     preprocessor_file = 'preprocessor.pkl'
+    meta_file = 'meta.json'
 
 
 class ModelSaver(_BaseModelSaverLoader):
@@ -42,6 +43,11 @@ class ModelSaver(_BaseModelSaverLoader):
         model.save(filepath)
         LOGGER.info('model saved to %s', filepath)
 
+    def _save_meta(self, meta: dict, filepath: str):
+        with open_file(filepath, 'w') as fp:
+            json.dump(meta, fp)
+        LOGGER.info('model meta saved to %s', filepath)
+
     def _update_checkpoints_meta_file(self, filepath: str, checkpoint_directory: str, epoch: int):
         try:
             with open_file(filepath, 'r') as fp:
@@ -60,11 +66,13 @@ class ModelSaver(_BaseModelSaverLoader):
             json.dump(meta, fp)
         LOGGER.info('updated checkpoints meta: %s', filepath)
 
-    def save_to(self, directory: str, model: Model):
+    def save_to(self, directory: str, model: Model, meta: dict = None):
         os.makedirs(directory, exist_ok=True)
         self._save_preprocessor(self.preprocessor, os.path.join(directory, self.preprocessor_file))
         self._save_model_config(self.model_config, os.path.join(directory, self.config_file))
         self._save_model(model, os.path.join(directory, self.weight_file))
+        if meta:
+            self._save_meta(meta, os.path.join(directory, self.meta_file))
 
     def add_checkpoint_meta(self, checkpoint_directory: str, epoch: int):
         self._update_checkpoints_meta_file(

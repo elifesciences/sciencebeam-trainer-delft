@@ -97,8 +97,9 @@ class ModelWithMetadataCheckpoint(ModelSaverCallback):
         super().__init__(save_fn=self._save_model, **kwargs)
 
     def _save_model(self, epoch: int, logs: dict, **_):
+        LOGGER.info('logs: %s', logs)
         base_path = self.base_path.format(epoch=epoch + 1, **logs)
-        self.model_saver.save_to(base_path, model=self.model)
+        self.model_saver.save_to(base_path, model=self.model, meta=logs)
         if self.add_checkpoint_meta:
             self.model_saver.add_checkpoint_meta(
                 base_path, epoch=epoch

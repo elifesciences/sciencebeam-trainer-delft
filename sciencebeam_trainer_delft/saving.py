@@ -48,7 +48,7 @@ class ModelSaver(_BaseModelSaverLoader):
         except FileNotFoundError:
             meta = {}
         checkpoint_meta = {
-            'epoch': epoch,
+            'epoch': (1 + epoch),
             'path': checkpoint_directory,
             'timestamp': datetime.utcnow().isoformat()
         }

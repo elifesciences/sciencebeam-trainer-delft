@@ -40,6 +40,7 @@ GCLOUD_JOB_DIR =
 # see https://cloud.google.com/ml-engine/docs/tensorflow/runtime-version-list
 GCLOUD_AI_PLATFORM_RUNTIME = 1.13
 GCLOUD_AI_PLATFORM_PYTHON_VERSION = 3.5
+GCLOUD_ARGS =
 
 PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
@@ -150,6 +151,7 @@ gcloud-ai-platform-local-grobid-train-header: .grobid-train-header-args
 	$(GCLOUD) ai-platform local train \
 		--module-name sciencebeam_trainer_delft.grobid_trainer \
 		--package-path sciencebeam_trainer_delft \
+		$(GCLOUD_ARGS) \
 		-- \
 		$(_GROBID_TRAIN_ARGS)
 
@@ -172,6 +174,7 @@ gcloud-ai-platform-cloud-grobid-train-header: .grobid-train-header-args .require
 		--python-version "$(GCLOUD_AI_PLATFORM_PYTHON_VERSION)" \
 		--module-name sciencebeam_trainer_delft.grobid_trainer \
 		--package-path sciencebeam_trainer_delft \
+		$(GCLOUD_ARGS) \
 		-- \
 		$(_GROBID_TRAIN_ARGS)
 

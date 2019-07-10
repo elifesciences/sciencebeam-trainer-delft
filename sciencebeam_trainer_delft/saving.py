@@ -45,7 +45,7 @@ class ModelSaver(_BaseModelSaverLoader):
 
     def _save_meta(self, meta: dict, filepath: str):
         with open_file(filepath, 'w') as fp:
-            json.dump(meta, fp)
+            json.dump(meta, fp, sort_keys=False, indent=4)
         LOGGER.info('model meta saved to %s', filepath)
 
     def _update_checkpoints_meta_file(self, filepath: str, checkpoint_directory: str, epoch: int):
@@ -63,7 +63,7 @@ class ModelSaver(_BaseModelSaverLoader):
         meta['checkpoints'].append(checkpoint_meta)
         meta['last_checkpoint'] = checkpoint_meta
         with open_file(filepath, 'w') as fp:
-            json.dump(meta, fp)
+            json.dump(meta, fp, sort_keys=False, indent=4)
         LOGGER.info('updated checkpoints meta: %s', filepath)
 
     def save_to(self, directory: str, model: Model, meta: dict = None):

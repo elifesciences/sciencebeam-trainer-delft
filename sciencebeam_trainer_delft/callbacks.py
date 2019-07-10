@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 
+import keras.backend as K
 from keras.callbacks import Callback
 
 from sciencebeam_trainer_delft.saving import ModelSaver
@@ -97,9 +98,15 @@ class ModelWithMetadataCheckpoint(ModelSaverCallback):
         super().__init__(save_fn=self._save_model, **kwargs)
 
     def _save_model(self, epoch: int, logs: dict, **_):
-        LOGGER.info('logs: %s', logs)
+        meta = {
+            **logs,
+            'optimizer': {
+                'lr': float(K.get_value(self.model.optimizer.lr))
+            }
+        }
+        LOGGER.info('meta: %s', meta)
         base_path = self.base_path.format(epoch=epoch + 1, **logs)
-        self.model_saver.save_to(base_path, model=self.model, meta=logs)
+        self.model_saver.save_to(base_path, model=self.model, meta=meta)
         if self.add_checkpoint_meta:
             self.model_saver.add_checkpoint_meta(
                 base_path, epoch=epoch

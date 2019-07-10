@@ -141,7 +141,7 @@ test: \
 	)
 
 
-grobid-train-header:
+grobid-train-header: .grobid-train-header-args
 	$(PYTHON) -m sciencebeam_trainer_delft.grobid_trainer \
 		$(_GROBID_TRAIN_ARGS)
 

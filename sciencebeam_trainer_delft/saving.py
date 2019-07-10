@@ -2,6 +2,7 @@ import logging
 import json
 import os
 from datetime import datetime
+from abc import ABC
 
 from delft.sequenceLabelling.models import Model
 
@@ -13,7 +14,7 @@ from sciencebeam_trainer_delft.utils import open_file
 LOGGER = logging.getLogger(__name__)
 
 
-class _BaseModelSaverLoader:
+class _BaseModelSaverLoader(ABC):
     config_file = 'config.json'
     weight_file = 'model_weights.hdf5'
     preprocessor_file = 'preprocessor.pkl'

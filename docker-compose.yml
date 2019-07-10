@@ -10,7 +10,7 @@ services:
         install_dev: y
     image: elifesciences/sciencebeam-trainer-delft:${IMAGE_TAG}
     volumes:
-      - data:/opt/delft/data
+      - data:/opt/sciencebeam-trainer-delft/data
 
   jupyter:
     build:

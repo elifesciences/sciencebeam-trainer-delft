@@ -2,6 +2,7 @@ import logging
 from functools import partial
 from typing import List, Iterable, Set
 
+import joblib
 import numpy as np
 
 from sklearn.base import BaseEstimator, TransformerMixin

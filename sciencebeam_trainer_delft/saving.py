@@ -5,6 +5,7 @@ from delft.sequenceLabelling.models import Model
 
 from sciencebeam_trainer_delft.config import ModelConfig
 from sciencebeam_trainer_delft.preprocess import Preprocessor
+from sciencebeam_trainer_delft.utils import open_file
 
 
 LOGGER = logging.getLogger(__name__)
@@ -49,14 +50,16 @@ class ModelLoader(_BaseModelSaverLoader):
 
     def load_preprocessor_from_file(self, filepath: str):
         LOGGER.info('loading preprocessor from %s', filepath)
-        return Preprocessor.load(filepath)
+        with open_file(filepath, 'rb') as fp:
+            return Preprocessor.load(fp)
 
     def load_model_config_from_directory(self, directory: str):
         return self.load_model_config_from_file(os.path.join(directory, self.config_file))
 
     def load_model_config_from_file(self, filepath: str):
         LOGGER.info('loading model config from %s', filepath)
-        return ModelConfig.load(filepath)
+        with open_file(filepath, 'r') as fp:
+            return ModelConfig.load(fp)
 
     def load_model_from_directory(self, directory: str, model: Model):
         return self.load_model_from_file(
@@ -66,4 +69,5 @@ class ModelLoader(_BaseModelSaverLoader):
 
     def load_model_from_file(self, filepath: str, model: Model):
         LOGGER.info('loading model from %s', filepath)
-        model.load(filepath)
+        with open_file(filepath, 'rb') as fp:
+            model.load(fp)

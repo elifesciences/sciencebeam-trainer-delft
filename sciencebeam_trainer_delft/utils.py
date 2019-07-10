@@ -55,7 +55,7 @@ def _open_raw(filepath: str, mode: str):
 def open_file(filepath: str, mode: str, gzip_compression=None):
     if gzip_compression is None:
         gzip_compression = is_gzip_filename(filepath)
-    if mode == 'rb':
+    if mode in {'rb', 'r'}:
         with _open_raw(filepath, mode=mode) as source_fp:
             if gzip_compression:
                 yield GzipFile(filename=filepath, fileobj=source_fp)

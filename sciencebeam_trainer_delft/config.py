@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 from delft.sequenceLabelling.config import ModelConfig as _ModelConfig
@@ -19,3 +20,11 @@ class ModelConfig(_ModelConfig):
         self.feature_embedding_size = feature_embedding_size
         for key, val in kwargs.items():
             setattr(self, key, val)
+
+    @classmethod
+    def load(cls, file):
+        variables = json.load(file)
+        self = cls()
+        for key, val in variables.items():
+            setattr(self, key, val)
+        return self

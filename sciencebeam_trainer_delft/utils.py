@@ -31,6 +31,10 @@ def is_gzip_filename(filepath: str):
     return filepath.endswith('.gz')
 
 
+def path_join(parent, child):
+    return os.path.join(str(parent), str(child))
+
+
 def strip_gzip_filename_ext(filepath: str):
     if not is_gzip_filename(filepath):
         raise ValueError('not a gzip filename: %s' % filepath)

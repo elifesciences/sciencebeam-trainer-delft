@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import List
 
 import numpy as np
@@ -12,6 +13,7 @@ from sciencebeam_trainer_delft.trainer import Trainer
 from sciencebeam_trainer_delft.models import get_model
 from sciencebeam_trainer_delft.preprocess import Preprocessor, FeaturesPreprocessor
 from sciencebeam_trainer_delft.utils import concatenate_or_none
+from sciencebeam_trainer_delft.saving import ModelSaver
 
 
 LOGGER = logging.getLogger(__name__)
@@ -82,6 +84,7 @@ class Sequence(_Sequence):
             self.embeddings,
             self.model_config,
             self.training_config,
+            model_saver=self.get_model_saver(),
             multiprocessing=self.multiprocessing,
             checkpoint_path=self.log_dir,
             preprocessor=self.p
@@ -94,6 +97,12 @@ class Sequence(_Sequence):
             self.embeddings.clean_ELMo_cache()
         if self.embeddings.use_BERT:
             self.embeddings.clean_BERT_cache()
+
+    def get_model_saver(self):
+        return ModelSaver(
+            preprocessor=self.p,
+            model_config=self.model_config
+        )
 
     def train_nfold(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid=None, y_valid=None, fold_number=10,
@@ -130,6 +139,7 @@ class Sequence(_Sequence):
             self.embeddings,
             self.model_config,
             self.training_config,
+            model_saver=self.get_model_saver(),
             checkpoint_path=self.log_dir,
             preprocessor=self.p
         )
@@ -237,3 +247,9 @@ class Sequence(_Sequence):
             self.model = self.models[best_index]
             print("\n** Best ** model scores - \n")
             print(reports[best_index])
+
+    def save(self, dir_path='data/models/sequenceLabelling/'):
+        # create subfolder for the model if not already exists
+        directory = os.path.join(dir_path, self.model_config.model_name)
+        os.makedirs(directory, exist_ok=True)
+        self.get_model_saver().save_to(directory, model=self.model)

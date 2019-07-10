@@ -1,20 +1,63 @@
 import logging
+import os
 
 import numpy as np
 
+from keras.callbacks import EarlyStopping
+
 from delft.sequenceLabelling.trainer import Trainer as _Trainer
-from delft.sequenceLabelling.trainer import get_callbacks
+from delft.sequenceLabelling.trainer import Scorer
 
 from sciencebeam_trainer_delft.data_generator import DataGenerator
+from sciencebeam_trainer_delft.callbacks import ModelWithMetadataCheckpoint
+from sciencebeam_trainer_delft.saving import ModelSaver
 
 
 LOGGER = logging.getLogger(__name__)
 
 
+def get_callbacks(
+        model_saver: ModelSaver,
+        log_dir: str = None,
+        valid: tuple = (),
+        early_stopping: bool = True):
+    """
+    Get callbacks.
+
+    Args:
+        log_dir (str): the destination to save logs
+        valid (tuple): data for validation.
+        early_stopping (bool): whether to use early stopping.
+
+    Returns:
+        list: list of callbacks
+    """
+    callbacks = []
+
+    if valid:
+        callbacks.append(Scorer(*valid))  # pylint: disable=no-value-for-parameter
+
+    if log_dir:
+        epoch_dirname = 'epoch-{epoch:05d}'
+        assert model_saver
+        save_callback = ModelWithMetadataCheckpoint(
+            os.path.join(log_dir, epoch_dirname),
+            model_saver=model_saver,
+            monitor='f1'
+        )
+        callbacks.append(save_callback)
+
+    if early_stopping:
+        callbacks.append(EarlyStopping(monitor='f1', patience=5, mode='max'))
+
+    return callbacks
+
+
 class Trainer(_Trainer):
-    def __init__(self, *args, multiprocessing: bool = True, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, model_saver: ModelSaver, multiprocessing: bool = True, **kwargs):
+        self.model_saver = model_saver
         self.multiprocessing = multiprocessing
+        super().__init__(*args, **kwargs)
 
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid, y_valid,
@@ -71,9 +114,12 @@ class Trainer(_Trainer):
                 features=features_valid
             )
 
-            callbacks = get_callbacks(log_dir=self.checkpoint_path,
-                                      eary_stopping=True,
-                                      valid=(validation_generator, self.preprocessor))
+            callbacks = get_callbacks(
+                model_saver=self.model_saver,
+                log_dir=self.checkpoint_path,
+                early_stopping=True,
+                valid=(validation_generator, self.preprocessor)
+            )
         else:
             x_train = np.concatenate((x_train, x_valid), axis=0)
             y_train = np.concatenate((y_train, y_valid), axis=0)
@@ -89,8 +135,11 @@ class Trainer(_Trainer):
                 features=features_all
             )
 
-            callbacks = get_callbacks(log_dir=self.checkpoint_path,
-                                      eary_stopping=False)
+            callbacks = get_callbacks(
+                model_saver=self.model_saver,
+                log_dir=self.checkpoint_path,
+                early_stopping=False
+            )
         nb_workers = 6
         multiprocessing = self.multiprocessing
         # multiple workers will not work with ELMo due to GPU memory limit (with GTX 1080Ti 11GB)

@@ -87,9 +87,14 @@ class ModelSaverCallback(Callback):
 class ModelWithMetadataCheckpoint(ModelSaverCallback):
     """Similar to ModelCheckpoint but saves model metadata such as the config.
     """
-    def __init__(self, base_path: str, model_saver: ModelSaver, **kwargs):
+    def __init__(
+            self, base_path: str,
+            model_saver: ModelSaver,
+            add_checkpoint_meta: bool = True,
+            **kwargs):
         self.base_path = base_path
         self.model_saver = model_saver
+        self.add_checkpoint_meta = add_checkpoint_meta
         super().__init__(save_fn=self._save_model, **kwargs)
 
     def _save_model(self, epoch: int, logs: dict, **_):
@@ -97,3 +102,7 @@ class ModelWithMetadataCheckpoint(ModelSaverCallback):
         with auto_upload_from_local_path(base_path) as local_path:
             LOGGER.info('local_path: %s', local_path)
             self.model_saver.save_to(local_path, model=self.model)
+            if self.add_checkpoint_meta:
+                self.model_saver.add_checkpoint_meta(
+                    local_path, epoch=epoch
+                )

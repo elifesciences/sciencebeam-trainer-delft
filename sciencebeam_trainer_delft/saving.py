@@ -1,5 +1,7 @@
 import logging
+import json
 import os
+from datetime import datetime
 
 from delft.sequenceLabelling.models import Model
 
@@ -37,11 +39,36 @@ class ModelSaver(_BaseModelSaverLoader):
         model.save(filepath)
         LOGGER.info('model saved to %s', filepath)
 
+    def _update_checkpoints_meta_file(self, filepath: str, checkpoint_directory: str, epoch: int):
+        try:
+            with open_file(filepath, 'r') as fp:
+                meta = json.load(fp)
+        except FileNotFoundError:
+            meta = {}
+        checkpoint_meta = {
+            'epoch': epoch,
+            'path': checkpoint_directory,
+            'timestamp': datetime.utcnow().isoformat()
+        }
+        meta['checkpoints'] = meta.get('checkpoints', [])
+        meta['checkpoints'].append(checkpoint_meta)
+        meta['last_checkpoint'] = checkpoint_meta
+        with open_file(filepath, 'w') as fp:
+            json.dump(meta, fp)
+        LOGGER.info('updated checkpoints meta: %s', filepath)
+
     def save_to(self, directory: str, model: Model):
         os.makedirs(directory, exist_ok=True)
         self._save_preprocessor(self.preprocessor, os.path.join(directory, self.preprocessor_file))
         self._save_model_config(self.model_config, os.path.join(directory, self.config_file))
         self._save_model(model, os.path.join(directory, self.weight_file))
+
+    def add_checkpoint_meta(self, checkpoint_directory: str, epoch: int):
+        self._update_checkpoints_meta_file(
+            os.path.join(os.path.dirname(checkpoint_directory), 'checkpoints.json'),
+            checkpoint_directory=checkpoint_directory,
+            epoch=epoch
+        )
 
 
 class ModelLoader(_BaseModelSaverLoader):

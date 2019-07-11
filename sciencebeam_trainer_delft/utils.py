@@ -14,10 +14,12 @@ try:
     from tensorflow import __version__ as tf_version
     from tensorflow.python.lib.io import file_io as tf_file_io
     from tensorflow.python.client import device_lib as tf_device_lib
+    from tensorflow.python.framework.errors_impl import NotFoundError as tf_NotFoundError
 except ImportError:
     tf_version = None
     tf_file_io = None
     tf_device_lib = None
+    tf_NotFoundError = None
 
 
 LOGGER = logging.getLogger(__name__)
@@ -47,21 +49,24 @@ def _open_raw(filepath: str, mode: str):
         with urlopen(filepath) as fp:
             yield fp
     else:
-        with tf_file_io.FileIO(filepath, mode=mode) as fp:
-            yield fp
+        try:
+            with tf_file_io.FileIO(filepath, mode=mode) as fp:
+                yield fp
+        except tf_NotFoundError as e:
+            raise FileNotFoundError('file not found: %s' % filepath) from e
 
 
 @contextmanager
 def open_file(filepath: str, mode: str, gzip_compression=None):
     if gzip_compression is None:
         gzip_compression = is_gzip_filename(filepath)
-    if mode == 'rb':
+    if mode in {'rb', 'r'}:
         with _open_raw(filepath, mode=mode) as source_fp:
             if gzip_compression:
                 yield GzipFile(filename=filepath, fileobj=source_fp)
             else:
                 yield source_fp
-    elif mode == 'wb':
+    elif mode in {'wb', 'w'}:
         tf_file_io.recursive_create_dir(os.path.dirname(filepath))
         with _open_raw(filepath, mode=mode) as target_fp:
             if gzip_compression:

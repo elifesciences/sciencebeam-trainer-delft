@@ -1,10 +1,12 @@
 import logging
+import os
 from typing import List
 
 import numpy as np
 
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.trainer import Scorer
+from delft.utilities.Embeddings import Embeddings
 
 from sciencebeam_trainer_delft.config import ModelConfig
 from sciencebeam_trainer_delft.data_generator import DataGenerator
@@ -12,9 +14,13 @@ from sciencebeam_trainer_delft.trainer import Trainer
 from sciencebeam_trainer_delft.models import get_model
 from sciencebeam_trainer_delft.preprocess import Preprocessor, FeaturesPreprocessor
 from sciencebeam_trainer_delft.utils import concatenate_or_none
+from sciencebeam_trainer_delft.saving import ModelSaver, ModelLoader
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+DEFAUT_MODEL_PATH = 'data/models/sequenceLabelling/'
 
 
 def prepare_preprocessor(X, y, model_config, features: np.array = None):
@@ -82,6 +88,7 @@ class Sequence(_Sequence):
             self.embeddings,
             self.model_config,
             self.training_config,
+            model_saver=self.get_model_saver(),
             multiprocessing=self.multiprocessing,
             checkpoint_path=self.log_dir,
             preprocessor=self.p
@@ -94,6 +101,12 @@ class Sequence(_Sequence):
             self.embeddings.clean_ELMo_cache()
         if self.embeddings.use_BERT:
             self.embeddings.clean_BERT_cache()
+
+    def get_model_saver(self):
+        return ModelSaver(
+            preprocessor=self.p,
+            model_config=self.model_config
+        )
 
     def train_nfold(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid=None, y_valid=None, fold_number=10,
@@ -130,6 +143,7 @@ class Sequence(_Sequence):
             self.embeddings,
             self.model_config,
             self.training_config,
+            model_saver=self.get_model_saver(),
             checkpoint_path=self.log_dir,
             preprocessor=self.p
         )
@@ -237,3 +251,39 @@ class Sequence(_Sequence):
             self.model = self.models[best_index]
             print("\n** Best ** model scores - \n")
             print(reports[best_index])
+
+    def _get_model_directory(self, dir_path=None):
+        return os.path.join(dir_path or DEFAUT_MODEL_PATH, self.model_config.model_name)
+
+    def get_embedding_for_model_config(self, model_config: ModelConfig):
+        return Embeddings(
+            model_config.embeddings_name,
+            use_ELMo=model_config.use_ELMo,
+            use_BERT=model_config.use_BERT
+        )
+
+    def save(self, dir_path=None):
+        # create subfolder for the model if not already exists
+        directory = self._get_model_directory(dir_path)
+        os.makedirs(directory, exist_ok=True)
+        self.get_model_saver().save_to(directory, model=self.model)
+
+    def load(self, dir_path=None):
+        directory = self._get_model_directory(dir_path)
+        self.load_from(directory)
+
+    def load_from(self, directory: str):
+        model_loader = ModelLoader()
+        self.p = model_loader.load_preprocessor_from_directory(directory)
+        self.model_config = model_loader.load_model_config_from_directory(directory)
+
+        # load embeddings
+        self.embeddings = Embeddings(
+            self.model_config.embeddings_name,
+            use_ELMo=self.model_config.use_ELMo,
+            use_BERT=self.model_config.use_BERT
+        )
+        self.model_config.word_embedding_size = self.embeddings.embed_size
+
+        self.model = get_model(self.model_config, self.p, ntags=len(self.p.vocab_tag))
+        model_loader.load_model_from_directory(directory, model=self.model)

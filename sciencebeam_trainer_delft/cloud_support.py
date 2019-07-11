@@ -62,6 +62,15 @@ def auto_upload_from_local_path(filepath: str):
             yield temp_path
 
 
+@contextmanager
+def auto_upload_from_local_file(filepath: str):
+    if not filepath or not _is_cloud_location(filepath):
+        yield filepath
+    else:
+        with _cloud_location_as_temp_context(filepath) as local_path:
+            yield local_path
+
+
 def patch_cloud_support():
     # deprecated
     pass

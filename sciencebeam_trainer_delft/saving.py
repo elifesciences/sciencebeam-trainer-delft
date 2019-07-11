@@ -6,6 +6,7 @@ from abc import ABC
 
 from delft.sequenceLabelling.models import Model
 
+from sciencebeam_trainer_delft.cloud_support import auto_upload_from_local_file
 from sciencebeam_trainer_delft.config import ModelConfig
 from sciencebeam_trainer_delft.preprocess import Preprocessor
 from sciencebeam_trainer_delft.utils import open_file
@@ -40,7 +41,8 @@ class ModelSaver(_BaseModelSaverLoader):
         LOGGER.info('model config file saved to %s', filepath)
 
     def _save_model(self, model: Model, filepath: str):
-        model.save(filepath)
+        with auto_upload_from_local_file(filepath) as local_filepath:
+            model.save(local_filepath)
         LOGGER.info('model saved to %s', filepath)
 
     def _save_meta(self, meta: dict, filepath: str):

@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from sciencebeam_trainer_delft.data import load_data_and_labels_crf_file
+from sciencebeam_trainer_delft.reader import load_data_and_labels_crf_file
 
 
 LOGGER = logging.getLogger(__name__)

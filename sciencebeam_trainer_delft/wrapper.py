@@ -291,12 +291,17 @@ class Sequence(_Sequence):
         return get_model_directory(model_name=self.model_config.model_name, dir_path=dir_path)
 
     def get_embedding_for_model_config(self, model_config: ModelConfig):
-        return Embeddings(
+        embeddings = Embeddings(
             model_config.embeddings_name,
             path=self.embedding_registry_path or DEFAULT_EMBEDDINGS_PATH,
             use_ELMo=model_config.use_ELMo,
             use_BERT=model_config.use_BERT
         )
+        if not embeddings.embed_size > 0:
+            raise AssertionError(
+                'invalid embedding size, embeddings not loaded? %s' % model_config.embeddings_name
+            )
+        return embeddings
 
     def save(self, dir_path=None):
         # create subfolder for the model if not already exists
@@ -316,7 +321,6 @@ class Sequence(_Sequence):
         # load embeddings
         LOGGER.info('loading embeddings: %s', self.model_config.embeddings_name)
         self.embeddings = self.get_embedding_for_model_config(self.model_config)
-        assert self.embeddings.embed_size > 0
         self.model_config.word_embedding_size = self.embeddings.embed_size
 
         self.model = get_model(self.model_config, self.p, ntags=len(self.p.vocab_tag))

@@ -1,7 +1,10 @@
 import logging
 from pathlib import Path
 
-from sciencebeam_trainer_delft.reader import load_data_and_labels_crf_file
+from sciencebeam_trainer_delft.reader import (
+    load_data_and_labels_crf_file,
+    load_data_crf_string
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -29,4 +32,12 @@ class TestLoadDataAndLabelsCrfFile:
         assert len(x_all) == len(y_all) == len(f_all)
         assert x_all.tolist() == [[UNICODE_VALUE_1]]
         assert y_all.tolist() == [[UNICODE_VALUE_1]]
+        assert f_all.tolist() == [[[UNICODE_VALUE_1] * 10]]
+
+class TestLoadDataCrfString:
+    def test_should_load_unicode_str(self):
+        crf_string = ' '.join([UNICODE_VALUE_1] * 11)
+        x_all, f_all = load_data_crf_string(crf_string)
+        assert len(x_all) == len(f_all)
+        assert x_all.tolist() == [[UNICODE_VALUE_1]]
         assert f_all.tolist() == [[[UNICODE_VALUE_1] * 10]]

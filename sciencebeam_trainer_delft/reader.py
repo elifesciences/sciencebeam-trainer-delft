@@ -35,6 +35,26 @@ def iter_load_data_and_labels_crf_lines(
         yield tokens, tags, features
 
 
+def iter_load_data_crf_lines(
+        lines: Iterable[str]) -> Iterable[Tuple[list, list]]:
+    tokens, features = [], []
+    for line in lines:
+        line = line.strip()
+        LOGGER.debug('line: %s', line)
+        if not line:
+            if tokens:
+                yield tokens, features
+                tokens, features = [], []
+        else:
+            pieces = re.split(' |\t', line)
+            token = pieces[0]
+            localFeatures = pieces[1:]
+            tokens.append(token)
+            features.append(localFeatures)
+    if tokens:
+        yield tokens, features
+
+
 def load_data_and_labels_crf_lines(
         lines: Iterable[str],
         limit: int = None) -> Tuple[np.array, np.array, np.array]:
@@ -67,8 +87,44 @@ def load_data_and_labels_crf_lines(
     return np.asarray(sents), np.asarray(labels), np.asarray(featureSets)
 
 
+def load_data_crf_lines(
+        lines: Iterable[str],
+        limit: int = None) -> Tuple[np.array, np.array, np.array]:
+    """
+    Load data, features (no label!) from a CRF matrix file
+    the format is as follow:
+
+    token_0 f0_0 f0_1 ... f0_n
+    token_1 f1_0 f1_1 ... f1_n
+    ...
+    token_m fm_0 fm_1 ... fm_n
+
+    field separator can be either space or tab
+
+    Returns:
+        tuple(numpy array, numpy array, numpy array): tokens, features
+
+    """
+    sents = []
+    featureSets = []
+    documents = iter_load_data_crf_lines(lines)
+    if limit:
+        LOGGER.info('limiting training data to: %s', limit)
+        documents = islice(documents, limit)
+    for tokens, features in documents:
+        sents.append(tokens)
+        featureSets.append(features)
+    return np.asarray(sents), np.asarray(featureSets)
+
+
 def load_data_and_labels_crf_file(
         filepath: str,
         limit: int = None) -> Tuple[np.array, np.array, np.array]:
     with open(filepath, 'r', encoding='utf-8') as fp:
         return load_data_and_labels_crf_lines(fp, limit=limit)
+
+
+def load_data_crf_string(
+        crf_string: str,
+        limit: int = None) -> Tuple[np.array, np.array]:
+    return load_data_crf_lines(crf_string.splitlines(), limit=limit)

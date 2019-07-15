@@ -278,14 +278,11 @@ class Sequence(_Sequence):
                 features=features
             )
             runtime = round(time.time() - start_time, 3)
-            if output_format is 'json':
+            if output_format == 'json':
                 annotations["runtime"] = runtime
-            #else:
-            #    print("runtime: %s seconds " % (runtime))
             return annotations
         else:
             raise OSError('Could not find a model.')
-
 
     def _get_model_directory(self, dir_path=None):
         return get_model_directory(model_name=self.model_config.model_name, dir_path=dir_path)

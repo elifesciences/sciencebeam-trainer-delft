@@ -7,8 +7,7 @@ from delft.utilities.Tokenizer import tokenizeAndFilter
 from sciencebeam_trainer_delft.data_generator import DataGenerator
 
 
-class Tagger(object):
-
+class Tagger:
     def __init__(
             self,
             model,
@@ -23,7 +22,7 @@ class Tagger(object):
     def tag(self, texts, output_format, features=None):
         assert isinstance(texts, list)
 
-        if output_format is 'json':
+        if output_format == 'json':
             res = {
                 "software": "DeLFT",
                 "date": datetime.datetime.now().isoformat(),
@@ -69,7 +68,7 @@ class Tagger(object):
                 tags = self._get_tags(pred)
                 prob = self._get_prob(pred)
 
-                if output_format is 'json':
+                if output_format == 'json':
                     piece = {}
                     piece["text"] = text
                     piece["entities"] = self._build_json_response(
@@ -81,7 +80,7 @@ class Tagger(object):
                     list_of_tags.append(the_tags)
             steps_done += 1
 
-        if output_format is 'json':
+        if output_format == 'json':
             return res
         else:
             return list_of_tags

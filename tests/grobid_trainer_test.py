@@ -8,13 +8,16 @@ import pytest
 
 from delft.utilities.Embeddings import Embeddings
 
+from sciencebeam_trainer_delft.wrapper import get_model_directory
 from sciencebeam_trainer_delft.grobid_trainer import (
     parse_args,
     train,
-    train_eval
+    train_eval,
+    tag_input
 )
 
 from .test_data import TEST_DATA_PATH
+from .test_utils import log_on_exception
 
 
 EMBEDDING_NAME_1 = 'embedding1'
@@ -51,15 +54,38 @@ def _embedding_class(embedding_registry_path: Path):
         yield mock
 
 
+@pytest.fixture(name='model_base_path')
+def _model_base_path(temp_dir: Path):
+    p = temp_dir.joinpath('models')
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
 @pytest.fixture(name='default_args')
-def _default_args(sample_train_file: str):
+def _default_args(
+        sample_train_file: str,
+        model_base_path: Path,
+        embedding_registry_path: Path):
     download_manager = MagicMock(name='download_manager')
     download_manager.download_if_url.return_value = str(sample_train_file)
     return dict(
         model='header',
         embeddings_name=EMBEDDING_NAME_1,
         input_path=sample_train_file,
-        download_manager=download_manager
+        download_manager=download_manager,
+        output_path=str(model_base_path),
+        architecture='CustomBidLSTM_CRF',
+        word_lstm_units=11,
+        feature_indices=list(range(7, 1 + 10)),
+        embedding_registry_path=str(embedding_registry_path)
+    )
+
+
+@pytest.fixture(name='default_model_directory')
+def _default_model_directory(default_args: dict):
+    return get_model_directory(
+        model_name=default_args['model'],
+        dir_path=default_args['output_path']
     )
 
 
@@ -71,15 +97,29 @@ class TestGrobidTrainer:
 
     @pytest.mark.slow
     class TestEndToEnd:
-        def test_should_be_able_to_train_without_features(self, default_args: dict):
+        @log_on_exception
+        def test_should_be_able_to_train_without_features(
+                self, default_args: dict, default_model_directory: str):
             train(
                 use_features=False,
                 **default_args
             )
+            tag_input(
+                use_features=False,
+                model_path=default_model_directory,
+                **default_args
+            )
 
-        def test_should_be_able_to_train_with_features(self, default_args: dict):
+        @log_on_exception
+        def test_should_be_able_to_train_with_features(
+                self, default_args: dict, default_model_directory: str):
             train(
                 use_features=True,
+                **default_args
+            )
+            tag_input(
+                use_features=True,
+                model_path=default_model_directory,
                 **default_args
             )
 

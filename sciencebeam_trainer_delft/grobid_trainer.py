@@ -218,8 +218,6 @@ def eval_model(
 
     if use_ELMo:
         model_name += '-with_ELMo'
-        if model_name in {'software-with_ELMo', 'grobid-software-with_ELMo'}:
-            batch_size = 3
 
     model = Sequence(
         model_name,
@@ -242,13 +240,56 @@ def eval_model(
     model.eval(x_eval, y_eval, features=features_eval)
 
 
+def tag_input(
+        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+        input_path=None, output_path=None, model_path: str = None,
+        limit: int = None,
+        max_sequence_length: int = 100,
+        fold_count=1, max_epoch=100, batch_size=20,
+        download_manager: DownloadManager = None,
+        **kwargs):
+    x_all, _, features_all = load_data_and_labels(
+        model=model, input_path=input_path, limit=limit,
+        download_manager=download_manager
+    )
+
+    print(len(x_all), 'input sequences')
+
+    if output_path:
+        model_name = model
+    else:
+        model_name = 'grobid-' + model
+
+    if use_ELMo:
+        model_name += '-with_ELMo'
+
+    model = Sequence(
+        model_name,
+        max_epoch=max_epoch,
+        recurrent_dropout=0.50,
+        embeddings_name=embeddings_name,
+        max_sequence_length=max_sequence_length,
+        model_type=architecture,
+        use_ELMo=use_ELMo,
+        batch_size=batch_size,
+        fold_number=fold_count,
+        **kwargs
+    )
+
+    assert model_path
+    model.load_from(model_path)
+
+    tag_result = model.tag(x_all, output_format=None, features=features_all)
+    LOGGER.info('tag results: %s', tag_result)
+
+
 def parse_args(argv: List[str] = None):
     parser = argparse.ArgumentParser(
         description="Trainer for GROBID models"
     )
 
     parser.add_argument("model", choices=GROBID_MODEL_NAMES)
-    parser.add_argument("action", choices=['train', 'train_eval', 'eval'])
+    parser.add_argument("action", choices=['train', 'train_eval', 'eval', 'tag'])
     parser.add_argument("--fold-count", type=int, default=1)
     parser.add_argument(
         "--architecture", default='BidLSTM_CRF',
@@ -357,6 +398,11 @@ def run(args):
         if not args.model_path:
             raise ValueError('--model-path required')
         eval_model(model_path=args.model_path, **train_args)
+
+    if action == 'tag':
+        if not args.model_path:
+            raise ValueError('--model-path required')
+        tag_input(model_path=args.model_path, **train_args)
 
     # see https://github.com/tensorflow/tensorflow/issues/3388
     K.clear_session()

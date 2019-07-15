@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from typing import List
 
 import numpy as np
@@ -15,12 +16,14 @@ from sciencebeam_trainer_delft.models import get_model
 from sciencebeam_trainer_delft.preprocess import Preprocessor, FeaturesPreprocessor
 from sciencebeam_trainer_delft.utils import concatenate_or_none
 from sciencebeam_trainer_delft.saving import ModelSaver, ModelLoader
+from sciencebeam_trainer_delft.tagger import Tagger
 
 
 LOGGER = logging.getLogger(__name__)
 
 
 DEFAUT_MODEL_PATH = 'data/models/sequenceLabelling/'
+DEFAULT_EMBEDDINGS_PATH = './embedding-registry.json'
 
 
 def prepare_preprocessor(X, y, model_config, features: np.array = None):
@@ -39,6 +42,10 @@ def prepare_preprocessor(X, y, model_config, features: np.array = None):
     return preprocessor
 
 
+def get_model_directory(model_name: str, dir_path: str = None):
+    return os.path.join(dir_path or DEFAUT_MODEL_PATH, model_name)
+
+
 class Sequence(_Sequence):
     def __init__(
             self, *args,
@@ -46,8 +53,10 @@ class Sequence(_Sequence):
             feature_indices: List[int] = None,
             feature_embedding_size: int = None,
             multiprocessing: bool = False,
+            embedding_registry_path: str = None,
             **kwargs):
         LOGGER.info('Sequence, args=%s, kwargs=%s', args, kwargs)
+        self.embedding_registry_path = embedding_registry_path
         super().__init__(*args, **kwargs)
         LOGGER.info('use_features=%s', use_features)
         self.model_config = ModelConfig(
@@ -252,15 +261,44 @@ class Sequence(_Sequence):
             print("\n** Best ** model scores - \n")
             print(reports[best_index])
 
+    def tag(  # pylint: disable=arguments-differ
+            self, texts, output_format, features=None):
+        # annotate a list of sentences, return the list of annotations in the
+        # specified output_format
+        if self.model:
+            if self.model_config.use_features and features is None:
+                raise ValueError('features required')
+            tagger = Tagger(
+                self.model, self.model_config, self.embeddings,
+                preprocessor=self.p
+            )
+            start_time = time.time()
+            annotations = tagger.tag(
+                list(texts), output_format,
+                features=features
+            )
+            runtime = round(time.time() - start_time, 3)
+            if output_format == 'json':
+                annotations["runtime"] = runtime
+            return annotations
+        else:
+            raise OSError('Could not find a model.')
+
     def _get_model_directory(self, dir_path=None):
-        return os.path.join(dir_path or DEFAUT_MODEL_PATH, self.model_config.model_name)
+        return get_model_directory(model_name=self.model_config.model_name, dir_path=dir_path)
 
     def get_embedding_for_model_config(self, model_config: ModelConfig):
-        return Embeddings(
+        embeddings = Embeddings(
             model_config.embeddings_name,
+            path=self.embedding_registry_path or DEFAULT_EMBEDDINGS_PATH,
             use_ELMo=model_config.use_ELMo,
             use_BERT=model_config.use_BERT
         )
+        if not embeddings.embed_size > 0:
+            raise AssertionError(
+                'invalid embedding size, embeddings not loaded? %s' % model_config.embeddings_name
+            )
+        return embeddings
 
     def save(self, dir_path=None):
         # create subfolder for the model if not already exists
@@ -278,11 +316,8 @@ class Sequence(_Sequence):
         self.model_config = model_loader.load_model_config_from_directory(directory)
 
         # load embeddings
-        self.embeddings = Embeddings(
-            self.model_config.embeddings_name,
-            use_ELMo=self.model_config.use_ELMo,
-            use_BERT=self.model_config.use_BERT
-        )
+        LOGGER.info('loading embeddings: %s', self.model_config.embeddings_name)
+        self.embeddings = self.get_embedding_for_model_config(self.model_config)
         self.model_config.word_embedding_size = self.embeddings.embed_size
 
         self.model = get_model(self.model_config, self.p, ntags=len(self.p.vocab_tag))

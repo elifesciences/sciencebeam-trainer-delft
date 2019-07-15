@@ -152,6 +152,10 @@ grobid-eval-header:
 	$(MAKE) GROBID_TRAIN_ACTION=eval grobid-train-header
 
 
+grobid-tag-header:
+	$(MAKE) GROBID_TRAIN_ACTION=tag grobid-train-header
+
+
 gcloud-ai-platform-local-grobid-train-header: .grobid-train-header-args
 	@echo "_GROBID_TRAIN_ARGS=$(_GROBID_TRAIN_ARGS)"
 	$(GCLOUD) ai-platform local train \

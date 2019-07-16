@@ -1,0 +1,14 @@
+{
+    "embeddings": [
+        {
+            "name": "glove.6B.50d",
+            "format": "vec",
+            "type": "glove",
+            "lang": "en",
+            "path": "data/download/glove.6B.50d.txt",
+            "url": "https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz"
+        }
+    ],
+    "embeddings-contextualized": [],
+    "embedding-lmdb-path": "data/db"
+}

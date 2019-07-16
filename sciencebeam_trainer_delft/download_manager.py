@@ -5,8 +5,7 @@ from pathlib import Path
 from sciencebeam_trainer_delft.utils import (
     copy_file,
     is_external_location,
-    is_gzip_filename,
-    strip_gzip_filename_ext
+    get_compression_wrapper
 )
 
 
@@ -22,8 +21,9 @@ class DownloadManager:
 
     def get_local_file(self, file_url: str, auto_uncompress: bool = True) -> str:
         filename = os.path.basename(file_url)
-        if auto_uncompress and is_gzip_filename(filename):
-            filename = strip_gzip_filename_ext(filename)
+        if auto_uncompress:
+            compression_wrapper = get_compression_wrapper(filename)
+            filename = compression_wrapper.strip_compression_filename_ext(filename)
         return str(self.download_dir.joinpath(filename))
 
     def is_downloaded(self, file_url: str, auto_uncompress: bool = True) -> bool:

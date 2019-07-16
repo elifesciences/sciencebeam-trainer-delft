@@ -19,7 +19,7 @@
         }
     ],
     "embedding-aliases": {
-        "glove.840B.300d.txt": "glove-840B"
+        "glove.840B.300d": "glove-840B"
     },
     "embeddings-contextualized": [],
     "embedding-lmdb-path": "data/db"

@@ -357,9 +357,8 @@ def run(args):
     embedding_manager = EmbeddingManager(download_manager=download_manager)
     if args.no_use_lmdb:
         embedding_manager.disable_embedding_lmdb_cache()
-    embedding_name = embedding_manager.download_and_install_embedding_if_url(
-        args.embedding
-    )
+    embedding_name = embedding_manager.ensure_available(args.embedding)
+    LOGGER.info('embedding_name: %s', embedding_name)
     embedding_manager.validate_embedding(embedding_name)
 
     train_args = dict(

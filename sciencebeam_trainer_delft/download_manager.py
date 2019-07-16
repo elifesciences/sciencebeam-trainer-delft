@@ -32,9 +32,12 @@ class DownloadManager:
 
     def download(
             self, file_url: str,
+            local_file: str = None,
             auto_uncompress: bool = True,
             skip_if_downloaded: bool = True) -> str:
-        download_file = self.get_local_file(file_url, auto_uncompress=auto_uncompress)
+        download_file = (
+            local_file or self.get_local_file(file_url, auto_uncompress=auto_uncompress)
+        )
         if skip_if_downloaded and self.is_downloaded(file_url, auto_uncompress=auto_uncompress):
             LOGGER.info('file already downloaded: %s', file_url)
         else:

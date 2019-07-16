@@ -76,7 +76,7 @@ class EmbeddingManager:
 
     def get_embedding_lmdb_path(self):
         registry_data = self._get_registry_data()
-        return registry_data.get('embedding-lmdb-path')
+        return registry_data.get('embedding-lmdb-path', self.default_embedding_lmdb_path)
 
     def disable_embedding_lmdb_cache(self):
         registry_data = self._get_registry_data()
@@ -122,6 +122,56 @@ class EmbeddingManager:
         if is_external_location(embedding_url_or_name):
             return self.download_and_install_embedding(embedding_url_or_name)
         return embedding_url_or_name
+
+    def has_lmdb_cache(self, embedding_name: str):
+        embedding_lmdb_path = self.get_embedding_lmdb_path()
+        if not embedding_lmdb_path:
+            return False
+        embedding_lmdb_dir = Path(embedding_lmdb_path).joinpath(embedding_name)
+        embedding_lmdb_file = embedding_lmdb_dir.joinpath('data.mdb')
+        exists = embedding_lmdb_file.exists()
+        LOGGER.debug('embedding_lmdb_file: %s (exists: %s)', embedding_lmdb_file, exists)
+        return exists
+
+    def is_downloaded(self, embedding_name: str):
+        embedding_config = self.get_embedding_config(embedding_name)
+        if not embedding_config:
+            return False
+        embedding_path = embedding_config.get('path')
+        if embedding_path and not Path(embedding_path).exists():
+            return False
+        return True
+
+    def is_downloaded_or_has_lmdb_cache(self, embedding_name: str):
+        return self.is_downloaded(embedding_name) or self.has_lmdb_cache(embedding_name)
+
+    def _ensure_external_url_available(self, embedding_url: str):
+        embedding_name = _get_embedding_name_for_filename(embedding_url)
+        if not self.is_downloaded_or_has_lmdb_cache(embedding_name):
+            return self.download_and_install_embedding(embedding_url)
+        if not self.get_embedding_config(embedding_name):
+            self.add_embedding_config(
+                _get_embedding_config_for_filename(embedding_url)
+            )
+        return embedding_name
+
+    def _ensure_registered_embedding_available(self, embedding_name: str):
+        self.validate_embedding(embedding_name)
+        if self.is_downloaded_or_has_lmdb_cache(embedding_name):
+            return embedding_name
+        embedding_config = self.get_embedding_config(embedding_name)
+        assert embedding_config, "embedding_config required for %s" % embedding_name
+        embedding_path = embedding_config['path']
+        embedding_url = embedding_config['url']
+        assert embedding_path, "embedding_path required for %s" % embedding_name
+        assert embedding_url, "embedding_url required for %s" % embedding_name
+        self.download_manager.download(embedding_url, local_file=embedding_path)
+        return embedding_name
+
+    def ensure_available(self, embedding_url_or_name: str):
+        if is_external_location(embedding_url_or_name):
+            return self._ensure_external_url_available(embedding_url_or_name)
+        return self._ensure_registered_embedding_available(embedding_url_or_name)
 
     def validate_embedding(self, embedding_name):
         if not self.get_embedding_config(embedding_name):

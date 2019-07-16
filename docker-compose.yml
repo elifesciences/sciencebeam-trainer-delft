@@ -19,7 +19,7 @@ services:
       dockerfile: Dockerfile.grobid
       args:
         base_image: ${BASE_GROBID_REPO}:${BASE_GROBID_TAG}
-    image: elifesciences/sciencebeam-grobid-delft:${BASE_GROBID_TAG}-${IMAGE_TAG}
+    image: elifesciences/sciencebeam-trainer-delft-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
     volumes:
       - data:/opt/sciencebeam-trainer-delft/data
     ports:

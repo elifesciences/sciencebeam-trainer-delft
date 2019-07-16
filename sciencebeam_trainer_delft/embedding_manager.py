@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 from sciencebeam_trainer_delft.download_manager import DownloadManager
 
@@ -107,6 +107,18 @@ class EmbeddingManager:
             return None
         return embedding_list[index]
 
+    def set_embedding_aliases(self, embedding_aliases: Dict[str, str]) -> dict:
+        registry_data = self._get_registry_data()
+        registry_data['embedding-aliases'] = embedding_aliases
+        self._save(registry_data)
+
+    def get_embedding_aliases(self) -> dict:
+        registry_data = self._get_registry_data()
+        return registry_data.get('embedding-aliases', {})
+
+    def resolve_alias(self, embedding_name: str):
+        return self.get_embedding_aliases().get(embedding_name, embedding_name)
+
     def download_and_install_embedding(self, embedding_url: str) -> str:
         download_file = self.download_manager.download_if_url(embedding_url)
         filename = os.path.basename(download_file)
@@ -171,7 +183,9 @@ class EmbeddingManager:
     def ensure_available(self, embedding_url_or_name: str):
         if is_external_location(embedding_url_or_name):
             return self._ensure_external_url_available(embedding_url_or_name)
-        return self._ensure_registered_embedding_available(embedding_url_or_name)
+        return self._ensure_registered_embedding_available(self.resolve_alias(
+            embedding_url_or_name
+        ))
 
     def validate_embedding(self, embedding_name):
         if not self.get_embedding_config(embedding_name):

@@ -9,6 +9,7 @@ from sciencebeam_trainer_delft.embedding_manager import (
 
 
 EMBEDDING_NAME_1 = 'embedding1'
+EMBEDDING_ALIAS_1 = 'alias1'
 EXTERNAL_TXT_URL_1 = 'http://host/%s.txt' % EMBEDDING_NAME_1
 EXTERNAL_TXT_GZ_URL_1 = EXTERNAL_TXT_URL_1 + '.gz'
 DOWNLOAD_FILENAME_1 = '%s.txt' % EMBEDDING_NAME_1
@@ -159,3 +160,35 @@ class TestEmbeddingManager:
             download_manager.download.assert_called_with(
                 EXTERNAL_TXT_URL_1, local_file=str(download_path_1)
             )
+
+        def test_should_resolve_registered_embedding(
+                self,
+                download_manager: MagicMock,
+                embedding_manager: EmbeddingManager,
+                download_path_1: Path):
+            embedding_manager.set_embedding_aliases({
+                EMBEDDING_ALIAS_1: EMBEDDING_NAME_1
+            })
+            embedding_manager.add_embedding_config({
+                'name': EMBEDDING_NAME_1,
+                'path': str(download_path_1),
+                'url': EXTERNAL_TXT_URL_1
+            })
+            assert embedding_manager.ensure_available(EMBEDDING_ALIAS_1) == EMBEDDING_NAME_1
+            download_manager.download.assert_called_with(
+                EXTERNAL_TXT_URL_1, local_file=str(download_path_1)
+            )
+
+    class TestResolveAlias:
+        def test_should_return_passed_in_embedding_name_by_default(
+                self,
+                embedding_manager: EmbeddingManager):
+            assert embedding_manager.resolve_alias(EMBEDDING_NAME_1) == EMBEDDING_NAME_1
+
+        def test_should_resolve_embedding_alias(
+                self,
+                embedding_manager: EmbeddingManager):
+            embedding_manager.set_embedding_aliases({
+                EMBEDDING_ALIAS_1: EMBEDDING_NAME_1
+            })
+            assert embedding_manager.resolve_alias(EMBEDDING_ALIAS_1) == EMBEDDING_NAME_1

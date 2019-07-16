@@ -19,6 +19,13 @@ elifePipeline {
             stage 'Merge to master', {
                 elifeGitMoveToBranch commit, 'master'
             }
+
+            stage 'Push unstable sciencebeam-trainer-delft image', {
+                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft', commit)
+                def unstable_image = image.addSuffixAndTag('_unstable', commit)
+                unstable_image.tag('latest').push()
+                unstable_image.push()
+            }
         }
     }
 }

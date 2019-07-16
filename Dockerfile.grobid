@@ -36,6 +36,9 @@ RUN pip install -r ${PROJECT_FOLDER}/requirements.delft.txt --no-deps
 # add sciencebeam_trainer_delft package itself
 COPY sciencebeam_trainer_delft ${PROJECT_FOLDER}/sciencebeam_trainer_delft
 
+# add embedding registry with download locations
+COPY config/embedding-registry.json ${PROJECT_FOLDER}/
+
 # enable delft
 COPY scripts/grobid /opt/scripts
 ENV PATH /opt/scripts:$PATH

@@ -1,0 +1,45 @@
+ARG base_image=
+FROM ${base_image}
+
+# install build requirements
+ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
+COPY requirements.build.txt ${PROJECT_FOLDER}/
+
+RUN mkdir -p /usr/share/man/man1 \
+    && apt-get update \
+    && apt-get install --yes --no-install-recommends \
+        gcc \
+        python3-minimal python3-venv python3-pip python3-setuptools python3-dev \
+        openjdk-8-jdk-headless \
+        curl \
+    && pip3 install -r ${PROJECT_FOLDER}/requirements.build.txt \
+    && JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 pip3 install jep==3.8.2 \
+    && apt-get remove --yes openjdk-8-jdk-headless \
+    && rm -rf /var/lib/apt/lists/*
+
+# create virtual env (see also https://bugs.python.org/issue24875)
+ENV VENV=/opt/venv
+RUN python3 -m venv ${VENV} \
+    && python3 -m venv --system-site-packages ${VENV}
+ENV VIRTUAL_ENV=${VENV} PYTHONUSERBASE=${VENV} PATH=${VENV}/bin:$PATH
+
+# install sciencebeam-trainer-delft dependencies
+COPY requirements.txt ${PROJECT_FOLDER}/
+RUN pip install -r ${PROJECT_FOLDER}/requirements.txt
+
+COPY requirements.cpu.txt ${PROJECT_FOLDER}/
+RUN pip install -r ${PROJECT_FOLDER}/requirements.cpu.txt
+
+COPY requirements.delft.txt ${PROJECT_FOLDER}/
+RUN pip install -r ${PROJECT_FOLDER}/requirements.delft.txt --no-deps
+
+# add sciencebeam_trainer_delft package itself
+COPY sciencebeam_trainer_delft ${PROJECT_FOLDER}/sciencebeam_trainer_delft
+
+# enable delft
+COPY scripts/grobid /opt/scripts
+ENV PATH /opt/scripts:$PATH
+RUN set-grobid-config.sh "grobid.crf.engine" "delft" \
+    && set-grobid-config.sh "grobid.delft.install" "${PROJECT_FOLDER}" \
+    && set-grobid-config.sh "grobid.delft.package" "sciencebeam_trainer_delft.grobid" \
+    && tail -5 /opt/grobid/grobid-home/config/grobid.properties

@@ -7,6 +7,12 @@ services:
       - ./tests:/opt/sciencebeam-trainer-delft/tests
       - ~/.config/gcloud:/root/.config/gcloud
 
+  grobid:
+    volumes:
+      - ./sciencebeam_trainer_delft:/opt/sciencebeam-trainer-delft/sciencebeam_trainer_delft
+      - ${LOCAL_DATA_DIR}:/opt/sciencebeam-trainer-delft/data
+      - ./embedding-registry.json:/opt/sciencebeam-trainer-delft/embedding-registry.json
+
   jupyter:
     environment:
       - NB_UID=${NB_UID}

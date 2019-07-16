@@ -189,6 +189,28 @@ gcloud-ai-platform-cloud-grobid-train-header: .grobid-train-header-args .require
 		$(_GROBID_TRAIN_ARGS)
 
 
+grobid-build:
+	@if [ "$(NO_BUILD)" != "y" ]; then \
+		$(DOCKER_COMPOSE) build grobid; \
+	fi
+
+
+grobid-shell:
+	$(DOCKER_COMPOSE) run --rm grobid bash
+
+
+grobid-start: grobid-build
+	$(DOCKER_COMPOSE) up -d grobid
+
+
+grobid-logs:
+	$(DOCKER_COMPOSE) logs -f grobid
+
+
+grobid-stop:
+	$(DOCKER_COMPOSE) stop grobid
+
+
 update-test-notebook:
 	$(JUPYTER_RUN) update-notebook-and-check-no-errors.sh \
 		test.ipynb "$(NOTEBOOK_OUTPUT_FILE)"
@@ -221,7 +243,8 @@ jupyter-stop:
 
 
 ci-build-and-test:
-	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build test jupyter-build update-test-notebook-temp
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
+		build test grobid-build jupyter-build update-test-notebook-temp
 
 
 ci-clean:

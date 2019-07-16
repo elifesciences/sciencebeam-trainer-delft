@@ -1,6 +1,7 @@
 elifePipeline {
     node('containers-jenkins-plugin') {
         def commit
+        def baseGrobidTag
 
         stage 'Checkout', {
             checkout scm
@@ -34,8 +35,9 @@ elifePipeline {
             }
 
             stage 'Push unstable sciencebeam-trainer-delft-grobid image', {
-                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-grobid', commit)
-                def unstable_image = image.addSuffixAndTag('_unstable', commit)
+                def tag = "${baseGrobidTag}-${commit}"
+                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-grobid', tag)
+                def unstable_image = image.addSuffixAndTag('_unstable', tag)
                 unstable_image.tag('latest').push()
                 unstable_image.push()
             }

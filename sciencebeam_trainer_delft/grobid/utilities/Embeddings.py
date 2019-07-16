@@ -1,2 +1,2 @@
 # pylint: disable=unused-import
-from delft.utilities.Embeddings import Embeddings  # noqa
+from sciencebeam_trainer_delft.embedding import Embeddings  # noqa

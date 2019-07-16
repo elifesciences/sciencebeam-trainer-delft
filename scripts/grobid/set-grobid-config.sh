@@ -9,6 +9,7 @@ PROP_VALUE="$2"
 
 echo "setting $PROP_NAME to $PROP_VALUE.."
 
+# remove existing properties via grep and add a new line, setting the new value
 UPDATED_CONFIG="$(cat $GROBID_CONFIG | grep --invert-match $PROP_NAME)"$'\n'"$PROP_NAME=$PROP_VALUE"
 
 echo "$UPDATED_CONFIG" > $GROBID_CONFIG

@@ -40,6 +40,17 @@ class TestDownloadManager:
         assert download_manager.download(EXTERNAL_TXT_URL_1) == download_file
         copy_file_mock.assert_called_with(EXTERNAL_TXT_URL_1, download_file)
 
+    def test_should_download_using_passed_in_local_file(
+            self,
+            copy_file_mock: MagicMock,
+            download_dir: Path):
+        download_file = str(download_dir.joinpath('custom.file'))
+        download_manager = DownloadManager(download_dir=download_dir)
+        assert download_manager.download(
+            EXTERNAL_TXT_URL_1, local_file=download_file
+        ) == download_file
+        copy_file_mock.assert_called_with(EXTERNAL_TXT_URL_1, download_file)
+
     def test_should_unzip_embedding(
             self,
             copy_file_mock: MagicMock,

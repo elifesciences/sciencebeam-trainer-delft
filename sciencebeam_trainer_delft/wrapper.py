@@ -10,6 +10,7 @@ from delft.sequenceLabelling.trainer import Scorer
 from delft.utilities.Embeddings import Embeddings
 
 from sciencebeam_trainer_delft.config import ModelConfig
+from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
 from sciencebeam_trainer_delft.data_generator import DataGenerator
 from sciencebeam_trainer_delft.trainer import Trainer
 from sciencebeam_trainer_delft.models import get_model
@@ -54,9 +55,11 @@ class Sequence(_Sequence):
             feature_embedding_size: int = None,
             multiprocessing: bool = False,
             embedding_registry_path: str = None,
+            embedding_manager: EmbeddingManager = None,
             **kwargs):
         LOGGER.info('Sequence, args=%s, kwargs=%s', args, kwargs)
         self.embedding_registry_path = embedding_registry_path
+        self.embedding_manager = embedding_manager
         super().__init__(*args, **kwargs)
         LOGGER.info('use_features=%s', use_features)
         self.model_config = ModelConfig(
@@ -288,15 +291,19 @@ class Sequence(_Sequence):
         return get_model_directory(model_name=self.model_config.model_name, dir_path=dir_path)
 
     def get_embedding_for_model_config(self, model_config: ModelConfig):
+        embedding_name = model_config.embeddings_name
+        LOGGER.info('embedding_manager: %s', self.embedding_manager)
+        if self.embedding_manager:
+            embedding_name = self.embedding_manager.ensure_available(embedding_name)
         embeddings = Embeddings(
-            model_config.embeddings_name,
+            embedding_name,
             path=self.embedding_registry_path or DEFAULT_EMBEDDINGS_PATH,
             use_ELMo=model_config.use_ELMo,
             use_BERT=model_config.use_BERT
         )
         if not embeddings.embed_size > 0:
             raise AssertionError(
-                'invalid embedding size, embeddings not loaded? %s' % model_config.embeddings_name
+                'invalid embedding size, embeddings not loaded? %s' % embedding_name
             )
         return embeddings
 

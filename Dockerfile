@@ -22,5 +22,7 @@ RUN if [ "${install_dev}" = "y" ]; then pip install -r requirements.dev.txt; fi
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
 COPY setup.py ./
 
+COPY config/embedding-registry.json ./
+
 COPY .flake8 .pylintrc pytest.ini ./
 COPY tests ./tests

@@ -28,7 +28,7 @@ NB_GID = $(shell id -g)
 
 LIMIT = 10000
 ARCHITECTURE = CustomBidLSTM_CRF
-EMBEDDING = https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.gz
+EMBEDDING = glove.6B.50d
 INPUT_PATH = https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-header-060518.train.gz
 WORD_LSTM_UNITS = 100
 FEATURE_INDICES =

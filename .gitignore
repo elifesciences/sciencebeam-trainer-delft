@@ -11,7 +11,7 @@ MANIFEST
 notebooks/data
 notebooks/embedding-registry.json
 
-embedding-registry.json
+/embedding-registry.json
 
 launch_*.py
 

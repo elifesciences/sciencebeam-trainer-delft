@@ -32,6 +32,16 @@ GROBID_MODEL_NAMES = [
 ]
 
 
+class Tasks:
+    TRAIN = 'train'
+    TRAIN_EVAL = 'train_eval'
+    EVAL = 'eval'
+    TAG = 'tag'
+
+
+ALL_TASKS = [Tasks.TRAIN, Tasks.TRAIN_EVAL, Tasks.EVAL, Tasks.TAG]
+
+
 def get_default_training_data(model: str) -> str:
     return 'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
 
@@ -68,6 +78,7 @@ def train(
         max_sequence_length: int = 100,
         max_epoch=100,
         download_manager: DownloadManager = None,
+        embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_path=input_path, limit=limit,
@@ -93,6 +104,7 @@ def train(
         max_epoch=max_epoch,
         recurrent_dropout=0.50,
         embeddings_name=embeddings_name,
+        embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
         model_type=architecture,
         use_ELMo=use_ELMo,
@@ -124,6 +136,7 @@ def train_eval(
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
+        embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_path=input_path, limit=limit,
@@ -156,6 +169,7 @@ def train_eval(
         max_epoch=max_epoch,
         recurrent_dropout=0.50,
         embeddings_name=embeddings_name,
+        embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
         model_type=architecture,
         use_ELMo=use_ELMo,
@@ -199,6 +213,7 @@ def eval_model(
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
+        embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_path=input_path, limit=limit,
@@ -219,11 +234,15 @@ def eval_model(
     if use_ELMo:
         model_name += '-with_ELMo'
 
+    # set embeddings_name to None, it will be loaded from the model
+    embeddings_name = None
+
     model = Sequence(
         model_name,
         max_epoch=max_epoch,
         recurrent_dropout=0.50,
         embeddings_name=embeddings_name,
+        embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
         model_type=architecture,
         use_ELMo=use_ELMo,
@@ -247,6 +266,7 @@ def tag_input(
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
+        embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, _, features_all = load_data_and_labels(
         model=model, input_path=input_path, limit=limit,
@@ -263,11 +283,15 @@ def tag_input(
     if use_ELMo:
         model_name += '-with_ELMo'
 
+    # set embeddings_name to None, it will be loaded from the model
+    embeddings_name = None
+
     model = Sequence(
         model_name,
         max_epoch=max_epoch,
         recurrent_dropout=0.50,
         embeddings_name=embeddings_name,
+        embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
         model_type=architecture,
         use_ELMo=use_ELMo,
@@ -289,7 +313,7 @@ def parse_args(argv: List[str] = None):
     )
 
     parser.add_argument("model", choices=GROBID_MODEL_NAMES)
-    parser.add_argument("action", choices=['train', 'train_eval', 'eval', 'tag'])
+    parser.add_argument("action", choices=ALL_TASKS)
     parser.add_argument("--fold-count", type=int, default=1)
     parser.add_argument(
         "--architecture", default='BidLSTM_CRF',
@@ -357,14 +381,17 @@ def run(args):
     embedding_manager = EmbeddingManager(download_manager=download_manager)
     if args.no_use_lmdb:
         embedding_manager.disable_embedding_lmdb_cache()
-    embedding_name = embedding_manager.download_and_install_embedding_if_url(
-        args.embedding
-    )
+    if action in {Tasks.TRAIN, Tasks.TRAIN_EVAL}:
+        embedding_name = embedding_manager.ensure_available(args.embedding)
+    else:
+        embedding_name = embedding_manager.resolve_alias(args.embedding)
+    LOGGER.info('embedding_name: %s', embedding_name)
     embedding_manager.validate_embedding(embedding_name)
 
     train_args = dict(
         model=model,
         embeddings_name=embedding_name,
+        embedding_manager=embedding_manager,
         architecture=architecture, use_ELMo=use_ELMo,
         input_path=args.input,
         output_path=args.output,
@@ -383,10 +410,10 @@ def run(args):
 
     LOGGER.info('get_tf_info: %s', get_tf_info())
 
-    if action == 'train':
+    if action == Tasks.TRAIN:
         train(**train_args)
 
-    if action == 'train_eval':
+    if action == Tasks.TRAIN_EVAL:
         if args.fold_count < 1:
             raise ValueError("fold-count should be equal or more than 1")
         train_eval(
@@ -394,12 +421,12 @@ def run(args):
             **train_args
         )
 
-    if action == 'eval':
+    if action == Tasks.EVAL:
         if not args.model_path:
             raise ValueError('--model-path required')
         eval_model(model_path=args.model_path, **train_args)
 
-    if action == 'tag':
+    if action == Tasks.TAG:
         if not args.model_path:
             raise ValueError('--model-path required')
         tag_input(model_path=args.model_path, **train_args)

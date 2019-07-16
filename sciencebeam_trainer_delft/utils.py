@@ -1,8 +1,10 @@
 import logging
 import os
+from abc import ABC, abstractmethod
 from shutil import copyfileobj
 from contextlib import contextmanager
 from gzip import GzipFile
+from lzma import LZMAFile
 from urllib.request import urlopen
 from typing import List
 
@@ -29,18 +31,75 @@ def is_external_location(filepath: str):
     return isinstance(filepath, string_types) and '://' in filepath
 
 
+def path_join(parent, child):
+    return os.path.join(str(parent), str(child))
+
+
 def is_gzip_filename(filepath: str):
     return filepath.endswith('.gz')
 
 
-def path_join(parent, child):
-    return os.path.join(str(parent), str(child))
+def is_xz_filename(filepath: str):
+    return filepath.endswith('.xz')
 
 
 def strip_gzip_filename_ext(filepath: str):
     if not is_gzip_filename(filepath):
         raise ValueError('not a gzip filename: %s' % filepath)
     return os.path.splitext(filepath)[0]
+
+
+def strip_xz_filename_ext(filepath: str):
+    if not is_xz_filename(filepath):
+        raise ValueError('not a xz filename: %s' % filepath)
+    return os.path.splitext(filepath)[0]
+
+
+class CompressionWrapper(ABC):
+    @abstractmethod
+    def strip_compression_filename_ext(self, filepath: str):
+        pass
+
+    @abstractmethod
+    def wrap_fileobj(self, filename: str, fileobj):
+        pass
+
+
+class GzipCompressionWrapper(CompressionWrapper):
+    def strip_compression_filename_ext(self, filepath: str):
+        return strip_gzip_filename_ext(filepath)
+
+    def wrap_fileobj(self, filename: str, fileobj):
+        return GzipFile(filename=filename, fileobj=fileobj)
+
+
+class XzCompressionWrapper(CompressionWrapper):
+    def strip_compression_filename_ext(self, filepath: str):
+        return strip_xz_filename_ext(filepath)
+
+    def wrap_fileobj(self, filename: str, fileobj):
+        return LZMAFile(filename=fileobj)
+
+
+class DummyCompressionWrapper(CompressionWrapper):
+    def strip_compression_filename_ext(self, filepath: str):
+        return filepath
+
+    def wrap_fileobj(self, filename: str, fileobj):
+        return fileobj
+
+
+GZIP_COMPRESSION_WRAPPER = GzipCompressionWrapper()
+XZ_COMPRESSION_WRAPPER = XzCompressionWrapper()
+DUMMY_COMPRESSION_WRAPPER = DummyCompressionWrapper()
+
+
+def get_compression_wrapper(filepath: str):
+    if is_gzip_filename(filepath):
+        return GZIP_COMPRESSION_WRAPPER
+    if is_xz_filename(filepath):
+        return XZ_COMPRESSION_WRAPPER
+    return DUMMY_COMPRESSION_WRAPPER
 
 
 @contextmanager
@@ -57,22 +116,16 @@ def _open_raw(filepath: str, mode: str):
 
 
 @contextmanager
-def open_file(filepath: str, mode: str, gzip_compression=None):
-    if gzip_compression is None:
-        gzip_compression = is_gzip_filename(filepath)
+def open_file(filepath: str, mode: str, compression_wrapper: CompressionWrapper = None):
+    if compression_wrapper is None:
+        compression_wrapper = get_compression_wrapper(filepath)
     if mode in {'rb', 'r'}:
         with _open_raw(filepath, mode=mode) as source_fp:
-            if gzip_compression:
-                yield GzipFile(filename=filepath, fileobj=source_fp)
-            else:
-                yield source_fp
+            yield compression_wrapper.wrap_fileobj(filename=filepath, fileobj=source_fp)
     elif mode in {'wb', 'w'}:
         tf_file_io.recursive_create_dir(os.path.dirname(filepath))
         with _open_raw(filepath, mode=mode) as target_fp:
-            if gzip_compression:
-                yield GzipFile(filename=filepath, fileobj=target_fp)
-            else:
-                yield target_fp
+            yield compression_wrapper.wrap_fileobj(filename=filepath, fileobj=target_fp)
     else:
         raise ValueError('unsupported mode: %s' % mode)
 

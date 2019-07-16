@@ -33,8 +33,8 @@ elifePipeline {
                 unstable_image.push()
             }
 
-            stage 'Push unstable sciencebeam-grobid-delft image', {
-                def image = DockerImage.elifesciences(this, 'sciencebeam-grobid-delft', commit)
+            stage 'Push unstable sciencebeam-trainer-delft-grobid image', {
+                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-grobid', commit)
                 def unstable_image = image.addSuffixAndTag('_unstable', commit)
                 unstable_image.tag('latest').push()
                 unstable_image.push()

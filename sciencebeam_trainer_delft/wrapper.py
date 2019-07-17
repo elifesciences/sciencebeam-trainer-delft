@@ -7,10 +7,11 @@ import numpy as np
 
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.trainer import Scorer
-from delft.utilities.Embeddings import Embeddings
 
 from sciencebeam_trainer_delft.config import ModelConfig
+from sciencebeam_trainer_delft.download_manager import DownloadManager
 from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
+from sciencebeam_trainer_delft.embedding import Embeddings
 from sciencebeam_trainer_delft.data_generator import DataGenerator
 from sciencebeam_trainer_delft.trainer import Trainer
 from sciencebeam_trainer_delft.models import get_model
@@ -57,11 +58,15 @@ class Sequence(_Sequence):
             embedding_registry_path: str = None,
             embedding_manager: EmbeddingManager = None,
             **kwargs):
-        LOGGER.info('Sequence, args=%s, kwargs=%s', args, kwargs)
+        # initialise logging if not already initialised
+        logging.basicConfig(level='INFO')
+        LOGGER.debug('Sequence, args=%s, kwargs=%s', args, kwargs)
+        if embedding_manager is None:
+            embedding_manager = EmbeddingManager(download_manager=DownloadManager())
         self.embedding_registry_path = embedding_registry_path
         self.embedding_manager = embedding_manager
         super().__init__(*args, **kwargs)
-        LOGGER.info('use_features=%s', use_features)
+        LOGGER.debug('use_features=%s', use_features)
         self.model_config = ModelConfig(
             **vars(self.model_config),
             use_features=use_features,
@@ -292,9 +297,8 @@ class Sequence(_Sequence):
 
     def get_embedding_for_model_config(self, model_config: ModelConfig):
         embedding_name = model_config.embeddings_name
-        LOGGER.info('embedding_manager: %s', self.embedding_manager)
-        if self.embedding_manager:
-            embedding_name = self.embedding_manager.ensure_available(embedding_name)
+        embedding_name = self.embedding_manager.ensure_available(embedding_name)
+        LOGGER.info('embedding_name: %s', embedding_name)
         embeddings = Embeddings(
             embedding_name,
             path=self.embedding_registry_path or DEFAULT_EMBEDDINGS_PATH,

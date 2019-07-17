@@ -39,10 +39,14 @@ COPY sciencebeam_trainer_delft ${PROJECT_FOLDER}/sciencebeam_trainer_delft
 # add embedding registry with download locations
 COPY config/embedding-registry.json ${PROJECT_FOLDER}/
 
+# disable python warnings (and fix logging)
+ENV PYTHONWARNINGS="ignore"
+
 # enable delft
 COPY scripts/grobid /opt/scripts
 ENV PATH /opt/scripts:$PATH
 RUN set-grobid-config.sh "grobid.crf.engine" "delft" \
     && set-grobid-config.sh "grobid.delft.install" "${PROJECT_FOLDER}" \
+    && set-grobid-config.sh "grobid.delft.redirect_output" "true" \
     && set-grobid-config.sh "grobid.delft.package" "sciencebeam_trainer_delft.grobid" \
     && tail -5 /opt/grobid/grobid-home/config/grobid.properties

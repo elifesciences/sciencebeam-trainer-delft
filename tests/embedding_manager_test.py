@@ -54,7 +54,8 @@ def _embedding_manager(
     embedding_manager = EmbeddingManager(
         embedding_registry_path,
         download_manager=download_manager,
-        default_embedding_lmdb_path=str(embedding_lmdb_path)
+        default_embedding_lmdb_path=str(embedding_lmdb_path),
+        min_lmdb_cache_size=0
     )
     return embedding_manager
 

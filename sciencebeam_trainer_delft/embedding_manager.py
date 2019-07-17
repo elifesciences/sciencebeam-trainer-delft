@@ -16,6 +16,8 @@ DEFAULT_EMBEDDING_REGISTRY = 'embedding-registry.json'
 DEFAULT_DOWNLOAD_DIR = 'data/download'
 DEFAULT_EMBEDDING_LMDB_PATH = 'data/db'
 
+DEFAULT_MIN_LMDB_CACHE_SIZE = 1024 * 1024
+
 
 def _find_embedding_index(embedding_list: List[dict], name: str) -> int:
     matching_indices = [i for i, x in enumerate(embedding_list) if x['name'] == name]
@@ -54,12 +56,14 @@ class EmbeddingManager:
             self, path: str = DEFAULT_EMBEDDING_REGISTRY,
             download_manager: DownloadManager = None,
             download_dir: str = DEFAULT_DOWNLOAD_DIR,
-            default_embedding_lmdb_path: str = DEFAULT_EMBEDDING_LMDB_PATH):
+            default_embedding_lmdb_path: str = DEFAULT_EMBEDDING_LMDB_PATH,
+            min_lmdb_cache_size: int = DEFAULT_MIN_LMDB_CACHE_SIZE):
         assert download_manager
         self.path = path
         self.download_manager = download_manager
         self.download_dir = download_dir
         self.default_embedding_lmdb_path = default_embedding_lmdb_path
+        self.min_lmdb_cache_size = min_lmdb_cache_size
 
     def _load(self) -> dict:
         return json.loads(Path(self.path).read_text())
@@ -141,14 +145,19 @@ class EmbeddingManager:
             return False
         embedding_lmdb_dir = Path(embedding_lmdb_path).joinpath(embedding_name)
         embedding_lmdb_file = embedding_lmdb_dir.joinpath('data.mdb')
-        exists = embedding_lmdb_file.exists()
-        LOGGER.debug('embedding_lmdb_file: %s (exists: %s)', embedding_lmdb_file, exists)
-        if exists:
+        exists = embedding_lmdb_file.is_file()
+        size = exists and embedding_lmdb_file.stat().st_size
+        valid = exists and size >= self.min_lmdb_cache_size
+        LOGGER.debug(
+            'embedding_lmdb_file: %s (exists: %s, valid: %s, size: %s)',
+            embedding_lmdb_file, exists, valid, size
+        )
+        if valid:
             LOGGER.info(
                 'has already lmdb cache: %s (%s bytes)',
-                embedding_lmdb_file, embedding_lmdb_file.stat().st_size
+                embedding_lmdb_file, size
             )
-        return exists
+        return valid
 
     def is_downloaded(self, embedding_name: str):
         embedding_config = self.get_embedding_config(embedding_name)

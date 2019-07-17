@@ -143,6 +143,11 @@ class EmbeddingManager:
         embedding_lmdb_file = embedding_lmdb_dir.joinpath('data.mdb')
         exists = embedding_lmdb_file.exists()
         LOGGER.debug('embedding_lmdb_file: %s (exists: %s)', embedding_lmdb_file, exists)
+        if exists:
+            LOGGER.info(
+                'has already lmdb cache: %s (%s bytes)',
+                embedding_lmdb_file, embedding_lmdb_file.stat().st_size
+            )
         return exists
 
     def is_downloaded(self, embedding_name: str):
@@ -152,6 +157,7 @@ class EmbeddingManager:
         embedding_path = embedding_config.get('path')
         if embedding_path and not Path(embedding_path).exists():
             return False
+        LOGGER.info('already downloaded: %s', embedding_name)
         return True
 
     def is_downloaded_or_has_lmdb_cache(self, embedding_name: str):

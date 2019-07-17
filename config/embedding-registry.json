@@ -12,7 +12,7 @@
             "name": "glove-840B",
             "path": "data/download/glove.840B.300d.txt",
             "type": "glove",
-            "format": "vec", 
+            "format": "vec",
             "lang": "en",
             "item": "word",
             "url": "https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.840B.300d.txt.xz"

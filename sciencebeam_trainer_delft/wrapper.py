@@ -62,7 +62,10 @@ class Sequence(_Sequence):
         logging.basicConfig(level='INFO')
         LOGGER.debug('Sequence, args=%s, kwargs=%s', args, kwargs)
         if embedding_manager is None:
-            embedding_manager = EmbeddingManager(download_manager=DownloadManager())
+            embedding_manager = EmbeddingManager(
+                path=embedding_registry_path,
+                download_manager=DownloadManager()
+            )
         self.embedding_registry_path = embedding_registry_path
         self.embedding_manager = embedding_manager
         super().__init__(*args, **kwargs)

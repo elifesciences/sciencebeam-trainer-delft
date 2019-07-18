@@ -6,7 +6,7 @@ from pathlib import Path
 
 from six import string_types
 
-from sciencebeam_trainer_delft.utils import copy_file, path_join
+from sciencebeam_trainer_delft.utils.io import copy_file, path_join
 
 
 LOGGER = logging.getLogger(__name__)

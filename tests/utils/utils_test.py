@@ -1,4 +1,4 @@
-from sciencebeam_trainer_delft.utils import is_external_location, parse_number_ranges
+from sciencebeam_trainer_delft.utils.io import is_external_location, parse_number_ranges
 
 
 class TestIsExternalLocation:

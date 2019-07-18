@@ -16,7 +16,7 @@ from sciencebeam_trainer_delft.data_generator import DataGenerator
 from sciencebeam_trainer_delft.trainer import Trainer
 from sciencebeam_trainer_delft.models import get_model
 from sciencebeam_trainer_delft.preprocess import Preprocessor, FeaturesPreprocessor
-from sciencebeam_trainer_delft.utils import concatenate_or_none
+from sciencebeam_trainer_delft.utils.io import concatenate_or_none
 from sciencebeam_trainer_delft.saving import ModelSaver, ModelLoader
 from sciencebeam_trainer_delft.tagger import Tagger
 

@@ -61,12 +61,12 @@ class Sequence(_Sequence):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
         LOGGER.debug('Sequence, args=%s, kwargs=%s', args, kwargs)
+        self.embedding_registry_path = embedding_registry_path or DEFAULT_EMBEDDINGS_PATH
         if embedding_manager is None:
             embedding_manager = EmbeddingManager(
-                path=embedding_registry_path,
+                path=self.embedding_registry_path,
                 download_manager=DownloadManager()
             )
-        self.embedding_registry_path = embedding_registry_path
         self.embedding_manager = embedding_manager
         super().__init__(*args, **kwargs)
         LOGGER.debug('use_features=%s', use_features)
@@ -304,7 +304,7 @@ class Sequence(_Sequence):
         LOGGER.info('embedding_name: %s', embedding_name)
         embeddings = Embeddings(
             embedding_name,
-            path=self.embedding_registry_path or DEFAULT_EMBEDDINGS_PATH,
+            path=self.embedding_registry_path,
             use_ELMo=model_config.use_ELMo,
             use_BERT=model_config.use_BERT
         )

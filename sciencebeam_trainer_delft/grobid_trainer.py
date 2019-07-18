@@ -20,7 +20,7 @@ from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
 from sciencebeam_trainer_delft.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.reader import load_data_and_labels_crf_file
 from sciencebeam_trainer_delft.download_manager import DownloadManager
-from sciencebeam_trainer_delft.utils.io import get_tf_info
+from sciencebeam_trainer_delft.utils.tf import get_tf_info
 
 
 LOGGER = logging.getLogger(__name__)

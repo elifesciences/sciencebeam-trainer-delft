@@ -42,6 +42,10 @@ COPY config/embedding-registry.json ${PROJECT_FOLDER}/
 # disable python warnings (and fix logging)
 ENV PYTHONWARNINGS="ignore"
 
+RUN mkdir -p /data \
+    && ln -s /data ${PROJECT_FOLDER}/data
+VOLUME ["/data"]
+
 # enable delft
 COPY scripts/grobid /opt/scripts
 ENV PATH /opt/scripts:$PATH

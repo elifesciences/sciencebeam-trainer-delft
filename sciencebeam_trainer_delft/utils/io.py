@@ -6,11 +6,8 @@ from contextlib import contextmanager
 from gzip import GzipFile
 from lzma import LZMAFile
 from urllib.request import urlopen
-from typing import List
 
 from six import string_types, text_type
-
-import numpy as np
 
 try:
     from tensorflow.python.lib.io import file_io as tf_file_io
@@ -135,9 +132,3 @@ def copy_file(source_filepath: str, target_filepath: str, overwrite: bool = True
     with open_file(text_type(source_filepath), mode='rb') as source_fp:
         with open_file(text_type(target_filepath), mode='wb') as target_fp:
             copyfileobj(source_fp, target_fp)
-
-
-def concatenate_or_none(arrays: List[np.array], **kwargs) -> np.array:
-    if arrays[0] is None:
-        return None
-    return np.concatenate(arrays, **kwargs)

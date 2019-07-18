@@ -6,21 +6,14 @@ from contextlib import contextmanager
 from gzip import GzipFile
 from lzma import LZMAFile
 from urllib.request import urlopen
-from typing import List
 
 from six import string_types, text_type
 
-import numpy as np
-
 try:
-    from tensorflow import __version__ as tf_version
     from tensorflow.python.lib.io import file_io as tf_file_io
-    from tensorflow.python.client import device_lib as tf_device_lib
     from tensorflow.python.framework.errors_impl import NotFoundError as tf_NotFoundError
 except ImportError:
-    tf_version = None
     tf_file_io = None
-    tf_device_lib = None
     tf_NotFoundError = None
 
 
@@ -139,34 +132,3 @@ def copy_file(source_filepath: str, target_filepath: str, overwrite: bool = True
     with open_file(text_type(source_filepath), mode='rb') as source_fp:
         with open_file(text_type(target_filepath), mode='wb') as target_fp:
             copyfileobj(source_fp, target_fp)
-
-
-def get_tf_info():
-    return {
-        'tf_version': tf_version,
-        'tf_device_lib': tf_device_lib.list_local_devices() if tf_device_lib else None
-    }
-
-
-def parse_number_range(expr: str) -> List[int]:
-    fragments = expr.split('-')
-    if len(fragments) == 1:
-        return [int(expr)]
-    if len(fragments) == 2:
-        return list(range(int(fragments[0]), int(fragments[1]) + 1))
-    raise ValueError('invalid number range: %s' % fragments)
-
-
-def parse_number_ranges(expr: str) -> List[int]:
-    if not expr:
-        return []
-    numbers = []
-    for fragment in expr.split(','):
-        numbers.extend(parse_number_range(fragment))
-    return numbers
-
-
-def concatenate_or_none(arrays: List[np.array], **kwargs) -> np.array:
-    if arrays[0] is None:
-        return None
-    return np.concatenate(arrays, **kwargs)

@@ -2,7 +2,10 @@ import logging
 
 import numpy as np
 
-from sciencebeam_trainer_delft.preprocess import WordPreprocessor, FeaturesPreprocessor
+from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
+    WordPreprocessor,
+    FeaturesPreprocessor
+)
 
 
 LOGGER = logging.getLogger(__name__)

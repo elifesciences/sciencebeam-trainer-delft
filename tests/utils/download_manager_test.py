@@ -4,8 +4,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-import sciencebeam_trainer_delft.download_manager as embedding_manager_module
-from sciencebeam_trainer_delft.download_manager import (
+import sciencebeam_trainer_delft.utils.download_manager as download_manager_module
+from sciencebeam_trainer_delft.utils.download_manager import (
     DownloadManager
 )
 
@@ -17,7 +17,7 @@ EXTERNAL_TXT_GZ_URL_1 = EXTERNAL_TXT_URL_1 + '.gz'
 
 @pytest.fixture(name='copy_file_mock', autouse=True)
 def _copy_file_mock():
-    with patch.object(embedding_manager_module, 'copy_file') as mock:
+    with patch.object(download_manager_module, 'copy_file') as mock:
         yield mock
 
 @pytest.fixture(name='data_dir')

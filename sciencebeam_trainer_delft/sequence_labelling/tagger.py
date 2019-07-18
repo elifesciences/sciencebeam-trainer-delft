@@ -4,7 +4,7 @@ import numpy as np
 
 from delft.utilities.Tokenizer import tokenizeAndFilter
 
-from sciencebeam_trainer_delft.data_generator import DataGenerator
+from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
 
 
 class Tagger:

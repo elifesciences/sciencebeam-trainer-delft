@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-from sciencebeam_trainer_delft.utils import (
+from sciencebeam_trainer_delft.utils.io import (
     copy_file,
     is_external_location,
     get_compression_wrapper

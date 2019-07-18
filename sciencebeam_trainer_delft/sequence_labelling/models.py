@@ -15,7 +15,7 @@ from delft.sequenceLabelling.models import BaseModel
 from delft.sequenceLabelling.models import get_model as _get_model
 
 
-from sciencebeam_trainer_delft.config import ModelConfig
+from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 
 
 LOGGER = logging.getLogger(__name__)

@@ -8,7 +8,7 @@ from delft.sequenceLabelling.preprocess import (
 )
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
 
-from sciencebeam_trainer_delft.preprocess import Preprocessor
+from sciencebeam_trainer_delft.sequence_labelling.preprocess import Preprocessor
 
 
 LOGGER = logging.getLogger(__name__)

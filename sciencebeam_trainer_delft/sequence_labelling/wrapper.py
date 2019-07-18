@@ -8,17 +8,21 @@ import numpy as np
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.trainer import Scorer
 
-from sciencebeam_trainer_delft.config import ModelConfig
-from sciencebeam_trainer_delft.download_manager import DownloadManager
-from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
-from sciencebeam_trainer_delft.embedding import Embeddings
-from sciencebeam_trainer_delft.data_generator import DataGenerator
-from sciencebeam_trainer_delft.trainer import Trainer
-from sciencebeam_trainer_delft.models import get_model
-from sciencebeam_trainer_delft.preprocess import Preprocessor, FeaturesPreprocessor
-from sciencebeam_trainer_delft.utils import concatenate_or_none
-from sciencebeam_trainer_delft.saving import ModelSaver, ModelLoader
-from sciencebeam_trainer_delft.tagger import Tagger
+from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
+from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
+
+from sciencebeam_trainer_delft.embedding import Embeddings, EmbeddingManager
+
+from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
+from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
+from sciencebeam_trainer_delft.sequence_labelling.trainer import Trainer
+from sciencebeam_trainer_delft.sequence_labelling.models import get_model
+from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
+    Preprocessor,
+    FeaturesPreprocessor
+)
+from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver, ModelLoader
+from sciencebeam_trainer_delft.sequence_labelling.tagger import Tagger
 
 
 LOGGER = logging.getLogger(__name__)

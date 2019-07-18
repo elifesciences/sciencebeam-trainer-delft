@@ -8,8 +8,8 @@ import pytest
 
 from delft.utilities.Embeddings import Embeddings
 
-from sciencebeam_trainer_delft.wrapper import get_model_directory
-from sciencebeam_trainer_delft.grobid_trainer import (
+from sciencebeam_trainer_delft.sequence_labelling.wrapper import get_model_directory
+from sciencebeam_trainer_delft.sequence_labelling.grobid_trainer import (
     parse_args,
     train,
     train_eval,
@@ -17,7 +17,7 @@ from sciencebeam_trainer_delft.grobid_trainer import (
 )
 
 from .test_data import TEST_DATA_PATH
-from .test_utils import log_on_exception
+from ..test_utils import log_on_exception
 
 
 EMBEDDING_NAME_1 = 'embedding1'

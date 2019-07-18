@@ -1,13 +1,10 @@
 import logging
-import os
 from pathlib import Path
 
 import pytest
 from py._path.local import LocalPath
 
 import tensorflow as tf
-
-from .test_data import TEST_DATA_PATH
 
 
 LOGGER = logging.getLogger(__name__)
@@ -19,14 +16,6 @@ def setup_logging():
     logging.basicConfig(level='INFO')
     logging.getLogger('tests').setLevel('DEBUG')
     logging.getLogger('sciencebeam_trainer_delft').setLevel('DEBUG')
-
-
-@pytest.fixture
-def sample_train_file():
-    return os.path.join(
-        TEST_DATA_PATH,
-        'test-header.train'
-    )
 
 
 @pytest.fixture

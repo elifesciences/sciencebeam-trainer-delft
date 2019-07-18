@@ -8,9 +8,9 @@ from keras.callbacks import EarlyStopping
 from delft.sequenceLabelling.trainer import Trainer as _Trainer
 from delft.sequenceLabelling.trainer import Scorer
 
-from sciencebeam_trainer_delft.data_generator import DataGenerator
-from sciencebeam_trainer_delft.callbacks import ModelWithMetadataCheckpoint
-from sciencebeam_trainer_delft.saving import ModelSaver
+from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
+from sciencebeam_trainer_delft.sequence_labelling.callbacks import ModelWithMetadataCheckpoint
+from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver
 
 
 LOGGER = logging.getLogger(__name__)

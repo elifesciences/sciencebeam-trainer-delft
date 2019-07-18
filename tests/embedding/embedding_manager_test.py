@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from sciencebeam_trainer_delft.embedding_manager import (
+from sciencebeam_trainer_delft.embedding import (
     EmbeddingManager
 )
 

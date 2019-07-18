@@ -1,4 +1,4 @@
-from sciencebeam_trainer_delft.wrapper import (
+from sciencebeam_trainer_delft.sequence_labelling.wrapper import (
     Sequence,
     DEFAULT_EMBEDDINGS_PATH
 )

@@ -4,7 +4,7 @@ import argparse
 import time
 from typing import List
 
-import sciencebeam_trainer_delft.no_warn_if_disabled  # noqa, pylint: disable=unused-import
+import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 # pylint: disable=wrong-import-order, ungrouped-imports
 
 import numpy as np
@@ -12,15 +12,16 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 
-from sciencebeam_trainer_delft.utils import parse_number_ranges
-from sciencebeam_trainer_delft.wrapper import Sequence
+from sciencebeam_trainer_delft.utils.misc import parse_number_ranges
+from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
+from sciencebeam_trainer_delft.utils.cloud_support import patch_cloud_support
+from sciencebeam_trainer_delft.utils.tf import get_tf_info
 
-from sciencebeam_trainer_delft.cloud_support import patch_cloud_support
-from sciencebeam_trainer_delft.embedding_manager import EmbeddingManager
-from sciencebeam_trainer_delft.models import get_model_names, patch_get_model
-from sciencebeam_trainer_delft.reader import load_data_and_labels_crf_file
-from sciencebeam_trainer_delft.download_manager import DownloadManager
-from sciencebeam_trainer_delft.utils import get_tf_info
+from sciencebeam_trainer_delft.embedding import EmbeddingManager
+
+from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence
+from sciencebeam_trainer_delft.sequence_labelling.models import get_model_names, patch_get_model
+from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_labels_crf_file
 
 
 LOGGER = logging.getLogger(__name__)

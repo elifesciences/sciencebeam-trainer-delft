@@ -1,2 +1,2 @@
 # pylint: disable=unused-import
-from sciencebeam_trainer_delft.wrapper import Sequence  # noqa
+from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence  # noqa

@@ -12,7 +12,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import keras.backend as K
 
-from sciencebeam_trainer_delft.utils.io import parse_number_ranges
+from sciencebeam_trainer_delft.utils.misc import parse_number_ranges
 from sciencebeam_trainer_delft.wrapper import Sequence
 
 from sciencebeam_trainer_delft.cloud_support import patch_cloud_support

@@ -4,8 +4,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-import sciencebeam_trainer_delft.download_manager as download_manager_module
-from sciencebeam_trainer_delft.download_manager import (
+import sciencebeam_trainer_delft.utils.download_manager as download_manager_module
+from sciencebeam_trainer_delft.utils.download_manager import (
     DownloadManager
 )
 

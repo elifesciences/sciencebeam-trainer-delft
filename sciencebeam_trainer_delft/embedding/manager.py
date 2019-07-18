@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Dict, List
 
-from sciencebeam_trainer_delft.download_manager import DownloadManager
+from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 
 from sciencebeam_trainer_delft.utils.io import is_external_location
 

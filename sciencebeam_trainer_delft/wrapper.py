@@ -9,7 +9,7 @@ from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.trainer import Scorer
 
 from sciencebeam_trainer_delft.config import ModelConfig
-from sciencebeam_trainer_delft.download_manager import DownloadManager
+from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.embedding import Embeddings, EmbeddingManager
 from sciencebeam_trainer_delft.data_generator import DataGenerator
 from sciencebeam_trainer_delft.trainer import Trainer

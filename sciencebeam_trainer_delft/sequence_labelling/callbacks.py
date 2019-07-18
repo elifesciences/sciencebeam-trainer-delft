@@ -6,7 +6,7 @@ import numpy as np
 import keras.backend as K
 from keras.callbacks import Callback
 
-from sciencebeam_trainer_delft.saving import ModelSaver
+from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver
 
 LOGGER = logging.getLogger(__name__)
 

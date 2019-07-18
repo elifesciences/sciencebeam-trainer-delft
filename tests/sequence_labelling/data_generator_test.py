@@ -8,7 +8,7 @@ import numpy as np
 
 from delft.sequenceLabelling.preprocess import to_casing_single
 
-from sciencebeam_trainer_delft.data_generator import (
+from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     left_pad_batch_values,
     DataGenerator
 )

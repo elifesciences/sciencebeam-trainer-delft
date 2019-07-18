@@ -7,9 +7,10 @@ from abc import ABC
 from delft.sequenceLabelling.models import Model
 
 from sciencebeam_trainer_delft.utils.cloud_support import auto_upload_from_local_file
-from sciencebeam_trainer_delft.config import ModelConfig
-from sciencebeam_trainer_delft.preprocess import Preprocessor
 from sciencebeam_trainer_delft.utils.io import open_file
+
+from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
+from sciencebeam_trainer_delft.sequence_labelling.preprocess import Preprocessor
 
 
 LOGGER = logging.getLogger(__name__)

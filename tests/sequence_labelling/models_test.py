@@ -1,7 +1,7 @@
 import pytest
 
-from sciencebeam_trainer_delft.config import ModelConfig
-from sciencebeam_trainer_delft.models import CustomBidLSTM_CRF
+from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
+from sciencebeam_trainer_delft.sequence_labelling.models import CustomBidLSTM_CRF
 
 
 @pytest.fixture(name='model_config')

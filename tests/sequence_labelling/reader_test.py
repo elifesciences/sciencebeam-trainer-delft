@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from sciencebeam_trainer_delft.reader import (
+from sciencebeam_trainer_delft.sequence_labelling.reader import (
     load_data_and_labels_crf_file,
     load_data_crf_string
 )

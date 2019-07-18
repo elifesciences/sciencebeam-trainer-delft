@@ -116,9 +116,13 @@ test-setup-install:
 	$(DELFT_RUN) python setup.py install
 
 
-test: \
+lint: \
 	flake8 \
-	pylint \
+	pylint
+
+
+test: \
+	lint \
 	pytest \
 	test-setup-install
 
@@ -197,6 +201,10 @@ grobid-build:
 
 grobid-shell:
 	$(DOCKER_COMPOSE) run --rm grobid bash
+
+
+grobid-exec:
+	$(DOCKER_COMPOSE) exec grobid bash
 
 
 grobid-start: grobid-build

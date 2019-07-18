@@ -17,7 +17,10 @@ from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
 from sciencebeam_trainer_delft.sequence_labelling.trainer import Trainer
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model
-from sciencebeam_trainer_delft.sequence_labelling.preprocess import Preprocessor, FeaturesPreprocessor
+from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
+    Preprocessor,
+    FeaturesPreprocessor
+)
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver, ModelLoader
 from sciencebeam_trainer_delft.sequence_labelling.tagger import Tagger
 

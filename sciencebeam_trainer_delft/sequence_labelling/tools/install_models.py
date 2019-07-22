@@ -54,6 +54,7 @@ def install_model(
     )
     target_directory = os.path.join(model_base_path, model_name)
     copy_directory_with_source_meta(model_source_url, target_directory, force=force)
+    LOGGER.info('copied model %s to %s', model_source_url, target_directory)
 
 
 def install_models(model_base_path: str, model_source_dict: Dict[str, str], force: bool = False):

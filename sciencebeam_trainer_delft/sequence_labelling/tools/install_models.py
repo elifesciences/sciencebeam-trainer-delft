@@ -32,7 +32,7 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
             'current source_url of %s already (skipping): %s',
             target_directory, current_source_url
         )
-        return
+        return []
     files = list_files(source_url)
     LOGGER.debug('files: %s', files)
     if not files:

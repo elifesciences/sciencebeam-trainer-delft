@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from gzip import GzipFile
 from lzma import LZMAFile
 from urllib.request import urlopen
+from typing import List
 
 from six import string_types, text_type
 
@@ -123,12 +124,21 @@ def open_file(filepath: str, mode: str, compression_wrapper: CompressionWrapper 
         raise ValueError('unsupported mode: %s' % mode)
 
 
-def copy_file(source_filepath: str, target_filepath: str, overwrite: bool = True):
+def _require_tf_file_io():
     if tf_file_io is None:
         raise ImportError('Cloud storage file transfer requires TensorFlow.')
+
+
+def copy_file(source_filepath: str, target_filepath: str, overwrite: bool = True):
+    _require_tf_file_io()
     if not overwrite and tf_file_io.file_exists(target_filepath):
         LOGGER.info('skipping already existing file: %s', target_filepath)
         return
     with open_file(text_type(source_filepath), mode='rb') as source_fp:
         with open_file(text_type(target_filepath), mode='wb') as target_fp:
             copyfileobj(source_fp, target_fp)
+
+
+def list_files(directory_path: str) -> List[str]:
+    _require_tf_file_io()
+    return tf_file_io.list_directory(directory_path)

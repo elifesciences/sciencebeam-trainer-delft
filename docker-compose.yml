@@ -20,6 +20,8 @@ services:
       args:
         base_image: ${BASE_GROBID_REPO}:${BASE_GROBID_TAG}
     image: elifesciences/sciencebeam-trainer-delft-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
+    environment:
+      - OVERRIDE_MODELS=${OVERRIDE_MODELS}
     volumes:
       - data:/opt/sciencebeam-trainer-delft/data
     ports:

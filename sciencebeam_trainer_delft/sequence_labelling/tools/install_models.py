@@ -54,6 +54,7 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
 def validate_pickle_file(pickle_file: str):
     with open(pickle_file, 'rb') as fp:
         pickle.load(fp)
+    LOGGER.info('validated pickle file: %s', pickle_file)
 
 
 def validate_pickle_files(pickle_files: List[str]):

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 GROBID_MODELS_DIRECTORY=/opt/grobid/grobid-home/models
 
 if [ ! -z "${OVERRIDE_MODELS}" ]; then
@@ -10,7 +12,8 @@ if [ ! -z "${OVERRIDE_MODELS}" ]; then
     echo "installing models: ${OVERRIDE_MODELS}"
     python -m sciencebeam_trainer_delft.sequence_labelling.tools.install_models \
         --model-base-path=${GROBID_MODELS_DIRECTORY} \
-        --install "${OVERRIDE_MODELS}"
+        --install "${OVERRIDE_MODELS}" \
+        --validate-pickles
 fi
 
 exec $@

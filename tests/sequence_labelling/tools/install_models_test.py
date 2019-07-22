@@ -1,3 +1,4 @@
+from pickle import UnpicklingError
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -13,6 +14,7 @@ from sciencebeam_trainer_delft.sequence_labelling.tools.install_models import (
 
 MODEL_NAME_1 = 'model1'
 MODEL_FILE_1 = 'file.bin'
+MODEL_PICKLE_FILE_1 = 'file.pkl'
 MODEL_DATA_1 = b'model data 1'
 
 
@@ -141,3 +143,16 @@ class TestMain:
             target_directory.joinpath(SOURCE_URL_META_FILENAME).read_text()
             == str(source_path)
         )
+
+    def test_should_validate_invalid_pickles_files(
+            self,
+            models_path: Path,
+            source_path: Path):
+        source_path.mkdir(parents=True, exist_ok=True)
+        source_path.joinpath(MODEL_PICKLE_FILE_1).write_bytes(MODEL_DATA_1)
+        with pytest.raises(UnpicklingError):
+            main([
+                '--model-base-path=%s' % models_path,
+                '--install', '%s=%s' % (MODEL_NAME_1, source_path),
+                '--validate-pickles'
+            ])

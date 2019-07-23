@@ -1,8 +1,13 @@
 import argparse
 import logging
-from abc import abstractmethod, ABC
 from typing import List
 
+
+from sciencebeam_trainer_delft.utils.cli import (
+    initialize_and_call_main,
+    SubCommand,
+    SubCommandProcessor
+)
 
 from sciencebeam_trainer_delft.embedding.manager import (
     EmbeddingManager,
@@ -32,20 +37,6 @@ def _get_embedding_manager(args: argparse.Namespace) -> EmbeddingManager:
         path=args.registry_path,
         download_manager=DownloadManager()
     )
-
-
-class SubCommand(ABC):
-    def __init__(self, name, description):
-        self.name = name
-        self.description = description
-
-    @abstractmethod
-    def add_arguments(self, parser: argparse.ArgumentParser):
-        pass
-
-    @abstractmethod
-    def run(self, args: argparse.Namespace):
-        pass
 
 
 class DisableLmdbCacheSubCommand(SubCommand):
@@ -85,50 +76,13 @@ SUB_COMMANDS = [
 ]
 
 
-SUB_COMMAND_BY_NAME = {
-    sub_command.name: sub_command
-    for sub_command in SUB_COMMANDS
-}
-
-
-def parse_args(argv: List[str] = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Manage Embeddings"
-    )
-
-    subparsers = parser.add_subparsers(
-        dest='command', required=True
-    )
-    for sub_command in SUB_COMMANDS:
-        sub_parser = subparsers.add_parser(
-            sub_command.name, help=sub_command.description
-        )
-        sub_command.add_arguments(sub_parser)
-
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
-
-    args = parser.parse_args(argv)
-    return args
-
-
-def run(args: argparse.Namespace):
-    sub_command = SUB_COMMAND_BY_NAME[args.command]
-    sub_command.run(args)
-
-
 def main(argv: List[str] = None):
-    LOGGER.debug('argv: %s', argv)
-    args = parse_args(argv)
-
-    if args.debug:
-        LOGGER.setLevel('DEBUG')
-        logging.getLogger('sciencebeam_trainer_delft').setLevel('DEBUG')
-
-    run(args)
+    processor = SubCommandProcessor(
+        SUB_COMMANDS,
+        description='Manage Embeddings'
+    )
+    processor.main(argv)
 
 
 if __name__ == "__main__":
-    logging.root.handlers = []
-    logging.basicConfig(level='INFO')
-
-    main()
+    initialize_and_call_main(main)

@@ -1,5 +1,6 @@
 import argparse
 import logging
+import sys
 from abc import abstractmethod, ABC
 from typing import List, Callable
 
@@ -83,9 +84,10 @@ class SubCommandProcessor:
         return self.get_parser().parse_args(argv)
 
     def add_sub_command_parsers(self, parser: argparse.ArgumentParser):
-        subparsers = parser.add_subparsers(
-            dest='command', required=True
-        )
+        kwargs = {}
+        if sys.version_info >= (3, 6):
+            kwargs['required'] = True
+        subparsers = parser.add_subparsers(dest='command', **kwargs)
         self.add_sub_command_parsers_to_subparsers(subparsers)
 
     def add_sub_command_parsers_to_subparsers(self, subparsers: argparse.ArgumentParser):

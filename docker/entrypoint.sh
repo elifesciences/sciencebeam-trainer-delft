@@ -3,6 +3,7 @@
 set -e
 
 GROBID_MODELS_DIRECTORY=/opt/grobid/grobid-home/models
+EMBEDDING_REGISTRY_PATH="${PROJECT_FOLDER}/embedding-registry.json"
 
 if [ ! -z "${OVERRIDE_MODELS}" ]; then
     if [ ! -d "${GROBID_MODELS_DIRECTORY}" ]; then
@@ -14,6 +15,13 @@ if [ ! -z "${OVERRIDE_MODELS}" ]; then
         --model-base-path=${GROBID_MODELS_DIRECTORY} \
         --install "${OVERRIDE_MODELS}" \
         --validate-pickles
+fi
+
+if [ "${DISABLE_LMDB_CACHE}" == "1" ]; then
+    echo "disabling lmdb cache: ${EMBEDDING_REGISTRY_PATH}"
+    python -m sciencebeam_trainer_delft.embedding \
+        disable-lmdb-cache \
+        --registry-path=${EMBEDDING_REGISTRY_PATH}
 fi
 
 exec $@

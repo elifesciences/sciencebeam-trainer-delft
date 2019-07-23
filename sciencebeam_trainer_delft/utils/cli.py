@@ -11,6 +11,10 @@ def add_debug_argument(parser: argparse.ArgumentParser):
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
 
 
+def add_default_arguments(parser: argparse.ArgumentParser):
+    add_debug_argument(parser)
+
+
 def get_project_package():
     return 'sciencebeam_trainer_delft'
 
@@ -21,7 +25,7 @@ def process_debug_argument(args: argparse.Namespace):
         logging.getLogger(get_project_package()).setLevel('DEBUG')
 
 
-def process_args(args: argparse.Namespace):
+def process_default_args(args: argparse.Namespace):
     process_debug_argument(args)
 
 
@@ -31,7 +35,7 @@ def default_main(
         argv: List[str] = None):
     LOGGER.debug('argv: %s', argv)
     args = parse_args(argv)
-    process_args(args)
+    process_default_args(args)
     run(args)
 
 
@@ -78,9 +82,6 @@ class SubCommandProcessor:
     def parse_args(self, argv: List[str] = None) -> argparse.Namespace:
         return self.get_parser().parse_args(argv)
 
-    def add_default_arguments(self, parser: argparse.ArgumentParser):
-        add_debug_argument(parser)
-
     def add_sub_command_parsers(self, parser: argparse.ArgumentParser):
         subparsers = parser.add_subparsers(
             dest='command', required=True
@@ -93,7 +94,7 @@ class SubCommandProcessor:
                 sub_command.name, help=sub_command.description
             )
             sub_command.add_arguments(sub_parser)
-            self.add_default_arguments(sub_parser)
+            add_default_arguments(sub_parser)
 
     def run(self, args: argparse.Namespace):
         sub_command = self.sub_command_by_name[args.command]
@@ -101,4 +102,5 @@ class SubCommandProcessor:
 
     def main(self, argv: List[str] = None):
         args = self.parse_args(argv)
+        process_default_args(args)
         self.run(args)

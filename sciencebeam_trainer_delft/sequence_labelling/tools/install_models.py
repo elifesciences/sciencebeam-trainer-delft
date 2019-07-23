@@ -7,6 +7,11 @@ from typing import Dict, List
 
 from sciencebeam_trainer_delft.utils.misc import parse_dict, merge_dicts
 from sciencebeam_trainer_delft.utils.io import list_files, copy_file
+from sciencebeam_trainer_delft.utils.cli import (
+    add_default_arguments,
+    process_default_args,
+    initialize_and_call_main
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -140,10 +145,8 @@ def parse_args(argv: List[str] = None) -> argparse.Namespace:
         help="Validate .pkl files after copying (e.g. package structure may have changed)"
     )
 
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
-
-    args = parser.parse_args(argv)
-    return args
+    add_default_arguments(parser)
+    return parser.parse_args(argv)
 
 
 def run(args: argparse.Namespace):
@@ -156,18 +159,10 @@ def run(args: argparse.Namespace):
 
 
 def main(argv: List[str] = None):
-    LOGGER.debug('argv: %s', argv)
     args = parse_args(argv)
-
-    if args.debug:
-        LOGGER.setLevel('DEBUG')
-        logging.getLogger('sciencebeam_trainer_delft').setLevel('DEBUG')
-
+    process_default_args(args)
     run(args)
 
 
 if __name__ == "__main__":
-    logging.root.handlers = []
-    logging.basicConfig(level='INFO')
-
-    main()
+    initialize_and_call_main(main)

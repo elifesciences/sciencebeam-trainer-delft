@@ -22,6 +22,7 @@ services:
     image: elifesciences/sciencebeam-trainer-delft-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
     environment:
       - OVERRIDE_MODELS=${OVERRIDE_MODELS}
+      - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
     volumes:
       - data:/opt/sciencebeam-trainer-delft/data
     ports:

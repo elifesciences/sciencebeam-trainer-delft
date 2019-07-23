@@ -82,10 +82,13 @@ class EmbeddingManager:
         registry_data = self._get_registry_data()
         return registry_data.get('embedding-lmdb-path', self.default_embedding_lmdb_path)
 
-    def disable_embedding_lmdb_cache(self):
+    def set_embedding_lmdb_cache_path(self, embedding_lmdb_cache_path: str):
         registry_data = self._get_registry_data()
-        registry_data['embedding-lmdb-path'] = None
+        registry_data['embedding-lmdb-path'] = embedding_lmdb_cache_path
         self._save(registry_data)
+
+    def disable_embedding_lmdb_cache(self):
+        self.set_embedding_lmdb_cache_path(None)
 
     def add_embedding_config(self, embedding_config: dict):
         LOGGER.debug('adding config: %s', embedding_config)

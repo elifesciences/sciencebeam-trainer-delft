@@ -16,7 +16,7 @@ from sciencebeam_trainer_delft.sequence_labelling.grobid_trainer import (
     tag_input
 )
 
-from .test_data import TEST_DATA_PATH
+from ..embedding.test_data import TEST_DATA_PATH
 from ..test_utils import log_on_exception
 
 

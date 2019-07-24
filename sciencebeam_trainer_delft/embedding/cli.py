@@ -22,6 +22,7 @@ LOGGER = logging.getLogger(__name__)
 class Commands:
     DISABLE_LMDB_CACHE = 'disable-lmdb-cache'
     SET_LMDB_PATH = 'set-lmdb-path'
+    PRELOAD = 'preload'
 
 
 def _add_registry_path_argument(parser: argparse.ArgumentParser):
@@ -70,9 +71,28 @@ class SetLmdbPathSubCommand(SubCommand):
         )
 
 
+class PreloadSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__(Commands.PRELOAD, 'Ensure embedding(s) are ready to use')
+
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        _add_registry_path_argument(parser)
+        parser.add_argument(
+            "--embedding",
+            required=True,
+            help="Name of embedding(s) to preload"
+        )
+
+    def run(self, args: argparse.Namespace):
+        embedding_manager = _get_embedding_manager(args)
+        embedding_name = embedding_manager.ensure_available(args.embedding)
+        embedding_manager.ensure_lmdb_cache_if_enabled(embedding_name)
+
+
 SUB_COMMANDS = [
     DisableLmdbCacheSubCommand(),
-    SetLmdbPathSubCommand()
+    SetLmdbPathSubCommand(),
+    PreloadSubCommand()
 ]
 
 

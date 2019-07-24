@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
+from sciencebeam_trainer_delft.embedding.embedding import Embeddings
 
 from sciencebeam_trainer_delft.utils.io import is_external_location
 
@@ -191,12 +192,22 @@ class EmbeddingManager:
             return embedding_name
         embedding_config = self.get_embedding_config(embedding_name)
         assert embedding_config, "embedding_config required for %s" % embedding_name
-        embedding_path = embedding_config['path']
-        embedding_url = embedding_config['url']
+        try:
+            embedding_path = embedding_config['path']
+            embedding_url = embedding_config['url']
+        except KeyError as e:
+            LOGGER.warning('KeyError: %s, embedding_config=%s', e, embedding_config)
+            raise
         assert embedding_path, "embedding_path required for %s" % embedding_name
         assert embedding_url, "embedding_url required for %s" % embedding_name
         self.download_manager.download(embedding_url, local_file=embedding_path)
         return embedding_name
+
+    def ensure_lmdb_cache_if_enabled(self, embedding_name: str):
+        if not self.get_embedding_lmdb_path():
+            return
+        Embeddings(embedding_name, path=self.path)
+        assert self.has_lmdb_cache(embedding_name)
 
     def ensure_available(self, embedding_url_or_name: str):
         if is_external_location(embedding_url_or_name):

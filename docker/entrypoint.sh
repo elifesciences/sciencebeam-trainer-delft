@@ -30,4 +30,14 @@ elif [ ! -z "${EMBEDDING_LMDB_PATH}" ]; then
         --lmdb-cache-path=${EMBEDDING_LMDB_PATH}
 fi
 
+if [ ! -z "${PRELOAD_EMBEDDING}" ]; then
+    echo "preloading embedding: ${PRELOAD_EMBEDDING}"
+    cd ${PROJECT_FOLDER}
+    python -m sciencebeam_trainer_delft.embedding \
+        preload \
+        --registry-path=${EMBEDDING_REGISTRY_PATH} \
+        --embedding=${PRELOAD_EMBEDDING}
+    cd -
+fi
+
 exec $@

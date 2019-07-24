@@ -205,7 +205,7 @@ class EmbeddingManager:
 
     def ensure_lmdb_cache_if_enabled(self, embedding_name: str):
         if not self.get_embedding_lmdb_path():
-            return  None
+            return
         Embeddings(embedding_name, path=self.path)
         assert self.has_lmdb_cache(embedding_name)
 

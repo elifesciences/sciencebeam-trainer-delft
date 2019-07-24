@@ -198,6 +198,9 @@ class EmbeddingManager:
         self.download_manager.download(embedding_url, local_file=embedding_path)
         return embedding_name
 
+    def ensure_lmdb_cache_if_enabled(self, embedding_name: str):
+        pass
+
     def ensure_available(self, embedding_url_or_name: str):
         if is_external_location(embedding_url_or_name):
             return self._ensure_external_url_available(embedding_url_or_name)

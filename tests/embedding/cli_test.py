@@ -79,9 +79,11 @@ class TestMain:
             self,
             embedding_registry_path: Path,
             embedding_manager_mock: MagicMock):
+        embedding_manager_mock.ensure_available.return_value = EMBEDDING_NAME_1
         main([
             'preload',
             '--registry-path=%s' % embedding_registry_path,
             '--embedding=%s' % EMBEDDING_NAME_1
         ])
         embedding_manager_mock.ensure_available.assert_called_with(EMBEDDING_NAME_1)
+        embedding_manager_mock.ensure_lmdb_cache_if_enabled.assert_called_with(EMBEDDING_NAME_1)

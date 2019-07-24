@@ -85,7 +85,8 @@ class PreloadSubCommand(SubCommand):
 
     def run(self, args: argparse.Namespace):
         embedding_manager = _get_embedding_manager(args)
-        embedding_manager.ensure_available(args.embedding)
+        embedding_name = embedding_manager.ensure_available(args.embedding)
+        embedding_manager.ensure_lmdb_cache_if_enabled(embedding_name)
 
 
 SUB_COMMANDS = [

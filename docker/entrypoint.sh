@@ -22,6 +22,12 @@ if [ "${DISABLE_LMDB_CACHE}" == "1" ]; then
     python -m sciencebeam_trainer_delft.embedding \
         disable-lmdb-cache \
         --registry-path=${EMBEDDING_REGISTRY_PATH}
+elif [ ! -z "${EMBEDDING_LMDB_PATH}" ]; then
+    echo "setting embedding lmdb path to: ${EMBEDDING_LMDB_PATH}"
+    python -m sciencebeam_trainer_delft.embedding \
+        set-lmdb-path \
+        --registry-path=${EMBEDDING_REGISTRY_PATH} \
+        --lmdb-cache-path=${EMBEDDING_LMDB_PATH}
 fi
 
 exec $@

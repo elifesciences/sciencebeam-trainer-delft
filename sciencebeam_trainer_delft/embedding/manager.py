@@ -203,6 +203,7 @@ class EmbeddingManager:
         if not self.get_embedding_lmdb_path():
             return  None
         Embeddings(embedding_name, path=self.path)
+        assert self.has_lmdb_cache(embedding_name)
 
     def ensure_available(self, embedding_url_or_name: str):
         if is_external_location(embedding_url_or_name):

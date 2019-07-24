@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
+from sciencebeam_trainer_delft.embedding.embedding import Embeddings
 
 from sciencebeam_trainer_delft.utils.io import is_external_location
 
@@ -199,7 +200,9 @@ class EmbeddingManager:
         return embedding_name
 
     def ensure_lmdb_cache_if_enabled(self, embedding_name: str):
-        pass
+        if not self.get_embedding_lmdb_path():
+            return  None
+        Embeddings(embedding_name, path=self.path)
 
     def ensure_available(self, embedding_url_or_name: str):
         if is_external_location(embedding_url_or_name):

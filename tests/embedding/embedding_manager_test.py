@@ -7,12 +7,24 @@ from sciencebeam_trainer_delft.embedding import (
     EmbeddingManager
 )
 
+from .test_data import TEST_DATA_PATH
+
 
 EMBEDDING_NAME_1 = 'embedding1'
 EMBEDDING_ALIAS_1 = 'alias1'
 EXTERNAL_TXT_URL_1 = 'http://host/%s.txt' % EMBEDDING_NAME_1
 EXTERNAL_TXT_GZ_URL_1 = EXTERNAL_TXT_URL_1 + '.gz'
 DOWNLOAD_FILENAME_1 = '%s.txt' % EMBEDDING_NAME_1
+
+
+EMBEDDING_1 = {
+    'name': EMBEDDING_NAME_1,
+    'path': str(Path(TEST_DATA_PATH).joinpath('%s.txt' % EMBEDDING_NAME_1)),
+    'url': EXTERNAL_TXT_URL_1,
+    'type': 'glove',
+    'format': 'vec',
+    'lang': 'en'
+}
 
 
 @pytest.fixture(name='embedding_registry_path')
@@ -179,6 +191,26 @@ class TestEmbeddingManager:
             download_manager.download.assert_called_with(
                 EXTERNAL_TXT_URL_1, local_file=str(download_path_1)
             )
+
+    class TestEnsureLmdbCacheIfEnabled:
+        def test_should_generate_lmdb_cache(
+                self,
+                embedding_manager: EmbeddingManager):
+            embedding_manager.add_embedding_config(EMBEDDING_1)
+            assert embedding_manager.ensure_available(EMBEDDING_NAME_1) == EMBEDDING_NAME_1
+            assert not embedding_manager.has_lmdb_cache(EMBEDDING_NAME_1)
+            embedding_manager.ensure_lmdb_cache_if_enabled(EMBEDDING_NAME_1)
+            assert embedding_manager.has_lmdb_cache(EMBEDDING_NAME_1)
+
+        def test_should_skip_if_lmdb_cache_is_disabled(
+                self,
+                embedding_manager: EmbeddingManager):
+            embedding_manager.add_embedding_config(EMBEDDING_1)
+            embedding_manager.disable_embedding_lmdb_cache()
+            assert embedding_manager.ensure_available(EMBEDDING_NAME_1) == EMBEDDING_NAME_1
+            assert not embedding_manager.has_lmdb_cache(EMBEDDING_NAME_1)
+            embedding_manager.ensure_lmdb_cache_if_enabled(EMBEDDING_NAME_1)
+            assert not embedding_manager.has_lmdb_cache(EMBEDDING_NAME_1)
 
     class TestResolveAlias:
         def test_should_return_passed_in_embedding_name_by_default(

@@ -1,10 +1,15 @@
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from sciencebeam_trainer_delft.embedding.manager import EmbeddingManager
+
+import sciencebeam_trainer_delft.embedding.cli as cli_module
 from sciencebeam_trainer_delft.embedding.cli import main
+
+
+EMBEDDING_NAME_1 = 'embedding1'
 
 
 @pytest.fixture(name='embedding_registry_path')
@@ -37,6 +42,17 @@ def _embedding_manager(
     return embedding_manager
 
 
+@pytest.fixture(name='embedding_manager_class_mock')
+def _embedding_manager_class_mock():
+    with patch.object(cli_module, 'EmbeddingManager') as mock:
+        yield mock
+
+
+@pytest.fixture(name='embedding_manager_mock')
+def _embedding_manager_mock(embedding_manager_class_mock: MagicMock):
+    return embedding_manager_class_mock.return_value
+
+
 class TestMain:
     def test_should_clear_lmdb_path(
             self,
@@ -58,3 +74,14 @@ class TestMain:
             '--lmdb-cache-path=data/updated-path'
         ])
         assert embedding_manager.get_embedding_lmdb_path() == 'data/updated-path'
+
+    def test_should_preload_embedding(
+            self,
+            embedding_registry_path: Path,
+            embedding_manager_mock: MagicMock):
+        main([
+            'preload',
+            '--registry-path=%s' % embedding_registry_path,
+            '--embedding=%s' % EMBEDDING_NAME_1
+        ])
+        embedding_manager_mock.ensure_available.assert_called_with(EMBEDDING_NAME_1)

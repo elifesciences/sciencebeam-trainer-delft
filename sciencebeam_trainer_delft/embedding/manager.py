@@ -192,8 +192,12 @@ class EmbeddingManager:
             return embedding_name
         embedding_config = self.get_embedding_config(embedding_name)
         assert embedding_config, "embedding_config required for %s" % embedding_name
-        embedding_path = embedding_config['path']
-        embedding_url = embedding_config['url']
+        try:
+            embedding_path = embedding_config['path']
+            embedding_url = embedding_config['url']
+        except KeyError as e:
+            LOGGER.warning('KeyError: %s, embedding_config=%s', e, embedding_config)
+            raise
         assert embedding_path, "embedding_path required for %s" % embedding_name
         assert embedding_url, "embedding_url required for %s" % embedding_name
         self.download_manager.download(embedding_url, local_file=embedding_path)

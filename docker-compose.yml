@@ -23,6 +23,7 @@ services:
     environment:
       - OVERRIDE_MODELS=${OVERRIDE_MODELS}
       - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
+      - EMBEDDING_LMDB_PATH=${EMBEDDING_LMDB_PATH}
     volumes:
       - data:/opt/sciencebeam-trainer-delft/data
     ports:

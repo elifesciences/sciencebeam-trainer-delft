@@ -152,13 +152,16 @@ class EmbeddingManager:
         })
         return embedding_name
 
-    def download_and_install_lmdb_cache_embedding(self, embedding_url: str) -> str:
-        embedding_config = _get_embedding_config_for_filename(embedding_url)
-        embedding_name = embedding_config['name']
-        self.download_manager.download_if_url(
+    def _download_lmdb_cache_embedding(self, embedding_name: str, embedding_url: str) -> str:
+        self.download_manager.download(
             embedding_url,
             local_file=str(self.get_embedding_lmdb_cache_data_path(embedding_name))
         )
+
+    def download_and_install_lmdb_cache_embedding(self, embedding_url: str) -> str:
+        embedding_config = _get_embedding_config_for_filename(embedding_url)
+        embedding_name = embedding_config['name']
+        self._download_lmdb_cache_embedding(embedding_name, embedding_url)
         self.add_embedding_config(embedding_config)
         return embedding_name
 
@@ -204,7 +207,7 @@ class EmbeddingManager:
         if not embedding_config:
             return False
         embedding_path = embedding_config.get('path')
-        if embedding_path and not Path(embedding_path).exists():
+        if not embedding_path or not Path(embedding_path).exists():
             return False
         LOGGER.info('already downloaded: %s', embedding_name)
         return True
@@ -228,14 +231,15 @@ class EmbeddingManager:
             return embedding_name
         embedding_config = self.get_embedding_config(embedding_name)
         assert embedding_config, "embedding_config required for %s" % embedding_name
-        try:
-            embedding_path = embedding_config['path']
-            embedding_url = embedding_config['url']
-        except KeyError as e:
-            LOGGER.warning('KeyError: %s, embedding_config=%s', e, embedding_config)
-            raise
-        assert embedding_path, "embedding_path required for %s" % embedding_name
+        embedding_url = embedding_config.get('url')
         assert embedding_url, "embedding_url required for %s" % embedding_name
+
+        if self.is_lmdb_cache_file(embedding_url):
+            self._download_lmdb_cache_embedding(embedding_name, embedding_url)
+            return embedding_name
+
+        embedding_path = embedding_config.get('path')
+        assert embedding_path, "embedding_path required for %s" % embedding_name
         self.download_manager.download(embedding_url, local_file=embedding_path)
         return embedding_name
 

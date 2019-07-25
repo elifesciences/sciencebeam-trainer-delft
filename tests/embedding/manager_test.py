@@ -122,7 +122,7 @@ class TestEmbeddingManager:
                 download_manager: MagicMock,
                 embedding_manager: EmbeddingManager):
             embedding_manager.download_and_install_embedding(EXTERNAL_MDB_GZ_URL_1)
-            download_manager.download_if_url.assert_called_with(
+            download_manager.download.assert_called_with(
                 EXTERNAL_MDB_GZ_URL_1,
                 local_file=str(
                     embedding_manager.get_embedding_lmdb_cache_data_path(EMBEDDING_NAME_1)
@@ -208,6 +208,24 @@ class TestEmbeddingManager:
             assert embedding_manager.ensure_available(EMBEDDING_ALIAS_1) == EMBEDDING_NAME_1
             download_manager.download.assert_called_with(
                 EXTERNAL_TXT_URL_1, local_file=str(download_path_1)
+            )
+
+        def test_should_download_registered_mdb_embedding(
+                self,
+                download_manager: MagicMock,
+                embedding_manager: EmbeddingManager):
+            embedding_manager.add_embedding_config({
+                'name': EMBEDDING_NAME_1,
+                'url': EXTERNAL_MDB_GZ_URL_1
+            })
+            assert embedding_manager.ensure_available(EMBEDDING_NAME_1) == EMBEDDING_NAME_1
+            download_manager.download.assert_called_with(
+                EXTERNAL_MDB_GZ_URL_1,
+                local_file=str(
+                    embedding_manager.get_embedding_lmdb_cache_data_path(
+                        EMBEDDING_NAME_1
+                    )
+                )
             )
 
     class TestEnsureLmdbCacheIfEnabled:

@@ -22,6 +22,7 @@ services:
     image: elifesciences/sciencebeam-trainer-delft-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
     environment:
       - OVERRIDE_MODELS=${OVERRIDE_MODELS}
+      - OVERRIDE_EMBEDDING_URL=${OVERRIDE_EMBEDDING_URL}
       - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
       - EMBEDDING_LMDB_PATH=${EMBEDDING_LMDB_PATH}
       - PRELOAD_EMBEDDING=${PRELOAD_EMBEDDING}

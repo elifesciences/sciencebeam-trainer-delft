@@ -1,7 +1,8 @@
 import argparse
 import logging
-from typing import List
+from typing import Dict, List
 
+from sciencebeam_trainer_delft.utils.misc import parse_dict, merge_dicts
 
 from sciencebeam_trainer_delft.utils.cli import (
     initialize_and_call_main,
@@ -23,6 +24,7 @@ class Commands:
     DISABLE_LMDB_CACHE = 'disable-lmdb-cache'
     SET_LMDB_PATH = 'set-lmdb-path'
     PRELOAD = 'preload'
+    OVERRIDE_EMBEDDING_URL = 'override-embedding-url'
 
 
 def _add_registry_path_argument(parser: argparse.ArgumentParser):
@@ -89,10 +91,50 @@ class PreloadSubCommand(SubCommand):
         embedding_manager.ensure_lmdb_cache_if_enabled(embedding_name)
 
 
+def parse_embedding_url_override_expr(embedding_url_override_expr: str) -> Dict[str, str]:
+    LOGGER.debug('embedding_url_override_expr: %s', embedding_url_override_expr)
+    return parse_dict(embedding_url_override_expr, delimiter='|')
+
+
+class OverrideEmbeddingUrlSubCommand(SubCommand):
+    def __init__(self):
+        super().__init__(
+            Commands.OVERRIDE_EMBEDDING_URL,
+            'Override the URL of embeddings so that they can be loaded from another location'
+        )
+
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        _add_registry_path_argument(parser)
+        parser.add_argument(
+            "--override-url",
+            nargs='+',
+            required=True,
+            type=parse_embedding_url_override_expr,
+            help=(
+                "The urls to override, in the form: <embedding name>=<url>"
+                "\n (multiple urls can be specified by using the pipe ('|') separator"
+                " or using the --override-url parameter multiple times"
+            )
+        )
+
+    def run(self, args: argparse.Namespace):
+        url_by_embedding_name = merge_dicts(args.override_url)
+        LOGGER.debug('url_by_embedding_name: %s', url_by_embedding_name)
+        embedding_manager = _get_embedding_manager(args)
+        for embedding_name, embedding_url in url_by_embedding_name.items():
+            LOGGER.info('setting url of embedding %s to %s', embedding_name, embedding_url)
+            embedding_config = embedding_manager.get_embedding_config(embedding_name)
+            embedding_manager.add_embedding_config({
+                **embedding_config,
+                'url': embedding_url
+            })
+
+
 SUB_COMMANDS = [
     DisableLmdbCacheSubCommand(),
     SetLmdbPathSubCommand(),
-    PreloadSubCommand()
+    PreloadSubCommand(),
+    OverrideEmbeddingUrlSubCommand()
 ]
 
 

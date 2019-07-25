@@ -14,6 +14,8 @@ EMBEDDING_NAME_1 = 'embedding1'
 EMBEDDING_ALIAS_1 = 'alias1'
 EXTERNAL_TXT_URL_1 = 'http://host/%s.txt' % EMBEDDING_NAME_1
 EXTERNAL_TXT_GZ_URL_1 = EXTERNAL_TXT_URL_1 + '.gz'
+EXTERNAL_MDB_URL_1 = 'http://host/%s.mdb' % EMBEDDING_NAME_1
+EXTERNAL_MDB_GZ_URL_1 = EXTERNAL_MDB_URL_1 + '.gz'
 DOWNLOAD_FILENAME_1 = '%s.txt' % EMBEDDING_NAME_1
 
 
@@ -114,6 +116,22 @@ class TestEmbeddingManager:
             assert embedding_config
             assert embedding_config['name'] == EMBEDDING_NAME_1
             assert embedding_config['path'] == str(download_path_1)
+
+        def test_should_unzip_mdb_embedding(
+                self,
+                download_manager: MagicMock,
+                embedding_manager: EmbeddingManager):
+            embedding_manager.download_and_install_embedding(EXTERNAL_MDB_GZ_URL_1)
+            download_manager.download_if_url.assert_called_with(
+                EXTERNAL_MDB_GZ_URL_1,
+                local_file=str(
+                    embedding_manager.get_embedding_lmdb_cache_data_path(EMBEDDING_NAME_1)
+                )
+            )
+
+            embedding_config = embedding_manager.get_embedding_config(EMBEDDING_NAME_1)
+            assert embedding_config
+            assert embedding_config['name'] == EMBEDDING_NAME_1
 
     class TestEnsureAvailable:
         def test_should_download_and_register_embedding(

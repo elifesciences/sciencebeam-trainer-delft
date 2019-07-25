@@ -11,6 +11,8 @@ from sciencebeam_trainer_delft.embedding.cli import main
 
 EMBEDDING_NAME_1 = 'embedding1'
 
+EXTERNAL_TXT_URL_1 = 'http://host/%s.txt' % EMBEDDING_NAME_1
+
 
 @pytest.fixture(name='embedding_registry_path')
 def _embedding_registry_path(temp_dir: Path):
@@ -74,6 +76,22 @@ class TestMain:
             '--lmdb-cache-path=data/updated-path'
         ])
         assert embedding_manager.get_embedding_lmdb_path() == 'data/updated-path'
+
+    def test_should_set_embedding_url(
+            self,
+            embedding_registry_path: Path,
+            embedding_manager: EmbeddingManager):
+        embedding_manager.add_embedding_config({
+            'name': EMBEDDING_NAME_1,
+            'url': 'other'
+        })
+        main([
+            'override-embedding-url',
+            '--registry-path=%s' % embedding_registry_path,
+            '--override-url=%s=%s' % (EMBEDDING_NAME_1, EXTERNAL_TXT_URL_1)
+        ])
+        embedding_config = embedding_manager.get_embedding_config(EMBEDDING_NAME_1)
+        assert embedding_config['url'] == EXTERNAL_TXT_URL_1
 
     def test_should_preload_embedding(
             self,

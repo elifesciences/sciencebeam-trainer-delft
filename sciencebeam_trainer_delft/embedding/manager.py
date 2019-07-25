@@ -180,11 +180,11 @@ class EmbeddingManager:
         return embedding_lmdb_dir.joinpath('data.mdb')
 
     def has_lmdb_cache(self, embedding_name: str):
-        if not self.is_embedding_lmdb_cache_enabled():
-            return  False
         embedding_lmdb_file = self.get_embedding_lmdb_cache_data_path(
             embedding_name
         )
+        if not embedding_lmdb_file:
+            return False
         exists = embedding_lmdb_file.is_file()
         size = exists and embedding_lmdb_file.stat().st_size
         valid = exists and size >= self.min_lmdb_cache_size

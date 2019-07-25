@@ -7,7 +7,10 @@ from typing import Dict, List
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.embedding.embedding import Embeddings
 
-from sciencebeam_trainer_delft.utils.io import is_external_location
+from sciencebeam_trainer_delft.utils.io import (
+    is_external_location,
+    get_compression_wrapper
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -28,7 +31,10 @@ def _find_embedding_index(embedding_list: List[dict], name: str) -> int:
 
 
 def _get_embedding_name_for_filename(filename: str) -> str:
-    return os.path.splitext(os.path.basename(filename))[0]
+    name = os.path.splitext(os.path.basename(filename))[0]
+    if name.endswith('.mdb'):
+        return os.path.splitext(name)[0]
+    return name
 
 
 def _get_embedding_format_for_filename(filename: str) -> str:
@@ -83,6 +89,9 @@ class EmbeddingManager:
         registry_data = self._get_registry_data()
         return registry_data.get('embedding-lmdb-path', self.default_embedding_lmdb_path)
 
+    def is_embedding_lmdb_cache_enabled(self):
+        return self.get_embedding_lmdb_path()
+
     def set_embedding_lmdb_cache_path(self, embedding_lmdb_cache_path: str):
         registry_data = self._get_registry_data()
         registry_data['embedding-lmdb-path'] = embedding_lmdb_cache_path
@@ -127,7 +136,12 @@ class EmbeddingManager:
     def resolve_alias(self, embedding_name: str):
         return self.get_embedding_aliases().get(embedding_name, embedding_name)
 
-    def download_and_install_embedding(self, embedding_url: str) -> str:
+    def is_lmdb_cache_file(self, embedding_url: str) -> bool:
+        return get_compression_wrapper(
+            embedding_url
+        ).strip_compression_filename_ext(embedding_url).endswith('.mdb')
+
+    def download_and_install_source_embedding(self, embedding_url: str) -> str:
         download_file = self.download_manager.download_if_url(embedding_url)
         filename = os.path.basename(download_file)
         embedding_config = _get_embedding_config_for_filename(filename)
@@ -138,17 +152,39 @@ class EmbeddingManager:
         })
         return embedding_name
 
+    def download_and_install_lmdb_cache_embedding(self, embedding_url: str) -> str:
+        embedding_config = _get_embedding_config_for_filename(embedding_url)
+        embedding_name = embedding_config['name']
+        self.download_manager.download_if_url(
+            embedding_url,
+            local_file=str(self.get_embedding_lmdb_cache_data_path(embedding_name))
+        )
+        self.add_embedding_config(embedding_config)
+        return embedding_name
+
+    def download_and_install_embedding(self, embedding_url: str) -> str:
+        if self.is_lmdb_cache_file(embedding_url):
+            return self.download_and_install_lmdb_cache_embedding(embedding_url)
+        return self.download_and_install_source_embedding(embedding_url)
+
     def download_and_install_embedding_if_url(self, embedding_url_or_name: str):
         if is_external_location(embedding_url_or_name):
             return self.download_and_install_embedding(embedding_url_or_name)
         return embedding_url_or_name
 
-    def has_lmdb_cache(self, embedding_name: str):
+    def get_embedding_lmdb_cache_data_path(self, embedding_name: str):
         embedding_lmdb_path = self.get_embedding_lmdb_path()
         if not embedding_lmdb_path:
-            return False
+            return None
         embedding_lmdb_dir = Path(embedding_lmdb_path).joinpath(embedding_name)
-        embedding_lmdb_file = embedding_lmdb_dir.joinpath('data.mdb')
+        return embedding_lmdb_dir.joinpath('data.mdb')
+
+    def has_lmdb_cache(self, embedding_name: str):
+        if not self.is_embedding_lmdb_cache_enabled():
+            return  False
+        embedding_lmdb_file = self.get_embedding_lmdb_cache_data_path(
+            embedding_name
+        )
         exists = embedding_lmdb_file.is_file()
         size = exists and embedding_lmdb_file.stat().st_size
         valid = exists and size >= self.min_lmdb_cache_size

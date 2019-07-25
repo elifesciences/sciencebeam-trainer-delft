@@ -30,6 +30,14 @@ elif [ ! -z "${EMBEDDING_LMDB_PATH}" ]; then
         --lmdb-cache-path=${EMBEDDING_LMDB_PATH}
 fi
 
+if [ ! -z "${OVERRIDE_EMBEDDING_URL}" ]; then
+    echo "overriding embedding url(s): ${OVERRIDE_EMBEDDING_URL}"
+    python -m sciencebeam_trainer_delft.embedding \
+        override-embedding-url \
+        --registry-path=${EMBEDDING_REGISTRY_PATH} \
+        --override-url="${OVERRIDE_EMBEDDING_URL}"
+fi
+
 if [ ! -z "${PRELOAD_EMBEDDING}" ]; then
     echo "preloading embedding: ${PRELOAD_EMBEDDING}"
     cd ${PROJECT_FOLDER}

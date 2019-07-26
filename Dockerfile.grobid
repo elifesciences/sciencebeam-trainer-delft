@@ -3,7 +3,7 @@ FROM ${base_image}
 
 # install build requirements
 ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
-COPY requirements.build.txt ${PROJECT_FOLDER}/
+COPY requirements.build.txt requirements.jep.txt ${PROJECT_FOLDER}/
 
 RUN mkdir -p /usr/share/man/man1 \
     && apt-get update \
@@ -13,7 +13,7 @@ RUN mkdir -p /usr/share/man/man1 \
         openjdk-8-jdk-headless \
         curl \
     && pip3 install -r ${PROJECT_FOLDER}/requirements.build.txt \
-    && JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 pip3 install jep==3.8.2 \
+    && JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 pip3 install -r ${PROJECT_FOLDER}/requirements.jep.txt \
     && apt-get remove --yes openjdk-8-jdk-headless \
     && rm -rf /var/lib/apt/lists/*
 

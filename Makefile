@@ -68,6 +68,7 @@ dev-install:
 	$(PIP) install -r requirements.dev.txt
 	$(PIP) install -r requirements.delft.txt --no-deps
 	$(PIP) install -r requirements.jep.txt
+	$(PIP) install -e . --no-deps
 
 
 dev-venv: venv-create dev-install

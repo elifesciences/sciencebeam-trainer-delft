@@ -150,7 +150,7 @@ test: \
 
 
 grobid-train-header: .grobid-train-header-args
-	$(PYTHON) -m sciencebeam_trainer_delft.grobid_trainer \
+	$(PYTHON) -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 		$(_GROBID_TRAIN_ARGS)
 
 
@@ -165,7 +165,7 @@ grobid-tag-header:
 gcloud-ai-platform-local-grobid-train-header: .grobid-train-header-args
 	@echo "_GROBID_TRAIN_ARGS=$(_GROBID_TRAIN_ARGS)"
 	$(GCLOUD) ai-platform local train \
-		--module-name sciencebeam_trainer_delft.grobid_trainer \
+		--module-name sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 		--package-path sciencebeam_trainer_delft \
 		$(GCLOUD_ARGS) \
 		-- \
@@ -188,7 +188,7 @@ gcloud-ai-platform-cloud-grobid-train-header: .grobid-train-header-args .require
 		--job-dir "$(GCLOUD_JOB_DIR)" \
 		--runtime-version "$(GCLOUD_AI_PLATFORM_RUNTIME)" \
 		--python-version "$(GCLOUD_AI_PLATFORM_PYTHON_VERSION)" \
-		--module-name sciencebeam_trainer_delft.grobid_trainer \
+		--module-name sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 		--package-path sciencebeam_trainer_delft \
 		$(GCLOUD_ARGS) \
 		-- \

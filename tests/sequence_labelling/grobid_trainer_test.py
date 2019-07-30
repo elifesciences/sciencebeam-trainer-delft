@@ -249,9 +249,11 @@ class TestGrobidTrainer:
                 [INPUT_PATH_1],
                 limit=123,
                 shuffle_input=True,
+                random_seed=424,
                 download_manager=download_manager_mock
             )
             shuffle_arrays_mock.assert_called()
+            assert shuffle_arrays_mock.call_args[1] == {'random_seed': 424}
             input_arrays = shuffle_arrays_mock.call_args[0][0]
             assert (input_arrays[0] == x_unshuffled).all()
             assert (input_arrays[1] == y_unshuffled).all()

@@ -43,6 +43,8 @@ class Tasks:
 
 ALL_TASKS = [Tasks.TRAIN, Tasks.TRAIN_EVAL, Tasks.EVAL, Tasks.TAG]
 
+DEFAULT_RANDOM_SEED = 42
+
 
 def get_default_training_data(model: str) -> str:
     return 'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
@@ -79,6 +81,7 @@ def load_data_and_labels(
         model: str, input_paths: List[str] = None,
         limit: int = None,
         shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
         download_manager: DownloadManager = None):
     assert download_manager
     if not input_paths:
@@ -93,7 +96,7 @@ def load_data_and_labels(
         limit=limit
     )
     if shuffle_input:
-        shuffle_arrays([x_all, y_all, f_all])
+        shuffle_arrays([x_all, y_all, f_all], random_seed=random_seed)
     log_data_info(x_all, y_all, f_all)
     return x_all, y_all, f_all
 
@@ -105,6 +108,7 @@ def train(
         output_path: str = None,
         limit: int = None,
         shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         max_epoch=100,
         download_manager: DownloadManager = None,
@@ -112,6 +116,7 @@ def train(
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        random_seed=random_seed,
         download_manager=download_manager
     )
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
@@ -165,6 +170,7 @@ def train_eval(
         output_path: str = None,
         limit: int = None,
         shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
@@ -172,6 +178,7 @@ def train_eval(
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        random_seed=random_seed,
         download_manager=download_manager
     )
 
@@ -245,6 +252,7 @@ def eval_model(
         model_path: str = None,
         limit: int = None,
         shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
@@ -252,6 +260,7 @@ def eval_model(
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        random_seed=random_seed,
         download_manager=download_manager
     )
 
@@ -301,6 +310,7 @@ def tag_input(
         model_path: str = None,
         limit: int = None,
         shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
@@ -308,6 +318,7 @@ def tag_input(
         **kwargs):
     x_all, _, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        random_seed=random_seed,
         download_manager=download_manager
     )
 
@@ -394,6 +405,12 @@ def parse_args(argv: List[str] = None):
         )
     )
     parser.add_argument(
+        "--random-seed",
+        type=int,
+        default=42,
+        help="Set the random seed for reproducibility"
+    )
+    parser.add_argument(
         "--embedding", default="glove-6B-50d",
         help="name of word embedding"
     )
@@ -455,6 +472,7 @@ def run(args):
         output_path=args.output,
         limit=args.limit,
         shuffle_input=args.shuffle_input,
+        random_seed=args.random_seed,
         log_dir=args.checkpoint,
         batch_size=args.batch_size,
         word_lstm_units=args.word_lstm_units,

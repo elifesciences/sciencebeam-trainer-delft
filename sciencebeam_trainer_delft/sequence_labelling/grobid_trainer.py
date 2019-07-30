@@ -11,6 +11,7 @@ import numpy as np
 
 from sklearn.model_selection import train_test_split
 import keras.backend as K
+import tensorflow as tf
 
 from sciencebeam_trainer_delft.utils.misc import parse_number_ranges
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
@@ -44,6 +45,11 @@ class Tasks:
 ALL_TASKS = [Tasks.TRAIN, Tasks.TRAIN_EVAL, Tasks.EVAL, Tasks.TAG]
 
 DEFAULT_RANDOM_SEED = 42
+
+
+def set_random_seeds(random_seed: int):
+    np.random.seed(random_seed)
+    tf.set_random_seed(random_seed)
 
 
 def get_default_training_data(model: str) -> str:
@@ -486,6 +492,8 @@ def run(args):
     )
 
     LOGGER.info('get_tf_info: %s', get_tf_info())
+
+    set_random_seeds(args.random_seed)
 
     if action == Tasks.TRAIN:
         train(**train_args)

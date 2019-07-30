@@ -15,6 +15,7 @@ from delft.utilities.Embeddings import Embeddings
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import get_model_directory
 import sciencebeam_trainer_delft.sequence_labelling.grobid_trainer as grobid_trainer_module
 from sciencebeam_trainer_delft.sequence_labelling.grobid_trainer import (
+    set_random_seeds,
     parse_args,
     load_data_and_labels,
     train,
@@ -138,6 +139,10 @@ def _default_model_directory(default_args: dict):
 
 
 class TestGrobidTrainer:
+    class TestSetRandomSeeds:
+        def test_should_not_fail(self):
+            set_random_seeds(123)
+
     class TestParseArgs:
         def test_should_require_arguments(self):
             with pytest.raises(SystemExit):

@@ -2,7 +2,7 @@
 import logging
 import argparse
 import time
-from typing import List
+from typing import List, Tuple
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 # pylint: disable=wrong-import-order, ungrouped-imports
@@ -55,16 +55,39 @@ def log_data_info(x: np.array, y: np.array, features: np.array):
     )
 
 
+def _load_data_and_labels_crf_files(
+        input_paths: List[str], limit: int = None) -> Tuple[np.array, np.array, np.array]:
+    if len(input_paths) == 1:
+        return load_data_and_labels_crf_file(input_paths[0], limit=limit)
+    x_list = []
+    y_list = []
+    features_list = []
+    for input_path in input_paths:
+        LOGGER.debug('calling load_data_and_labels_crf_file: %s', input_path)
+        x, y, f = load_data_and_labels_crf_file(
+            input_path,
+            limit=limit
+        )
+        x_list.append(x)
+        y_list.append(y)
+        features_list.append(f)
+    return np.concatenate(x_list), np.concatenate(y_list), np.concatenate(features_list)
+
+
 def load_data_and_labels(
-        model: str, input_path: str = None,
+        model: str, input_paths: List[str] = None,
         limit: int = None,
         download_manager: DownloadManager = None):
     assert download_manager
-    if input_path is None:
-        input_path = get_default_training_data(model)
-    LOGGER.info('loading data from: %s', input_path)
-    x_all, y_all, f_all = load_data_and_labels_crf_file(
-        download_manager.download_if_url(input_path),
+    if not input_paths:
+        input_paths = [get_default_training_data(model)]
+    LOGGER.info('loading data from: %s', input_paths)
+    downloaded_input_paths = [
+        download_manager.download_if_url(input_path)
+        for input_path in input_paths
+    ]
+    x_all, y_all, f_all = _load_data_and_labels_crf_files(
+        downloaded_input_paths,
         limit=limit
     )
     log_data_info(x_all, y_all, f_all)
@@ -74,7 +97,8 @@ def load_data_and_labels(
 # train a GROBID model with all available data
 def train(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
-        input_path=None, output_path=None,
+        input_paths: List[str] = None,
+        output_path: str = None,
         limit: int = None,
         max_sequence_length: int = 100,
         max_epoch=100,
@@ -82,7 +106,7 @@ def train(
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_path=input_path, limit=limit,
+        model=model, input_paths=input_paths, limit=limit,
         download_manager=download_manager
     )
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
@@ -132,7 +156,8 @@ def train(
 # split data, train a GROBID model and evaluate it
 def train_eval(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
-        input_path=None, output_path=None,
+        input_paths: List[str] = None,
+        output_path: str = None,
         limit: int = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
@@ -140,7 +165,7 @@ def train_eval(
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_path=input_path, limit=limit,
+        model=model, input_paths=input_paths, limit=limit,
         download_manager=download_manager
     )
 
@@ -209,7 +234,9 @@ def train_eval(
 
 def eval_model(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
-        input_path=None, output_path=None, model_path: str = None,
+        input_paths: List[str] = None,
+        output_path: str = None,
+        model_path: str = None,
         limit: int = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
@@ -217,7 +244,7 @@ def eval_model(
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_path=input_path, limit=limit,
+        model=model, input_paths=input_paths, limit=limit,
         download_manager=download_manager
     )
 
@@ -262,7 +289,9 @@ def eval_model(
 
 def tag_input(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
-        input_path=None, output_path=None, model_path: str = None,
+        input_paths: List[str] = None,
+        output_path: str = None,
+        model_path: str = None,
         limit: int = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
@@ -270,7 +299,7 @@ def tag_input(
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, _, features_all = load_data_and_labels(
-        model=model, input_path=input_path, limit=limit,
+        model=model, input_paths=input_paths, limit=limit,
         download_manager=download_manager
     )
 
@@ -336,8 +365,21 @@ def parse_args(argv: List[str] = None):
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
     parser.add_argument("--model-path", help="directory to the saved model")
-    parser.add_argument("--input", help="provided training file")
-    parser.add_argument("--limit", type=int, help="limit the number of training samples")
+    parser.add_argument(
+        "--input",
+        nargs='+',
+        action='append',
+        help="provided training file"
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help=(
+            "limit the number of training samples."
+            " With more than one input file, the limit will be applied to"
+            " each of the input files individually"
+        )
+    )
     parser.add_argument(
         "--embedding", default="glove-6B-50d",
         help="name of word embedding"
@@ -367,6 +409,8 @@ def parse_args(argv: List[str] = None):
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
 
     args = parser.parse_args(argv)
+    if args.input:
+        args.input = [input_path for input_paths in args.input for input_path in input_paths]
     return args
 
 
@@ -394,7 +438,7 @@ def run(args):
         embeddings_name=embedding_name,
         embedding_manager=embedding_manager,
         architecture=architecture, use_ELMo=use_ELMo,
-        input_path=args.input,
+        input_paths=args.input,
         output_path=args.output,
         limit=args.limit,
         log_dir=args.checkpoint,

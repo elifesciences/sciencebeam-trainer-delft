@@ -102,7 +102,7 @@ def _default_args(
     return dict(
         model='header',
         embeddings_name=EMBEDDING_NAME_1,
-        input_path=sample_train_file,
+        input_paths=[sample_train_file],
         download_manager=download_manager,
         output_path=str(model_base_path),
         architecture='CustomBidLSTM_CRF',

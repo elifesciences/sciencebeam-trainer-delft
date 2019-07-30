@@ -30,6 +30,7 @@ LIMIT = 10000
 ARCHITECTURE = CustomBidLSTM_CRF
 EMBEDDING = glove.6B.50d
 INPUT_PATH = https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-header-060518.train.gz
+INPUT_PATHS = "$(INPUT_PATH)"
 WORD_LSTM_UNITS = 100
 FEATURE_INDICES =
 FEATURE_EMBEDDING_SIZE = 0
@@ -140,7 +141,7 @@ test: \
 		--feature-indices="$(FEATURE_INDICES)" \
 		--feature-embedding-size="$(FEATURE_EMBEDDING_SIZE)" \
 		--max-epoch="$(MAX_EPOCH)" \
-		--input="$(INPUT_PATH)" \
+		--input=$(INPUT_PATHS) \
 		--model-path="$(MODEL_PATH)" \
 		--output="$(MODEL_OUTPUT)" \
 		--limit="$(LIMIT)" \

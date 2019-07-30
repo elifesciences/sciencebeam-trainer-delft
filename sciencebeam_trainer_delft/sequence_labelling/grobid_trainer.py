@@ -2,7 +2,7 @@
 import logging
 import argparse
 import time
-from typing import List
+from typing import List, Tuple
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 # pylint: disable=wrong-import-order, ungrouped-imports
@@ -11,10 +11,12 @@ import numpy as np
 
 from sklearn.model_selection import train_test_split
 import keras.backend as K
+import tensorflow as tf
 
 from sciencebeam_trainer_delft.utils.misc import parse_number_ranges
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.cloud_support import patch_cloud_support
+from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.tf import get_tf_info
 
 from sciencebeam_trainer_delft.embedding import EmbeddingManager
@@ -42,6 +44,13 @@ class Tasks:
 
 ALL_TASKS = [Tasks.TRAIN, Tasks.TRAIN_EVAL, Tasks.EVAL, Tasks.TAG]
 
+DEFAULT_RANDOM_SEED = 42
+
+
+def set_random_seeds(random_seed: int):
+    np.random.seed(random_seed)
+    tf.set_random_seed(random_seed)
+
 
 def get_default_training_data(model: str) -> str:
     return 'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
@@ -55,18 +64,45 @@ def log_data_info(x: np.array, y: np.array, features: np.array):
     )
 
 
+def _load_data_and_labels_crf_files(
+        input_paths: List[str], limit: int = None) -> Tuple[np.array, np.array, np.array]:
+    if len(input_paths) == 1:
+        return load_data_and_labels_crf_file(input_paths[0], limit=limit)
+    x_list = []
+    y_list = []
+    features_list = []
+    for input_path in input_paths:
+        LOGGER.debug('calling load_data_and_labels_crf_file: %s', input_path)
+        x, y, f = load_data_and_labels_crf_file(
+            input_path,
+            limit=limit
+        )
+        x_list.append(x)
+        y_list.append(y)
+        features_list.append(f)
+    return np.concatenate(x_list), np.concatenate(y_list), np.concatenate(features_list)
+
+
 def load_data_and_labels(
-        model: str, input_path: str = None,
+        model: str, input_paths: List[str] = None,
         limit: int = None,
+        shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
         download_manager: DownloadManager = None):
     assert download_manager
-    if input_path is None:
-        input_path = get_default_training_data(model)
-    LOGGER.info('loading data from: %s', input_path)
-    x_all, y_all, f_all = load_data_and_labels_crf_file(
-        download_manager.download_if_url(input_path),
+    if not input_paths:
+        input_paths = [get_default_training_data(model)]
+    LOGGER.info('loading data from: %s', input_paths)
+    downloaded_input_paths = [
+        download_manager.download_if_url(input_path)
+        for input_path in input_paths
+    ]
+    x_all, y_all, f_all = _load_data_and_labels_crf_files(
+        downloaded_input_paths,
         limit=limit
     )
+    if shuffle_input:
+        shuffle_arrays([x_all, y_all, f_all], random_seed=random_seed)
     log_data_info(x_all, y_all, f_all)
     return x_all, y_all, f_all
 
@@ -74,15 +110,19 @@ def load_data_and_labels(
 # train a GROBID model with all available data
 def train(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
-        input_path=None, output_path=None,
+        input_paths: List[str] = None,
+        output_path: str = None,
         limit: int = None,
+        shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         max_epoch=100,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_path=input_path, limit=limit,
+        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        random_seed=random_seed,
         download_manager=download_manager
     )
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
@@ -132,15 +172,19 @@ def train(
 # split data, train a GROBID model and evaluate it
 def train_eval(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
-        input_path=None, output_path=None,
+        input_paths: List[str] = None,
+        output_path: str = None,
         limit: int = None,
+        shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_path=input_path, limit=limit,
+        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        random_seed=random_seed,
         download_manager=download_manager
     )
 
@@ -209,15 +253,20 @@ def train_eval(
 
 def eval_model(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
-        input_path=None, output_path=None, model_path: str = None,
+        input_paths: List[str] = None,
+        output_path: str = None,
+        model_path: str = None,
         limit: int = None,
+        shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_path=input_path, limit=limit,
+        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        random_seed=random_seed,
         download_manager=download_manager
     )
 
@@ -262,15 +311,20 @@ def eval_model(
 
 def tag_input(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
-        input_path=None, output_path=None, model_path: str = None,
+        input_paths: List[str] = None,
+        output_path: str = None,
+        model_path: str = None,
         limit: int = None,
+        shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, _, features_all = load_data_and_labels(
-        model=model, input_path=input_path, limit=limit,
+        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        random_seed=random_seed,
         download_manager=download_manager
     )
 
@@ -336,8 +390,32 @@ def parse_args(argv: List[str] = None):
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
     parser.add_argument("--model-path", help="directory to the saved model")
-    parser.add_argument("--input", help="provided training file")
-    parser.add_argument("--limit", type=int, help="limit the number of training samples")
+    parser.add_argument(
+        "--input",
+        nargs='+',
+        action='append',
+        help="provided training file"
+    )
+    parser.add_argument(
+        "--shuffle-input",
+        action="store_true",
+        help="Shuffle the input before splitting"
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help=(
+            "limit the number of training samples."
+            " With more than one input file, the limit will be applied to"
+            " each of the input files individually"
+        )
+    )
+    parser.add_argument(
+        "--random-seed",
+        type=int,
+        default=42,
+        help="Set the random seed for reproducibility"
+    )
     parser.add_argument(
         "--embedding", default="glove-6B-50d",
         help="name of word embedding"
@@ -367,6 +445,8 @@ def parse_args(argv: List[str] = None):
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
 
     args = parser.parse_args(argv)
+    if args.input:
+        args.input = [input_path for input_paths in args.input for input_path in input_paths]
     return args
 
 
@@ -394,9 +474,11 @@ def run(args):
         embeddings_name=embedding_name,
         embedding_manager=embedding_manager,
         architecture=architecture, use_ELMo=use_ELMo,
-        input_path=args.input,
+        input_paths=args.input,
         output_path=args.output,
         limit=args.limit,
+        shuffle_input=args.shuffle_input,
+        random_seed=args.random_seed,
         log_dir=args.checkpoint,
         batch_size=args.batch_size,
         word_lstm_units=args.word_lstm_units,
@@ -410,6 +492,8 @@ def run(args):
     )
 
     LOGGER.info('get_tf_info: %s', get_tf_info())
+
+    set_random_seeds(args.random_seed)
 
     if action == Tasks.TRAIN:
         train(**train_args)

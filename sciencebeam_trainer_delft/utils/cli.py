@@ -85,9 +85,10 @@ class SubCommandProcessor:
 
     def add_sub_command_parsers(self, parser: argparse.ArgumentParser):
         kwargs = {}
-        if sys.version_info >= (3, 6):
+        if sys.version_info >= (3, 7):
             kwargs['required'] = True
         subparsers = parser.add_subparsers(dest='command', **kwargs)
+        subparsers.required = True
         self.add_sub_command_parsers_to_subparsers(subparsers)
 
     def add_sub_command_parsers_to_subparsers(self, subparsers: argparse.ArgumentParser):

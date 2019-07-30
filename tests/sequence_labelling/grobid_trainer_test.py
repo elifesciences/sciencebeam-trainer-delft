@@ -4,6 +4,7 @@ import os
 from functools import partial
 from pathlib import Path
 from unittest.mock import call, patch, MagicMock
+from typing import List
 
 import pytest
 
@@ -76,6 +77,22 @@ def _get_default_training_data_mock():
 def _load_data_and_labels_crf_file_mock():
     with patch.object(grobid_trainer_module, 'load_data_and_labels_crf_file') as mock:
         mock.return_value = (MagicMock(), MagicMock(), MagicMock())
+        yield mock
+
+
+def _mock_shuffle_array(a: np.array) -> np.array:
+    # reverse array
+    return a[::-1]
+
+
+def _mock_shuffle_arrays(arrays: List[np.array], **_) -> np.array:
+    return [_mock_shuffle_array(a) for a in arrays]
+
+
+@pytest.fixture(name='shuffle_arrays_mock')
+def _shuffle_arrays_mock():
+    with patch.object(grobid_trainer_module, 'shuffle_arrays') as mock:
+        mock.side_effect = _mock_shuffle_arrays
         yield mock
 
 
@@ -214,6 +231,34 @@ class TestGrobidTrainer:
             load_data_and_labels_crf_file_mock.assert_has_calls(
                 [call(INPUT_PATH_1, limit=123), call(INPUT_PATH_2, limit=123)]
             )
+
+        def test_should_shuffle_single_source_input_data(
+                self,
+                load_data_and_labels_crf_file_mock: MagicMock,
+                shuffle_arrays_mock: MagicMock,
+                download_manager_mock: MagicMock):
+            download_manager_mock.download_if_url.side_effect = lambda input_path: input_path
+            x_unshuffled = np.array([['x1'], ['x2']])
+            y_unshuffled = np.array([['y1'], ['y2']])
+            f_unshuffled = np.array([[['f1']], [['f2']]])
+            load_data_and_labels_crf_file_mock.side_effect = [
+                (x_unshuffled, y_unshuffled, f_unshuffled)
+            ]
+            x, y, f = load_data_and_labels(
+                MODEL_NAME_1,
+                [INPUT_PATH_1],
+                limit=123,
+                shuffle_input=True,
+                download_manager=download_manager_mock
+            )
+            shuffle_arrays_mock.assert_called()
+            input_arrays = shuffle_arrays_mock.call_args[0][0]
+            assert (input_arrays[0] == x_unshuffled).all()
+            assert (input_arrays[1] == y_unshuffled).all()
+            assert (input_arrays[2] == f_unshuffled).all()
+            assert (x == _mock_shuffle_arrays(x)).all()
+            assert (y == _mock_shuffle_arrays(y)).all()
+            assert (f == _mock_shuffle_arrays(f)).all()
 
     @pytest.mark.slow
     class TestEndToEnd:

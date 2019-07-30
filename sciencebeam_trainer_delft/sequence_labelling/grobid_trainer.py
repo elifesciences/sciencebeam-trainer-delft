@@ -15,6 +15,7 @@ import keras.backend as K
 from sciencebeam_trainer_delft.utils.misc import parse_number_ranges
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.cloud_support import patch_cloud_support
+from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.tf import get_tf_info
 
 from sciencebeam_trainer_delft.embedding import EmbeddingManager
@@ -77,6 +78,7 @@ def _load_data_and_labels_crf_files(
 def load_data_and_labels(
         model: str, input_paths: List[str] = None,
         limit: int = None,
+        shuffle_input: bool = False,
         download_manager: DownloadManager = None):
     assert download_manager
     if not input_paths:
@@ -90,6 +92,8 @@ def load_data_and_labels(
         downloaded_input_paths,
         limit=limit
     )
+    if shuffle_input:
+        shuffle_arrays([x_all, y_all, f_all])
     log_data_info(x_all, y_all, f_all)
     return x_all, y_all, f_all
 
@@ -100,13 +104,14 @@ def train(
         input_paths: List[str] = None,
         output_path: str = None,
         limit: int = None,
+        shuffle_input: bool = False,
         max_sequence_length: int = 100,
         max_epoch=100,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit,
+        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         download_manager=download_manager
     )
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
@@ -159,13 +164,14 @@ def train_eval(
         input_paths: List[str] = None,
         output_path: str = None,
         limit: int = None,
+        shuffle_input: bool = False,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit,
+        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         download_manager=download_manager
     )
 
@@ -238,13 +244,14 @@ def eval_model(
         output_path: str = None,
         model_path: str = None,
         limit: int = None,
+        shuffle_input: bool = False,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit,
+        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         download_manager=download_manager
     )
 
@@ -293,13 +300,14 @@ def tag_input(
         output_path: str = None,
         model_path: str = None,
         limit: int = None,
+        shuffle_input: bool = False,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     x_all, _, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit,
+        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         download_manager=download_manager
     )
 
@@ -372,6 +380,11 @@ def parse_args(argv: List[str] = None):
         help="provided training file"
     )
     parser.add_argument(
+        "--shuffle-input",
+        action="store_true",
+        help="Shuffle the input before splitting"
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         help=(
@@ -441,6 +454,7 @@ def run(args):
         input_paths=args.input,
         output_path=args.output,
         limit=args.limit,
+        shuffle_input=args.shuffle_input,
         log_dir=args.checkpoint,
         batch_size=args.batch_size,
         word_lstm_units=args.word_lstm_units,

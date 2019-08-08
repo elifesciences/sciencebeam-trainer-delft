@@ -11,3 +11,6 @@ def _hide_warnings_if_disabled():
         # respect no warning
         # see https://github.com/scikit-learn/scikit-learn/issues/2531
         hide_warnings()
+
+
+_hide_warnings_if_disabled()

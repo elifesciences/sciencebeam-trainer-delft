@@ -5,16 +5,27 @@ FROM ${base_image}
 ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
 COPY requirements.build.txt requirements.jep.txt ${PROJECT_FOLDER}/
 
+ENV TEMP_JDK_HOME=/tmp/jdk-${JAVA_VERSION}
+ENV JDK_URL=https://github.com/AdoptOpenJDK/openjdk8-upstream-binaries/releases/download/jdk8u212-b04/OpenJDK8U-x64_linux_8u212b04.tar.gz
+
 RUN mkdir -p /usr/share/man/man1 \
     && apt-get update \
     && apt-get install --yes --no-install-recommends \
         gcc \
         python3-minimal python3-venv python3-pip python3-setuptools python3-dev \
-        openjdk-8-jdk-headless \
         curl \
+    && curl --fail --show-error --location -q ${JDK_URL} -o /tmp/openjdk.tar.gz \
+    && ls -lh /tmp/openjdk.tar.gz \
+    && mkdir - "${TEMP_JDK_HOME}" \
+    && tar --extract \
+		--file /tmp/openjdk.tar.gz \
+		--directory "${TEMP_JDK_HOME}" \
+		--strip-components 1 \
+        --no-same-owner \
     && pip3 install -r ${PROJECT_FOLDER}/requirements.build.txt \
-    && JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 pip3 install -r ${PROJECT_FOLDER}/requirements.jep.txt \
-    && apt-get remove --yes openjdk-8-jdk-headless \
+    && JAVA_HOME=${TEMP_JDK_HOME} pip3 install -r ${PROJECT_FOLDER}/requirements.jep.txt \
+    && rm -f /tmp/openjdk.tar.gz \
+    && rm -rf "${TEMP_JDK_HOME}" \
     && rm -rf /var/lib/apt/lists/*
 
 # create virtual env (see also https://bugs.python.org/issue24875)

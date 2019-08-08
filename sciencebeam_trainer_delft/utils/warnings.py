@@ -1,14 +1,11 @@
 import warnings
+import logging
 
 
 def hide_warnings():
     def no_warn(*_, **__):
         pass
 
+    warnings.simplefilter("ignore")
     warnings.warn = no_warn
-
-    try:
-        import tensorflow as tf
-        tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-    except (ImportError, AttributeError):
-        pass
+    logging.getLogger('tensorflow').setLevel('ERROR')

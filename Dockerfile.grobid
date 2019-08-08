@@ -1,20 +1,30 @@
 ARG base_image=
 FROM ${base_image}
 
-# install build requirements
 ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
-COPY requirements.build.txt requirements.jep.txt ${PROJECT_FOLDER}/
 
-ENV TEMP_JDK_HOME=/tmp/jdk-${JAVA_VERSION}
-ENV JDK_URL=https://github.com/AdoptOpenJDK/openjdk8-upstream-binaries/releases/download/jdk8u212-b04/OpenJDK8U-x64_linux_8u212b04.tar.gz
-
-RUN mkdir -p /usr/share/man/man1 \
-    && apt-get update \
+# install python and other dependencies
+RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
         gcc \
         python3-minimal python3-venv python3-pip python3-setuptools python3-dev \
         curl \
-    && curl --fail --show-error --location -q ${JDK_URL} -o /tmp/openjdk.tar.gz \
+    && rm -rf /var/lib/apt/lists/*
+
+# create virtual env (see also https://bugs.python.org/issue24875)
+ENV VENV=/opt/venv
+COPY requirements.build.txt ${PROJECT_FOLDER}/
+RUN python3 -m venv ${VENV} \
+    && python3 -m venv --system-site-packages ${VENV} \
+    && ln -s ${VENV}/lib/python3.* ${VENV}/lib/python3 \
+    && ${VENV}/bin/pip install -r ${PROJECT_FOLDER}/requirements.build.txt
+ENV VIRTUAL_ENV=${VENV} PYTHONUSERBASE=${VENV} PATH=${VENV}/bin:$PATH
+
+# install jep (and temporarily the matching JDK)
+ENV TEMP_JDK_HOME=/tmp/jdk-${JAVA_VERSION}
+ENV JDK_URL=https://github.com/AdoptOpenJDK/openjdk8-upstream-binaries/releases/download/jdk8u212-b04/OpenJDK8U-x64_linux_8u212b04.tar.gz
+COPY requirements.jep.txt ${PROJECT_FOLDER}/
+RUN curl --fail --show-error --location -q ${JDK_URL} -o /tmp/openjdk.tar.gz \
     && ls -lh /tmp/openjdk.tar.gz \
     && mkdir - "${TEMP_JDK_HOME}" \
     && tar --extract \
@@ -22,17 +32,10 @@ RUN mkdir -p /usr/share/man/man1 \
 		--directory "${TEMP_JDK_HOME}" \
 		--strip-components 1 \
         --no-same-owner \
-    && pip3 install -r ${PROJECT_FOLDER}/requirements.build.txt \
     && JAVA_HOME=${TEMP_JDK_HOME} pip3 install -r ${PROJECT_FOLDER}/requirements.jep.txt \
     && rm -f /tmp/openjdk.tar.gz \
-    && rm -rf "${TEMP_JDK_HOME}" \
-    && rm -rf /var/lib/apt/lists/*
-
-# create virtual env (see also https://bugs.python.org/issue24875)
-ENV VENV=/opt/venv
-RUN python3 -m venv ${VENV} \
-    && python3 -m venv --system-site-packages ${VENV}
-ENV VIRTUAL_ENV=${VENV} PYTHONUSERBASE=${VENV} PATH=${VENV}/bin:$PATH
+    && rm -rf "${TEMP_JDK_HOME}"
+ENV LD_LIBRARY_PATH=${VENV}/lib/python3/site-packages/jep:${LD_LIBRARY_PATH}
 
 # install sciencebeam-trainer-delft dependencies
 COPY requirements.txt ${PROJECT_FOLDER}/

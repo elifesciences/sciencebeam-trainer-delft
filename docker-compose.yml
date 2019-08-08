@@ -26,8 +26,9 @@ services:
       - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
       - EMBEDDING_LMDB_PATH=${EMBEDDING_LMDB_PATH}
       - PRELOAD_EMBEDDING=${PRELOAD_EMBEDDING}
+      - GROBID__HEADER__USE_HEURISTICS=${GROBID__HEADER__USE_HEURISTICS}
     volumes:
-      - data:/opt/sciencebeam-trainer-delft/data
+      - data:/data
     ports:
       - "${GROBID_PORT}:8070"
 

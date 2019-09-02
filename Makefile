@@ -110,11 +110,11 @@ shell-dev:
 
 
 pylint:
-	$(DELFT_DEV_RUN) pylint sciencebeam_trainer_delft setup.py
+	$(DELFT_DEV_RUN) pylint sciencebeam_trainer_delft tests setup.py
 
 
 flake8:
-	$(DELFT_DEV_RUN) flake8 sciencebeam_trainer_delft setup.py
+	$(DELFT_DEV_RUN) flake8 sciencebeam_trainer_delft tests setup.py
 
 
 pytest:

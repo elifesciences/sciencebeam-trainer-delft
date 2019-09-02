@@ -34,6 +34,7 @@ class TestLoadDataAndLabelsCrfFile:
         assert y_all.tolist() == [[UNICODE_VALUE_1]]
         assert f_all.tolist() == [[[UNICODE_VALUE_1] * 10]]
 
+
 class TestLoadDataCrfString:
     def test_should_load_unicode_str(self):
         crf_string = ' '.join([UNICODE_VALUE_1] * 11)

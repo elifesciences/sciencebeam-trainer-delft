@@ -16,7 +16,7 @@ CHECKPOINT_OUTPUT =
 DELFT_RUN = $(DOCKER_COMPOSE) run --rm delft
 DELFT_DEV_RUN = $(DELFT_RUN)
 PYTEST_WATCH = $(DELFT_DEV_RUN) pytest-watch
-PYTHON = $(DELFT_RUN) python
+RUN_PYTHON = $(DELFT_RUN) python
 
 JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
 JUPYTER_RUN = $(JUPYTER_DOCKER_COMPOSE) run --rm jupyter
@@ -75,6 +75,28 @@ dev-install:
 dev-venv: venv-create dev-install
 
 
+dev-flake8:
+	$(PYTHON) -m flake8 sciencebeam_trainer_delft tests setup.py
+
+
+dev-pylint:
+	$(PYTHON) -m pylint sciencebeam_trainer_delft tests setup.py
+
+
+dev-lint: dev-flake8 dev-pylint
+
+
+dev-pytest:
+	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS)
+
+
+dev-watch:
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings $(ARGS)
+
+
+dev-test: dev-lint dev-pytest
+
+
 build:
 	$(DOCKER_COMPOSE) build delft
 
@@ -88,11 +110,11 @@ shell-dev:
 
 
 pylint:
-	$(DELFT_DEV_RUN) pylint sciencebeam_trainer_delft setup.py
+	$(DELFT_DEV_RUN) pylint sciencebeam_trainer_delft tests setup.py
 
 
 flake8:
-	$(DELFT_DEV_RUN) flake8 sciencebeam_trainer_delft setup.py
+	$(DELFT_DEV_RUN) flake8 sciencebeam_trainer_delft tests setup.py
 
 
 pytest:
@@ -151,7 +173,7 @@ test: \
 
 
 grobid-train-header: .grobid-train-header-args
-	$(PYTHON) -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+	$(RUN_PYTHON) -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 		$(_GROBID_TRAIN_ARGS)
 
 
@@ -183,7 +205,7 @@ gcloud-ai-platform-local-grobid-train-header: .grobid-train-header-args
 gcloud-ai-platform-cloud-grobid-train-header: .grobid-train-header-args .require-GCLOUD_JOB_DIR
 	@echo "_GROBID_TRAIN_ARGS=$(_GROBID_TRAIN_ARGS)"
 	@echo "GCLOUD_JOB_NAME=$(GCLOUD_JOB_NAME)"
-	$(GCLOUD) ai-platform jobs submit training \
+	$(GCLOUD) beta ai-platform jobs submit training \
 		"$(GCLOUD_JOB_NAME)" \
 		--stream-logs \
 		--job-dir "$(GCLOUD_JOB_DIR)" \

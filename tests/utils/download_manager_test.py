@@ -20,6 +20,7 @@ def _copy_file_mock():
     with patch.object(download_manager_module, 'copy_file') as mock:
         yield mock
 
+
 @pytest.fixture(name='data_dir')
 def _data_dir(temp_dir: Path):
     return temp_dir.joinpath('data')

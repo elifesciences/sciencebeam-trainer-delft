@@ -4,6 +4,11 @@ set -e
 
 GROBID_CONFIG=${GROBID_CONFIG:-/opt/grobid/grobid-home/config/grobid.properties}
 
+if [ ! -f "${GROBID_CONFIG}" ]; then
+  echo "grobid config not found: ${GROBID_CONFIG}"
+  exit 2
+fi
+
 PROP_NAME="$1"
 PROP_VALUE="$2"
 

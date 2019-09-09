@@ -244,6 +244,16 @@ grobid-stop:
 	$(DOCKER_COMPOSE) stop grobid
 
 
+trainer-grobid-build:
+	@if [ "$(NO_BUILD)" != "y" ]; then \
+		$(DOCKER_COMPOSE) build trainer-grobid-base trainer-grobid; \
+	fi
+
+
+trainer-grobid-shell:
+	$(DOCKER_COMPOSE) run --rm --no-deps trainer-grobid bash $(ARGS)
+
+
 update-test-notebook:
 	$(JUPYTER_RUN) update-notebook-and-check-no-errors.sh \
 		test.ipynb "$(NOTEBOOK_OUTPUT_FILE)"
@@ -277,7 +287,7 @@ jupyter-stop:
 
 ci-build-and-test:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
-		build test grobid-build jupyter-build update-test-notebook-temp
+		build test grobid-build trainer-grobid-build jupyter-build update-test-notebook-temp
 
 
 ci-clean:

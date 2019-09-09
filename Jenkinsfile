@@ -41,6 +41,14 @@ elifePipeline {
                 unstable_image.tag('latest').push()
                 unstable_image.push()
             }
+
+            stage 'Push unstable sciencebeam-trainer-delft-trainer-grobid image', {
+                def tag = "${baseGrobidTag}-${commit}"
+                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-trainer-grobid', tag)
+                def unstable_image = image.addSuffixAndTag('_unstable', tag)
+                unstable_image.tag('latest').push()
+                unstable_image.push()
+            }
         }
     }
 }

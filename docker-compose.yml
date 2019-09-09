@@ -32,6 +32,36 @@ services:
     ports:
       - "${GROBID_PORT}:8070"
 
+  # trainer grobid with delft (base image)
+  trainer-grobid-base:
+    build:
+      context: .
+      dockerfile: Dockerfile.grobid
+      args:
+        base_image: ${BASE_TRAINER_GROBID_REPO}:${BASE_TRAINER_GROBID_TAG}
+        grobid_config: /opt/grobid-source/grobid-home/config/grobid.properties
+    image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
+
+  # trainer grobid with delft
+  trainer-grobid:
+    build:
+      context: .
+      dockerfile: Dockerfile.trainer-grobid
+      args:
+        base_image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
+    image: elifesciences/sciencebeam-trainer-delft-trainer-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
+    depends_on:
+      - trainer-grobid-base
+    environment:
+      - OVERRIDE_MODELS=${OVERRIDE_MODELS}
+      - OVERRIDE_EMBEDDING_URL=${OVERRIDE_EMBEDDING_URL}
+      - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
+      - EMBEDDING_LMDB_PATH=${EMBEDDING_LMDB_PATH}
+      - PRELOAD_EMBEDDING=${PRELOAD_EMBEDDING}
+      - GROBID__HEADER__USE_HEURISTICS=${GROBID__HEADER__USE_HEURISTICS}
+    volumes:
+      - data:/data
+
   jupyter:
     build:
       context: .

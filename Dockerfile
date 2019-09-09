@@ -1,5 +1,15 @@
 FROM python:3.5.7-stretch
 
+# install gcloud to make it easier to access cloud storage
+RUN mkdir -p /usr/local/gcloud \
+    && curl -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz -o /tmp/google-cloud-sdk.tar.gz \
+    && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
+    && rm /tmp/google-cloud-sdk.tar.gz \
+    && /usr/local/gcloud/google-cloud-sdk/install.sh --usage-reporting false \
+    && /usr/local/gcloud/google-cloud-sdk/bin/gcloud components install --quiet beta
+
+ENV PATH /usr/local/gcloud/google-cloud-sdk/bin:$PATH
+
 ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
 
 WORKDIR ${PROJECT_FOLDER}

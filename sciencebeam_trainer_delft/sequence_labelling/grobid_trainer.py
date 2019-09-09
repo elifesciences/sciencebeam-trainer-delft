@@ -18,6 +18,7 @@ from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.cloud_support import patch_cloud_support
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.tf import get_tf_info
+from sciencebeam_trainer_delft.utils.io import copy_file
 
 from sciencebeam_trainer_delft.embedding import EmbeddingManager
 
@@ -442,6 +443,14 @@ def parse_args(argv: List[str] = None):
         help="Do not use LMDB embedding cache (load embeddings into memory instead)"
     )
 
+    parser.add_argument(
+        "--save-input-to-and-exit",
+        help=(
+            "If set, saves the input to the specified path and exits."
+            " This can be useful to retrain the model outside GROBID."
+        )
+    )
+
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
 
     args = parser.parse_args(argv)
@@ -450,9 +459,20 @@ def parse_args(argv: List[str] = None):
     return args
 
 
+def save_input_to(input_paths: List[str], output_path: str):
+    assert len(input_paths) == 1, "exactly one input path expected (got: %s)" % input_paths
+    input_path = input_paths[0]
+    LOGGER.info('saving input (%s) to: %s', input_path, output_path)
+    copy_file(input_path, output_path)
+
+
 def run(args):
     model = args.model
     action = args.action
+
+    if args.save_input_to_and_exit:
+        save_input_to(args.input, args.save_input_to_and_exit)
+        return
 
     use_ELMo = args.use_ELMo
     architecture = args.architecture

@@ -1,3 +1,4 @@
+import gzip
 import json
 import logging
 import os
@@ -20,7 +21,8 @@ from sciencebeam_trainer_delft.sequence_labelling.grobid_trainer import (
     load_data_and_labels,
     train,
     train_eval,
-    tag_input
+    tag_input,
+    main
 )
 
 from ..embedding.test_data import TEST_DATA_PATH
@@ -305,3 +307,40 @@ class TestGrobidTrainer:
                 fold_count=2,
                 **default_args
             )
+
+    @pytest.mark.slow
+    class TestEndToEndMain:
+        @log_on_exception
+        def test_should_be_able_capture_train_input_data(
+                self, temp_dir: Path):
+            input_path = temp_dir.joinpath('input.train')
+            input_path.write_text('some training data')
+
+            output_path = temp_dir.joinpath('captured-input.train')
+
+            main([
+                'header',
+                'train',
+                '--input=%s' % input_path,
+                '--save-input-to-and-exit=%s' % output_path
+            ])
+
+            assert output_path.read_text() == 'some training data'
+
+        @log_on_exception
+        def _test_should_be_able_capture_train_input_data_gzipped(
+                self, temp_dir: Path):
+            input_path = temp_dir.joinpath('input.train')
+            input_path.write_text('some training data')
+
+            output_path = temp_dir.joinpath('captured-input.train.gz')
+
+            main([
+                'header',
+                'train',
+                '--input=%s' % input_path,
+                '--save-input-to-and-exit=%s' % output_path
+            ])
+
+            with gzip.open(str(output_path), mode='rb') as fp:
+                assert fp.read() == 'some training data'

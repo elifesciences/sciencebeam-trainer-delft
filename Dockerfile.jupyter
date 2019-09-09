@@ -23,7 +23,7 @@ RUN if [ "${install_gcloud}" = "y" ]; then \
         -o /tmp/google-cloud-sdk.tar.gz \
       && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
       && rm /tmp/google-cloud-sdk.tar.gz \
-      && /usr/local/gcloud/google-cloud-sdk/install.sh; \
+      && /usr/local/gcloud/google-cloud-sdk/install.sh --usage-reporting false; \
     fi
 
 USER jovyan

@@ -20,6 +20,7 @@ def _model_config():
     return config
 
 
+@pytest.mark.slow
 class TestCustomBidLSTM_CRF:
     def test_should_be_able_to_build_without_features(self, model_config: ModelConfig):
         model_config.use_features = False

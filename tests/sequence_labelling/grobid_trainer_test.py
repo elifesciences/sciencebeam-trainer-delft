@@ -270,6 +270,7 @@ class TestGrobidTrainer:
             assert (f == _mock_shuffle_arrays(f)).all()
 
     @pytest.mark.slow
+    @pytest.mark.very_slow
     class TestEndToEnd:
         @log_on_exception
         def test_should_be_able_to_train_without_features(

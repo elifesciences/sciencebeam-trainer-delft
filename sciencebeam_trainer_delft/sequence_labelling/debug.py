@@ -47,19 +47,19 @@ class TagDebugReporter:
             features: np.array,
             annotations,
             model_name: str):
-        output_file = self.get_base_output_name(model_name=model_name) + '.json'
+        filename_prefix = self.get_base_output_name(model_name=model_name)
+        output_file = filename_prefix + '.json'
         LOGGER.info('tagger, output_file: %s', output_file)
         output_props = {
             'texts': np.array(texts).tolist(),
             'features': np.array(features).tolist() if features is not None else None,
-            'annotations': annotations,
-            'flat_text': to_flat_text(texts)
+            'annotations': annotations
         }
+        Path(filename_prefix + '.txt').write_text(to_flat_text(texts), encoding='utf-8')
         with open(output_file, 'w', encoding='utf-8') as fp:
             json.dump(output_props, fp, indent=4)
         if features is not None:
-            data_output_file = self.get_base_output_name(model_name=model_name) + '.data'
-            Path(data_output_file).write_text('\n'.join(to_data_lines(
+            Path(filename_prefix + '.data').write_text('\n'.join(to_data_lines(
                 features=features,
                 annotations=annotations
             )), encoding='utf-8')

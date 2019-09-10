@@ -14,6 +14,7 @@ FILE_1_PREFIX = 'file1'
 
 JSON_FILE_1 = FILE_1_PREFIX + '.json'
 DATA_FILE_1 = FILE_1_PREFIX + '.data'
+TXT_FILE_1 = FILE_1_PREFIX + '.txt'
 
 TEXTS_1 = np.array([
     ['token1', 'token2']
@@ -60,7 +61,9 @@ class TestTagDebugReporter:
             assert output_dict['texts'] == TEXTS_1.tolist()
             assert output_dict['features'] == FEATURES_1.tolist()
             assert output_dict['annotations'] == ANNOTATIONS_1
-            assert output_dict['flat_text'] == FLAT_TEXT_1
 
             data_output_file = temp_dir.joinpath(DATA_FILE_1)
             assert data_output_file.read_text().splitlines() == DATA_LINES_1
+
+            data_output_file = temp_dir.joinpath(TXT_FILE_1)
+            assert data_output_file.read_text() == FLAT_TEXT_1

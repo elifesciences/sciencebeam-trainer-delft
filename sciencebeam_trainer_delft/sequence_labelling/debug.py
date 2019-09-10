@@ -37,8 +37,8 @@ class TagDebugReporter:
 
     def get_base_output_name(self, model_name: str) -> str:
         return os.path.join(self.output_directory, 'sciencebeam-delft-%s-%s' % (
-            model_name,
-            round(time.time())
+            round(time.time()),
+            model_name
         ))
 
     def report_tag_results(

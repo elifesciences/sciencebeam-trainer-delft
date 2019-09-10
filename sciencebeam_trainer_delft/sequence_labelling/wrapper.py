@@ -297,7 +297,10 @@ class Sequence(_Sequence):
                 annotations["runtime"] = runtime
             return annotations
         else:
-            raise OSError('Could not find a model.')
+            raise OSError('Could not find a model: %s' % self._get_model_name())
+
+    def _get_model_name(self):
+        return self.model_config.model_name
 
     def _get_model_directory(self, dir_path=None):
         return get_model_directory(model_name=self.model_config.model_name, dir_path=dir_path)

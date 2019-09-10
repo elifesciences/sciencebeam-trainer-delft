@@ -39,6 +39,7 @@ services:
       dockerfile: Dockerfile.grobid
       args:
         base_image: ${BASE_TRAINER_GROBID_REPO}:${BASE_TRAINER_GROBID_TAG}
+        grobid_home: /opt/grobid-source/grobid-home
         grobid_config: /opt/grobid-source/grobid-home/config/grobid.properties
     image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
 

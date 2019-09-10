@@ -196,23 +196,21 @@ class Sequence(_Sequence):
 
     def eval_single(  # pylint: disable=arguments-differ
             self, x_test, y_test, features: np.array = None):
-        if self.model:
-            # Prepare test data(steps, generator)
-            test_generator = DataGenerator(
-                x_test, y_test,
-                features=features,
-                batch_size=self.training_config.batch_size, preprocessor=self.p,
-                char_embed_size=self.model_config.char_embedding_size,
-                max_sequence_length=self.model_config.max_sequence_length,
-                embeddings=self.embeddings, shuffle=False
-            )
+        self._require_model()
+        # Prepare test data(steps, generator)
+        test_generator = DataGenerator(
+            x_test, y_test,
+            features=features,
+            batch_size=self.training_config.batch_size, preprocessor=self.p,
+            char_embed_size=self.model_config.char_embedding_size,
+            max_sequence_length=self.model_config.max_sequence_length,
+            embeddings=self.embeddings, shuffle=False
+        )
 
-            # Build the evaluator and evaluate the model
-            scorer = Scorer(test_generator, self.p, evaluation=True)
-            scorer.model = self.model
-            scorer.on_epoch_end(epoch=-1)
-        else:
-            raise OSError('Could not find a model.')
+        # Build the evaluator and evaluate the model
+        scorer = Scorer(test_generator, self.p, evaluation=True)
+        scorer.model = self.model
+        scorer.on_epoch_end(epoch=-1)
 
     def eval_nfold(  # pylint: disable=arguments-differ
             self, x_test, y_test, features: np.array = None):
@@ -280,24 +278,26 @@ class Sequence(_Sequence):
             self, texts, output_format, features=None):
         # annotate a list of sentences, return the list of annotations in the
         # specified output_format
-        if self.model:
-            if self.model_config.use_features and features is None:
-                raise ValueError('features required')
-            tagger = Tagger(
-                self.model, self.model_config, self.embeddings,
-                preprocessor=self.p
-            )
-            start_time = time.time()
-            annotations = tagger.tag(
-                list(texts), output_format,
-                features=features
-            )
-            runtime = round(time.time() - start_time, 3)
-            if output_format == 'json':
-                annotations["runtime"] = runtime
-            return annotations
-        else:
-            raise OSError('Could not find a model: %s' % self._get_model_name())
+        self._require_model()
+        if self.model_config.use_features and features is None:
+            raise ValueError('features required')
+        tagger = Tagger(
+            self.model, self.model_config, self.embeddings,
+            preprocessor=self.p
+        )
+        start_time = time.time()
+        annotations = tagger.tag(
+            list(texts), output_format,
+            features=features
+        )
+        runtime = round(time.time() - start_time, 3)
+        if output_format == 'json':
+            annotations["runtime"] = runtime
+        return annotations
+
+    def _require_model(self):
+        if not self.model:
+            raise OSError('Model not loaded: %s' % self._get_model_name())
 
     def _get_model_name(self):
         return self.model_config.model_name

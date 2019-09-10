@@ -24,6 +24,8 @@ from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver, ModelLoader
 from sciencebeam_trainer_delft.sequence_labelling.tagger import Tagger
 
+from sciencebeam_trainer_delft.sequence_labelling.debug import get_tag_debug_reporter_if_enabled
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +83,7 @@ class Sequence(_Sequence):
             feature_embedding_size=feature_embedding_size
         )
         self.multiprocessing = multiprocessing
+        self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
 
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid=None, y_valid=None,
@@ -293,6 +296,13 @@ class Sequence(_Sequence):
         runtime = round(time.time() - start_time, 3)
         if output_format == 'json':
             annotations["runtime"] = runtime
+        if self.tag_debug_reporter:
+            self.tag_debug_reporter.report_tag_results(
+                texts=texts,
+                features=features,
+                annotations=annotations,
+                model_name=self._get_model_name()
+            )
         return annotations
 
     def _require_model(self):

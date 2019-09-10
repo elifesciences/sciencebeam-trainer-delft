@@ -55,14 +55,14 @@ class TagDebugReporter:
             'annotations': annotations,
             'flat_text': to_flat_text(texts)
         }
-        with open(output_file, 'w') as fp:
+        with open(output_file, 'w', encoding='utf-8') as fp:
             json.dump(output_props, fp, indent=4)
         if features is not None:
             data_output_file = self.get_base_output_name(model_name=model_name) + '.data'
             Path(data_output_file).write_text('\n'.join(to_data_lines(
                 features=features,
                 annotations=annotations
-            )))
+            )), encoding='utf-8')
 
 
 def get_tag_debug_reporter_if_enabled() -> TagDebugReporter:

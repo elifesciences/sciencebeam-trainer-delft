@@ -11,12 +11,11 @@ RUN if [ "${install_jq}" = "y" ]; then \
     fi
 
 # install gcloud to make it easier to access cloud storage
-# gcloud sdk cli only works with Python 2 (in 2019)
 ARG install_gcloud=y
 RUN if [ "${install_gcloud}" = "y" ]; then \
       apt-get update \
       && apt-get install --assume-yes --no-install-recommends \
-        curl python2.7 \
+        curl \
       && rm -rf /var/lib/apt/lists/* \
       && mkdir -p /usr/local/gcloud \
       && curl -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz \

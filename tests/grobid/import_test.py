@@ -1,4 +1,4 @@
-# pylint: disable=unused-import
+# pylint: disable=unused-import, import-outside-toplevel
 
 
 class TestGrobidImports:

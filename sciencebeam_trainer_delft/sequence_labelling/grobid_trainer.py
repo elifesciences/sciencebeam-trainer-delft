@@ -61,7 +61,7 @@ def log_data_info(x: np.array, y: np.array, features: np.array):
     LOGGER.info('x sample: %s (y: %s)', x[:1][:10], y[:1][:1])
     LOGGER.info(
         'feature dimensions of first sample, word: %s',
-        [{index: value for index, value in enumerate(features[0][0])}]
+        [{index: value for index, value in enumerate(features[0][0])}]  # noqa pylint: disable=unnecessary-comprehension
     )
 
 

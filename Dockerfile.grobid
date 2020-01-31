@@ -11,7 +11,7 @@ RUN apt-get update \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install pip --upgrade
+RUN python3 -m pip install pip --upgrade
 
 # create virtual env (see also https://bugs.python.org/issue24875)
 ENV VENV=/opt/venv

@@ -16,6 +16,9 @@ WORKDIR ${PROJECT_FOLDER}
 
 ENV PATH=/root/.local/bin:${PATH}
 
+COPY requirements.build.txt ./
+RUN pip install --user -r requirements.build.txt
+
 COPY requirements.txt ./
 RUN pip install --user -r requirements.txt
 

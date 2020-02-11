@@ -1,5 +1,6 @@
 import logging
 import os
+from hashlib import md5
 from pathlib import Path
 
 from sciencebeam_trainer_delft.utils.io import (
@@ -20,7 +21,10 @@ class DownloadManager:
         self.download_dir = Path(download_dir)
 
     def get_local_file(self, file_url: str, auto_uncompress: bool = True) -> str:
-        filename = os.path.basename(file_url)
+        filename = '%s-%s' % (
+            md5(file_url.encode('utf-8')).hexdigest(),
+            os.path.basename(file_url)
+        )
         if auto_uncompress:
             compression_wrapper = get_compression_wrapper(filename)
             filename = compression_wrapper.strip_compression_filename_ext(filename)
@@ -39,7 +43,7 @@ class DownloadManager:
             local_file or self.get_local_file(file_url, auto_uncompress=auto_uncompress)
         )
         if skip_if_downloaded and self.is_downloaded(file_url, auto_uncompress=auto_uncompress):
-            LOGGER.info('file already downloaded: %s', file_url)
+            LOGGER.info('file already downloaded: %s (%s)', file_url, download_file)
         else:
             LOGGER.info('copying %s to %s', file_url, download_file)
             copy_file(file_url, download_file)

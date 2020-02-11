@@ -1,10 +1,13 @@
-DOCKER_COMPOSE_DEV = docker-compose
+DOCKER_COMPOSE_DEV = USER_ID="$(USER_ID)" docker-compose
 DOCKER_COMPOSE_CI = docker-compose -f docker-compose.yml
 DOCKER_COMPOSE = $(DOCKER_COMPOSE_DEV)
 
 VENV = venv
 PIP = $(VENV)/bin/pip
 PYTHON = $(VENV)/bin/python
+
+USER_ID = $(shell id -u)
+GROUP_ID = $(shell id -g)
 
 BATCH_SIZE = 10
 MAX_EPOCH = 1
@@ -18,13 +21,10 @@ DELFT_DEV_RUN = $(DELFT_RUN)
 PYTEST_WATCH = $(DELFT_DEV_RUN) pytest-watch
 RUN_PYTHON = $(DELFT_RUN) python
 
-JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
+JUPYTER_DOCKER_COMPOSE = NB_UID="$(USER_ID)" NB_GID="$(GROUP_ID)" $(DOCKER_COMPOSE)
 JUPYTER_RUN = $(JUPYTER_DOCKER_COMPOSE) run --rm jupyter
 
 NOTEBOOK_OUTPUT_FILE =
-
-NB_UID = $(shell id -u)
-NB_GID = $(shell id -g)
 
 LIMIT = 10000
 ARCHITECTURE = CustomBidLSTM_CRF

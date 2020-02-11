@@ -14,19 +14,22 @@ ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
 
 WORKDIR ${PROJECT_FOLDER}
 
-ENV PATH=/root/.local/bin:${PATH}
+ENV VENV=/opt/venv
+RUN python3 -m venv ${VENV} \
+    && python3 -m venv ${VENV}
+ENV VIRTUAL_ENV=${VENV} PYTHONUSERBASE=${VENV} PATH=${VENV}/bin:$PATH
 
 COPY requirements.build.txt ./
-RUN pip install --user -r requirements.build.txt
+RUN pip install -r requirements.build.txt
 
 COPY requirements.txt ./
-RUN pip install --user -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY requirements.cpu.txt ./
-RUN pip install --user -r requirements.cpu.txt
+RUN pip install -r requirements.cpu.txt
 
 COPY requirements.delft.txt ./
-RUN pip install --user -r requirements.delft.txt --no-deps
+RUN pip install -r requirements.delft.txt --no-deps
 
 ARG install_dev
 COPY requirements.dev.txt ./

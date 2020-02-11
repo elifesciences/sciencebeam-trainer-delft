@@ -158,12 +158,16 @@ class DataGenerator(keras.utils.Sequence):
         if self.preprocessor.return_casing:
             inputs.append(batch_a)
         if self.preprocessor.return_features:
-            batch_features = left_pad_batch_values(
-                self.preprocessor.transform_features(self.features[
-                    (index * self.batch_size):(index * self.batch_size) + max_iter
-                ]),
-                max_length_x
-            )
+            sub_f = self.features[(index * self.batch_size):(index * self.batch_size) + max_iter]
+            LOGGER.debug('extend: %s', extend)
+            try:
+                batch_features, _ = self.preprocessor.transform_features(sub_f, extend=extend)
+            except TypeError:
+                batch_features = left_pad_batch_values(
+                    self.preprocessor.transform_features(sub_f),
+                    max_length_x
+                )
+            LOGGER.debug('batch_features.shape: %s', batch_features.shape)
             inputs.append(batch_features)
         inputs.append(batch_l)
 

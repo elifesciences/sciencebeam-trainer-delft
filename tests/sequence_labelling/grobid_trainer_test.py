@@ -298,6 +298,28 @@ class TestGrobidTrainer:
                 **default_args
             )
 
+        @log_on_exception
+        def test_should_be_able_to_train_BidLSTM_CRF_FEATURES(
+                self, default_args: dict, default_model_directory: str):
+            train_args = {
+                **default_args,
+                'architecture': 'BidLSTM_CRF_FEATURES',
+                'feature_embedding_size': 4,
+                'config_props': {
+                    'use_features_indices_input': True,
+                    'features_lstm_units': 10
+                }
+            }
+            train(
+                use_features=True,
+                **train_args
+            )
+            tag_input(
+                use_features=True,
+                model_path=default_model_directory,
+                **train_args
+            )
+
         def test_should_be_able_to_train_eval(self, default_args: dict):
             train_eval(
                 **default_args

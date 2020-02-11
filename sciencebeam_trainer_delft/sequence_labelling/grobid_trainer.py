@@ -383,16 +383,27 @@ def parse_args(argv: List[str] = None):
         help="type of model architecture to be used"
     )
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
-    parser.add_argument("--use-features", action="store_true", help="Use features")
-    parser.add_argument(
+
+    features_group = parser.add_argument_group('features')
+    features_group.add_argument("--use-features", action="store_true", help="Use features")
+    features_group.add_argument(
         "--feature-indices",
         type=parse_number_ranges,
-        help="The feature indices to use. e.g. 7:10. If blank, all of the features will be used."
+        help="The feature indices to use. e.g. 7-10. If blank, all of the features will be used."
     )
-    parser.add_argument(
+    features_group.add_argument(
         "--feature-embedding-size", type=int,
         help="size of feature embedding, use 0 to disable embedding"
     )
+    features_group.add_argument(
+        "--use-features-indices-input", action="store_true",
+        help="Use features indices values (should be inferred from the model)"
+    )
+    features_group.add_argument(
+        "--features-lstm-units", type=int,
+        help="Number of LSTM units used by the features"
+    )
+
     parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
@@ -525,7 +536,11 @@ def run(args):
         feature_indices=args.feature_indices,
         feature_embedding_size=args.feature_embedding_size,
         multiprocessing=args.multiprocessing,
-        download_manager=download_manager
+        download_manager=download_manager,
+        config_props=dict(
+            use_features_indices_input=args.use_features_indices_input,
+            features_lstm_units=args.features_lstm_units
+        )
     )
 
     LOGGER.info('get_tf_info: %s', get_tf_info())

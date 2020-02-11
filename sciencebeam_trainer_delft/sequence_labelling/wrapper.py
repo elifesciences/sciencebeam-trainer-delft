@@ -19,7 +19,9 @@ from sciencebeam_trainer_delft.sequence_labelling.trainer import Trainer
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
     Preprocessor,
-    FeaturesPreprocessor
+    T_FeaturesPreprocessor,
+    FeaturesPreprocessor,
+    FeaturesIndicesInputPreprocessor
 )
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver, ModelLoader
 from sciencebeam_trainer_delft.sequence_labelling.tagger import Tagger
@@ -34,12 +36,21 @@ DEFAUT_MODEL_PATH = 'data/models/sequenceLabelling/'
 DEFAULT_EMBEDDINGS_PATH = './embedding-registry.json'
 
 
+def get_features_preprocessor(model_config) -> T_FeaturesPreprocessor:
+    if model_config.use_features_indices_input:
+        return FeaturesIndicesInputPreprocessor(
+            features_indices=model_config.feature_indices,
+            features_vocabulary_size=model_config.features_vocabulary_size
+        )
+    return FeaturesPreprocessor(
+        feature_indices=model_config.feature_indices
+    )
+
+
 def prepare_preprocessor(X, y, model_config, features: np.array = None):
     feature_preprocessor = None
     if features is not None:
-        feature_preprocessor = FeaturesPreprocessor(
-            feature_indices=model_config.feature_indices
-        )
+        feature_preprocessor = get_features_preprocessor(model_config)
     preprocessor = Preprocessor(
         max_char_length=model_config.max_char_length,
         feature_preprocessor=feature_preprocessor
@@ -47,6 +58,10 @@ def prepare_preprocessor(X, y, model_config, features: np.array = None):
     preprocessor.fit(X, y)
     if features is not None:
         preprocessor.fit_features(features)
+        if model_config.features_indices != preprocessor.feature_preprocessor.features_indices:
+            LOGGER.info('revised features_indices: %s', model_config.features_indices)
+            model_config.features_indices = preprocessor.feature_preprocessor.features_indices
+        model_config.features_map_to_index = preprocessor.feature_preprocessor.features_map_to_index
     return preprocessor
 
 
@@ -63,6 +78,7 @@ class Sequence(_Sequence):
             multiprocessing: bool = False,
             embedding_registry_path: str = None,
             embedding_manager: EmbeddingManager = None,
+            config_props: dict = None,
             **kwargs):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
@@ -78,6 +94,7 @@ class Sequence(_Sequence):
         LOGGER.debug('use_features=%s', use_features)
         self.model_config = ModelConfig(
             **vars(self.model_config),
+            **(config_props or {}),
             use_features=use_features,
             feature_indices=feature_indices,
             feature_embedding_size=feature_embedding_size
@@ -105,8 +122,11 @@ class Sequence(_Sequence):
             LOGGER.info('x_train.shape: %s', x_train.shape)
             LOGGER.info('features_train.shape: %s', features_train.shape)
             sample_transformed_features = self.p.transform_features(features_train[:1])
-            self.model_config.max_feature_size = sample_transformed_features.shape[-1]
-            LOGGER.info('max_feature_size: %s', self.model_config.max_feature_size)
+            try:
+                self.model_config.max_feature_size = sample_transformed_features.shape[-1]
+                LOGGER.info('max_feature_size: %s', self.model_config.max_feature_size)
+            except Exception:  # pylint: disable=broad-except
+                LOGGER.info('features do not implement shape, set max_feature_size manually')
 
         self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
         trainer = Trainer(

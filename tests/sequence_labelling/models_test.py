@@ -1,7 +1,10 @@
 import pytest
 
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
-from sciencebeam_trainer_delft.sequence_labelling.models import CustomBidLSTM_CRF
+from sciencebeam_trainer_delft.sequence_labelling.models import (
+    CustomBidLSTM_CRF,
+    BidLSTM_CRF_FEATURES
+)
 
 
 @pytest.fixture(name='model_config')
@@ -34,3 +37,12 @@ class TestCustomBidLSTM_CRF:
         model_config.use_features = True
         model_config.feature_embedding_size = 11
         CustomBidLSTM_CRF(model_config, ntags=5)
+
+@pytest.mark.slow
+class TestBidLSTM_CRF_FEATURES:
+    def test_should_be_able_to_build_model(self, model_config: ModelConfig):
+        model_config.features_indices = [1, 2, 3]
+        model_config.features_vocabulary_size = 11
+        model_config.features_embedding_size = 12
+        model_config.features_lstm_units = 13
+        BidLSTM_CRF_FEATURES(model_config, ntags=5)

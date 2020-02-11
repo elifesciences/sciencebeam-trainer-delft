@@ -259,6 +259,7 @@ def eval_model(
         model_path: str = None,
         limit: int = None,
         shuffle_input: bool = False,
+        split_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
@@ -271,9 +272,14 @@ def eval_model(
         download_manager=download_manager
     )
 
-    _, x_eval, _, y_eval, _, features_eval = train_test_split(
-        x_all, y_all, features_all, test_size=0.1
-    )
+    if split_input:
+        _, x_eval, _, y_eval, _, features_eval = train_test_split(
+            x_all, y_all, features_all, test_size=0.1
+        )
+    else:
+        x_eval = x_all
+        y_eval = y_all
+        features_eval = features_all
 
     print(len(x_eval), 'evaluation sequences')
 
@@ -391,18 +397,28 @@ def parse_args(argv: List[str] = None):
     parser.add_argument("--output", help="directory where to save a trained model")
     parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
     parser.add_argument("--model-path", help="directory to the saved model")
-    parser.add_argument(
+
+    input_group = parser.add_argument_group('input')
+    input_group.add_argument(
         "--input",
         nargs='+',
         action='append',
         help="provided training file"
     )
-    parser.add_argument(
+    input_group.add_argument(
         "--shuffle-input",
         action="store_true",
         help="Shuffle the input before splitting"
     )
-    parser.add_argument(
+    input_group.add_argument(
+        "--use-eval-train-test-split",
+        action="store_true",
+        help=" ".join([
+            "If enabled, split the input when running 'eval'",
+            "(in the same way it is split for 'train_eval')"
+        ])
+    )
+    input_group.add_argument(
         "--limit",
         type=int,
         help=(
@@ -411,6 +427,7 @@ def parse_args(argv: List[str] = None):
             " each of the input files individually"
         )
     )
+
     parser.add_argument(
         "--random-seed",
         type=int,
@@ -529,7 +546,11 @@ def run(args):
     if action == Tasks.EVAL:
         if not args.model_path:
             raise ValueError('--model-path required')
-        eval_model(model_path=args.model_path, **train_args)
+        eval_model(
+            model_path=args.model_path,
+            split_input=args.use_eval_train_test_split,
+            **train_args
+        )
 
     if action == Tasks.TAG:
         if not args.model_path:

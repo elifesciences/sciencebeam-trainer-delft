@@ -6,6 +6,7 @@ services:
       - ./sciencebeam_trainer_delft:/opt/sciencebeam-trainer-delft/sciencebeam_trainer_delft
       - ./tests:/opt/sciencebeam-trainer-delft/tests
       - ~/.config/gcloud:/root/.config/gcloud
+      - ${LOCAL_DATA_DIR}:/opt/sciencebeam-trainer-delft/data
 
   grobid:
     volumes:

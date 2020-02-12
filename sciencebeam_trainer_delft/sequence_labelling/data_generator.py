@@ -87,7 +87,7 @@ class DataGenerator(keras.utils.Sequence):
         if self.shuffle:
             self._shuffle_dataset()
 
-    def __data_generation(self, index):
+    def __data_generation(self, index):  # pylint: disable=too-many-statements
         'Generates data containing batch_size samples'
         max_iter = min(self.batch_size, len(self.x) - self.batch_size * index)
 

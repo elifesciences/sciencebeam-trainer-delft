@@ -66,6 +66,7 @@ def calculate_cardinality(feature_vector, indices=None):
 
     return columns_length
 
+
 def cardinality_to_index_map(columns_length, features_max_vector_size):
     # Filter out the columns that are not fitting
     columns_index = []

@@ -149,7 +149,6 @@ class BidLSTM_CRF_FEATURES(CustomModel):
             input_dim=config.char_vocab_size,
             output_dim=config.char_embedding_size,
             mask_zero=True,
-            #embeddings_initializer=RandomUniform(minval=-0.5, maxval=0.5),
             name='char_embeddings'
         ))(char_input)
 

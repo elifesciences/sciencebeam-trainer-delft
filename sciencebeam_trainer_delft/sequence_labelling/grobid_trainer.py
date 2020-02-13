@@ -501,10 +501,10 @@ def run(args):
         embedding_manager.disable_embedding_lmdb_cache()
     if action in {Tasks.TRAIN, Tasks.TRAIN_EVAL}:
         embedding_name = embedding_manager.ensure_available(args.embedding)
+        LOGGER.info('embedding_name: %s', embedding_name)
+        embedding_manager.validate_embedding(embedding_name)
     else:
         embedding_name = embedding_manager.resolve_alias(args.embedding)
-    LOGGER.info('embedding_name: %s', embedding_name)
-    embedding_manager.validate_embedding(embedding_name)
 
     train_args = dict(
         model=model,

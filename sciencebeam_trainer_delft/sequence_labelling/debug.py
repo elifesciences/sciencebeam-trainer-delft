@@ -56,6 +56,12 @@ class TagDebugReporter:
         )
         Path(output_file).write_text(formatted_json, encoding='utf-8')
 
+        formatted_xml = format_tag_result(
+            output_format=TagOutputFormats.XML,
+            **format_tag_result_kwargs
+        )
+        Path(filename_prefix + '.xml').write_text(formatted_xml, encoding='utf-8')
+
         if features is not None:
             formatted_data = format_tag_result(
                 output_format=TagOutputFormats.DATA,

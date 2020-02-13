@@ -14,6 +14,7 @@ from .tag_formatter_test import (
     ANNOTATIONS_1,
     DATA_LINES_1,
     FLAT_TEXT_1,
+    XML_1,
     MODEL_1
 )
 
@@ -23,6 +24,7 @@ FILE_1_PREFIX = 'file1'
 JSON_FILE_1 = FILE_1_PREFIX + '.json'
 DATA_FILE_1 = FILE_1_PREFIX + '.data'
 TXT_FILE_1 = FILE_1_PREFIX + '.txt'
+XML_FILE_1 = FILE_1_PREFIX + '.xml'
 
 
 @pytest.fixture(name='tag_debug_reporter')
@@ -52,5 +54,8 @@ class TestTagDebugReporter:
             data_output_file = temp_dir.joinpath(DATA_FILE_1)
             assert data_output_file.read_text().splitlines() == DATA_LINES_1
 
-            data_output_file = temp_dir.joinpath(TXT_FILE_1)
-            assert data_output_file.read_text() == FLAT_TEXT_1
+            text_output_file = temp_dir.joinpath(TXT_FILE_1)
+            assert text_output_file.read_text() == FLAT_TEXT_1
+
+            xml_output_file = temp_dir.joinpath(XML_FILE_1)
+            assert xml_output_file.read_text() == XML_1

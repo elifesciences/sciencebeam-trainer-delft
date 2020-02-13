@@ -374,12 +374,20 @@ def tag_input(
     assert model_path
     model.load_from(model_path)
 
-    LOGGER.info('tag_result:')
-    print(format_tag_result(model.tag(
+    tag_result = model.tag(
         x_all,
-        output_format='json',
+        output_format=None,
         features=features_all
-    ), output_format=tag_output_format))
+    )
+    formatted_tag_result = format_tag_result(
+        tag_result,
+        output_format=tag_output_format,
+        texts=x_all,
+        features=features_all,
+        model_name=model._get_model_name()  # pylint: disable=protected-access
+    )
+    LOGGER.info('tag_result:')
+    print(formatted_tag_result)
 
 
 def parse_args(argv: List[str] = None):

@@ -7,11 +7,13 @@ import numpy as np
 class TagOutputFormats:
     JSON = 'json'
     DATA = 'data'
+    TEXT = 'text'
 
 
 TAG_OUTPUT_FORMATS = [
     TagOutputFormats.JSON,
-    TagOutputFormats.DATA
+    TagOutputFormats.DATA,
+    TagOutputFormats.TEXT
 ]
 
 
@@ -62,6 +64,22 @@ def format_list_tag_result_as_data(
     ))
 
 
+def to_flat_text(texts: np.array) -> str:
+    return '\n'.join([
+        ' '.join(line_tokens)
+        for line_tokens in texts
+    ])
+
+
+def format_list_tag_result_as_text(
+        tag_result: List[List[Tuple[str, str]]],  # pylint: disable=unused-argument
+        texts: np.array = None,
+        features: np.array = None,  # pylint: disable=unused-argument
+        model_name: str = None) -> str:  # pylint: disable=unused-argument
+    assert texts is not None
+    return to_flat_text(texts=texts)
+
+
 def format_list_tag_result(
         *args,
         output_format: str,
@@ -70,6 +88,8 @@ def format_list_tag_result(
         return format_list_tag_result_as_json(*args, **kwargs)
     if output_format == TagOutputFormats.DATA:
         return format_list_tag_result_as_data(*args, **kwargs)
+    if output_format == TagOutputFormats.TEXT:
+        return format_list_tag_result_as_text(*args, **kwargs)
     raise ValueError('unrecognised output format: %s' % output_format)
 
 

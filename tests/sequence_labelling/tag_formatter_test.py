@@ -25,6 +25,8 @@ DATA_LINES_1 = [
     'token2 feat2.1 feat2.2 tag2'
 ]
 
+FLAT_TEXT_1 = 'token1 token2'
+
 MODEL_1 = 'model1'
 
 
@@ -60,3 +62,13 @@ class TestFormatTagResult:
             model_name=MODEL_1
         )
         assert result.splitlines() == DATA_LINES_1
+
+    def test_should_format_tag_list_result_as_text(self):
+        result = format_tag_result(
+            tag_result=ANNOTATIONS_1,
+            output_format=TagOutputFormats.TEXT,
+            texts=TEXTS_1,
+            features=FEATURES_1,
+            model_name=MODEL_1
+        )
+        assert result == FLAT_TEXT_1

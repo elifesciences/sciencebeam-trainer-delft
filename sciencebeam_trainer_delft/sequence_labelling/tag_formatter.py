@@ -1,4 +1,5 @@
 import json
+from xml.sax.saxutils import escape as xml_escape
 from typing import Union, List, Tuple
 
 import numpy as np
@@ -104,7 +105,7 @@ def iter_annotations_xml_text(
             if should_open_tag:
                 yield '<%s>' % xml_tag
                 current_xml_tag = xml_tag
-            yield token_text
+            yield xml_escape(token_text)
         if current_xml_tag:
             yield '</%s>' % current_xml_tag
             current_xml_tag = None

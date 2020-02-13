@@ -4,38 +4,25 @@ from unittest.mock import patch
 
 import pytest
 
-import numpy as np
-
 from sciencebeam_trainer_delft.sequence_labelling.debug import (
     TagDebugReporter
 )
+
+from .tag_formatter_test import (
+    TEXTS_1,
+    FEATURES_1,
+    ANNOTATIONS_1,
+    DATA_LINES_1,
+    FLAT_TEXT_1,
+    MODEL_1
+)
+
 
 FILE_1_PREFIX = 'file1'
 
 JSON_FILE_1 = FILE_1_PREFIX + '.json'
 DATA_FILE_1 = FILE_1_PREFIX + '.data'
 TXT_FILE_1 = FILE_1_PREFIX + '.txt'
-
-TEXTS_1 = np.array([
-    ['token1', 'token2']
-])
-
-FEATURES_1 = np.array([
-    [['feat1.1', 'feat1.2'], ['feat2.1', 'feat2.2']]
-])
-
-ANNOTATIONS_1 = [
-    [['token1', 'tag1'], ['token2', 'tag2']]
-]
-
-DATA_LINES_1 = [
-    'token1 feat1.1 feat1.2 tag1',
-    'token2 feat2.1 feat2.2 tag2'
-]
-
-FLAT_TEXT_1 = 'token1 token2'
-
-MODEL_1 = 'model1'
 
 
 @pytest.fixture(name='tag_debug_reporter')

@@ -421,7 +421,7 @@ def parse_args(argv: List[str] = None):
     output_group.add_argument("--checkpoint", help="directory where to save a checkpoint model")
     output_group.add_argument(
         "--tag-output-format",
-        default=TagOutputFormats.LIST,
+        default=TagOutputFormats.JSON,
         choices=TAG_OUTPUT_FORMATS,
         help="output format for tag results"
     )

@@ -50,3 +50,13 @@ class TestFormatTagResult:
         assert result['texts'] == TEXTS_1.tolist()
         assert result['features'] == FEATURES_1.tolist()
         assert result['annotations'] == ANNOTATIONS_1
+
+    def test_should_format_tag_list_result_as_data(self):
+        result = format_tag_result(
+            tag_result=ANNOTATIONS_1,
+            output_format=TagOutputFormats.DATA,
+            texts=TEXTS_1,
+            features=FEATURES_1,
+            model_name=MODEL_1
+        )
+        assert result.splitlines() == DATA_LINES_1

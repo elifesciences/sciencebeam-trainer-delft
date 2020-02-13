@@ -111,4 +111,5 @@ class ModelLoader(_BaseModelSaverLoader):
     def load_model_from_file(self, filepath: str, model: Model):
         LOGGER.info('loading model from %s', filepath)
         with open_file(filepath, 'rb') as fp:
-            model.load(fp)
+            # using load_weights to avoid print statement in load method
+            model.model.load_weights(fp)

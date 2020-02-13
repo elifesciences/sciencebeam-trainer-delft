@@ -7,16 +7,6 @@ from delft.utilities.Tokenizer import tokenizeAndFilter
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
 
 
-class TagOutputFormats:
-    JSON = 'json'
-    LIST = 'list'
-
-
-TAG_OUTPUT_FORMATS = [
-    TagOutputFormats.JSON,
-    TagOutputFormats.LIST
-]
-
 class Tagger:
     def __init__(
             self,
@@ -32,7 +22,7 @@ class Tagger:
     def tag(self, texts, output_format, features=None):
         assert isinstance(texts, list)
 
-        if output_format == TagOutputFormats.JSON:
+        if output_format == 'json':
             res = {
                 "software": "DeLFT",
                 "date": datetime.datetime.now().isoformat(),

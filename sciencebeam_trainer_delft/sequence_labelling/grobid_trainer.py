@@ -25,9 +25,10 @@ from sciencebeam_trainer_delft.embedding import EmbeddingManager
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_labels_crf_file
-from sciencebeam_trainer_delft.sequence_labelling.tagger import (
+from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     TagOutputFormats,
-    TAG_OUTPUT_FORMATS
+    TAG_OUTPUT_FORMATS,
+    format_tag_result
 )
 
 
@@ -373,13 +374,12 @@ def tag_input(
     assert model_path
     model.load_from(model_path)
 
-    tag_result = model.tag(
-        x_all,
-        output_format=tag_output_format,
-        features=features_all
-    )
     LOGGER.info('tag_result:')
-    print(tag_result)
+    print(format_tag_result(model.tag(
+        x_all,
+        output_format='json',
+        features=features_all
+    ), output_format=tag_output_format))
 
 
 def parse_args(argv: List[str] = None):

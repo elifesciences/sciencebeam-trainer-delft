@@ -130,8 +130,8 @@ def train(
         x_all, y_all, features_all, test_size=0.1
     )
 
-    print(len(x_train), 'train sequences')
-    print(len(x_valid), 'validation sequences')
+    LOGGER.info('%d train sequences', len(x_train))
+    LOGGER.info('%d validation sequences', len(x_valid))
 
     if output_path:
         model_name = model
@@ -160,11 +160,11 @@ def train(
         features_train=features_train, features_valid=features_valid
     )
     runtime = round(time.time() - start_time, 3)
-    print("training runtime: %s seconds " % (runtime))
+    LOGGER.info("training runtime: %s seconds ", runtime)
 
     # saving the model
     if output_path:
-        print('saving model to:', output_path)
+        LOGGER.info('saving model to: %s', output_path)
         model.save(output_path)
     else:
         model.save()
@@ -196,9 +196,9 @@ def train_eval(
         x_train_all, y_train_all, features_train_all, test_size=0.1
     )
 
-    print(len(x_train), 'train sequences')
-    print(len(x_valid), 'validation sequences')
-    print(len(x_eval), 'evaluation sequences')
+    LOGGER.info('%d train sequences', len(x_train))
+    LOGGER.info('%d validation sequences', len(x_valid))
+    LOGGER.info('%d evaluation sequences', len(x_eval))
 
     if output_path:
         model_name = model
@@ -239,7 +239,7 @@ def train_eval(
         )
 
     runtime = round(time.time() - start_time, 3)
-    print("training runtime: %s seconds " % (runtime))
+    LOGGER.info("training runtime: %s seconds ", runtime)
 
     # evaluation
     print("\nEvaluation:")
@@ -281,7 +281,7 @@ def eval_model(
         y_eval = y_all
         features_eval = features_all
 
-    print(len(x_eval), 'evaluation sequences')
+    LOGGER.info('%d evaluation sequences', len(x_eval))
 
     if output_path:
         model_name = model
@@ -335,7 +335,7 @@ def tag_input(
         download_manager=download_manager
     )
 
-    print(len(x_all), 'input sequences')
+    LOGGER.info('%d input sequences', len(x_all))
 
     if output_path:
         model_name = model

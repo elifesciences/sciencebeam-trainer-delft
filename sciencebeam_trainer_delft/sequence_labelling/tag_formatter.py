@@ -8,12 +8,14 @@ class TagOutputFormats:
     JSON = 'json'
     DATA = 'data'
     TEXT = 'text'
+    XML = 'xml'
 
 
 TAG_OUTPUT_FORMATS = [
     TagOutputFormats.JSON,
     TagOutputFormats.DATA,
-    TagOutputFormats.TEXT
+    TagOutputFormats.TEXT,
+    TagOutputFormats.XML
 ]
 
 
@@ -44,7 +46,7 @@ def format_list_tag_result_as_json(
 
 def to_data_lines(
         features: np.array,
-        annotations) -> List[str]:
+        annotations: List[List[Tuple[str, str]]]) -> List[str]:
     return [
         ' '.join([token_annoation[0]] + list(token_features) + [token_annoation[1]])
         for line_annotations, line_features in zip(annotations, features.tolist())
@@ -80,6 +82,45 @@ def format_list_tag_result_as_text(
     return to_flat_text(texts=texts)
 
 
+def get_xml_tag_for_annotation_label(annotation_label: str) -> str:
+    return annotation_label.replace('<', '').replace('>', '').split('-', maxsplit=1)[-1]
+
+
+def iter_annotations_xml_text(
+        annotations: List[List[Tuple[str, str]]]) -> List[str]:
+    current_xml_tag = None
+    for doc_index, doc_annotations in enumerate(annotations):
+        if doc_index > 0:
+            yield '\n\n'
+        yield '<p>'
+        for token_index, token_annoation in enumerate(doc_annotations):
+            token_text, token_label = token_annoation[:2]
+            xml_tag = get_xml_tag_for_annotation_label(token_label)
+            should_open_tag = (token_label.startswith('B-') or xml_tag != current_xml_tag)
+            if should_open_tag and current_xml_tag:
+                yield '</%s>' % current_xml_tag
+            if token_index > 0:
+                yield ' '
+            if should_open_tag:
+                yield '<%s>' % xml_tag
+                current_xml_tag = xml_tag
+            yield token_text
+        if current_xml_tag:
+            yield '</%s>' % current_xml_tag
+            current_xml_tag = None
+        yield '</p>'
+
+
+def format_list_tag_result_as_xml(
+        tag_result: List[List[Tuple[str, str]]],
+        texts: np.array = None,  # pylint: disable=unused-argument
+        features: np.array = None,  # pylint: disable=unused-argument
+        model_name: str = None) -> str:  # pylint: disable=unused-argument
+    return '<xml>%s</xml>' % ''.join(iter_annotations_xml_text(
+        annotations=tag_result
+    ))
+
+
 def format_list_tag_result(
         *args,
         output_format: str,
@@ -90,6 +131,8 @@ def format_list_tag_result(
         return format_list_tag_result_as_data(*args, **kwargs)
     if output_format == TagOutputFormats.TEXT:
         return format_list_tag_result_as_text(*args, **kwargs)
+    if output_format == TagOutputFormats.XML:
+        return format_list_tag_result_as_xml(*args, **kwargs)
     raise ValueError('unrecognised output format: %s' % output_format)
 
 

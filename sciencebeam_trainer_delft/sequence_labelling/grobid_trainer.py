@@ -52,6 +52,8 @@ ALL_TASKS = [Tasks.TRAIN, Tasks.TRAIN_EVAL, Tasks.EVAL, Tasks.TAG]
 
 DEFAULT_RANDOM_SEED = 42
 
+DEFAULT_TAG_OUTPUT_FORMAT = TagOutputFormats.XML
+
 
 def set_random_seeds(random_seed: int):
     np.random.seed(random_seed)
@@ -323,8 +325,8 @@ def eval_model(
 
 def tag_input(
         model,
-        tag_output_format: str,
-        embeddings_name,
+        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+        embeddings_name: str = None,
         architecture: str = 'BidLSTM_CRF',
         use_ELMo: bool = False,
         input_paths: List[str] = None,
@@ -421,7 +423,7 @@ def parse_args(argv: List[str] = None):
     output_group.add_argument("--checkpoint", help="directory where to save a checkpoint model")
     output_group.add_argument(
         "--tag-output-format",
-        default=TagOutputFormats.JSON,
+        default=DEFAULT_TAG_OUTPUT_FORMAT,
         choices=TAG_OUTPUT_FORMATS,
         help="output format for tag results"
     )

@@ -11,6 +11,7 @@ from sciencebeam_trainer_delft.utils.io import open_file
 
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import Preprocessor
+from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 
 
 LOGGER = logging.getLogger(__name__)
@@ -86,6 +87,13 @@ class ModelSaver(_BaseModelSaverLoader):
 
 
 class ModelLoader(_BaseModelSaverLoader):
+    def __init__(
+            self,
+            download_manager: DownloadManager = None):
+        if download_manager is None:
+            download_manager = DownloadManager()
+        self.download_manager = download_manager
+
     def load_preprocessor_from_directory(self, directory: str):
         return self.load_preprocessor_from_file(os.path.join(directory, self.preprocessor_file))
 
@@ -110,6 +118,7 @@ class ModelLoader(_BaseModelSaverLoader):
 
     def load_model_from_file(self, filepath: str, model: Model):
         LOGGER.info('loading model from %s', filepath)
-        with open_file(filepath, 'rb') as fp:
-            # using load_weights to avoid print statement in load method
-            model.model.load_weights(fp)
+        # we need a seekable file, ensure we download the file first
+        local_filepath = self.download_manager.download_if_url(filepath)
+        # using load_weights to avoid print statement in load method
+        model.model.load_weights(local_filepath)

@@ -125,8 +125,7 @@ def checkpoint_summary(
     if last_checkpoint:
         LOGGER.info('last checkpoint: %s', last_checkpoint)
     if not checkpoint_urls:
-        LOGGER.warning('no checkpoints found')
-        return
+        raise RuntimeError('no checkpoints found')
     checkpoint_meta_map = get_checkpoint_meta_map(
         checkpoint_urls,
         max_workers=max_workers

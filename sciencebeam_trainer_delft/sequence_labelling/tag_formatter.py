@@ -1,8 +1,14 @@
 import json
+import logging
 from xml.sax.saxutils import escape as xml_escape
 from typing import Union, Iterable, List, Tuple
 
 import numpy as np
+
+from delft.sequenceLabelling.evaluation import get_entities
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TagOutputFormats:
@@ -89,22 +95,20 @@ def get_xml_tag_for_annotation_label(annotation_label: str) -> str:
 
 def iter_doc_annotations_xml_text(
         doc_annotations: List[Tuple[str, str]]) -> Iterable[str]:
-    current_xml_tag = None
-    for token_index, token_annoation in enumerate(doc_annotations):
-        token_text, token_label = token_annoation[:2]
-        xml_tag = get_xml_tag_for_annotation_label(token_label)
-        should_open_tag = (token_label.startswith('B-') or xml_tag != current_xml_tag)
-        if should_open_tag and current_xml_tag:
-            yield '</%s>' % current_xml_tag
-        if token_index > 0:
-            yield ' '
-        if should_open_tag:
-            yield '<%s>' % xml_tag
-            current_xml_tag = xml_tag
-        yield xml_escape(token_text)
-    if current_xml_tag:
-        yield '</%s>' % current_xml_tag
-        current_xml_tag = None
+    LOGGER.debug('doc_annotations: %s', doc_annotations)
+    text_tokens = [token_text for token_text, _ in doc_annotations]
+    token_labels = [token_label for _, token_label in doc_annotations]
+    entity_chunks = get_entities(token_labels)
+    LOGGER.debug('text_tokens: %s', text_tokens)
+    LOGGER.debug('token_labels: %s', token_labels)
+    LOGGER.debug('entity_chunks: %s', entity_chunks)
+    return ' '.join((
+        '<{tag}>{text}</{tag}>'.format(
+            tag=get_xml_tag_for_annotation_label(chunk_type),
+            text=xml_escape(' '.join(text_tokens[chunk_start:chunk_end + 1]))
+        )
+        for chunk_type, chunk_start, chunk_end in entity_chunks
+    ))
 
 
 def iter_annotations_xml_text(

@@ -113,3 +113,81 @@ With the result:
 ```text
 Markov Chain Algorithms for Planar Lattice Structures Michael Luby y Dana Randall z Alistair Sinclair Abstract Consider the following Markov chain , whose states are all domino tilings of a 2n 񮽙 2n chessboard : starting from some arbitrary tiling , pick a 2 񮽙 2 window uniformly at random . If the four squares appearing in this window are covered by two parallel dominoes , rotate the dominoes in place . Repeat many times . This process is used in practice to generate a tiling , and is a tool in the study of the combinatorics of tilings and the behavior of dimer systems in statistical physics . Analogous Markov chains are used to randomly generate other structures on various two - dimensional lattices . This paper presents techniques which prove for the 񮽙rst time that , in many interesting cases , a small number of random moves suuce to obtain a uniform distribution .
 ```
+
+## Checkpoints CLI
+
+The checkpoints CLI tool is there to give you a summary of the saved checkpoints. Checkpoints are optionally saved during training, they allow you to resume model training or further evaluate performance at the individual checkpoints. Usually training will stop after the f1 score hasn't improved for a number of epochs. The last checkpoint may not be the best.
+
+The checkpoints tool will sort by the f1 score and show the *n* (`limit`) top checkpoints.
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.tools.checkpoints --help
+```
+
+### Checkpoints Text Output
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.tools.checkpoints \
+    --checkpoint="/path/to/checkpoints" \
+    --limit=3 \
+    --output-format=text
+```
+
+```text
+best checkpoints:
+00039: 0.5877923107411811 (/path/to/checkpoints/epoch-00039) (last)
+
+00036: 0.5899450117831894 (/path/to/checkpoints/epoch-00036)
+
+00034: 0.591387179996031 (/path/to/checkpoints/epoch-00034) (best)
+```
+
+### Checkpoints JSON Output
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.tools.checkpoints \
+    --checkpoint="/path/to/checkpoints" \
+    --limit=3 \
+    --output-format=json
+```
+
+```json
+[
+  {
+    "loss": 40.520591011530236,
+    "f1": 0.5877923107411811,
+    "optimizer": {
+      "type": "keras.optimizers.Adam",
+      "lr": 0.0010000000474974513
+    },
+    "epoch": 39,
+    "path": "/path/to/checkpoints/epoch-00039",
+    "is_last": true,
+    "is_best": false
+  },
+  {
+    "loss": 44.48661111276361,
+    "f1": 0.5899450117831894,
+    "optimizer": {
+      "type": "keras.optimizers.Adam",
+      "lr": 0.0010000000474974513
+    },
+    "epoch": 36,
+    "path": "/path/to/checkpoints/epoch-00036",
+    "is_last": false,
+    "is_best": false
+  },
+  {
+    "loss": 47.80826501711393,
+    "f1": 0.591387179996031,
+    "optimizer": {
+      "type": "keras.optimizers.Adam",
+      "lr": 0.0010000000474974513
+    },
+    "epoch": 34,
+    "path": "/path/to/checkpoints/epoch-00034",
+    "is_last": false,
+    "is_best": true
+  }
+]
+```

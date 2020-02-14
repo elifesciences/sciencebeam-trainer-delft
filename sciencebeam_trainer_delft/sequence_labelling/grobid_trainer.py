@@ -25,6 +25,11 @@ from sciencebeam_trainer_delft.embedding import EmbeddingManager
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_labels_crf_file
+from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
+    TagOutputFormats,
+    TAG_OUTPUT_FORMATS,
+    format_tag_result
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -46,6 +51,8 @@ class Tasks:
 ALL_TASKS = [Tasks.TRAIN, Tasks.TRAIN_EVAL, Tasks.EVAL, Tasks.TAG]
 
 DEFAULT_RANDOM_SEED = 42
+
+DEFAULT_TAG_OUTPUT_FORMAT = TagOutputFormats.XML
 
 
 def set_random_seeds(random_seed: int):
@@ -317,7 +324,11 @@ def eval_model(
 
 
 def tag_input(
-        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+        model,
+        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+        embeddings_name: str = None,
+        architecture: str = 'BidLSTM_CRF',
+        use_ELMo: bool = False,
         input_paths: List[str] = None,
         output_path: str = None,
         model_path: str = None,
@@ -365,8 +376,20 @@ def tag_input(
     assert model_path
     model.load_from(model_path)
 
-    tag_result = model.tag(x_all, output_format=None, features=features_all)
-    LOGGER.info('tag results: %s', tag_result)
+    tag_result = model.tag(
+        x_all,
+        output_format=None,
+        features=features_all
+    )
+    formatted_tag_result = format_tag_result(
+        tag_result,
+        output_format=tag_output_format,
+        texts=x_all,
+        features=features_all,
+        model_name=model._get_model_name()  # pylint: disable=protected-access
+    )
+    LOGGER.info('tag_result:')
+    print(formatted_tag_result)
 
 
 def parse_args(argv: List[str] = None):
@@ -394,9 +417,18 @@ def parse_args(argv: List[str] = None):
         help="size of feature embedding, use 0 to disable embedding"
     )
     parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
-    parser.add_argument("--output", help="directory where to save a trained model")
-    parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
-    parser.add_argument("--model-path", help="directory to the saved model")
+
+    output_group = parser.add_argument_group('output')
+    output_group.add_argument("--output", help="directory where to save a trained model")
+    output_group.add_argument("--checkpoint", help="directory where to save a checkpoint model")
+    output_group.add_argument(
+        "--tag-output-format",
+        default=DEFAULT_TAG_OUTPUT_FORMAT,
+        choices=TAG_OUTPUT_FORMATS,
+        help="output format for tag results"
+    )
+
+    parser.add_argument("--model-path", help="directory to the saved or loaded model")
 
     input_group = parser.add_argument_group('input')
     input_group.add_argument(
@@ -555,7 +587,11 @@ def run(args):
     if action == Tasks.TAG:
         if not args.model_path:
             raise ValueError('--model-path required')
-        tag_input(model_path=args.model_path, **train_args)
+        tag_input(
+            model_path=args.model_path,
+            tag_output_format=args.tag_output_format,
+            **train_args
+        )
 
     # see https://github.com/tensorflow/tensorflow/issues/3388
     K.clear_session()

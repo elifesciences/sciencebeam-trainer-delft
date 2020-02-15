@@ -43,6 +43,7 @@ The `tag` sub command supports multiple output formats:
 - `data`: data output with features but label being replaced by predicted label
 - `text`: not really a tag output as it just outputs the input text
 - `xml`: uses predicted labels as XML elements
+- `xml_diff`: same as `xml` but it is showing a diff between expected and predicted results
 
 #### XML Output Example
 
@@ -54,14 +55,12 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
     --tag-output-format="xml" \
-    2> /tmp/tag.log \
-    | xmllint --format /dev/stdin
+    2> /tmp/tag.log
 ```
 
 With the result:
 
 ```xml
-<?xml version="1.0"?>
 <xml>
   <p>
     <title>Markov Chain Algorithms for Planar Lattice Structures</title>
@@ -69,6 +68,42 @@ With the result:
     <abstract>Abstract Consider the following Markov chain , whose states are all domino tilings of a 2n &#x6EF59; 2n chessboard : starting from some arbitrary tiling , pick a 2 &#x6EF59; 2 window uniformly at random . If the four squares appearing in this window are covered by two parallel dominoes , rotate the dominoes in place . Repeat many times . This process is used in practice to generate a tiling , and is a tool in the study of the combinatorics of tilings and the behavior of dimer systems in statistical physics . Analogous Markov chains are used to randomly generate other structures on various two - dimensional lattices . This paper presents techniques which prove for the &#x6EF59;rst time that , in many interesting cases , a small number of random moves suuce to obtain a uniform distribution .</abstract>
   </p>
 </xml>
+```
+
+#### XML Diff Output Example
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header tag \
+    --batch-size="10" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
+    --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
+    --limit="2" \
+    --tag-output-format="xml_diff" \
+    2> /tmp/tag.log
+```
+
+With the result (the second document contains differences):
+
+```xml
+  <xml>
+    <p>
+      <title>Markov Chain Algorithms for Planar Lattice Structures</title>
+      <author>Michael Luby y Dana Randall z Alistair Sinclair</author>
+      <abstract>Abstract Consider the following Markov chain , whose states are all domino tilings of a 2n 񮽙 2n chessboard : starting from some arbitrary tiling , pick a 2 񮽙 2 window uniformly at random . If the four squares appearing in this window are covered by two parallel dominoes , rotate the dominoes in place . Repeat many times . This process is used in practice to generate a tiling , and is a tool in the study of the combinatorics of tilings and the behavior of dimer systems in statistical physics . Analogous Markov chains are used to randomly generate other structures on various two - dimensional lattices . This paper presents techniques which prove for the 񮽙rst time that , in many interesting cases , a small number of random moves suuce to obtain a uniform distribution .</abstract>
+    </p>
+  
+  
+    <p>
+      <title>Translucent Sums : A Foundation for Higher - Order Module Systems</title>
+      <author>Mark Lillibridge</author>
+      <date>May , 1997</date>
+-     <pubnum>- - 95 -</pubnum>
++     <pubnum>- - 95 - of</pubnum>
+?                     +++
+-     <affiliation>of</affiliation>
+    </p>
+  </xml>
 ```
 
 #### DATA Output Example

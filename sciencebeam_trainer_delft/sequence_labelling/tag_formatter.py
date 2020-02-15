@@ -1,4 +1,5 @@
 import json
+import difflib
 import logging
 from xml.sax.saxutils import escape as xml_escape
 from typing import Union, Iterable, List, Tuple
@@ -16,13 +17,15 @@ class TagOutputFormats:
     DATA = 'data'
     TEXT = 'text'
     XML = 'xml'
+    XML_DIFF = 'xml_diff'
 
 
 TAG_OUTPUT_FORMATS = [
     TagOutputFormats.JSON,
     TagOutputFormats.DATA,
     TagOutputFormats.TEXT,
-    TagOutputFormats.XML
+    TagOutputFormats.XML,
+    TagOutputFormats.XML_DIFF,
 ]
 
 
@@ -31,6 +34,13 @@ class CustomJsonEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
+
+
+def get_tag_result(texts: List[List[str]], labels: List[List[str]]):
+    return [
+        list(zip(doc_texts, doc_labels))
+        for doc_texts, doc_labels in zip(texts, labels)
+    ]
 
 
 def format_json_tag_result_as_json(tag_result: dict) -> str:
@@ -102,13 +112,13 @@ def iter_doc_annotations_xml_text(
     LOGGER.debug('text_tokens: %s', text_tokens)
     LOGGER.debug('token_labels: %s', token_labels)
     LOGGER.debug('entity_chunks: %s', entity_chunks)
-    return ' '.join((
-        '<{tag}>{text}</{tag}>'.format(
+    return '\n'.join((
+        '    <{tag}>{text}</{tag}>'.format(
             tag=get_xml_tag_for_annotation_label(chunk_type),
             text=xml_escape(' '.join(text_tokens[chunk_start:chunk_end + 1]))
         )
         for chunk_type, chunk_start, chunk_end in entity_chunks
-    ))
+    )) + '\n'
 
 
 def iter_annotations_xml_text(
@@ -116,9 +126,9 @@ def iter_annotations_xml_text(
     for doc_index, doc_annotations in enumerate(annotations):
         if doc_index > 0:
             yield '\n\n'
-        yield '<p>'
+        yield '  <p>\n'
         yield from iter_doc_annotations_xml_text(doc_annotations)
-        yield '</p>'
+        yield '  </p>\n'
 
 
 def format_list_tag_result_as_xml(
@@ -126,14 +136,30 @@ def format_list_tag_result_as_xml(
         texts: np.array = None,  # pylint: disable=unused-argument
         features: np.array = None,  # pylint: disable=unused-argument
         model_name: str = None) -> str:  # pylint: disable=unused-argument
-    return '<xml>%s</xml>' % ''.join(iter_annotations_xml_text(
+    return '<xml>\n%s</xml>' % ''.join(iter_annotations_xml_text(
         annotations=tag_result
+    ))
+
+
+def format_list_tag_result_as_xml_diff(
+        tag_result: List[List[Tuple[str, str]]],
+        expected_tag_result: List[Tuple[str, str]] = None,
+        texts: np.array = None,  # pylint: disable=unused-argument
+        features: np.array = None,  # pylint: disable=unused-argument
+        model_name: str = None) -> str:  # pylint: disable=unused-argument
+    assert expected_tag_result
+    actual_xml = format_list_tag_result_as_xml(tag_result)
+    expected_xml = format_list_tag_result_as_xml(expected_tag_result)
+    return ''.join(difflib.ndiff(
+        expected_xml.splitlines(keepends=True),
+        actual_xml.splitlines(keepends=True)
     ))
 
 
 def format_list_tag_result(
         *args,
         output_format: str,
+        expected_tag_result: List[Tuple[str, str]] = None,
         **kwargs) -> str:
     if output_format == TagOutputFormats.JSON:
         return format_list_tag_result_as_json(*args, **kwargs)
@@ -143,12 +169,19 @@ def format_list_tag_result(
         return format_list_tag_result_as_text(*args, **kwargs)
     if output_format == TagOutputFormats.XML:
         return format_list_tag_result_as_xml(*args, **kwargs)
+    if output_format == TagOutputFormats.XML_DIFF:
+        return format_list_tag_result_as_xml_diff(
+            *args,
+            expected_tag_result=expected_tag_result,
+            **kwargs
+        )
     raise ValueError('unrecognised output format: %s' % output_format)
 
 
 def format_tag_result(
         tag_result: Union[dict, list],
         output_format: str,
+        expected_tag_result: List[Tuple[str, str]] = None,
         texts: np.array = None,
         features: np.array = None,
         model_name: str = None) -> str:
@@ -158,6 +191,7 @@ def format_tag_result(
     return format_list_tag_result(
         tag_result,
         output_format=output_format,
+        expected_tag_result=expected_tag_result,
         texts=texts,
         features=features,
         model_name=model_name

@@ -1,12 +1,17 @@
 
 import json
+import logging
 import numpy as np
 
 from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     TagOutputFormats,
+    get_tag_result,
     get_xml_tag_for_annotation_label,
     format_tag_result
 )
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 TEXTS_1 = np.array([
@@ -28,9 +33,26 @@ DATA_LINES_1 = [
 
 FLAT_TEXT_1 = 'token1 token2'
 
-XML_1 = '<xml><p><tag1>token1</tag1> <tag2>token2</tag2></p></xml>'
+XML_1 = '\n'.join([
+    '<xml>',
+    '  <p>',
+    '    <tag1>token1</tag1>',
+    '    <tag2>token2</tag2>',
+    '  </p>',
+    '</xml>'
+])
 
 MODEL_1 = 'model1'
+
+
+class TestGetTagResult:
+    def test_should_combine_text_with_labels(self):
+        assert get_tag_result(
+            texts=[['token1', 'token2']],
+            labels=[['label1', 'label2']]
+        ) == [
+            [('token1', 'label1'), ('token2', 'label2')]
+        ]
 
 
 class TestGetXmlTagForAnnotationLabel:
@@ -99,4 +121,30 @@ class TestFormatTagResult:
             tag_result=[[['token1', 'tag1'], ['token2', 'tag1'], ['token3', 'tag2']]],
             output_format=TagOutputFormats.XML
         )
-        assert result == '<xml><p><tag1>token1 token2</tag1> <tag2>token3</tag2></p></xml>'
+        assert result.splitlines() == [
+            '<xml>',
+            '  <p>',
+            '    <tag1>token1 token2</tag1>',
+            '    <tag2>token3</tag2>',
+            '  </p>',
+            '</xml>'
+        ]
+
+    def test_should_format_tag_list_result_as_xml_diff_and_combined_tags(self):
+        result = format_tag_result(
+            tag_result=[[['token1', 'tag1'], ['token2', 'tag1'], ['token3', 'tag2']]],
+            expected_tag_result=[[['token1', 'tag1'], ['token2', 'tag1'], ['token3', 'tag3']]],
+            output_format=TagOutputFormats.XML_DIFF
+        )
+        LOGGER.debug('result:\n%s', result)
+        assert result.splitlines() == [
+            '  <xml>',
+            '    <p>',
+            '      <tag1>token1 token2</tag1>',
+            '-     <tag3>token3</tag3>',
+            '?         ^            ^',
+            '+     <tag2>token3</tag2>',
+            '?         ^            ^',
+            '    </p>',
+            '  </xml>'
+        ]

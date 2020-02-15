@@ -36,6 +36,13 @@ class CustomJsonEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+def get_tag_result(texts: List[List[str]], labels: List[List[str]]):
+    return [
+        list(zip(doc_texts, doc_labels))
+        for doc_texts, doc_labels in zip(texts, labels)
+    ]
+
+
 def format_json_tag_result_as_json(tag_result: dict) -> str:
     return json.dumps(tag_result, indent=2, cls=CustomJsonEncoder)
 

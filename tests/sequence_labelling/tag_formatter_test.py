@@ -5,6 +5,7 @@ import numpy as np
 
 from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     TagOutputFormats,
+    get_tag_result,
     get_xml_tag_for_annotation_label,
     format_tag_result
 )
@@ -42,6 +43,16 @@ XML_1 = '\n'.join([
 ])
 
 MODEL_1 = 'model1'
+
+
+class TestGetTagResult:
+    def test_should_combine_text_with_labels(self):
+        assert get_tag_result(
+            texts=[['token1', 'token2']],
+            labels=[['label1', 'label2']]
+        ) == [
+            [('token1', 'label1'), ('token2', 'label2')]
+        ]
 
 
 class TestGetXmlTagForAnnotationLabel:

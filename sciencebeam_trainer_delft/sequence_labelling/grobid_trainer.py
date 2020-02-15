@@ -28,6 +28,7 @@ from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_la
 from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     TagOutputFormats,
     TAG_OUTPUT_FORMATS,
+    get_tag_result,
     format_tag_result
 )
 
@@ -340,7 +341,7 @@ def tag_input(
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
-    x_all, _, features_all = load_data_and_labels(
+    x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
         download_manager=download_manager
@@ -381,9 +382,14 @@ def tag_input(
         output_format=None,
         features=features_all
     )
+    expected_tag_result = get_tag_result(
+        texts=x_all,
+        labels=y_all
+    )
     formatted_tag_result = format_tag_result(
         tag_result,
         output_format=tag_output_format,
+        expected_tag_result=expected_tag_result,
         texts=x_all,
         features=features_all,
         model_name=model._get_model_name()  # pylint: disable=protected-access

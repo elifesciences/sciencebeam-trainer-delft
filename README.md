@@ -54,14 +54,12 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
     --tag-output-format="xml" \
-    2> /tmp/tag.log \
-    | xmllint --format /dev/stdin
+    2> /tmp/tag.log
 ```
 
 With the result:
 
 ```xml
-<?xml version="1.0"?>
 <xml>
   <p>
     <title>Markov Chain Algorithms for Planar Lattice Structures</title>

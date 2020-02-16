@@ -1,34 +1,20 @@
 import os
-import json
 import logging
 import time
 from pathlib import Path
-from typing import List
 
 import numpy as np
+
+from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
+    TagOutputFormats,
+    format_tag_result
+)
 
 
 LOGGER = logging.getLogger(__name__)
 
 
 SCIENCEBEAM_DELFT_TAGGING_DEBUG_OUT = "SCIENCEBEAM_DELFT_TAGGING_DEBUG_OUT"
-
-
-def to_data_lines(
-        features: np.array,
-        annotations) -> List[str]:
-    return [
-        ' '.join([token_annoation[0]] + list(token_features) + [token_annoation[1]])
-        for line_annotations, line_features in zip(annotations, features.tolist())
-        for token_annoation, token_features in zip(line_annotations, line_features)
-    ]
-
-
-def to_flat_text(texts: np.array) -> str:
-    return '\n'.join([
-        ' '.join(line_tokens)
-        for line_tokens in texts
-    ])
 
 
 class TagDebugReporter:
@@ -50,19 +36,38 @@ class TagDebugReporter:
         filename_prefix = self.get_base_output_name(model_name=model_name)
         output_file = filename_prefix + '.json'
         LOGGER.info('tagger, output_file: %s', output_file)
-        output_props = {
-            'texts': np.array(texts).tolist(),
-            'features': np.array(features).tolist() if features is not None else None,
-            'annotations': annotations
-        }
-        Path(filename_prefix + '.txt').write_text(to_flat_text(texts), encoding='utf-8')
-        with open(output_file, 'w', encoding='utf-8') as fp:
-            json.dump(output_props, fp, indent=4)
+
+        format_tag_result_kwargs = dict(
+            tag_result=annotations,
+            texts=texts,
+            features=features,
+            model_name=model_name
+        )
+
+        formatted_text = format_tag_result(
+            output_format=TagOutputFormats.TEXT,
+            **format_tag_result_kwargs
+        )
+        Path(filename_prefix + '.txt').write_text(formatted_text, encoding='utf-8')
+
+        formatted_json = format_tag_result(
+            output_format=TagOutputFormats.JSON,
+            **format_tag_result_kwargs
+        )
+        Path(output_file).write_text(formatted_json, encoding='utf-8')
+
+        formatted_xml = format_tag_result(
+            output_format=TagOutputFormats.XML,
+            **format_tag_result_kwargs
+        )
+        Path(filename_prefix + '.xml').write_text(formatted_xml, encoding='utf-8')
+
         if features is not None:
-            Path(filename_prefix + '.data').write_text('\n'.join(to_data_lines(
-                features=features,
-                annotations=annotations
-            )), encoding='utf-8')
+            formatted_data = format_tag_result(
+                output_format=TagOutputFormats.DATA,
+                **format_tag_result_kwargs
+            )
+            Path(filename_prefix + '.data').write_text(formatted_data, encoding='utf-8')
 
 
 def get_tag_debug_reporter_if_enabled() -> TagDebugReporter:

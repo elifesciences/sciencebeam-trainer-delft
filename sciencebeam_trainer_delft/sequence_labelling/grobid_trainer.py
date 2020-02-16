@@ -25,6 +25,12 @@ from sciencebeam_trainer_delft.embedding import EmbeddingManager
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_labels_crf_file
+from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
+    TagOutputFormats,
+    TAG_OUTPUT_FORMATS,
+    get_tag_result,
+    format_tag_result
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -46,6 +52,8 @@ class Tasks:
 ALL_TASKS = [Tasks.TRAIN, Tasks.TRAIN_EVAL, Tasks.EVAL, Tasks.TAG]
 
 DEFAULT_RANDOM_SEED = 42
+
+DEFAULT_TAG_OUTPUT_FORMAT = TagOutputFormats.XML
 
 
 def set_random_seeds(random_seed: int):
@@ -130,8 +138,8 @@ def train(
         x_all, y_all, features_all, test_size=0.1
     )
 
-    print(len(x_train), 'train sequences')
-    print(len(x_valid), 'validation sequences')
+    LOGGER.info('%d train sequences', len(x_train))
+    LOGGER.info('%d validation sequences', len(x_valid))
 
     if output_path:
         model_name = model
@@ -160,11 +168,11 @@ def train(
         features_train=features_train, features_valid=features_valid
     )
     runtime = round(time.time() - start_time, 3)
-    print("training runtime: %s seconds " % (runtime))
+    LOGGER.info("training runtime: %s seconds ", runtime)
 
     # saving the model
     if output_path:
-        print('saving model to:', output_path)
+        LOGGER.info('saving model to: %s', output_path)
         model.save(output_path)
     else:
         model.save()
@@ -196,9 +204,9 @@ def train_eval(
         x_train_all, y_train_all, features_train_all, test_size=0.1
     )
 
-    print(len(x_train), 'train sequences')
-    print(len(x_valid), 'validation sequences')
-    print(len(x_eval), 'evaluation sequences')
+    LOGGER.info('%d train sequences', len(x_train))
+    LOGGER.info('%d validation sequences', len(x_valid))
+    LOGGER.info('%d evaluation sequences', len(x_eval))
 
     if output_path:
         model_name = model
@@ -239,7 +247,7 @@ def train_eval(
         )
 
     runtime = round(time.time() - start_time, 3)
-    print("training runtime: %s seconds " % (runtime))
+    LOGGER.info("training runtime: %s seconds ", runtime)
 
     # evaluation
     print("\nEvaluation:")
@@ -281,7 +289,7 @@ def eval_model(
         y_eval = y_all
         features_eval = features_all
 
-    print(len(x_eval), 'evaluation sequences')
+    LOGGER.info('%d evaluation sequences', len(x_eval))
 
     if output_path:
         model_name = model
@@ -317,7 +325,11 @@ def eval_model(
 
 
 def tag_input(
-        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+        model,
+        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+        embeddings_name: str = None,
+        architecture: str = 'BidLSTM_CRF',
+        use_ELMo: bool = False,
         input_paths: List[str] = None,
         output_path: str = None,
         model_path: str = None,
@@ -329,13 +341,13 @@ def tag_input(
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
-    x_all, _, features_all = load_data_and_labels(
+    x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
         download_manager=download_manager
     )
 
-    print(len(x_all), 'input sequences')
+    LOGGER.info('%d input sequences', len(x_all))
 
     if output_path:
         model_name = model
@@ -365,8 +377,25 @@ def tag_input(
     assert model_path
     model.load_from(model_path)
 
-    tag_result = model.tag(x_all, output_format=None, features=features_all)
-    LOGGER.info('tag results: %s', tag_result)
+    tag_result = model.tag(
+        x_all,
+        output_format=None,
+        features=features_all
+    )
+    expected_tag_result = get_tag_result(
+        texts=x_all,
+        labels=y_all
+    )
+    formatted_tag_result = format_tag_result(
+        tag_result,
+        output_format=tag_output_format,
+        expected_tag_result=expected_tag_result,
+        texts=x_all,
+        features=features_all,
+        model_name=model._get_model_name()  # pylint: disable=protected-access
+    )
+    LOGGER.info('tag_result:')
+    print(formatted_tag_result)
 
 
 def parse_args(argv: List[str] = None):
@@ -405,9 +434,18 @@ def parse_args(argv: List[str] = None):
     )
 
     parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
-    parser.add_argument("--output", help="directory where to save a trained model")
-    parser.add_argument("--checkpoint", help="directory where to save a checkpoint model")
-    parser.add_argument("--model-path", help="directory to the saved model")
+
+    output_group = parser.add_argument_group('output')
+    output_group.add_argument("--output", help="directory where to save a trained model")
+    output_group.add_argument("--checkpoint", help="directory where to save a checkpoint model")
+    output_group.add_argument(
+        "--tag-output-format",
+        default=DEFAULT_TAG_OUTPUT_FORMAT,
+        choices=TAG_OUTPUT_FORMATS,
+        help="output format for tag results"
+    )
+
+    parser.add_argument("--model-path", help="directory to the saved or loaded model")
 
     input_group = parser.add_argument_group('input')
     input_group.add_argument(
@@ -512,10 +550,10 @@ def run(args):
         embedding_manager.disable_embedding_lmdb_cache()
     if action in {Tasks.TRAIN, Tasks.TRAIN_EVAL}:
         embedding_name = embedding_manager.ensure_available(args.embedding)
+        LOGGER.info('embedding_name: %s', embedding_name)
+        embedding_manager.validate_embedding(embedding_name)
     else:
         embedding_name = embedding_manager.resolve_alias(args.embedding)
-    LOGGER.info('embedding_name: %s', embedding_name)
-    embedding_manager.validate_embedding(embedding_name)
 
     train_args = dict(
         model=model,
@@ -570,7 +608,11 @@ def run(args):
     if action == Tasks.TAG:
         if not args.model_path:
             raise ValueError('--model-path required')
-        tag_input(model_path=args.model_path, **train_args)
+        tag_input(
+            model_path=args.model_path,
+            tag_output_format=args.tag_output_format,
+            **train_args
+        )
 
     # see https://github.com/tensorflow/tensorflow/issues/3388
     K.clear_session()

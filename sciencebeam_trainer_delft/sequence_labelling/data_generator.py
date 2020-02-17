@@ -29,6 +29,13 @@ def left_pad_batch_values(batch_values: np.array, max_sequence_length: int, dtyp
     return result
 
 
+def truncate_batch_values(batch_values: list, max_sequence_length: int) -> list:
+    return [
+        row[:max_sequence_length]
+        for row in batch_values
+    ]
+
+
 # generate batch of data to feed sequence labelling model, both for training and prediction
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -108,10 +115,7 @@ class DataGenerator(keras.utils.Sequence):
         if self.max_sequence_length and max_length_x > self.max_sequence_length:
             max_length_x = self.max_sequence_length
             # truncation of sequence at max_sequence_length
-            x_tokenized = [
-                tokens[:self.max_sequence_length]
-                for tokens in x_tokenized
-            ]
+            x_tokenized = truncate_batch_values(x_tokenized, self.max_sequence_length)
 
         # prevent sequence of length 1 alone in a batch (this causes an error in tf)
         extend = False
@@ -149,10 +153,7 @@ class DataGenerator(keras.utils.Sequence):
             if self.max_sequence_length and max_length_y > self.max_sequence_length:
                 max_length_y = self.max_sequence_length
                 # truncation of sequence at max_sequence_length
-                batch_y = [
-                    y_row[:self.max_sequence_length]
-                    for y_row in batch_y
-                ]
+                batch_y = truncate_batch_values(batch_y, self.max_sequence_length)
 
             batches, batch_y = self.preprocessor.transform(x_tokenized, batch_y, extend=extend)
         else:

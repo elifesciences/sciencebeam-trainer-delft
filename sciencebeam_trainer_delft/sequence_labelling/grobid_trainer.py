@@ -516,7 +516,7 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--feature-indices",
         type=parse_number_ranges,
-        help="The feature indices to use. e.g. 7:10. If blank, all of the features will be used."
+        help="The feature indices to use. e.g. 7-10. If blank, all of the features will be used."
     )
     parser.add_argument(
         "--feature-embedding-size", type=int,

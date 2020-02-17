@@ -95,7 +95,6 @@ class DataGenerator(keras.utils.Sequence):
         sub_x = self.x[(index * self.batch_size):(index * self.batch_size) + max_iter]
 
         # tokenize texts in self.x if not already done
-        max_length_x = 0
         if self.tokenize:
             x_tokenized = []
             for i in range(0, max_iter):
@@ -104,9 +103,7 @@ class DataGenerator(keras.utils.Sequence):
         else:
             x_tokenized = sub_x
 
-        for tokens in x_tokenized:
-            if len(tokens) > max_length_x:
-                max_length_x = len(tokens)
+        max_length_x = max((len(tokens) for tokens in x_tokenized))
 
         if self.max_sequence_length and max_length_x > self.max_sequence_length:
             max_length_x = self.max_sequence_length

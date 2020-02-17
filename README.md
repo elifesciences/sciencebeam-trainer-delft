@@ -49,7 +49,7 @@ The `tag` sub command supports multiple output formats:
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    header tag \
+    tag \
     --batch-size="10" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
@@ -74,7 +74,7 @@ With the result:
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    header tag \
+    tag \
     --batch-size="10" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
@@ -110,7 +110,7 @@ With the result (the second document contains differences):
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    header tag \
+    tag \
     --batch-size="10" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
@@ -134,7 +134,7 @@ Planar planar P Pl Pla Plan r ar nar anar BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    header tag \
+    tag \
     --batch-size="10" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
@@ -153,7 +153,7 @@ Markov Chain Algorithms for Planar Lattice Structures Michael Luby y Dana Randal
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    header input_info \
+    input_info \
     --quiet \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz
 ```

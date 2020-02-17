@@ -359,7 +359,7 @@ def tag_input(
 
     LOGGER.info('%d input sequences', len(x_all))
 
-    if output_path:
+    if output_path or model_path:
         model_name = model
     else:
         model_name = 'grobid-' + model
@@ -535,7 +535,7 @@ def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
 
 
 def add_model_positional_argument(parser: argparse.ArgumentParser):
-    parser.add_argument("model", choices=GROBID_MODEL_NAMES)
+    parser.add_argument("model", nargs='?', choices=GROBID_MODEL_NAMES)
 
 
 def process_args(args: argparse.Namespace) -> argparse.Namespace:
@@ -629,6 +629,8 @@ class TrainSubCommand(GrobidTrainerSubCommand):
         add_model_path_argument(parser, help='directory to the saved model')
 
     def do_run(self, args: argparse.Namespace):
+        if not args.model:
+            raise ValueError("model required")
         embedding_name = self.preload_and_validate_embedding(
             args.embedding
         )
@@ -646,6 +648,8 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         add_model_path_argument(parser, help='directory to the saved model')
 
     def do_run(self, args: argparse.Namespace):
+        if not args.model:
+            raise ValueError("model required")
         if args.fold_count < 1:
             raise ValueError("fold-count should be equal or more than 1")
         embedding_name = self.preload_and_validate_embedding(

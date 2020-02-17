@@ -262,6 +262,78 @@ class TestDataGenerator:
         assert get_lengths(batch_x) == [len(LONG_SENTENCE_TOKENS)] * batch_size
         assert get_lengths(batch_features) == [len(LONG_SENTENCE_TOKENS)] * batch_size
 
+    def test_should_truncate_using_max_sequence_length_if_tokenize(
+            self, preprocessor, embeddings):
+        preprocessor.return_features = True
+        batch_size = 2
+        LOGGER.debug('SHORT_SENTENCE_TOKENS: %s', SHORT_SENTENCE_TOKENS)
+        LOGGER.debug('LONG_SENTENCE_TOKENS: %s', LONG_SENTENCE_TOKENS)
+        batch = DataGenerator(
+            np.asarray([
+                ' '.join(LONG_SENTENCE_TOKENS),
+                ' '.join(SHORT_SENTENCE_TOKENS)
+            ]),
+            np.asarray([
+                [LABEL_1] * len(LONG_SENTENCE_TOKENS),
+                [LABEL_2] * len(SHORT_SENTENCE_TOKENS)
+            ]),
+            features=np.asarray([
+                np.asarray([WORD_FEATURES_1] * len(LONG_SENTENCE_TOKENS)),
+                np.asarray([WORD_FEATURES_2] * len(SHORT_SENTENCE_TOKENS))
+            ]),
+            preprocessor=preprocessor,
+            embeddings=embeddings,
+            max_sequence_length=len(SHORT_SENTENCE_TOKENS),
+            **{
+                **DEFAULT_ARGS,
+                'batch_size': batch_size,
+                'tokenize': True
+            }
+        )[0]
+        LOGGER.debug('batch: %s', batch)
+        assert len(batch) == 2
+        inputs, _ = batch
+        batch_x = inputs[0]
+        batch_features = inputs[2]
+        assert get_lengths(batch_x) == [len(SHORT_SENTENCE_TOKENS)] * batch_size
+        assert get_lengths(batch_features) == [len(SHORT_SENTENCE_TOKENS)] * batch_size
+
+    def test_should_truncate_using_max_sequence_length_if_already_tokenized(
+            self, preprocessor, embeddings):
+        preprocessor.return_features = True
+        batch_size = 2
+        LOGGER.debug('SHORT_SENTENCE_TOKENS: %s', SHORT_SENTENCE_TOKENS)
+        LOGGER.debug('LONG_SENTENCE_TOKENS: %s', LONG_SENTENCE_TOKENS)
+        batch = DataGenerator(
+            np.asarray([
+                LONG_SENTENCE_TOKENS,
+                SHORT_SENTENCE_TOKENS
+            ]),
+            np.asarray([
+                [LABEL_1] * len(LONG_SENTENCE_TOKENS),
+                [LABEL_2] * len(SHORT_SENTENCE_TOKENS)
+            ]),
+            features=np.asarray([
+                np.asarray([WORD_FEATURES_1] * len(LONG_SENTENCE_TOKENS)),
+                np.asarray([WORD_FEATURES_2] * len(SHORT_SENTENCE_TOKENS))
+            ]),
+            preprocessor=preprocessor,
+            embeddings=embeddings,
+            max_sequence_length=len(SHORT_SENTENCE_TOKENS),
+            **{
+                **DEFAULT_ARGS,
+                'batch_size': batch_size,
+                'tokenize': False
+            }
+        )[0]
+        LOGGER.debug('batch: %s', batch)
+        assert len(batch) == 2
+        inputs, _ = batch
+        batch_x = inputs[0]
+        batch_features = inputs[2]
+        assert get_lengths(batch_x) == [len(SHORT_SENTENCE_TOKENS)] * batch_size
+        assert get_lengths(batch_features) == [len(SHORT_SENTENCE_TOKENS)] * batch_size
+
     def test_should_not_fail_on_shuffle_dataset(self, preprocessor, embeddings):
         data_generator = DataGenerator(
             np.asarray([SENTENCE_TOKENS_1]),

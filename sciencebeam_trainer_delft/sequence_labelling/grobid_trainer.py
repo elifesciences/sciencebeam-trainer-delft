@@ -604,8 +604,12 @@ def run(args):
 
 
 def main(argv: List[str] = None):
-    args = parse_args(argv)
-    run(args)
+    try:
+        args = parse_args(argv)
+        run(args)
+    except BaseException as e:
+        LOGGER.error('uncaught exception: %s', e, exc_info=1)
+        raise
 
 
 if __name__ == "__main__":

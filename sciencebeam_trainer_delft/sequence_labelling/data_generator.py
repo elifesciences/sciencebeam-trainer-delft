@@ -96,10 +96,10 @@ class DataGenerator(keras.utils.Sequence):
 
         # tokenize texts in self.x if not already done
         if self.tokenize:
-            x_tokenized = []
-            for i in range(0, max_iter):
-                tokens = tokenizeAndFilterSimple(sub_x[i])
-                x_tokenized.append(tokens)
+            x_tokenized = [
+                tokenizeAndFilterSimple(text)
+                for text in sub_x
+            ]
         else:
             x_tokenized = sub_x
 

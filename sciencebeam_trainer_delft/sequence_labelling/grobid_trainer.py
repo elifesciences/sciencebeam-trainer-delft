@@ -503,6 +503,11 @@ def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
 
 
+def process_args(args: argparse.Namespace) -> argparse.Namespace:
+    if args.input:
+        args.input = [input_path for input_paths in args.input for input_path in input_paths]
+
+
 def parse_args(argv: List[str] = None):
     parser = argparse.ArgumentParser(
         description="Trainer for GROBID models"
@@ -513,8 +518,7 @@ def parse_args(argv: List[str] = None):
     add_all_non_positional_arguments(parser)
 
     args = parser.parse_args(argv)
-    if args.input:
-        args.input = [input_path for input_paths in args.input for input_path in input_paths]
+    process_args(args)
     return args
 
 

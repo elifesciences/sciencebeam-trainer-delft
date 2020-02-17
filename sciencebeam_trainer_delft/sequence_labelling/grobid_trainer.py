@@ -407,38 +407,7 @@ def tag_input(
     print(formatted_tag_result)
 
 
-def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
-    parser.add_argument("--fold-count", type=int, default=1)
-    parser.add_argument(
-        "--architecture", default='BidLSTM_CRF',
-        choices=get_model_names(),
-        help="type of model architecture to be used"
-    )
-    parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
-    parser.add_argument("--use-features", action="store_true", help="Use features")
-    parser.add_argument(
-        "--feature-indices",
-        type=parse_number_ranges,
-        help="The feature indices to use. e.g. 7:10. If blank, all of the features will be used."
-    )
-    parser.add_argument(
-        "--feature-embedding-size", type=int,
-        help="size of feature embedding, use 0 to disable embedding"
-    )
-    parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
-
-    output_group = parser.add_argument_group('output')
-    output_group.add_argument("--output", help="directory where to save a trained model")
-    output_group.add_argument("--checkpoint", help="directory where to save a checkpoint model")
-    output_group.add_argument(
-        "--tag-output-format",
-        default=DEFAULT_TAG_OUTPUT_FORMAT,
-        choices=TAG_OUTPUT_FORMATS,
-        help="output format for tag results"
-    )
-
-    parser.add_argument("--model-path", help="directory to the saved or loaded model")
-
+def add_common_arguments(parser: argparse.ArgumentParser):
     input_group = parser.add_argument_group('input')
     input_group.add_argument(
         "--input",
@@ -468,7 +437,6 @@ def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
             " each of the input files individually"
         )
     )
-
     parser.add_argument(
         "--random-seed",
         type=int,
@@ -476,30 +444,19 @@ def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
         help="Set the random seed for reproducibility"
     )
     parser.add_argument(
-        "--embedding", default="glove-6B-50d",
-        help="name of word embedding"
-    )
-    parser.add_argument(
         "--batch-size", type=int, default=10,
         help="batch size"
-    )
-    parser.add_argument(
-        "--word-lstm-units", type=int, default=100,
-        help="number of words in lstm units"
     )
     parser.add_argument(
         "--max-sequence-length", type=int, default=500,
         help="maximum sequence length"
     )
     parser.add_argument(
-        "--max-epoch", type=int, default=10,
-        help="max epoch to train to"
-    )
-
-    parser.add_argument(
         "--no-use-lmdb", action="store_true",
         help="Do not use LMDB embedding cache (load embeddings into memory instead)"
     )
+
+    parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
 
     parser.add_argument(
         "--save-input-to-and-exit",
@@ -510,6 +467,54 @@ def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
+
+
+def add_train_arguments(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--architecture", default='BidLSTM_CRF',
+        choices=get_model_names(),
+        help="type of model architecture to be used"
+    )
+    parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
+    parser.add_argument("--use-features", action="store_true", help="Use features")
+    parser.add_argument(
+        "--feature-indices",
+        type=parse_number_ranges,
+        help="The feature indices to use. e.g. 7:10. If blank, all of the features will be used."
+    )
+    parser.add_argument(
+        "--feature-embedding-size", type=int,
+        help="size of feature embedding, use 0 to disable embedding"
+    )
+
+    output_group = parser.add_argument_group('output')
+    output_group.add_argument("--output", help="directory where to save a trained model")
+    output_group.add_argument("--checkpoint", help="directory where to save a checkpoint model")
+
+    parser.add_argument("--model-path", help="directory to the saved or loaded model")
+
+    parser.add_argument(
+        "--embedding", default="glove-6B-50d",
+        help="name of word embedding"
+    )
+    parser.add_argument(
+        "--word-lstm-units", type=int, default=100,
+        help="number of words in lstm units"
+    )
+    parser.add_argument(
+        "--max-epoch", type=int, default=10,
+        help="max epoch to train to"
+    )
+
+
+def add_eval_arguments(parser: argparse.ArgumentParser):
+    parser.add_argument("--fold-count", type=int, default=1)
+
+
+def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
+    add_common_arguments(parser)
+    add_train_arguments(parser)
+    add_eval_arguments(parser)
 
 
 def add_model_positional_argument(parser: argparse.ArgumentParser):
@@ -643,6 +648,12 @@ class EvalSubCommand(GrobidTrainerSubCommand):
 class TagSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_all_non_positional_arguments(parser)
+        parser.add_argument(
+            "--tag-output-format",
+            default=DEFAULT_TAG_OUTPUT_FORMAT,
+            choices=TAG_OUTPUT_FORMATS,
+            help="output format for tag results"
+        )
 
     def do_run(self, args: argparse.Namespace):
         if not args.model_path:

@@ -456,8 +456,6 @@ def add_common_arguments(parser: argparse.ArgumentParser):
         help="Do not use LMDB embedding cache (load embeddings into memory instead)"
     )
 
-    parser.add_argument("--model-path", help="directory to the saved or loaded model")
-
     parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
 
     parser.add_argument(
@@ -469,6 +467,10 @@ def add_common_arguments(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
+
+
+def add_model_path_argument(parser: argparse.ArgumentParser, **kwargs):
+    parser.add_argument("--model-path", **kwargs)
 
 
 def add_train_arguments(parser: argparse.ArgumentParser):
@@ -604,6 +606,7 @@ class TrainSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_train_arguments(parser)
+        add_model_path_argument(parser, help='directory to the saved model')
 
     def do_run(self, args: argparse.Namespace):
         embedding_name = self.preload_and_validate_embedding(
@@ -620,6 +623,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         add_common_arguments(parser)
         add_train_arguments(parser)
         parser.add_argument("--fold-count", type=int, default=1)
+        add_model_path_argument(parser, help='directory to the saved model')
 
     def do_run(self, args: argparse.Namespace):
         if args.fold_count < 1:
@@ -637,6 +641,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
 class EvalSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
+        add_model_path_argument(parser, required=True, help='directory to load the model from')
 
     def do_run(self, args: argparse.Namespace):
         if not args.model_path:
@@ -651,6 +656,7 @@ class EvalSubCommand(GrobidTrainerSubCommand):
 class TagSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
+        add_model_path_argument(parser, required=True, help='directory to load the model from')
         parser.add_argument(
             "--tag-output-format",
             default=DEFAULT_TAG_OUTPUT_FORMAT,

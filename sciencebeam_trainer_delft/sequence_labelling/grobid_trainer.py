@@ -209,8 +209,7 @@ def train_eval(
     if eval_input_paths:
         x_eval, y_eval, features_eval = load_data_and_labels(
             model=model,
-            input_paths=eval_input_paths, limit=eval_limit, shuffle_input=shuffle_input,
-            random_seed=random_seed,
+            input_paths=eval_input_paths, limit=eval_limit,
             download_manager=download_manager
         )
         x_train_all, y_train_all, features_train_all = (

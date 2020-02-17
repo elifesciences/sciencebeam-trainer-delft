@@ -712,10 +712,22 @@ class InputInfoSubCommand(GrobidTrainerSubCommand):
 
 
 SUB_COMMANDS = [
-    TrainSubCommand(Tasks.TRAIN, 'Train'),
-    TrainEvalSubCommand(Tasks.TRAIN_EVAL, 'Train Eval'),
-    EvalSubCommand(Tasks.EVAL, 'Eval'),
-    TagSubCommand(Tasks.TAG, 'Tag'),
+    TrainSubCommand(
+        Tasks.TRAIN,
+        'Train the model using the provided input(s)'
+    ),
+    TrainEvalSubCommand(
+        Tasks.TRAIN_EVAL,
+        'Train and reserve a slice of the input data for evaluation'
+    ),
+    EvalSubCommand(
+        Tasks.EVAL,
+        'Evaluate the already trained model on the provided input(s)'
+    ),
+    TagSubCommand(
+        Tasks.TAG,
+        'Tag inputs and show results. Optionally also show a diff to the expected labels'
+    ),
     InputInfoSubCommand(
         Tasks.INPUT_INFO,
         'Display input summary information relating to the passed in input(s)'

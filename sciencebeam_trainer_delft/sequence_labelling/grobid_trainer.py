@@ -708,6 +708,9 @@ def run(args: argparse.Namespace, subcommand_processor: SubCommandProcessor = No
 def main(argv: List[str] = None):
     subcommand_processor = get_subcommand_processor()
     args = parse_args(argv, subcommand_processor=subcommand_processor)
+    if args.debug:
+        for name in [__name__, 'sciencebeam_trainer_delft', 'delft']:
+            logging.getLogger(name).setLevel('DEBUG')
     try:
         subcommand_processor.run(args)
     except BaseException as e:

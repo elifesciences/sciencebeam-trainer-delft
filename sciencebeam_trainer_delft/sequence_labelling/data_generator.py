@@ -29,6 +29,13 @@ def left_pad_batch_values(batch_values: np.array, max_sequence_length: int, dtyp
     return result
 
 
+def truncate_batch_values(batch_values: list, max_sequence_length: int) -> list:
+    return [
+        row[:max_sequence_length]
+        for row in batch_values
+    ]
+
+
 # generate batch of data to feed sequence labelling model, both for training and prediction
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -108,10 +115,7 @@ class DataGenerator(keras.utils.Sequence):
         if self.max_sequence_length and max_length_x > self.max_sequence_length:
             max_length_x = self.max_sequence_length
             # truncation of sequence at max_sequence_length
-            x_tokenized = [
-                tokens[:self.max_sequence_length]
-                for tokens in x_tokenized
-            ]
+            x_tokenized = truncate_batch_values(x_tokenized, self.max_sequence_length)
 
         # prevent sequence of length 1 alone in a batch (this causes an error in tf)
         extend = False
@@ -124,10 +128,6 @@ class DataGenerator(keras.utils.Sequence):
             batch_a = np.zeros((max_iter, max_length_x), dtype='float32')
 
         batch_y = None
-        max_length_y = max_length_x
-        if self.y is not None:
-            # note: tags are always already "tokenized",
-            batch_y = np.zeros((max_iter, max_length_y), dtype='float32')
 
         if self.embeddings.use_ELMo:
             # batch_x = to_vector_elmo(x_tokenized, self.embeddings, max_length_x)
@@ -145,11 +145,16 @@ class DataGenerator(keras.utils.Sequence):
             if self.preprocessor.return_casing:
                 batch_a[i] = to_casing_single(x_tokenized[i], max_length_x)
 
-            # store tag embeddings
-            if self.y is not None:
-                batch_y = self.y[(index*self.batch_size):(index*self.batch_size)+max_iter]
-
+        batch_y = None
+        # store tag embeddings
         if self.y is not None:
+            batch_y = self.y[(index*self.batch_size):(index*self.batch_size)+max_iter]
+            max_length_y = max((len(y_row) for y_row in batch_y))
+            if self.max_sequence_length and max_length_y > self.max_sequence_length:
+                max_length_y = self.max_sequence_length
+                # truncation of sequence at max_sequence_length
+                batch_y = truncate_batch_values(batch_y, self.max_sequence_length)
+
             batches, batch_y = self.preprocessor.transform(x_tokenized, batch_y, extend=extend)
         else:
             batches = self.preprocessor.transform(x_tokenized, extend=extend)

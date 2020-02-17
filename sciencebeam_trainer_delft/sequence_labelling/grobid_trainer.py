@@ -398,13 +398,7 @@ def tag_input(
     print(formatted_tag_result)
 
 
-def parse_args(argv: List[str] = None):
-    parser = argparse.ArgumentParser(
-        description="Trainer for GROBID models"
-    )
-
-    parser.add_argument("model", choices=GROBID_MODEL_NAMES)
-    parser.add_argument("action", choices=ALL_TASKS)
+def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
     parser.add_argument("--fold-count", type=int, default=1)
     parser.add_argument(
         "--architecture", default='BidLSTM_CRF',
@@ -507,6 +501,16 @@ def parse_args(argv: List[str] = None):
     )
 
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
+
+
+def parse_args(argv: List[str] = None):
+    parser = argparse.ArgumentParser(
+        description="Trainer for GROBID models"
+    )
+
+    parser.add_argument("model", choices=GROBID_MODEL_NAMES)
+    parser.add_argument("action", choices=ALL_TASKS)
+    add_all_non_positional_arguments(parser)
 
     args = parser.parse_args(argv)
     if args.input:

@@ -4,6 +4,7 @@ import argparse
 import time
 from abc import abstractmethod
 from collections import Counter
+from itertools import islice
 from typing import List, Tuple
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
@@ -436,12 +437,29 @@ def print_input_info(
         for y_doc in y_all
         for y_row in y_doc
     )
+    flat_features = [
+        features_vector
+        for features_doc in features_all
+        for features_vector in features_doc
+    ]
+    feature_lengths = Counter(map(len, flat_features))
 
     print('number of input sequences: %d' % len(x_all))
     print('sequence lengths: min=%d, max=%d, median=%.1f' % (
         np.min(seq_lengths), np.max(seq_lengths), np.median(seq_lengths)
     ))
     print('number of features: %d' % len(features_all[0][0]))
+    if len(feature_lengths) > 1:
+        print('inconsistent feature lengths: %s' % feature_lengths)
+        for feature_length in feature_lengths:
+            print('examples with feature length=%d:\n%s' % (
+                feature_length,
+                '\n'.join(islice((
+                    ' '.join(features_vector)
+                    for features_vector in flat_features
+                    if len(features_vector) == feature_length
+                ), 3))
+            ))
     print('labels: %s' % y_counts)
 
 

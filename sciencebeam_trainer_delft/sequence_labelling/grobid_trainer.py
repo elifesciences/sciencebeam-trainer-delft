@@ -450,6 +450,8 @@ def add_common_arguments(parser: argparse.ArgumentParser):
 
     parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
 
+    parser.add_argument("--quiet", action="store_true", help="Only log errors")
+
     parser.add_argument(
         "--save-input-to-and-exit",
         help=(
@@ -708,7 +710,9 @@ def run(args: argparse.Namespace, subcommand_processor: SubCommandProcessor = No
 def main(argv: List[str] = None):
     subcommand_processor = get_subcommand_processor()
     args = parse_args(argv, subcommand_processor=subcommand_processor)
-    if args.debug:
+    if args.quiet:
+        logging.root.setLevel('ERROR')
+    elif args.debug:
         for name in [__name__, 'sciencebeam_trainer_delft', 'delft']:
             logging.getLogger(name).setLevel('DEBUG')
     try:

@@ -35,7 +35,67 @@ docker run --rm elifesciences/sciencebeam-trainer-delft_unstable \
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer --help
 ```
 
-### Tag Command
+### Train Sub Command
+
+Training a model comes with many parameters. The following is an example to run the training without recommending parameters.
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+### Train Eval Sub Command
+
+The `train_eval` sub command is combining the `train` and `eval` command. It is reserving a slice of the input for the evaluation.
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+If you rather want to provide separate evaluation data:
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --eval-input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
+    --eval-limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+### Eval Sub Command
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    eval \
+    --batch-size="10" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
+    --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
+    --limit="10" \
+    --quiet
+```
+
+### Tag Sub Command
 
 The `tag` sub command supports multiple output formats:
 
@@ -49,13 +109,13 @@ The `tag` sub command supports multiple output formats:
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    header tag \
+    tag \
     --batch-size="10" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
     --tag-output-format="xml" \
-    2> /tmp/tag.log
+    --quiet
 ```
 
 With the result:
@@ -74,13 +134,13 @@ With the result:
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    header tag \
+    tag \
     --batch-size="10" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="2" \
     --tag-output-format="xml_diff" \
-    2> /tmp/tag.log
+    --quiet
 ```
 
 With the result (the second document contains differences):
@@ -110,13 +170,13 @@ With the result (the second document contains differences):
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    header tag \
+    tag \
     --batch-size="10" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
     --tag-output-format="data" \
-    2> /tmp/tag.log \
+    --quiet \
     | head -5
 ```
 
@@ -134,19 +194,37 @@ Planar planar P Pl Pla Plan r ar nar anar BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    header tag \
+    tag \
     --batch-size="10" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
     --tag-output-format="text" \
-    2> /tmp/tag.log
+    --quiet
 ```
 
 With the result:
 
 ```text
 Markov Chain Algorithms for Planar Lattice Structures Michael Luby y Dana Randall z Alistair Sinclair Abstract Consider the following Markov chain , whose states are all domino tilings of a 2n 񮽙 2n chessboard : starting from some arbitrary tiling , pick a 2 񮽙 2 window uniformly at random . If the four squares appearing in this window are covered by two parallel dominoes , rotate the dominoes in place . Repeat many times . This process is used in practice to generate a tiling , and is a tool in the study of the combinatorics of tilings and the behavior of dimer systems in statistical physics . Analogous Markov chains are used to randomly generate other structures on various two - dimensional lattices . This paper presents techniques which prove for the 񮽙rst time that , in many interesting cases , a small number of random moves suuce to obtain a uniform distribution .
+```
+
+### Input Info Sub Command
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    input_info \
+    --quiet \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz
+```
+
+Result:
+
+```text
+number of input sequences: 2538
+sequence lengths: min=1, max=6606, median=178.0
+number of features: 31
+labels: Counter({'I-<abstract>': 269983, 'I-<intro>': 96944, 'I-<note>': 26033, 'I-<author>': 25830, 'I-<title>': 24481, 'I-<affiliation>': 23886, 'I-<address>': 13963, 'I-<reference>': 10121, 'I-<keyword>': 7804, 'I-<email>': 7796, 'I-<copyright>': 5152, 'I-<grant>': 4509, 'I-<pubnum>': 3755, 'I-<submission>': 3729, 'I-<web>': 3162, 'B-<affiliation>': 2782, 'B-<title>': 2363, 'B-<address>': 2330, 'B-<author>': 2241, 'I-<date>': 2204, 'B-<note>': 1823, 'B-<abstract>': 1528, 'I-<degree>': 1355, 'B-<email>': 891, 'I-<phone>': 710, 'B-<date>': 658, 'B-<intro>': 439, 'B-<keyword>': 424, 'I-<entitle>': 421, 'B-<pubnum>': 421, 'B-<reference>': 414, 'B-<submission>': 409, 'B-<copyright>': 281, 'I-<dedication>': 243, 'B-<web>': 187, 'I-<date-submission>': 166, 'B-<grant>': 105, 'B-<phone>': 71, 'B-<degree>': 59, 'B-<date-submission>': 29, 'B-<entitle>': 24, 'B-<dedication>': 22})
 ```
 
 ## Checkpoints CLI

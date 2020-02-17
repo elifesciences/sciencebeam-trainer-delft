@@ -2,9 +2,12 @@
 import logging
 import argparse
 import time
+from abc import abstractmethod
+from collections import Counter
 from typing import List, Tuple
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
+import sciencebeam_trainer_delft.utils.no_keras_backend_message  # noqa, pylint: disable=unused-import
 # pylint: disable=wrong-import-order, ungrouped-imports
 
 import numpy as np
@@ -32,6 +35,11 @@ from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     format_tag_result
 )
 
+from sciencebeam_trainer_delft.utils.cli import (
+    SubCommand,
+    SubCommandProcessor
+)
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,9 +55,8 @@ class Tasks:
     TRAIN_EVAL = 'train_eval'
     EVAL = 'eval'
     TAG = 'tag'
+    INPUT_INFO = 'input_info'
 
-
-ALL_TASKS = [Tasks.TRAIN, Tasks.TRAIN_EVAL, Tasks.EVAL, Tasks.TAG]
 
 DEFAULT_RANDOM_SEED = 42
 
@@ -186,6 +193,8 @@ def train_eval(
         limit: int = None,
         shuffle_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
+        eval_input_paths: List[str] = None,
+        eval_limit: int = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
@@ -197,9 +206,19 @@ def train_eval(
         download_manager=download_manager
     )
 
-    x_train_all, x_eval, y_train_all, y_eval, features_train_all, features_eval = train_test_split(
-        x_all, y_all, features_all, test_size=0.1
-    )
+    if eval_input_paths:
+        x_eval, y_eval, features_eval = load_data_and_labels(
+            model=model,
+            input_paths=eval_input_paths, limit=eval_limit,
+            download_manager=download_manager
+        )
+        x_train_all, y_train_all, features_train_all = (
+            x_all, y_all, features_all
+        )
+    else:
+        x_train_all, x_eval, y_train_all, y_eval, features_train_all, features_eval = (
+            train_test_split(x_all, y_all, features_all, test_size=0.1)
+        )
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
         x_train_all, y_train_all, features_train_all, test_size=0.1
     )
@@ -261,7 +280,10 @@ def train_eval(
 
 
 def eval_model(
-        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+        model,
+        embeddings_name: str = None,
+        architecture: str = 'BidLSTM_CRF',
+        use_ELMo: bool = False,
         input_paths: List[str] = None,
         output_path: str = None,
         model_path: str = None,
@@ -291,7 +313,7 @@ def eval_model(
 
     LOGGER.info('%d evaluation sequences', len(x_eval))
 
-    if output_path:
+    if output_path or model_path:
         model_name = model
     else:
         model_name = 'grobid-' + model
@@ -349,7 +371,7 @@ def tag_input(
 
     LOGGER.info('%d input sequences', len(x_all))
 
-    if output_path:
+    if output_path or model_path:
         model_name = model
     else:
         model_name = 'grobid-' + model
@@ -398,14 +420,92 @@ def tag_input(
     print(formatted_tag_result)
 
 
-def parse_args(argv: List[str] = None):
-    parser = argparse.ArgumentParser(
-        description="Trainer for GROBID models"
+def print_input_info(
+        model: str,
+        input_paths: List[str],
+        limit: int = None,
+        download_manager: DownloadManager = None):
+    x_all, y_all, features_all = load_data_and_labels(
+        model=model, input_paths=input_paths, limit=limit,
+        download_manager=download_manager
     )
 
-    parser.add_argument("model", choices=GROBID_MODEL_NAMES)
-    parser.add_argument("action", choices=ALL_TASKS)
-    parser.add_argument("--fold-count", type=int, default=1)
+    seq_lengths = np.array([len(seq) for seq in x_all])
+    y_counts = Counter(
+        y_row
+        for y_doc in y_all
+        for y_row in y_doc
+    )
+
+    print('number of input sequences: %d' % len(x_all))
+    print('sequence lengths: min=%d, max=%d, median=%.1f' % (
+        np.min(seq_lengths), np.max(seq_lengths), np.median(seq_lengths)
+    ))
+    print('number of features: %d' % len(features_all[0][0]))
+    print('labels: %s' % y_counts)
+
+
+def add_common_arguments(parser: argparse.ArgumentParser):
+    input_group = parser.add_argument_group('input')
+    input_group.add_argument(
+        "--input",
+        nargs='+',
+        action='append',
+        help="provided training file"
+    )
+    input_group.add_argument(
+        "--shuffle-input",
+        action="store_true",
+        help="Shuffle the input before splitting"
+    )
+    input_group.add_argument(
+        "--limit",
+        type=int,
+        help=(
+            "limit the number of training samples."
+            " With more than one input file, the limit will be applied to"
+            " each of the input files individually"
+        )
+    )
+    parser.add_argument(
+        "--random-seed",
+        type=int,
+        default=42,
+        help="Set the random seed for reproducibility"
+    )
+    parser.add_argument(
+        "--batch-size", type=int, default=10,
+        help="batch size"
+    )
+    parser.add_argument(
+        "--max-sequence-length", type=int, default=500,
+        help="maximum sequence length"
+    )
+    parser.add_argument(
+        "--no-use-lmdb", action="store_true",
+        help="Do not use LMDB embedding cache (load embeddings into memory instead)"
+    )
+
+    parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
+
+    parser.add_argument("--quiet", action="store_true", help="Only log errors")
+
+    parser.add_argument(
+        "--save-input-to-and-exit",
+        help=(
+            "If set, saves the input to the specified path and exits."
+            " This can be useful to retrain the model outside GROBID."
+        )
+    )
+
+    parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
+
+
+def add_model_path_argument(parser: argparse.ArgumentParser, **kwargs):
+    parser.add_argument("--model-path", **kwargs)
+
+
+def add_train_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--architecture", default='BidLSTM_CRF',
         choices=get_model_names(),
@@ -433,96 +533,46 @@ def parse_args(argv: List[str] = None):
         help="Number of LSTM units used by the features"
     )
 
-    parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
-
     output_group = parser.add_argument_group('output')
     output_group.add_argument("--output", help="directory where to save a trained model")
     output_group.add_argument("--checkpoint", help="directory where to save a checkpoint model")
-    output_group.add_argument(
-        "--tag-output-format",
-        default=DEFAULT_TAG_OUTPUT_FORMAT,
-        choices=TAG_OUTPUT_FORMATS,
-        help="output format for tag results"
-    )
 
-    parser.add_argument("--model-path", help="directory to the saved or loaded model")
-
-    input_group = parser.add_argument_group('input')
-    input_group.add_argument(
-        "--input",
-        nargs='+',
-        action='append',
-        help="provided training file"
-    )
-    input_group.add_argument(
-        "--shuffle-input",
-        action="store_true",
-        help="Shuffle the input before splitting"
-    )
-    input_group.add_argument(
-        "--use-eval-train-test-split",
-        action="store_true",
-        help=" ".join([
-            "If enabled, split the input when running 'eval'",
-            "(in the same way it is split for 'train_eval')"
-        ])
-    )
-    input_group.add_argument(
-        "--limit",
-        type=int,
-        help=(
-            "limit the number of training samples."
-            " With more than one input file, the limit will be applied to"
-            " each of the input files individually"
-        )
-    )
-
-    parser.add_argument(
-        "--random-seed",
-        type=int,
-        default=42,
-        help="Set the random seed for reproducibility"
-    )
     parser.add_argument(
         "--embedding", default="glove-6B-50d",
         help="name of word embedding"
-    )
-    parser.add_argument(
-        "--batch-size", type=int, default=10,
-        help="batch size"
     )
     parser.add_argument(
         "--word-lstm-units", type=int, default=100,
         help="number of words in lstm units"
     )
     parser.add_argument(
-        "--max-sequence-length", type=int, default=500,
-        help="maximum sequence length"
-    )
-    parser.add_argument(
         "--max-epoch", type=int, default=10,
         help="max epoch to train to"
     )
-
     parser.add_argument(
-        "--no-use-lmdb", action="store_true",
-        help="Do not use LMDB embedding cache (load embeddings into memory instead)"
+        "--early-stopping-patience", type=int, default=10,
+        help="how many epochs to continue training after the f1 score hasn't improved"
     )
 
-    parser.add_argument(
-        "--save-input-to-and-exit",
-        help=(
-            "If set, saves the input to the specified path and exits."
-            " This can be useful to retrain the model outside GROBID."
-        )
-    )
 
-    parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
+def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
+    add_common_arguments(parser)
+    add_train_arguments(parser)
 
-    args = parser.parse_args(argv)
+
+def add_model_positional_argument(parser: argparse.ArgumentParser):
+    parser.add_argument("model", nargs='?', choices=GROBID_MODEL_NAMES)
+
+
+def process_args(args: argparse.Namespace) -> argparse.Namespace:
     if args.input:
         args.input = [input_path for input_paths in args.input for input_path in input_paths]
-    return args
+
+
+def create_parser() -> argparse.ArgumentParser:
+    return argparse.ArgumentParser(
+        description="Trainer for GROBID models"
+    )
 
 
 def save_input_to(input_paths: List[str], output_path: str):
@@ -532,95 +582,247 @@ def save_input_to(input_paths: List[str], output_path: str):
     copy_file(input_path, output_path)
 
 
-def run(args):
-    model = args.model
-    action = args.action
+class GrobidTrainerSubCommand(SubCommand):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.download_manager = None
+        self.embedding_manager = None
 
-    if args.save_input_to_and_exit:
-        save_input_to(args.input, args.save_input_to_and_exit)
-        return
+    @abstractmethod
+    def do_run(self, args: argparse.Namespace):
+        pass
 
-    use_ELMo = args.use_ELMo
-    architecture = args.architecture
-
-    download_manager = DownloadManager()
-
-    embedding_manager = EmbeddingManager(download_manager=download_manager)
-    if args.no_use_lmdb:
-        embedding_manager.disable_embedding_lmdb_cache()
-    if action in {Tasks.TRAIN, Tasks.TRAIN_EVAL}:
-        embedding_name = embedding_manager.ensure_available(args.embedding)
+    def preload_and_validate_embedding(self, embedding_name: str) -> str:
+        embedding_name = self.embedding_manager.ensure_available(embedding_name)
         LOGGER.info('embedding_name: %s', embedding_name)
-        embedding_manager.validate_embedding(embedding_name)
-    else:
-        embedding_name = embedding_manager.resolve_alias(args.embedding)
+        self.embedding_manager.validate_embedding(embedding_name)
+        return embedding_name
 
-    train_args = dict(
-        model=model,
-        embeddings_name=embedding_name,
-        embedding_manager=embedding_manager,
-        architecture=architecture, use_ELMo=use_ELMo,
-        input_paths=args.input,
-        output_path=args.output,
-        limit=args.limit,
-        shuffle_input=args.shuffle_input,
-        random_seed=args.random_seed,
-        log_dir=args.checkpoint,
-        batch_size=args.batch_size,
-        word_lstm_units=args.word_lstm_units,
-        max_sequence_length=args.max_sequence_length,
-        max_epoch=args.max_epoch,
-        use_features=args.use_features,
-        feature_indices=args.feature_indices,
-        feature_embedding_size=args.feature_embedding_size,
-        multiprocessing=args.multiprocessing,
-        download_manager=download_manager,
-        config_props=dict(
-            use_features_indices_input=args.use_features_indices_input,
-            features_lstm_units=args.features_lstm_units
+    def get_common_args(self, args: argparse.Namespace) -> dict:
+        return dict(
+            model=args.model,
+            input_paths=args.input,
+            limit=args.limit,
+            shuffle_input=args.shuffle_input,
+            random_seed=args.random_seed,
+            batch_size=args.batch_size,
+            max_sequence_length=args.max_sequence_length,
+            multiprocessing=args.multiprocessing,
+            embedding_manager=self.embedding_manager,
+            download_manager=self.download_manager
         )
-    )
 
-    LOGGER.info('get_tf_info: %s', get_tf_info())
+    def get_train_args(self, args: argparse.Namespace) -> dict:
+        return dict(
+            architecture=args.architecture,
+            use_ELMo=args.use_ELMo,
+            output_path=args.output,
+            log_dir=args.checkpoint,
+            word_lstm_units=args.word_lstm_units,
+            max_epoch=args.max_epoch,
+            use_features=args.use_features,
+            feature_indices=args.feature_indices,
+            feature_embedding_size=args.feature_embedding_size,
+            patience=args.early_stopping_patience,
+            config_props=dict(
+                use_features_indices_input=args.use_features_indices_input,
+                features_lstm_units=args.features_lstm_units
+            ),
+            **self.get_common_args(args)
+        )
 
-    set_random_seeds(args.random_seed)
+    def run(self, args: argparse.Namespace):
+        if args.save_input_to_and_exit:
+            save_input_to(args.input, args.save_input_to_and_exit)
+            return
 
-    if action == Tasks.TRAIN:
-        train(**train_args)
+        self.download_manager = DownloadManager()
+        self.embedding_manager = EmbeddingManager(
+            download_manager=self.download_manager
+        )
+        if args.no_use_lmdb:
+            self.embedding_manager.disable_embedding_lmdb_cache()
 
-    if action == Tasks.TRAIN_EVAL:
+        LOGGER.info('get_tf_info: %s', get_tf_info())
+
+        set_random_seeds(args.random_seed)
+
+        self.do_run(args)
+
+        # see https://github.com/tensorflow/tensorflow/issues/3388
+        K.clear_session()
+
+
+class TrainSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+        add_train_arguments(parser)
+        add_model_path_argument(parser, help='directory to the saved model')
+
+    def do_run(self, args: argparse.Namespace):
+        if not args.model:
+            raise ValueError("model required")
+        embedding_name = self.preload_and_validate_embedding(
+            args.embedding
+        )
+        train(
+            embeddings_name=embedding_name,
+            **self.get_train_args(args)
+        )
+
+
+class TrainEvalSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+        add_train_arguments(parser)
+        add_model_path_argument(parser, help='directory to the saved model')
+        parser.add_argument("--fold-count", type=int, default=1)
+        parser.add_argument(
+            "--eval-input",
+            nargs='+',
+            action='append',
+            help=' '.join([
+                "Evaluation data at the end of training. If not specified,",
+                "it will use a slice of the training data"
+            ])
+        )
+        parser.add_argument(
+            "--eval-limit",
+            type=int,
+            help=' '.join([
+                "Limit the number of documents to use for evaluation.",
+                "This is mostly for testing to make evaluation faster."
+            ])
+        )
+
+    def do_run(self, args: argparse.Namespace):
+        if not args.model:
+            raise ValueError("model required")
         if args.fold_count < 1:
             raise ValueError("fold-count should be equal or more than 1")
+        embedding_name = self.preload_and_validate_embedding(
+            args.embedding
+        )
         train_eval(
             fold_count=args.fold_count,
-            **train_args
+            embeddings_name=embedding_name,
+            **self.get_train_args(args)
         )
 
-    if action == Tasks.EVAL:
-        if not args.model_path:
-            raise ValueError('--model-path required')
+
+class EvalSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+        add_model_path_argument(parser, required=True, help='directory to load the model from')
+        parser.add_argument(
+            "--use-eval-train-test-split",
+            action="store_true",
+            help=" ".join([
+                "If enabled, split the input when running 'eval'",
+                "(in the same way it is split for 'train_eval')"
+            ])
+        )
+
+    def do_run(self, args: argparse.Namespace):
         eval_model(
             model_path=args.model_path,
             split_input=args.use_eval_train_test_split,
-            **train_args
+            **self.get_common_args(args)
         )
 
-    if action == Tasks.TAG:
-        if not args.model_path:
-            raise ValueError('--model-path required')
+
+class TagSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+        add_model_path_argument(parser, required=True, help='directory to load the model from')
+        parser.add_argument(
+            "--tag-output-format",
+            default=DEFAULT_TAG_OUTPUT_FORMAT,
+            choices=TAG_OUTPUT_FORMATS,
+            help="output format for tag results"
+        )
+
+    def do_run(self, args: argparse.Namespace):
         tag_input(
             model_path=args.model_path,
             tag_output_format=args.tag_output_format,
-            **train_args
+            **self.get_common_args(args)
         )
 
-    # see https://github.com/tensorflow/tensorflow/issues/3388
-    K.clear_session()
+
+class InputInfoSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+
+    def do_run(self, args: argparse.Namespace):
+        print_input_info(
+            model=args.model,
+            input_paths=args.input,
+            limit=args.limit,
+            download_manager=self.download_manager
+        )
+
+
+SUB_COMMANDS = [
+    TrainSubCommand(
+        Tasks.TRAIN,
+        'Train the model using the provided input(s)'
+    ),
+    TrainEvalSubCommand(
+        Tasks.TRAIN_EVAL,
+        'Train and reserve a slice of the input data for evaluation'
+    ),
+    EvalSubCommand(
+        Tasks.EVAL,
+        'Evaluate the already trained model on the provided input(s)'
+    ),
+    TagSubCommand(
+        Tasks.TAG,
+        'Tag inputs and show results. Optionally also show a diff to the expected labels'
+    ),
+    InputInfoSubCommand(
+        Tasks.INPUT_INFO,
+        'Display input summary information relating to the passed in input(s)'
+    )
+]
+
+
+def get_subcommand_processor():
+    return SubCommandProcessor(SUB_COMMANDS, command_dest='action')
+
+
+def parse_args(argv: List[str] = None, subcommand_processor: SubCommandProcessor = None):
+    parser = create_parser()
+    if subcommand_processor is None:
+        subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
+
+    add_model_positional_argument(parser)
+    subcommand_processor.add_sub_command_parsers(parser)
+
+    args = parser.parse_args(argv)
+    process_args(args)
+    return args
+
+
+def run(args: argparse.Namespace, subcommand_processor: SubCommandProcessor = None):
+    if subcommand_processor is None:
+        subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
+    subcommand_processor.run(args)
 
 
 def main(argv: List[str] = None):
-    args = parse_args(argv)
-    run(args)
+    subcommand_processor = get_subcommand_processor()
+    args = parse_args(argv, subcommand_processor=subcommand_processor)
+    if args.quiet:
+        logging.root.setLevel('ERROR')
+    elif args.debug:
+        for name in [__name__, 'sciencebeam_trainer_delft', 'delft']:
+            logging.getLogger(name).setLevel('DEBUG')
+    try:
+        subcommand_processor.run(args)
+    except BaseException as e:
+        LOGGER.error('uncaught exception: %s', e, exc_info=1)
+        raise
 
 
 if __name__ == "__main__":

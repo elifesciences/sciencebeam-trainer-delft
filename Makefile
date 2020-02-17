@@ -40,8 +40,8 @@ GCLOUD = gcloud
 GCLOUD_JOB_NAME = sciencebeam_$(GROBID_TRAIN_ACTION)_$(ARCHITECTURE)_$(LIMIT)_$(shell date +%s -u)
 GCLOUD_JOB_DIR =
 # see https://cloud.google.com/ml-engine/docs/tensorflow/runtime-version-list
-GCLOUD_AI_PLATFORM_RUNTIME = 1.13
-GCLOUD_AI_PLATFORM_PYTHON_VERSION = 3.5
+GCLOUD_AI_PLATFORM_RUNTIME = 1.15
+GCLOUD_AI_PLATFORM_PYTHON_VERSION = 3.7
 GCLOUD_ARGS =
 
 PYTEST_ARGS =

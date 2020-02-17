@@ -39,6 +39,7 @@ def calculate_cardinality(feature_vector, indices=None):
     if not len(feature_vector) > 0:
         return []
 
+    LOGGER.debug('feature_vector[0][0] (%d): %s', len(feature_vector[0][0]), feature_vector[0][0])
     for index_column in range(index, len(feature_vector[0][0])):
         if indices and index_column not in indices:
             index += 1
@@ -47,7 +48,12 @@ def calculate_cardinality(feature_vector, indices=None):
         values = set()
         for rows in feature_vector:
             for row in rows:
-                value = row[index_column]
+                try:
+                    value = row[index_column]
+                except IndexError:
+                    raise IndexError('out of index, index=%d, len=%d, row=%s' % (
+                        index_column, len(row), row
+                    ))
                 if value != " ":
                     values.add(value)
 

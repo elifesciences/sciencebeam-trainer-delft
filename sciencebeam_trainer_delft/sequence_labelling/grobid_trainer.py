@@ -539,12 +539,17 @@ SUB_COMMANDS = [
 ]
 
 
-def parse_args(argv: List[str] = None):
+def get_subcommand_processor():
+    return SubCommandProcessor(SUB_COMMANDS, command_dest='action')
+
+
+def parse_args(argv: List[str] = None, subcommand_processor: SubCommandProcessor = None):
     parser = create_parser()
-    processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
+    if subcommand_processor is None:
+        subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
 
     add_model_positional_argument(parser)
-    processor.add_sub_command_parsers(parser)
+    subcommand_processor.add_sub_command_parsers(parser)
 
     args = parser.parse_args(argv)
     process_args(args)
@@ -641,9 +646,10 @@ def run(args):
 
 
 def main(argv: List[str] = None):
-    args = parse_args(argv)
+    subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
+    args = parse_args(argv, subcommand_processor=subcommand_processor)
     try:
-        run(args)
+        subcommand_processor.run(args)
     except BaseException as e:
         LOGGER.error('uncaught exception: %s', e, exc_info=1)
         raise

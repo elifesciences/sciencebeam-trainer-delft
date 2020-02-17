@@ -2,6 +2,7 @@
 import logging
 import argparse
 import time
+from abc import abstractmethod
 from typing import List, Tuple
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
@@ -266,7 +267,10 @@ def train_eval(
 
 
 def eval_model(
-        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+        model,
+        embeddings_name: str = None,
+        architecture: str = 'BidLSTM_CRF',
+        use_ELMo: bool = False,
         input_paths: List[str] = None,
         output_path: str = None,
         model_path: str = None,
@@ -523,19 +527,138 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
 
-class AllSubCommand(SubCommand):
+def save_input_to(input_paths: List[str], output_path: str):
+    assert len(input_paths) == 1, "exactly one input path expected (got: %s)" % input_paths
+    input_path = input_paths[0]
+    LOGGER.info('saving input (%s) to: %s', input_path, output_path)
+    copy_file(input_path, output_path)
+
+
+class GrobidTrainerSubCommand(SubCommand):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.download_manager = None
+        self.embedding_manager = None
+
+    @abstractmethod
+    def do_run(self, args: argparse.Namespace):
+        pass
+
+    def preload_and_validate_embedding(self, embedding_name: str) -> str:
+        embedding_name = self.embedding_manager.ensure_available(embedding_name)
+        LOGGER.info('embedding_name: %s', embedding_name)
+        self.embedding_manager.validate_embedding(embedding_name)
+        return embedding_name
+
+    def get_train_args(self, args: argparse.Namespace) -> dict:
+        return dict(
+            model=args.model,
+            architecture=args.architecture,
+            use_ELMo=args.use_ELMo,
+            input_paths=args.input,
+            output_path=args.output,
+            limit=args.limit,
+            shuffle_input=args.shuffle_input,
+            random_seed=args.random_seed,
+            log_dir=args.checkpoint,
+            batch_size=args.batch_size,
+            word_lstm_units=args.word_lstm_units,
+            max_sequence_length=args.max_sequence_length,
+            max_epoch=args.max_epoch,
+            use_features=args.use_features,
+            feature_indices=args.feature_indices,
+            feature_embedding_size=args.feature_embedding_size,
+            multiprocessing=args.multiprocessing,
+            embedding_manager=self.embedding_manager,
+            download_manager=self.download_manager
+        )
+
+    def run(self, args: argparse.Namespace):
+        if args.save_input_to_and_exit:
+            save_input_to(args.input, args.save_input_to_and_exit)
+            return
+
+        self.download_manager = DownloadManager()
+        self.embedding_manager = EmbeddingManager(
+            download_manager=self.download_manager
+        )
+        if args.no_use_lmdb:
+            self.embedding_manager.disable_embedding_lmdb_cache()
+
+        LOGGER.info('get_tf_info: %s', get_tf_info())
+
+        set_random_seeds(args.random_seed)
+
+        self.do_run(args)
+
+        # see https://github.com/tensorflow/tensorflow/issues/3388
+        K.clear_session()
+
+
+class TrainSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_all_non_positional_arguments(parser)
 
-    def run(self, args: argparse.Namespace):
-        run(args)
+    def do_run(self, args: argparse.Namespace):
+        embedding_name = self.preload_and_validate_embedding(
+            args.embedding
+        )
+        train(
+            embeddings_name=embedding_name,
+            **self.get_train_args(args)
+        )
+
+
+class TrainEvalSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_all_non_positional_arguments(parser)
+
+    def do_run(self, args: argparse.Namespace):
+        if args.fold_count < 1:
+            raise ValueError("fold-count should be equal or more than 1")
+        embedding_name = self.preload_and_validate_embedding(
+            args.embedding
+        )
+        train_eval(
+            fold_count=args.fold_count,
+            embeddings_name=embedding_name,
+            **self.get_train_args(args)
+        )
+
+
+class EvalSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_all_non_positional_arguments(parser)
+
+    def do_run(self, args: argparse.Namespace):
+        if not args.model_path:
+            raise ValueError('--model-path required')
+        eval_model(
+            model_path=args.model_path,
+            split_input=args.use_eval_train_test_split,
+            **self.get_train_args(args)
+        )
+
+
+class TagSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_all_non_positional_arguments(parser)
+
+    def do_run(self, args: argparse.Namespace):
+        if not args.model_path:
+            raise ValueError('--model-path required')
+        tag_input(
+            model_path=args.model_path,
+            tag_output_format=args.tag_output_format,
+            **self.get_train_args(args)
+        )
 
 
 SUB_COMMANDS = [
-    AllSubCommand(Tasks.TRAIN, 'Train'),
-    AllSubCommand(Tasks.TRAIN_EVAL, 'Train Eval'),
-    AllSubCommand(Tasks.EVAL, 'Eval'),
-    AllSubCommand(Tasks.TAG, 'Tag')
+    TrainSubCommand(Tasks.TRAIN, 'Train'),
+    TrainEvalSubCommand(Tasks.TRAIN_EVAL, 'Train Eval'),
+    EvalSubCommand(Tasks.EVAL, 'Eval'),
+    TagSubCommand(Tasks.TAG, 'Tag')
 ]
 
 
@@ -556,97 +679,14 @@ def parse_args(argv: List[str] = None, subcommand_processor: SubCommandProcessor
     return args
 
 
-def save_input_to(input_paths: List[str], output_path: str):
-    assert len(input_paths) == 1, "exactly one input path expected (got: %s)" % input_paths
-    input_path = input_paths[0]
-    LOGGER.info('saving input (%s) to: %s', input_path, output_path)
-    copy_file(input_path, output_path)
-
-
-def run(args):
-    model = args.model
-    action = args.action
-
-    if args.save_input_to_and_exit:
-        save_input_to(args.input, args.save_input_to_and_exit)
-        return
-
-    use_ELMo = args.use_ELMo
-    architecture = args.architecture
-
-    download_manager = DownloadManager()
-
-    embedding_manager = EmbeddingManager(download_manager=download_manager)
-    if args.no_use_lmdb:
-        embedding_manager.disable_embedding_lmdb_cache()
-    if action in {Tasks.TRAIN, Tasks.TRAIN_EVAL}:
-        embedding_name = embedding_manager.ensure_available(args.embedding)
-        LOGGER.info('embedding_name: %s', embedding_name)
-        embedding_manager.validate_embedding(embedding_name)
-    else:
-        embedding_name = embedding_manager.resolve_alias(args.embedding)
-
-    train_args = dict(
-        model=model,
-        embeddings_name=embedding_name,
-        embedding_manager=embedding_manager,
-        architecture=architecture, use_ELMo=use_ELMo,
-        input_paths=args.input,
-        output_path=args.output,
-        limit=args.limit,
-        shuffle_input=args.shuffle_input,
-        random_seed=args.random_seed,
-        log_dir=args.checkpoint,
-        batch_size=args.batch_size,
-        word_lstm_units=args.word_lstm_units,
-        max_sequence_length=args.max_sequence_length,
-        max_epoch=args.max_epoch,
-        use_features=args.use_features,
-        feature_indices=args.feature_indices,
-        feature_embedding_size=args.feature_embedding_size,
-        multiprocessing=args.multiprocessing,
-        download_manager=download_manager
-    )
-
-    LOGGER.info('get_tf_info: %s', get_tf_info())
-
-    set_random_seeds(args.random_seed)
-
-    if action == Tasks.TRAIN:
-        train(**train_args)
-
-    if action == Tasks.TRAIN_EVAL:
-        if args.fold_count < 1:
-            raise ValueError("fold-count should be equal or more than 1")
-        train_eval(
-            fold_count=args.fold_count,
-            **train_args
-        )
-
-    if action == Tasks.EVAL:
-        if not args.model_path:
-            raise ValueError('--model-path required')
-        eval_model(
-            model_path=args.model_path,
-            split_input=args.use_eval_train_test_split,
-            **train_args
-        )
-
-    if action == Tasks.TAG:
-        if not args.model_path:
-            raise ValueError('--model-path required')
-        tag_input(
-            model_path=args.model_path,
-            tag_output_format=args.tag_output_format,
-            **train_args
-        )
-
-    # see https://github.com/tensorflow/tensorflow/issues/3388
-    K.clear_session()
+def run(args: argparse.Namespace, subcommand_processor: SubCommandProcessor = None):
+    if subcommand_processor is None:
+        subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
+    subcommand_processor.run(args)
 
 
 def main(argv: List[str] = None):
-    subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
+    subcommand_processor = get_subcommand_processor()
     args = parse_args(argv, subcommand_processor=subcommand_processor)
     try:
         subcommand_processor.run(args)

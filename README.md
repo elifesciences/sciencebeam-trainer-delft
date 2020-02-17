@@ -55,7 +55,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
     --tag-output-format="xml" \
-    2> /tmp/tag.log
+    --quiet
 ```
 
 With the result:
@@ -80,7 +80,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="2" \
     --tag-output-format="xml_diff" \
-    2> /tmp/tag.log
+    --quiet
 ```
 
 With the result (the second document contains differences):
@@ -116,7 +116,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
     --tag-output-format="data" \
-    2> /tmp/tag.log \
+    --quiet \
     | head -5
 ```
 
@@ -140,7 +140,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
     --tag-output-format="text" \
-    2> /tmp/tag.log
+    --quiet
 ```
 
 With the result:

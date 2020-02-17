@@ -421,14 +421,6 @@ def add_common_arguments(parser: argparse.ArgumentParser):
         help="Shuffle the input before splitting"
     )
     input_group.add_argument(
-        "--use-eval-train-test-split",
-        action="store_true",
-        help=" ".join([
-            "If enabled, split the input when running 'eval'",
-            "(in the same way it is split for 'train_eval')"
-        ])
-    )
-    input_group.add_argument(
         "--limit",
         type=int,
         help=(
@@ -642,6 +634,14 @@ class EvalSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_model_path_argument(parser, required=True, help='directory to load the model from')
+        parser.add_argument(
+            "--use-eval-train-test-split",
+            action="store_true",
+            help=" ".join([
+                "If enabled, split the input when running 'eval'",
+                "(in the same way it is split for 'train_eval')"
+            ])
+        )
 
     def do_run(self, args: argparse.Namespace):
         if not args.model_path:

@@ -301,7 +301,7 @@ def eval_model(
 
     LOGGER.info('%d evaluation sequences', len(x_eval))
 
-    if output_path:
+    if output_path or model_path:
         model_name = model
     else:
         model_name = 'grobid-' + model

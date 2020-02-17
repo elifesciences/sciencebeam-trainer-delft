@@ -65,13 +65,18 @@ class SubCommand(ABC):
 
 
 class SubCommandProcessor:
-    def __init__(self, sub_commands: List[SubCommand], description: str = None):
+    def __init__(
+            self,
+            sub_commands: List[SubCommand],
+            description: str = None,
+            command_dest: str = 'command'):
         self.sub_commands = sub_commands
         self.sub_command_by_name = {
             sub_command.name: sub_command
             for sub_command in sub_commands
         }
         self.description = description
+        self.command_dest = command_dest
 
     def get_parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(
@@ -83,11 +88,13 @@ class SubCommandProcessor:
     def parse_args(self, argv: List[str] = None) -> argparse.Namespace:
         return self.get_parser().parse_args(argv)
 
-    def add_sub_command_parsers(self, parser: argparse.ArgumentParser):
+    def add_sub_command_parsers(
+            self,
+            parser: argparse.ArgumentParser):
         kwargs = {}
         if sys.version_info >= (3, 7):
             kwargs['required'] = True
-        subparsers = parser.add_subparsers(dest='command', **kwargs)
+        subparsers = parser.add_subparsers(dest=self.command_dest, **kwargs)
         subparsers.required = True
         self.add_sub_command_parsers_to_subparsers(subparsers)
 
@@ -100,7 +107,7 @@ class SubCommandProcessor:
             add_default_arguments(sub_parser)
 
     def run(self, args: argparse.Namespace):
-        sub_command = self.sub_command_by_name[args.command]
+        sub_command = self.sub_command_by_name[getattr(args, self.command_dest)]
         sub_command.run(args)
 
     def main(self, argv: List[str] = None):

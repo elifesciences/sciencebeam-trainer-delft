@@ -32,6 +32,11 @@ from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     format_tag_result
 )
 
+from sciencebeam_trainer_delft.utils.cli import (
+    SubCommand,
+    SubCommandProcessor
+)
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -518,12 +523,28 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
 
+class AllSubCommand(SubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_all_non_positional_arguments(parser)
+
+    def run(self, args: argparse.Namespace):
+        run(args)
+
+
+SUB_COMMANDS = [
+    AllSubCommand(Tasks.TRAIN, 'Train'),
+    AllSubCommand(Tasks.TRAIN_EVAL, 'Train Eval'),
+    AllSubCommand(Tasks.EVAL, 'Eval'),
+    AllSubCommand(Tasks.TAG, 'Tag')
+]
+
+
 def parse_args(argv: List[str] = None):
     parser = create_parser()
+    processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
 
     add_model_positional_argument(parser)
-    parser.add_argument("action", choices=ALL_TASKS)
-    add_all_non_positional_arguments(parser)
+    processor.add_sub_command_parsers(parser)
 
     args = parser.parse_args(argv)
     process_args(args)

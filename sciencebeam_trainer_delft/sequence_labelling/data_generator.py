@@ -100,14 +100,14 @@ class DataGenerator(keras.utils.Sequence):
             x_tokenized = []
             for i in range(0, max_iter):
                 tokens = tokenizeAndFilterSimple(sub_x[i])
-                if len(tokens) > max_length_x:
-                    max_length_x = len(tokens)
                 x_tokenized.append(tokens)
         else:
-            for tokens in sub_x:
-                if len(tokens) > max_length_x:
-                    max_length_x = len(tokens)
             x_tokenized = sub_x
+
+        for tokens in x_tokenized:
+            if len(tokens) > max_length_x:
+                max_length_x = len(tokens)
+
         if self.max_sequence_length and max_length_x > self.max_sequence_length:
             max_length_x = self.max_sequence_length
             # truncation of sequence at max_sequence_length

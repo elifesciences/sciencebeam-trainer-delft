@@ -608,8 +608,8 @@ def run(args):
 
 
 def main(argv: List[str] = None):
+    args = parse_args(argv)
     try:
-        args = parse_args(argv)
         run(args)
     except BaseException as e:
         LOGGER.error('uncaught exception: %s', e, exc_info=1)

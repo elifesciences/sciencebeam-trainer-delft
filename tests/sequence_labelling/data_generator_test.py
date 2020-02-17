@@ -292,11 +292,12 @@ class TestDataGenerator:
         )[0]
         LOGGER.debug('batch: %s', batch)
         assert len(batch) == 2
-        inputs, _ = batch
+        inputs, batch_y = batch
         batch_x = inputs[0]
         batch_features = inputs[2]
         assert get_lengths(batch_x) == [len(SHORT_SENTENCE_TOKENS)] * batch_size
         assert get_lengths(batch_features) == [len(SHORT_SENTENCE_TOKENS)] * batch_size
+        assert get_lengths(batch_y) == [len(SHORT_SENTENCE_TOKENS)] * batch_size
 
     def test_should_truncate_using_max_sequence_length_if_already_tokenized(
             self, preprocessor, embeddings):
@@ -328,11 +329,12 @@ class TestDataGenerator:
         )[0]
         LOGGER.debug('batch: %s', batch)
         assert len(batch) == 2
-        inputs, _ = batch
+        inputs, batch_y = batch
         batch_x = inputs[0]
         batch_features = inputs[2]
         assert get_lengths(batch_x) == [len(SHORT_SENTENCE_TOKENS)] * batch_size
         assert get_lengths(batch_features) == [len(SHORT_SENTENCE_TOKENS)] * batch_size
+        assert get_lengths(batch_y) == [len(SHORT_SENTENCE_TOKENS)] * batch_size
 
     def test_should_not_fail_on_shuffle_dataset(self, preprocessor, embeddings):
         data_generator = DataGenerator(

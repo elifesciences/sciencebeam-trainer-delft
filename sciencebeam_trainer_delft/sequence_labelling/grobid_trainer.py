@@ -193,6 +193,8 @@ def train_eval(
         limit: int = None,
         shuffle_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
+        eval_input_paths: List[str] = None,
+        eval_limit: int = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
@@ -204,9 +206,19 @@ def train_eval(
         download_manager=download_manager
     )
 
-    x_train_all, x_eval, y_train_all, y_eval, features_train_all, features_eval = train_test_split(
-        x_all, y_all, features_all, test_size=0.1
-    )
+    if eval_input_paths:
+        x_eval, y_eval, features_eval = load_data_and_labels(
+            model=model,
+            input_paths=eval_input_paths, limit=eval_limit,
+            download_manager=download_manager
+        )
+        x_train_all, y_train_all, features_train_all = (
+            x_all, y_all, features_all
+        )
+    else:
+        x_train_all, x_eval, y_train_all, y_eval, features_train_all, features_eval = (
+            train_test_split(x_all, y_all, features_all, test_size=0.1)
+        )
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
         x_train_all, y_train_all, features_train_all, test_size=0.1
     )
@@ -649,8 +661,25 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_train_arguments(parser)
-        parser.add_argument("--fold-count", type=int, default=1)
         add_model_path_argument(parser, help='directory to the saved model')
+        parser.add_argument("--fold-count", type=int, default=1)
+        parser.add_argument(
+            "--eval-input",
+            nargs='+',
+            action='append',
+            help=' '.join([
+                "Evaluation data at the end of training. If not specified,",
+                "it will use a slice of the training data"
+            ])
+        )
+        parser.add_argument(
+            "--eval-limit",
+            type=int,
+            help=' '.join([
+                "Limit the number of documents to use for evaluation.",
+                "This is mostly for testing to make evaluation faster."
+            ])
+        )
 
     def do_run(self, args: argparse.Namespace):
         if not args.model:

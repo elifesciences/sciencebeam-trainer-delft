@@ -20,7 +20,8 @@ def get_callbacks(
         model_saver: ModelSaver,
         log_dir: str = None,
         valid: tuple = (),
-        early_stopping: bool = True):
+        early_stopping: bool = True,
+        early_stopping_patience: int = 5):
     """
     Get callbacks.
 
@@ -48,7 +49,11 @@ def get_callbacks(
         callbacks.append(save_callback)
 
     if early_stopping:
-        callbacks.append(EarlyStopping(monitor='f1', patience=5, mode='max'))
+        callbacks.append(EarlyStopping(
+            monitor='f1',
+            patience=early_stopping_patience,
+            mode='max'
+        ))
 
     return callbacks
 
@@ -118,6 +123,7 @@ class Trainer(_Trainer):
                 model_saver=self.model_saver,
                 log_dir=self.checkpoint_path,
                 early_stopping=True,
+                early_stopping_patience=self.training_config.patience,
                 valid=(validation_generator, self.preprocessor)
             )
         else:

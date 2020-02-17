@@ -100,10 +100,27 @@ def _load_data_and_labels_crf_files(
     return np.concatenate(x_list), np.concatenate(y_list), np.concatenate(features_list)
 
 
+def get_clean_features_mask(features_all: np.array) -> List[bool]:
+    feature_lengths = Counter((
+        len(features_vector)
+        for features_doc in features_all
+        for features_vector in features_doc
+    ))
+    if len(feature_lengths) <= 1:
+        return [True] * len(features_all)
+    expected_feature_length = next(feature_lengths.keys().__iter__())
+    LOGGER.info('cleaning features, expected_feature_length=%s', expected_feature_length)
+    return [
+        all(len(features_vector) == expected_feature_length for features_vector in features_doc)
+        for features_doc in features_all
+    ]
+
+
 def load_data_and_labels(
         model: str, input_paths: List[str] = None,
         limit: int = None,
         shuffle_input: bool = False,
+        clean_features: bool = True,
         random_seed: int = DEFAULT_RANDOM_SEED,
         download_manager: DownloadManager = None):
     assert download_manager
@@ -121,6 +138,18 @@ def load_data_and_labels(
     if shuffle_input:
         shuffle_arrays([x_all, y_all, f_all], random_seed=random_seed)
     log_data_info(x_all, y_all, f_all)
+    if clean_features:
+        clean_features_mask = get_clean_features_mask(f_all)
+        if sum(clean_features_mask) != len(clean_features_mask):
+            LOGGER.info(
+                'ignoring %d documents with inconsistent features',
+                len(clean_features_mask) - sum(clean_features_mask)
+            )
+            x_all, y_all, f_all = (
+                x_all[clean_features_mask],
+                y_all[clean_features_mask],
+                f_all[clean_features_mask]
+            )
     return x_all, y_all, f_all
 
 
@@ -428,7 +457,8 @@ def print_input_info(
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit,
-        download_manager=download_manager
+        download_manager=download_manager,
+        clean_features=False
     )
 
     seq_lengths = np.array([len(seq) for seq in x_all])

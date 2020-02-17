@@ -156,22 +156,44 @@ test: \
 	test-setup-install
 
 
-.grobid-train-header-args:
+.grobid-common-args:
+	$(eval _GROBID_COMMON_ARGS = \
+		--batch-size="$(BATCH_SIZE)" \
+		--max-sequence-length="$(MAX_SEQUENCE_LENGTH)" \
+		--input=$(INPUT_PATHS) \
+		--limit="$(LIMIT)" \
+	)
+
+.grobid-train-header-args: .grobid-common-args
 	$(eval _GROBID_TRAIN_ARGS = \
 		header $(GROBID_TRAIN_ACTION) \
-		--batch-size="$(BATCH_SIZE)" \
+		$(_GROBID_COMMON_ARGS) \
 		--word-lstm-units="$(WORD_LSTM_UNITS)" \
-		--max-sequence-length="$(MAX_SEQUENCE_LENGTH)" \
 		--embedding="$(EMBEDDING)" \
 		--architecture="$(ARCHITECTURE)" \
 		--feature-indices="$(FEATURE_INDICES)" \
 		--feature-embedding-size="$(FEATURE_EMBEDDING_SIZE)" \
 		--max-epoch="$(MAX_EPOCH)" \
-		--input=$(INPUT_PATHS) \
 		--model-path="$(MODEL_PATH)" \
 		--output="$(MODEL_OUTPUT)" \
-		--limit="$(LIMIT)" \
 		--checkpoint="$(CHECKPOINT_OUTPUT)" \
+		$(ARGS) \
+	)
+
+.grobid-eval-header-args: .grobid-common-args
+	$(eval _GROBID_EVAL_ARGS = \
+		header eval \
+		$(_GROBID_COMMON_ARGS) \
+		--model-path="$(MODEL_PATH)" \
+		$(ARGS) \
+	)
+
+
+.grobid-tag-header-args: .grobid-common-args
+	$(eval _GROBID_TAG_ARGS = \
+		header tag \
+		$(_GROBID_COMMON_ARGS) \
+		--model-path="$(MODEL_PATH)" \
 		$(ARGS) \
 	)
 
@@ -181,12 +203,18 @@ grobid-train-header: .grobid-train-header-args
 		$(_GROBID_TRAIN_ARGS)
 
 
-grobid-eval-header:
-	$(MAKE) GROBID_TRAIN_ACTION=eval grobid-train-header
+grobid-train-eval-header: .grobid-train-header-args
+	$(MAKE) GROBID_TRAIN_ACTION=train_eval grobid-train-header
 
 
-grobid-tag-header:
-	$(MAKE) GROBID_TRAIN_ACTION=tag grobid-train-header
+grobid-eval-header: .grobid-eval-header-args
+	$(RUN_PYTHON) -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+		$(_GROBID_EVAL_ARGS)
+
+
+grobid-tag-header: .grobid-tag-header-args
+	$(RUN_PYTHON) -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+		$(_GROBID_TAG_ARGS)
 
 
 gcloud-ai-platform-local-grobid-train-header: .grobid-train-header-args

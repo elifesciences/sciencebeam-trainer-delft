@@ -456,6 +456,8 @@ def add_common_arguments(parser: argparse.ArgumentParser):
         help="Do not use LMDB embedding cache (load embeddings into memory instead)"
     )
 
+    parser.add_argument("--model-path", help="directory to the saved or loaded model")
+
     parser.add_argument("--multiprocessing", action="store_true", help="Use multiprocessing")
 
     parser.add_argument(
@@ -491,8 +493,6 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     output_group.add_argument("--output", help="directory where to save a trained model")
     output_group.add_argument("--checkpoint", help="directory where to save a checkpoint model")
 
-    parser.add_argument("--model-path", help="directory to the saved or loaded model")
-
     parser.add_argument(
         "--embedding", default="glove-6B-50d",
         help="name of word embedding"
@@ -507,14 +507,9 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     )
 
 
-def add_eval_arguments(parser: argparse.ArgumentParser):
-    parser.add_argument("--fold-count", type=int, default=1)
-
-
 def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
     add_common_arguments(parser)
     add_train_arguments(parser)
-    add_eval_arguments(parser)
 
 
 def add_model_positional_argument(parser: argparse.ArgumentParser):
@@ -555,27 +550,32 @@ class GrobidTrainerSubCommand(SubCommand):
         self.embedding_manager.validate_embedding(embedding_name)
         return embedding_name
 
-    def get_train_args(self, args: argparse.Namespace) -> dict:
+    def get_common_args(self, args: argparse.Namespace) -> dict:
         return dict(
             model=args.model,
-            architecture=args.architecture,
-            use_ELMo=args.use_ELMo,
             input_paths=args.input,
-            output_path=args.output,
             limit=args.limit,
             shuffle_input=args.shuffle_input,
             random_seed=args.random_seed,
-            log_dir=args.checkpoint,
             batch_size=args.batch_size,
-            word_lstm_units=args.word_lstm_units,
             max_sequence_length=args.max_sequence_length,
+            multiprocessing=args.multiprocessing,
+            embedding_manager=self.embedding_manager,
+            download_manager=self.download_manager
+        )
+
+    def get_train_args(self, args: argparse.Namespace) -> dict:
+        return dict(
+            architecture=args.architecture,
+            use_ELMo=args.use_ELMo,
+            output_path=args.output,
+            log_dir=args.checkpoint,
+            word_lstm_units=args.word_lstm_units,
             max_epoch=args.max_epoch,
             use_features=args.use_features,
             feature_indices=args.feature_indices,
             feature_embedding_size=args.feature_embedding_size,
-            multiprocessing=args.multiprocessing,
-            embedding_manager=self.embedding_manager,
-            download_manager=self.download_manager
+            **self.get_common_args(args)
         )
 
     def run(self, args: argparse.Namespace):
@@ -602,7 +602,8 @@ class GrobidTrainerSubCommand(SubCommand):
 
 class TrainSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
-        add_all_non_positional_arguments(parser)
+        add_common_arguments(parser)
+        add_train_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         embedding_name = self.preload_and_validate_embedding(
@@ -616,7 +617,9 @@ class TrainSubCommand(GrobidTrainerSubCommand):
 
 class TrainEvalSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
-        add_all_non_positional_arguments(parser)
+        add_common_arguments(parser)
+        add_train_arguments(parser)
+        parser.add_argument("--fold-count", type=int, default=1)
 
     def do_run(self, args: argparse.Namespace):
         if args.fold_count < 1:
@@ -633,7 +636,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
 
 class EvalSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
-        add_all_non_positional_arguments(parser)
+        add_common_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         if not args.model_path:
@@ -641,13 +644,13 @@ class EvalSubCommand(GrobidTrainerSubCommand):
         eval_model(
             model_path=args.model_path,
             split_input=args.use_eval_train_test_split,
-            **self.get_train_args(args)
+            **self.get_common_args(args)
         )
 
 
 class TagSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
-        add_all_non_positional_arguments(parser)
+        add_common_arguments(parser)
         parser.add_argument(
             "--tag-output-format",
             default=DEFAULT_TAG_OUTPUT_FORMAT,
@@ -661,7 +664,7 @@ class TagSubCommand(GrobidTrainerSubCommand):
         tag_input(
             model_path=args.model_path,
             tag_output_format=args.tag_output_format,
-            **self.get_train_args(args)
+            **self.get_common_args(args)
         )
 
 

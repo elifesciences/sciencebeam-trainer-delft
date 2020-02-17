@@ -301,7 +301,7 @@ def eval_model(
 
     LOGGER.info('%d evaluation sequences', len(x_eval))
 
-    if output_path:
+    if output_path or model_path:
         model_name = model
     else:
         model_name = 'grobid-' + model
@@ -527,6 +527,10 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--max-epoch", type=int, default=10,
         help="max epoch to train to"
     )
+    parser.add_argument(
+        "--early-stopping-patience", type=int, default=10,
+        help="how many epochs to continue training after the f1 score hasn't improved"
+    )
 
 
 def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
@@ -597,6 +601,7 @@ class GrobidTrainerSubCommand(SubCommand):
             use_features=args.use_features,
             feature_indices=args.feature_indices,
             feature_embedding_size=args.feature_embedding_size,
+            patience=args.early_stopping_patience,
             **self.get_common_args(args)
         )
 

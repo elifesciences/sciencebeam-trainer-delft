@@ -35,7 +35,51 @@ docker run --rm elifesciences/sciencebeam-trainer-delft_unstable \
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer --help
 ```
 
-### Tag Command
+### Train Sub Command
+
+Training a model comes with many parameters. The following is an example to run the training without recommending parameters.
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+### Train Eval Sub Command
+
+The `train_eval` sub command is combining the `train` and `eval` command. It is reserving a slice of the input for the evaluation.
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+### Eval Sub Command
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    eval \
+    --batch-size="10" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
+    --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
+    --limit="10" \
+    --quiet
+```
+
+### Tag Sub Command
 
 The `tag` sub command supports multiple output formats:
 
@@ -149,7 +193,7 @@ With the result:
 Markov Chain Algorithms for Planar Lattice Structures Michael Luby y Dana Randall z Alistair Sinclair Abstract Consider the following Markov chain , whose states are all domino tilings of a 2n 񮽙 2n chessboard : starting from some arbitrary tiling , pick a 2 񮽙 2 window uniformly at random . If the four squares appearing in this window are covered by two parallel dominoes , rotate the dominoes in place . Repeat many times . This process is used in practice to generate a tiling , and is a tool in the study of the combinatorics of tilings and the behavior of dimer systems in statistical physics . Analogous Markov chains are used to randomly generate other structures on various two - dimensional lattices . This paper presents techniques which prove for the 񮽙rst time that , in many interesting cases , a small number of random moves suuce to obtain a uniform distribution .
 ```
 
-### Input Info
+### Input Info Sub Command
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \

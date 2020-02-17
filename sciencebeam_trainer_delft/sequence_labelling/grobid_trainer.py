@@ -3,6 +3,7 @@ import logging
 import argparse
 import time
 from abc import abstractmethod
+from collections import Counter
 from typing import List, Tuple
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
@@ -54,9 +55,8 @@ class Tasks:
     TRAIN_EVAL = 'train_eval'
     EVAL = 'eval'
     TAG = 'tag'
+    INPUT_INFO = 'input_info'
 
-
-ALL_TASKS = [Tasks.TRAIN, Tasks.TRAIN_EVAL, Tasks.EVAL, Tasks.TAG]
 
 DEFAULT_RANDOM_SEED = 42
 
@@ -408,6 +408,31 @@ def tag_input(
     print(formatted_tag_result)
 
 
+def print_input_info(
+        model: str,
+        input_paths: List[str],
+        limit: int = None,
+        download_manager: DownloadManager = None):
+    x_all, y_all, features_all = load_data_and_labels(
+        model=model, input_paths=input_paths, limit=limit,
+        download_manager=download_manager
+    )
+
+    seq_lengths = np.array([len(seq) for seq in x_all])
+    y_counts = Counter(
+        y_row
+        for y_doc in y_all
+        for y_row in y_doc
+    )
+
+    print('number of input sequences: %d' % len(x_all))
+    print('sequence lengths: min=%d, max=%d, median=%.1f' % (
+        np.min(seq_lengths), np.max(seq_lengths), np.median(seq_lengths)
+    ))
+    print('number of features: %d' % len(features_all[0][0]))
+    print('labels: %s' % y_counts)
+
+
 def add_common_arguments(parser: argparse.ArgumentParser):
     input_group = parser.add_argument_group('input')
     input_group.add_argument(
@@ -647,8 +672,6 @@ class EvalSubCommand(GrobidTrainerSubCommand):
         )
 
     def do_run(self, args: argparse.Namespace):
-        if not args.model_path:
-            raise ValueError('--model-path required')
         eval_model(
             model_path=args.model_path,
             split_input=args.use_eval_train_test_split,
@@ -668,8 +691,6 @@ class TagSubCommand(GrobidTrainerSubCommand):
         )
 
     def do_run(self, args: argparse.Namespace):
-        if not args.model_path:
-            raise ValueError('--model-path required')
         tag_input(
             model_path=args.model_path,
             tag_output_format=args.tag_output_format,
@@ -677,11 +698,40 @@ class TagSubCommand(GrobidTrainerSubCommand):
         )
 
 
+class InputInfoSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+
+    def do_run(self, args: argparse.Namespace):
+        print_input_info(
+            model=args.model,
+            input_paths=args.input,
+            limit=args.limit,
+            download_manager=self.download_manager
+        )
+
+
 SUB_COMMANDS = [
-    TrainSubCommand(Tasks.TRAIN, 'Train'),
-    TrainEvalSubCommand(Tasks.TRAIN_EVAL, 'Train Eval'),
-    EvalSubCommand(Tasks.EVAL, 'Eval'),
-    TagSubCommand(Tasks.TAG, 'Tag')
+    TrainSubCommand(
+        Tasks.TRAIN,
+        'Train the model using the provided input(s)'
+    ),
+    TrainEvalSubCommand(
+        Tasks.TRAIN_EVAL,
+        'Train and reserve a slice of the input data for evaluation'
+    ),
+    EvalSubCommand(
+        Tasks.EVAL,
+        'Evaluate the already trained model on the provided input(s)'
+    ),
+    TagSubCommand(
+        Tasks.TAG,
+        'Tag inputs and show results. Optionally also show a diff to the expected labels'
+    ),
+    InputInfoSubCommand(
+        Tasks.INPUT_INFO,
+        'Display input summary information relating to the passed in input(s)'
+    )
 ]
 
 

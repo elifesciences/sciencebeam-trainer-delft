@@ -4,6 +4,7 @@ import argparse
 import time
 from abc import abstractmethod
 from collections import Counter
+from itertools import islice
 from typing import List, Tuple
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
@@ -99,10 +100,27 @@ def _load_data_and_labels_crf_files(
     return np.concatenate(x_list), np.concatenate(y_list), np.concatenate(features_list)
 
 
+def get_clean_features_mask(features_all: np.array) -> List[bool]:
+    feature_lengths = Counter((
+        len(features_vector)
+        for features_doc in features_all
+        for features_vector in features_doc
+    ))
+    if len(feature_lengths) <= 1:
+        return [True] * len(features_all)
+    expected_feature_length = next(feature_lengths.keys().__iter__())
+    LOGGER.info('cleaning features, expected_feature_length=%s', expected_feature_length)
+    return [
+        all(len(features_vector) == expected_feature_length for features_vector in features_doc)
+        for features_doc in features_all
+    ]
+
+
 def load_data_and_labels(
         model: str, input_paths: List[str] = None,
         limit: int = None,
         shuffle_input: bool = False,
+        clean_features: bool = True,
         random_seed: int = DEFAULT_RANDOM_SEED,
         download_manager: DownloadManager = None):
     assert download_manager
@@ -120,6 +138,18 @@ def load_data_and_labels(
     if shuffle_input:
         shuffle_arrays([x_all, y_all, f_all], random_seed=random_seed)
     log_data_info(x_all, y_all, f_all)
+    if clean_features:
+        clean_features_mask = get_clean_features_mask(f_all)
+        if sum(clean_features_mask) != len(clean_features_mask):
+            LOGGER.info(
+                'ignoring %d documents with inconsistent features',
+                len(clean_features_mask) - sum(clean_features_mask)
+            )
+            x_all, y_all, f_all = (
+                x_all[clean_features_mask],
+                y_all[clean_features_mask],
+                f_all[clean_features_mask]
+            )
     return x_all, y_all, f_all
 
 
@@ -427,7 +457,8 @@ def print_input_info(
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit,
-        download_manager=download_manager
+        download_manager=download_manager,
+        clean_features=False
     )
 
     seq_lengths = np.array([len(seq) for seq in x_all])
@@ -436,12 +467,29 @@ def print_input_info(
         for y_doc in y_all
         for y_row in y_doc
     )
+    flat_features = [
+        features_vector
+        for features_doc in features_all
+        for features_vector in features_doc
+    ]
+    feature_lengths = Counter(map(len, flat_features))
 
     print('number of input sequences: %d' % len(x_all))
     print('sequence lengths: min=%d, max=%d, median=%.1f' % (
         np.min(seq_lengths), np.max(seq_lengths), np.median(seq_lengths)
     ))
     print('number of features: %d' % len(features_all[0][0]))
+    if len(feature_lengths) > 1:
+        print('inconsistent feature lengths: %s' % feature_lengths)
+        for feature_length in feature_lengths:
+            print('examples with feature length=%d:\n%s' % (
+                feature_length,
+                '\n'.join(islice((
+                    ' '.join(features_vector)
+                    for features_vector in flat_features
+                    if len(features_vector) == feature_length
+                ), 3))
+            ))
     print('labels: %s' % y_counts)
 
 
@@ -512,15 +560,25 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         help="type of model architecture to be used"
     )
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
-    parser.add_argument("--use-features", action="store_true", help="Use features")
-    parser.add_argument(
+
+    features_group = parser.add_argument_group('features')
+    features_group.add_argument("--use-features", action="store_true", help="Use features")
+    features_group.add_argument(
         "--feature-indices",
         type=parse_number_ranges,
         help="The feature indices to use. e.g. 7-10. If blank, all of the features will be used."
     )
-    parser.add_argument(
+    features_group.add_argument(
         "--feature-embedding-size", type=int,
         help="size of feature embedding, use 0 to disable embedding"
+    )
+    features_group.add_argument(
+        "--use-features-indices-input", action="store_true",
+        help="Use features indices values (should be inferred from the model)"
+    )
+    features_group.add_argument(
+        "--features-lstm-units", type=int,
+        help="Number of LSTM units used by the features"
     )
 
     output_group = parser.add_argument_group('output')
@@ -614,6 +672,10 @@ class GrobidTrainerSubCommand(SubCommand):
             feature_indices=args.feature_indices,
             feature_embedding_size=args.feature_embedding_size,
             patience=args.early_stopping_patience,
+            config_props=dict(
+                use_features_indices_input=args.use_features_indices_input,
+                features_lstm_units=args.features_lstm_units
+            ),
             **self.get_common_args(args)
         )
 

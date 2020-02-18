@@ -1,6 +1,6 @@
 import logging
 from functools import partial
-from typing import List, Iterable, Set
+from typing import List, Iterable, Set, Union
 
 import numpy as np
 
@@ -11,6 +11,10 @@ from sklearn.preprocessing import FunctionTransformer
 
 from delft.sequenceLabelling.preprocess import PAD
 from delft.sequenceLabelling.preprocess import WordPreprocessor as _WordPreprocessor
+
+from sciencebeam_trainer_delft.sequence_labelling.features_preprocess import (
+    FeaturesPreprocessor as FeaturesIndicesInputPreprocessor
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -80,6 +84,8 @@ class WordPreprocessor(_WordPreprocessor):
 
 class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
     def __init__(self, feature_indices: Iterable[int] = None):
+        self.features_indices = feature_indices
+        self.features_map_to_index = None
         feature_indices_set = None
         if feature_indices:
             feature_indices_set = set(feature_indices)
@@ -107,13 +113,16 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
         ])
 
 
+T_FeaturesPreprocessor = Union[FeaturesPreprocessor, FeaturesIndicesInputPreprocessor]
+
+
 class Preprocessor(WordPreprocessor):
-    def __init__(self, *args, feature_preprocessor: FeaturesPreprocessor = None, **kwargs):
+    def __init__(self, *args, feature_preprocessor: T_FeaturesPreprocessor = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.feature_preprocessor = feature_preprocessor
 
     def fit_features(self, features_batch):
         return self.feature_preprocessor.fit(features_batch)
 
-    def transform_features(self, features_batch):
-        return self.feature_preprocessor.transform(features_batch)
+    def transform_features(self, features_batch, **kwargs):
+        return self.feature_preprocessor.transform(features_batch, **kwargs)

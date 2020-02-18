@@ -38,6 +38,7 @@ class ModelSaver(_BaseModelSaverLoader):
         LOGGER.info('preprocessor saved to %s', filepath)
 
     def _save_model_config(self, model_config: ModelConfig, filepath: str):
+        LOGGER.debug('model_config: %s', model_config)
         with open_file(filepath, 'w') as fp:
             model_config.save(fp)
         LOGGER.info('model config file saved to %s', filepath)

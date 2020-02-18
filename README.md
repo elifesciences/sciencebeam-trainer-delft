@@ -227,6 +227,54 @@ number of features: 31
 labels: Counter({'I-<abstract>': 269983, 'I-<intro>': 96944, 'I-<note>': 26033, 'I-<author>': 25830, 'I-<title>': 24481, 'I-<affiliation>': 23886, 'I-<address>': 13963, 'I-<reference>': 10121, 'I-<keyword>': 7804, 'I-<email>': 7796, 'I-<copyright>': 5152, 'I-<grant>': 4509, 'I-<pubnum>': 3755, 'I-<submission>': 3729, 'I-<web>': 3162, 'B-<affiliation>': 2782, 'B-<title>': 2363, 'B-<address>': 2330, 'B-<author>': 2241, 'I-<date>': 2204, 'B-<note>': 1823, 'B-<abstract>': 1528, 'I-<degree>': 1355, 'B-<email>': 891, 'I-<phone>': 710, 'B-<date>': 658, 'B-<intro>': 439, 'B-<keyword>': 424, 'I-<entitle>': 421, 'B-<pubnum>': 421, 'B-<reference>': 414, 'B-<submission>': 409, 'B-<copyright>': 281, 'I-<dedication>': 243, 'B-<web>': 187, 'I-<date-submission>': 166, 'B-<grant>': 105, 'B-<phone>': 71, 'B-<degree>': 59, 'B-<date-submission>': 29, 'B-<entitle>': 24, 'B-<dedication>': 22})
 ```
 
+## Training in Google's AI Platform
+
+You can train a model using Google's [AI Platform](https://cloud.google.com/ai-platform/). e.g.
+
+```bash
+gcloud beta ai-platform jobs submit training \
+    --job-dir "gs://your-job-bucket/path" \
+    --scale-tier=custom \
+    --master-machine-type=n1-highmem-8 \
+    --master-accelerator=count=1,type=NVIDIA_TESLA_K80 \
+    --region=europe-west1 \
+    --stream-logs \
+    --module-name sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    --package-path sciencebeam_trainer_delft \
+    -- \
+    header train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="500" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="10000" \
+    --early-stopping-patience="10" \
+    --max-epoch="50"
+```
+
+Or using the project's wrapper script which provides some default values:
+
+```bash
+./gcloud-ai-platform-submit.sh \
+    --job-prefix "my_job_prefix" \
+    --job-dir "gs://your-job-bucket/path" \
+    --scale-tier=custom \
+    --master-machine-type=n1-highmem-8 \
+    --master-accelerator=count=1,type=NVIDIA_TESLA_K80 \
+    --region=europe-west1 \
+    -- \
+    header train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="500" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="10000" \
+    --early-stopping-patience="10" \
+    --max-epoch="50"
+```
+
+(Alternatively you can train for free using Google Colab, see Example Notebooks above)
+
 ## Checkpoints CLI
 
 The checkpoints CLI tool is there to give you a summary of the saved checkpoints. Checkpoints are optionally saved during training, they allow you to resume model training or further evaluate performance at the individual checkpoints. Usually training will stop after the f1 score hasn't improved for a number of epochs. The last checkpoint may not be the best.

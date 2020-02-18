@@ -93,6 +93,7 @@ class Sequence(_Sequence):
                 download_manager=DownloadManager()
             )
         self.embedding_manager = embedding_manager
+        self.max_sequence_length = kwargs.get('max_sequence_length')
         super().__init__(*args, **kwargs)
         LOGGER.debug('use_features=%s', use_features)
         self.model_config = ModelConfig(
@@ -316,6 +317,7 @@ class Sequence(_Sequence):
             raise ValueError('features required')
         tagger = Tagger(
             self.model, self.model_config, self.embeddings,
+            max_sequence_length=self.max_sequence_length,
             preprocessor=self.p
         )
         start_time = time.time()

@@ -388,7 +388,7 @@ def tag_input(
         limit: int = None,
         shuffle_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
-        max_sequence_length: int = 100,
+        max_sequence_length: int = None,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
@@ -493,7 +493,9 @@ def print_input_info(
     print('labels: %s' % y_counts)
 
 
-def add_common_arguments(parser: argparse.ArgumentParser):
+def add_common_arguments(
+        parser: argparse.ArgumentParser,
+        max_sequence_length_default: int = None):
     input_group = parser.add_argument_group('input')
     input_group.add_argument(
         "--input",
@@ -526,7 +528,8 @@ def add_common_arguments(parser: argparse.ArgumentParser):
         help="batch size"
     )
     parser.add_argument(
-        "--max-sequence-length", type=int, default=500,
+        "--max-sequence-length", type=int,
+        default=max_sequence_length_default,
         help="maximum sequence length"
     )
     parser.add_argument(
@@ -781,7 +784,7 @@ class EvalSubCommand(GrobidTrainerSubCommand):
 
 class TagSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
-        add_common_arguments(parser)
+        add_common_arguments(parser, max_sequence_length_default=None)
         add_model_path_argument(parser, required=True, help='directory to load the model from')
         parser.add_argument(
             "--tag-output-format",

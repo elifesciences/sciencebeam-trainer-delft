@@ -13,11 +13,13 @@ class Tagger:
             model,
             model_config,
             embeddings=None,
-            preprocessor=None):
+            preprocessor=None,
+            max_sequence_length: int = None):
         self.model = model
         self.preprocessor = preprocessor
         self.model_config = model_config
         self.embeddings = embeddings
+        self.max_sequence_length = max_sequence_length
 
     def tag(self, texts, output_format, features=None):
         assert isinstance(texts, list)
@@ -41,7 +43,7 @@ class Tagger:
             batch_size=self.model_config.batch_size,
             preprocessor=self.preprocessor,
             char_embed_size=self.model_config.char_embedding_size,
-            max_sequence_length=self.model_config.max_sequence_length,
+            max_sequence_length=self.max_sequence_length,
             embeddings=self.embeddings, tokenize=tokeniz, shuffle=False,
             features=features
         )

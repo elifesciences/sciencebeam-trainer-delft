@@ -3,7 +3,8 @@ import pytest
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.models import (
     CustomBidLSTM_CRF,
-    BidLSTM_CRF_FEATURES
+    BidLSTM_CRF_FEATURES,
+    updated_implicit_model_config_props
 )
 
 
@@ -21,6 +22,16 @@ def _model_config():
     config.num_word_lstm_units = 5
     config.num_char_lstm_units = 6
     return config
+
+
+class TestUpdatedImplicitModelConfigProps:
+    def test_should_set_props_for_BidLSTM_CRF_FEATURES(self, model_config: ModelConfig):
+        model_config.model_type = BidLSTM_CRF_FEATURES.name
+        model_config.use_features = False
+        model_config.use_features_indices_input = False
+        updated_implicit_model_config_props(model_config)
+        assert model_config.use_features
+        assert model_config.use_features_indices_input
 
 
 @pytest.mark.slow

@@ -306,16 +306,13 @@ class TestGrobidTrainer:
                 'architecture': 'BidLSTM_CRF_FEATURES',
                 'feature_embedding_size': 4,
                 'config_props': {
-                    'use_features_indices_input': True,
-                    'features_lstm_units': 10
+                    'features_lstm_units': 4
                 }
             }
             train(
-                use_features=True,
                 **train_args
             )
             tag_input(
-                use_features=True,
                 model_path=default_model_directory,
                 **train_args
             )

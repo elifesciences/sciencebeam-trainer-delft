@@ -214,12 +214,27 @@ DEFAULT_MODEL_NAMES = [
 
 MODEL_MAP = {
     'CustomBidLSTM_CRF': CustomBidLSTM_CRF,
-    'BidLSTM_CRF_FEATURES': BidLSTM_CRF_FEATURES
+    BidLSTM_CRF_FEATURES.name: BidLSTM_CRF_FEATURES
+}
+
+IMPLICIT_MODEL_CONFIG_PROPS_MAP = {
+    BidLSTM_CRF_FEATURES.name: dict(
+        use_features=True,
+        use_features_indices_input=True
+    )
 }
 
 
 def register_model(name: str, model_class: Type[CustomModel]):
     MODEL_MAP[name] = model_class
+
+
+def updated_implicit_model_config_props(model_config: ModelConfig):
+    implicit_model_config_props = IMPLICIT_MODEL_CONFIG_PROPS_MAP.get(model_config.model_type)
+    if not implicit_model_config_props:
+        return
+    for key, value in implicit_model_config_props.items():
+        setattr(model_config, key, value)
 
 
 def _create_model(

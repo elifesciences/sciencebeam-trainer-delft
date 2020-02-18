@@ -16,7 +16,10 @@ from sciencebeam_trainer_delft.embedding import Embeddings, EmbeddingManager
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
 from sciencebeam_trainer_delft.sequence_labelling.trainer import Trainer
-from sciencebeam_trainer_delft.sequence_labelling.models import get_model
+from sciencebeam_trainer_delft.sequence_labelling.models import (
+    get_model,
+    updated_implicit_model_config_props
+)
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
     Preprocessor,
     T_FeaturesPreprocessor,
@@ -99,6 +102,7 @@ class Sequence(_Sequence):
             feature_indices=feature_indices,
             feature_embedding_size=feature_embedding_size
         )
+        updated_implicit_model_config_props(self.model_config)
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
 

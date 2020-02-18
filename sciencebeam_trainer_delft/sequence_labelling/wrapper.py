@@ -123,6 +123,12 @@ class Sequence(_Sequence):
             LOGGER.info('features_train.shape: %s', features_train.shape)
             sample_transformed_features = self.p.transform_features(features_train[:1])
             try:
+                if isinstance(sample_transformed_features, tuple):
+                    sample_transformed_features = sample_transformed_features[0]
+                LOGGER.info(
+                    'sample_transformed_features.shape: %s',
+                    sample_transformed_features.shape
+                )
                 self.model_config.max_feature_size = sample_transformed_features.shape[-1]
                 LOGGER.info('max_feature_size: %s', self.model_config.max_feature_size)
             except Exception:  # pylint: disable=broad-except

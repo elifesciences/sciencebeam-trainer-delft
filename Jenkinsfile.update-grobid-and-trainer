@@ -1,0 +1,17 @@
+def grobidTag = params.grobid_tag
+def grobidTrainerTag = params.grobid_trainer_tag
+
+elifeUpdatePipeline(
+    { _commit ->
+        sh "sed -i -e 's/SCIENCEBEAM_TAG=.*/SCIENCEBEAM_TAG=${sciencebeamTag}/' .env"
+        sh "sed -i -e 's/BASE_TRAINER_GROBID_TAG=.*/BASE_TRAINER_GROBID_TAG=${grobidTrainerTag}/' .env"
+        sh "git add .env"
+    },
+    {
+        return "Updated sciencebeam to ${sciencebeamTag}"
+    },
+    'update_grobid_and_trainer/',
+    false,
+    'develop',
+    true
+)

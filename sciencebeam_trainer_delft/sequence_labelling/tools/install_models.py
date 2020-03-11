@@ -3,10 +3,11 @@ import logging
 import os
 import pickle
 from pathlib import Path
+from shutil import rmtree
 from typing import Dict, List
 
 from sciencebeam_trainer_delft.utils.misc import parse_dict, merge_dicts
-from sciencebeam_trainer_delft.utils.io import list_files, copy_file
+from sciencebeam_trainer_delft.utils.io import list_files, copy_file, get_compression_wrapper
 from sciencebeam_trainer_delft.utils.cli import (
     add_default_arguments,
     process_default_args,
@@ -42,18 +43,23 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
     LOGGER.debug('files: %s', files)
     if not files:
         raise FileNotFoundError('no files found in %s' % source_url)
+    if os.path.exists(target_directory):
+        rmtree(target_directory)
     os.makedirs(target_directory, exist_ok=True)
+    target_filepath_list = []
     for filename in files:
-        source_filepath = os.path.join(source_url, filename)
-        target_filepath = os.path.join(target_directory, filename)
+        relative_filename = os.path.basename(filename)
+        relative_output_filename = get_compression_wrapper(
+            relative_filename
+        ).strip_compression_filename_ext(relative_filename)
+        source_filepath = os.path.join(source_url, relative_filename)
+        target_filepath = os.path.join(target_directory, relative_output_filename)
+        target_filepath_list.append(target_filepath)
         LOGGER.debug('copying %s to %s', source_filepath, target_filepath)
         copy_file(source_filepath, target_filepath)
     LOGGER.debug('setting %s to %s', source_url_meta_file, source_url)
     source_url_meta_file.write_text(source_url)
-    return [
-        os.path.join(target_directory, filename)
-        for filename in files
-    ]
+    return target_filepath_list
 
 
 def validate_pickle_file(pickle_file: str):
@@ -88,7 +94,7 @@ def install_model(
     )
     if validate_pickles:
         validate_pickle_files(filter_pickle_files(target_files))
-    LOGGER.info('copied model %s to %s', model_source_url, target_directory)
+    LOGGER.info('copied model %s to %s (%s)', model_source_url, target_directory, target_files)
 
 
 def install_models(

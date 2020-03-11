@@ -3,6 +3,7 @@ import logging
 import os
 import pickle
 from pathlib import Path
+from shutil import rmtree
 from typing import Dict, List
 
 from sciencebeam_trainer_delft.utils.misc import parse_dict, merge_dicts
@@ -42,6 +43,8 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
     LOGGER.debug('files: %s', files)
     if not files:
         raise FileNotFoundError('no files found in %s' % source_url)
+    if os.path.exists(target_directory):
+        rmtree(target_directory)
     os.makedirs(target_directory, exist_ok=True)
     for filename in files:
         relative_filename = os.path.basename(filename)

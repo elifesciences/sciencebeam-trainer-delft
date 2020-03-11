@@ -46,6 +46,7 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
     if os.path.exists(target_directory):
         rmtree(target_directory)
     os.makedirs(target_directory, exist_ok=True)
+    target_filepath_list = []
     for filename in files:
         relative_filename = os.path.basename(filename)
         relative_output_filename = get_compression_wrapper(
@@ -53,14 +54,12 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
         ).strip_compression_filename_ext(relative_filename)
         source_filepath = os.path.join(source_url, relative_filename)
         target_filepath = os.path.join(target_directory, relative_output_filename)
+        target_filepath_list.append(target_filepath)
         LOGGER.debug('copying %s to %s', source_filepath, target_filepath)
         copy_file(source_filepath, target_filepath)
     LOGGER.debug('setting %s to %s', source_url_meta_file, source_url)
     source_url_meta_file.write_text(source_url)
-    return [
-        os.path.join(target_directory, filename)
-        for filename in files
-    ]
+    return target_filepath_list
 
 
 def validate_pickle_file(pickle_file: str):

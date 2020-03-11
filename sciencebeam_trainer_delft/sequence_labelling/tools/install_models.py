@@ -94,7 +94,7 @@ def install_model(
     )
     if validate_pickles:
         validate_pickle_files(filter_pickle_files(target_files))
-    LOGGER.info('copied model %s to %s', model_source_url, target_directory)
+    LOGGER.info('copied model %s to %s (%s)', model_source_url, target_directory, target_files)
 
 
 def install_models(

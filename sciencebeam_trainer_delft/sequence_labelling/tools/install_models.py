@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from sciencebeam_trainer_delft.utils.misc import parse_dict, merge_dicts
-from sciencebeam_trainer_delft.utils.io import list_files, copy_file
+from sciencebeam_trainer_delft.utils.io import list_files, copy_file, get_compression_wrapper
 from sciencebeam_trainer_delft.utils.cli import (
     add_default_arguments,
     process_default_args,
@@ -44,8 +44,12 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
         raise FileNotFoundError('no files found in %s' % source_url)
     os.makedirs(target_directory, exist_ok=True)
     for filename in files:
-        source_filepath = os.path.join(source_url, filename)
-        target_filepath = os.path.join(target_directory, filename)
+        relative_filename = os.path.basename(filename)
+        relative_output_filename = get_compression_wrapper(
+            relative_filename
+        ).strip_compression_filename_ext(relative_filename)
+        source_filepath = os.path.join(source_url, relative_filename)
+        target_filepath = os.path.join(target_directory, relative_output_filename)
         LOGGER.debug('copying %s to %s', source_filepath, target_filepath)
         copy_file(source_filepath, target_filepath)
     LOGGER.debug('setting %s to %s', source_url_meta_file, source_url)

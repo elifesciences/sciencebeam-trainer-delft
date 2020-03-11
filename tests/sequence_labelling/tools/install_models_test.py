@@ -1,3 +1,4 @@
+import gzip
 from pickle import UnpicklingError
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -130,6 +131,27 @@ class TestMain:
             source_path: Path):
         source_path.mkdir(parents=True, exist_ok=True)
         source_path.joinpath(MODEL_FILE_1).write_bytes(MODEL_DATA_1)
+        target_directory = models_path.joinpath(MODEL_NAME_1)
+        main([
+            '--model-base-path=%s' % models_path,
+            '--install', '%s=%s' % (MODEL_NAME_1, source_path)
+        ])
+        assert (
+            target_directory.joinpath(MODEL_FILE_1).read_bytes()
+            == MODEL_DATA_1
+        )
+        assert (
+            target_directory.joinpath(SOURCE_URL_META_FILENAME).read_text()
+            == str(source_path)
+        )
+
+    def test_should_copy_and_decompress_gzipped_file(
+            self,
+            models_path: Path,
+            source_path: Path):
+        source_path.mkdir(parents=True, exist_ok=True)
+        with gzip.open(str(source_path.joinpath(MODEL_FILE_1 + '.gz')), 'wb') as out_fp:
+            out_fp.write(MODEL_DATA_1)
         target_directory = models_path.joinpath(MODEL_NAME_1)
         main([
             '--model-base-path=%s' % models_path,

@@ -224,6 +224,17 @@ Result:
 number of input sequences: 2538
 sequence lengths: min=1, max=6606, median=178.0
 number of features: 31
+inconsistent feature lengths: Counter({31: 536893, 30: 12855})
+examples with feature length=31:
+die D Di Die Die e ie Die Die BLOCKSTART LINESTART NEWFONT HIGHERFONT 0 0 0 INITCAP NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0
+abscheidung A Ab Abs Absc g ng ung dung BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0
+strömender s st str strö r er der nder BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0
+examples with feature length=30:
+gudina G Gu Gud Gudi a na ina dina BLOCKSTART LINESTART LINEINDENT NEWFONT HIGHERFONT 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 NOPUNCT 0 0
+et e et et et t et et et BLOCKIN LINEIN LINEINDENT NEWFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 0 0 0 0 0 0 0 NOPUNCT 0 0
+al a al al al l al al al BLOCKIN LINEIN LINEINDENT SAMEFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 1 0 0 0 0 0 0 NOPUNCT 0 0
+feature counts: 0: 1000, 1: 247, 2: 1000, 3: 1000, 4: 1000, 5: 265, 6: 1000, 7: 1000, 8: 1000, 9: 3, 10: 3, 11: 2, 12: 3, 13: 2, 14: 2, 15: 2, 16: 3, 17: 3, 18: 2, 19: 2, 20: 2, 21: 1, 22: 1, 23: 2, 24: 2, 25: 1, 26: 2, 27: 2, 28: 8, 29: 1, 30: 1
+suggested feature indices: 9-30
 labels: Counter({'I-<abstract>': 269983, 'I-<intro>': 96944, 'I-<note>': 26033, 'I-<author>': 25830, 'I-<title>': 24481, 'I-<affiliation>': 23886, 'I-<address>': 13963, 'I-<reference>': 10121, 'I-<keyword>': 7804, 'I-<email>': 7796, 'I-<copyright>': 5152, 'I-<grant>': 4509, 'I-<pubnum>': 3755, 'I-<submission>': 3729, 'I-<web>': 3162, 'B-<affiliation>': 2782, 'B-<title>': 2363, 'B-<address>': 2330, 'B-<author>': 2241, 'I-<date>': 2204, 'B-<note>': 1823, 'B-<abstract>': 1528, 'I-<degree>': 1355, 'B-<email>': 891, 'I-<phone>': 710, 'B-<date>': 658, 'B-<intro>': 439, 'B-<keyword>': 424, 'I-<entitle>': 421, 'B-<pubnum>': 421, 'B-<reference>': 414, 'B-<submission>': 409, 'B-<copyright>': 281, 'I-<dedication>': 243, 'B-<web>': 187, 'I-<date-submission>': 166, 'B-<grant>': 105, 'B-<phone>': 71, 'B-<degree>': 59, 'B-<date-submission>': 29, 'B-<entitle>': 24, 'B-<dedication>': 22})
 ```
 

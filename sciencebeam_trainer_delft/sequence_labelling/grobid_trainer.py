@@ -3,9 +3,9 @@ import logging
 import argparse
 import time
 from abc import abstractmethod
-from collections import Counter
+from collections import Counter, defaultdict, OrderedDict
 from itertools import islice
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 import sciencebeam_trainer_delft.utils.no_keras_backend_message  # noqa, pylint: disable=unused-import
@@ -117,6 +117,21 @@ def get_clean_features_mask(features_all: np.array) -> List[bool]:
     ]
 
 
+def get_clean_x_y_features(x: np.array, y: np.array, features: np.array):
+    clean_features_mask = get_clean_features_mask(features)
+    if sum(clean_features_mask) != len(clean_features_mask):
+        LOGGER.info(
+            'ignoring %d documents with inconsistent features',
+            len(clean_features_mask) - sum(clean_features_mask)
+        )
+        return (
+            x[clean_features_mask],
+            y[clean_features_mask],
+            features[clean_features_mask]
+        )
+    return x, y, features
+
+
 def load_data_and_labels(
         model: str, input_paths: List[str] = None,
         limit: int = None,
@@ -140,17 +155,9 @@ def load_data_and_labels(
         shuffle_arrays([x_all, y_all, f_all], random_seed=random_seed)
     log_data_info(x_all, y_all, f_all)
     if clean_features:
-        clean_features_mask = get_clean_features_mask(f_all)
-        if sum(clean_features_mask) != len(clean_features_mask):
-            LOGGER.info(
-                'ignoring %d documents with inconsistent features',
-                len(clean_features_mask) - sum(clean_features_mask)
-            )
-            x_all, y_all, f_all = (
-                x_all[clean_features_mask],
-                y_all[clean_features_mask],
-                f_all[clean_features_mask]
-            )
+        (x_all, y_all, f_all) = get_clean_x_y_features(
+            x_all, y_all, f_all
+        )
     return x_all, y_all, f_all
 
 
@@ -451,6 +458,75 @@ def tag_input(
     print(formatted_tag_result)
 
 
+def iter_flat_features(features: np.array):
+    return (
+        features_vector
+        for features_doc in features
+        for features_vector in features_doc
+    )
+
+
+def get_feature_value_counts_by_index(features: np.array, max_feature_values: int = 1000):
+    feature_value_counts_by_index = defaultdict(Counter)
+    for feature_vector in iter_flat_features(features):
+        for index, value in enumerate(feature_vector):
+            feature_value_counts = feature_value_counts_by_index[index]
+            if (
+                    len(feature_value_counts) >= max_feature_values
+                    and value not in feature_value_counts):
+                continue
+            feature_value_counts[value] += 1
+    return feature_value_counts_by_index
+
+
+def get_feature_counts(features: np.array):
+    feature_value_counts_by_index = get_feature_value_counts_by_index(features)
+    return OrderedDict([
+        (index, len(feature_value_counts_by_index[index]))
+        for index in sorted(feature_value_counts_by_index.keys())
+    ])
+
+
+def get_suggested_feature_indices(feature_counts: Dict[int, int], threshold: int = 12):
+    return [
+        index
+        for index in sorted(feature_counts.keys())
+        if feature_counts[index] <= threshold
+    ]
+
+
+def format_dict(d: dict) -> str:
+    return ', '.join([
+        '%s: %s' % (key, value)
+        for key, value in d.items()
+    ])
+
+
+def iter_index_groups(indices: List[int]) -> str:
+    group = []
+    for index in indices:
+        if not group or group[-1] + 1 == index:
+            group.append(index)
+            continue
+        yield group
+        group = []
+    if group:
+        yield group
+
+
+def iter_formatted_index_groups(indices: List[int]) -> str:
+    group = []
+    for group in iter_index_groups(indices):
+        if len(group) == 1:
+            yield str(group[0])
+            continue
+        yield '%s-%s' % (group[0], group[-1])
+
+
+def format_indices(indices: List[int]) -> str:
+    return ','.join(list(iter_formatted_index_groups(indices)))
+
+
 def print_input_info(
         model: str,
         input_paths: List[str],
@@ -468,11 +544,7 @@ def print_input_info(
         for y_doc in y_all
         for y_row in y_doc
     )
-    flat_features = [
-        features_vector
-        for features_doc in features_all
-        for features_vector in features_doc
-    ]
+    flat_features = list(iter_flat_features(features_all))
     feature_lengths = Counter(map(len, flat_features))
 
     print('number of input sequences: %d' % len(x_all))
@@ -491,6 +563,14 @@ def print_input_info(
                     if len(features_vector) == feature_length
                 ), 3))
             ))
+        (x_all, y_all, features_all) = get_clean_x_y_features(
+            x_all, y_all, features_all
+        )
+    feature_counts = get_feature_counts(features_all)
+    print('feature counts: %s' % format_dict(feature_counts))
+    print('suggested feature indices: %s' % format_indices(
+        get_suggested_feature_indices(feature_counts)
+    ))
     print('labels: %s' % y_counts)
 
 

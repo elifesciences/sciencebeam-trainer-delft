@@ -36,6 +36,14 @@ from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     format_tag_result
 )
 
+from sciencebeam_trainer_delft.sequence_labelling.input_info import (
+    iter_flat_features,
+    get_feature_counts,
+    get_suggested_feature_indices,
+    format_dict,
+    format_indices
+)
+
 from sciencebeam_trainer_delft.utils.cli import (
     SubCommand,
     SubCommandProcessor
@@ -117,6 +125,21 @@ def get_clean_features_mask(features_all: np.array) -> List[bool]:
     ]
 
 
+def get_clean_x_y_features(x: np.array, y: np.array, features: np.array):
+    clean_features_mask = get_clean_features_mask(features)
+    if sum(clean_features_mask) != len(clean_features_mask):
+        LOGGER.info(
+            'ignoring %d documents with inconsistent features',
+            len(clean_features_mask) - sum(clean_features_mask)
+        )
+        return (
+            x[clean_features_mask],
+            y[clean_features_mask],
+            features[clean_features_mask]
+        )
+    return x, y, features
+
+
 def load_data_and_labels(
         model: str, input_paths: List[str] = None,
         limit: int = None,
@@ -140,17 +163,9 @@ def load_data_and_labels(
         shuffle_arrays([x_all, y_all, f_all], random_seed=random_seed)
     log_data_info(x_all, y_all, f_all)
     if clean_features:
-        clean_features_mask = get_clean_features_mask(f_all)
-        if sum(clean_features_mask) != len(clean_features_mask):
-            LOGGER.info(
-                'ignoring %d documents with inconsistent features',
-                len(clean_features_mask) - sum(clean_features_mask)
-            )
-            x_all, y_all, f_all = (
-                x_all[clean_features_mask],
-                y_all[clean_features_mask],
-                f_all[clean_features_mask]
-            )
+        (x_all, y_all, f_all) = get_clean_x_y_features(
+            x_all, y_all, f_all
+        )
     return x_all, y_all, f_all
 
 
@@ -468,11 +483,7 @@ def print_input_info(
         for y_doc in y_all
         for y_row in y_doc
     )
-    flat_features = [
-        features_vector
-        for features_doc in features_all
-        for features_vector in features_doc
-    ]
+    flat_features = list(iter_flat_features(features_all))
     feature_lengths = Counter(map(len, flat_features))
 
     print('number of input sequences: %d' % len(x_all))
@@ -491,6 +502,14 @@ def print_input_info(
                     if len(features_vector) == feature_length
                 ), 3))
             ))
+        (x_all, y_all, features_all) = get_clean_x_y_features(
+            x_all, y_all, features_all
+        )
+    feature_counts = get_feature_counts(features_all)
+    print('feature counts: %s' % format_dict(feature_counts))
+    print('suggested feature indices: %s' % format_indices(
+        get_suggested_feature_indices(feature_counts)
+    ))
     print('labels: %s' % y_counts)
 
 
@@ -695,8 +714,6 @@ class GrobidTrainerSubCommand(SubCommand):
         if args.no_use_lmdb:
             self.embedding_manager.disable_embedding_lmdb_cache()
 
-        LOGGER.info('get_tf_info: %s', get_tf_info())
-
         set_random_seeds(args.random_seed)
 
         self.do_run(args)
@@ -717,6 +734,7 @@ class TrainSubCommand(GrobidTrainerSubCommand):
         embedding_name = self.preload_and_validate_embedding(
             args.embedding
         )
+        LOGGER.info('get_tf_info: %s', get_tf_info())
         train(
             embeddings_name=embedding_name,
             **self.get_train_args(args)
@@ -755,6 +773,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         embedding_name = self.preload_and_validate_embedding(
             args.embedding
         )
+        LOGGER.info('get_tf_info: %s', get_tf_info())
         train_eval(
             fold_count=args.fold_count,
             embeddings_name=embedding_name,

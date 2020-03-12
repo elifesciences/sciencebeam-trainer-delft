@@ -46,8 +46,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 GROBID_MODEL_NAMES = [
-    'affiliation-address', 'citation', 'date', 'header',
-    'name-citation', 'name-header', 'software'
+    'affiliation-address', 'citation', 'date', 'figure', 'fulltext', 'header',
+    'name', 'name-citation', 'name-header', 'patent', 'reference-segmenter',
+    'segmentation', 'software', 'table'
 ]
 
 

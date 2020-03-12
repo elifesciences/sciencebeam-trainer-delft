@@ -714,8 +714,6 @@ class GrobidTrainerSubCommand(SubCommand):
         if args.no_use_lmdb:
             self.embedding_manager.disable_embedding_lmdb_cache()
 
-        LOGGER.info('get_tf_info: %s', get_tf_info())
-
         set_random_seeds(args.random_seed)
 
         self.do_run(args)
@@ -736,6 +734,7 @@ class TrainSubCommand(GrobidTrainerSubCommand):
         embedding_name = self.preload_and_validate_embedding(
             args.embedding
         )
+        LOGGER.info('get_tf_info: %s', get_tf_info())
         train(
             embeddings_name=embedding_name,
             **self.get_train_args(args)
@@ -774,6 +773,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         embedding_name = self.preload_and_validate_embedding(
             args.embedding
         )
+        LOGGER.info('get_tf_info: %s', get_tf_info())
         train_eval(
             fold_count=args.fold_count,
             embeddings_name=embedding_name,

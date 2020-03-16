@@ -37,7 +37,6 @@ def lines_to_log(logger: logging.Logger, level: int, message: str, lines: Iterab
         logger.log(level, message, line)
 
 
-
 class WapitiModel:
     def __init__(self, process: subprocess.Popen):
         self.process = process

@@ -183,6 +183,7 @@ class TestGrobidTrainer:
                 get_default_training_data_mock: MagicMock,
                 load_data_and_labels_crf_file_mock: MagicMock,
                 download_manager_mock: MagicMock):
+            get_default_training_data_mock.return_value = '/tmp/dummy/training/data'
             load_data_and_labels(
                 MODEL_NAME_1,
                 [],
@@ -193,7 +194,7 @@ class TestGrobidTrainer:
                 get_default_training_data_mock.return_value
             )
             load_data_and_labels_crf_file_mock.assert_called_with(
-                download_manager_mock.download_if_url.return_value,
+                get_default_training_data_mock.return_value,
                 limit=None
             )
 
@@ -220,7 +221,7 @@ class TestGrobidTrainer:
                 download_manager=download_manager_mock
             )
             load_data_and_labels_crf_file_mock.assert_called_with(
-                download_manager_mock.download_if_url.return_value,
+                INPUT_PATH_1,
                 limit=123
             )
 

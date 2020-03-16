@@ -1,12 +1,13 @@
 import logging
 import os
+import tempfile
 from abc import ABC, abstractmethod
 from shutil import copyfileobj
 from contextlib import contextmanager
 from gzip import GzipFile
 from lzma import LZMAFile
 from urllib.request import urlopen
-from typing import List
+from typing import List, IO
 
 from six import string_types, text_type
 
@@ -55,31 +56,64 @@ class CompressionWrapper(ABC):
         pass
 
     @abstractmethod
-    def wrap_fileobj(self, filename: str, fileobj):
+    def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
         pass
+
+    def open(self, filename: str, mode: str):
+        return self.wrap_fileobj(
+            filename=filename,
+            fileobj=_open_raw(filename, mode=mode),
+            mode=mode
+        )
+
+
+class ClosingGzipFile(GzipFile):
+    # GzipFile doesn't close the underlying fileobj, we will do that here
+    def close(self):
+        fileobj = self.fileobj
+        LOGGER.debug('ClosingGzipFile.close, fileobj: %s', fileobj)
+        try:
+            super().close()
+        finally:
+            if fileobj is not None:
+                LOGGER.debug('closing: %s', fileobj)
+                fileobj.close()
 
 
 class GzipCompressionWrapper(CompressionWrapper):
     def strip_compression_filename_ext(self, filepath: str):
         return strip_gzip_filename_ext(filepath)
 
-    def wrap_fileobj(self, filename: str, fileobj):
-        return GzipFile(filename=filename, fileobj=fileobj)
+    def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
+        return ClosingGzipFile(filename=filename, fileobj=fileobj, mode=mode)
+
+    @contextmanager
+    def open(self, filename: str, mode: str):
+        if is_external_location(filename):
+            # there seem to be an issue with GzipFile and fileobj
+            with tempfile.TemporaryDirectory(suffix='-gzip') as gzip_dir:
+                local_gzip_file = os.path.join(gzip_dir, os.path.basename(filename))
+                with ClosingGzipFile(filename=local_gzip_file, mode=mode) as local_fp:
+                    yield local_fp
+                tf_file_io.copy(local_gzip_file, filename, overwrite=True)
+        else:
+            with ClosingGzipFile(filename=filename, mode=mode) as local_fp:
+                yield local_fp
 
 
 class XzCompressionWrapper(CompressionWrapper):
     def strip_compression_filename_ext(self, filepath: str):
         return strip_xz_filename_ext(filepath)
 
-    def wrap_fileobj(self, filename: str, fileobj):
-        return LZMAFile(filename=fileobj)
+    def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
+        return LZMAFile(filename=fileobj, mode=mode)
 
 
 class DummyCompressionWrapper(CompressionWrapper):
     def strip_compression_filename_ext(self, filepath: str):
         return filepath
 
-    def wrap_fileobj(self, filename: str, fileobj):
+    def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
         return fileobj
 
 
@@ -113,13 +147,21 @@ def _open_raw(filepath: str, mode: str):
 def open_file(filepath: str, mode: str, compression_wrapper: CompressionWrapper = None):
     if compression_wrapper is None:
         compression_wrapper = get_compression_wrapper(filepath)
+    LOGGER.debug(
+        'open_file, filepath=%s, mode=%s, compression_wrapper=%s',
+        filepath, mode, compression_wrapper
+    )
     if mode in {'rb', 'r'}:
         with _open_raw(filepath, mode=mode) as source_fp:
-            yield compression_wrapper.wrap_fileobj(filename=filepath, fileobj=source_fp)
+            yield compression_wrapper.wrap_fileobj(
+                filename=filepath,
+                fileobj=source_fp,
+                mode=mode
+            )
     elif mode in {'wb', 'w'}:
         tf_file_io.recursive_create_dir(os.path.dirname(filepath))
-        with _open_raw(filepath, mode=mode) as target_fp:
-            yield compression_wrapper.wrap_fileobj(filename=filepath, fileobj=target_fp)
+        with compression_wrapper.open(filepath, mode=mode) as target_fp:
+            yield target_fp
     else:
         raise ValueError('unsupported mode: %s' % mode)
 

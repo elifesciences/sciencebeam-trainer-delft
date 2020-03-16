@@ -10,6 +10,20 @@ RUN mkdir -p /usr/local/gcloud \
 
 ENV PATH /usr/local/gcloud/google-cloud-sdk/bin:$PATH
 
+# install wapiti
+ARG wapiti_source_download_url
+RUN if [ ! -z "${wapiti_source_download_url}" ]; then \
+    curl --location -q "${wapiti_source_download_url}" -o /tmp/wapiti.tar.gz \
+    && ls -lh /tmp/wapiti.tar.gz \
+    && mkdir -p /tmp/wapiti \
+    && tar --strip-components 1 -C /tmp/wapiti -xvf /tmp/wapiti.tar.gz \
+    && rm /tmp/wapiti.tar.gz \
+    && cd /tmp/wapiti \
+    && make \
+    && make install \
+    && rm -rf /tmp/wapiti; \
+    fi
+
 ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
 
 WORKDIR ${PROJECT_FOLDER}

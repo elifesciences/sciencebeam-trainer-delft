@@ -209,6 +209,61 @@ With the result:
 Markov Chain Algorithms for Planar Lattice Structures Michael Luby y Dana Randall z Alistair Sinclair Abstract Consider the following Markov chain , whose states are all domino tilings of a 2n 񮽙 2n chessboard : starting from some arbitrary tiling , pick a 2 񮽙 2 window uniformly at random . If the four squares appearing in this window are covered by two parallel dominoes , rotate the dominoes in place . Repeat many times . This process is used in practice to generate a tiling , and is a tool in the study of the combinatorics of tilings and the behavior of dimer systems in statistical physics . Analogous Markov chains are used to randomly generate other structures on various two - dimensional lattices . This paper presents techniques which prove for the 񮽙rst time that , in many interesting cases , a small number of random moves suuce to obtain a uniform distribution .
 ```
 
+### Wapiti Sub Commands
+
+The Wapiti sub commands allow to use a similar process for training, evaluating and tagging Wapiti models, as the sub commands for the other DL model(s) above.
+
+Currently you would need to install [Wapiti](https://wapiti.limsi.fr/) and make the `wapiti` command available in the path.
+
+#### Wapiti Train Sub Command
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header wapiti_train \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --wapiti-template=https://raw.githubusercontent.com/kermitt2/grobid/0.5.6/grobid-trainer/resources/dataset/header/crfpp-templates/header.template \
+    --output="data/models" \
+    --limit="100" \
+    --max-epoch="10"
+```
+
+#### Wapiti Train Eval Sub Command
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header wapiti_train_eval \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --eval-input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
+    --wapiti-template=https://raw.githubusercontent.com/kermitt2/grobid/0.5.6/grobid-trainer/resources/dataset/header/crfpp-templates/header.template \
+    --output="data/models" \
+    --limit="100" \
+    --max-epoch="10"
+```
+
+#### Wapiti Eval Sub Command
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    wapiti_eval \
+    --batch-size="10" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
+    --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header" \
+    --quiet
+```
+
+#### Wapiti Tag Sub Command
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    wapiti_tag \
+    --batch-size="10" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
+    --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header" \
+    --limit="1" \
+    --tag-output-format="xml_diff" \
+    --quiet
+```
+
 ### Input Info Sub Command
 
 ```bash

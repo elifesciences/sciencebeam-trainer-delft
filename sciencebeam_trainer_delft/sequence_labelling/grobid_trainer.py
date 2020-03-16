@@ -1,11 +1,14 @@
+# pylint: disable=too-many-lines
 # mostly copied from https://github.com/kermitt2/delft/blob/master/grobidTagger.py
 import logging
 import argparse
 import time
+import tempfile
+import os
 from abc import abstractmethod
 from collections import Counter
 from itertools import islice
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 import sciencebeam_trainer_delft.utils.no_keras_backend_message  # noqa, pylint: disable=unused-import
@@ -29,6 +32,12 @@ from sciencebeam_trainer_delft.embedding import EmbeddingManager
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_labels_crf_file
+
+from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti_adapters import (
+    WapitiModelAdapter,
+    WapitiModelTrainAdapter
+)
+
 from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     TagOutputFormats,
     TAG_OUTPUT_FORMATS,
@@ -53,6 +62,8 @@ from sciencebeam_trainer_delft.utils.cli import (
 LOGGER = logging.getLogger(__name__)
 
 
+WAPITI_MODEL_NAME = 'wapiti'
+
 GROBID_MODEL_NAMES = [
     'affiliation-address', 'citation', 'date', 'figure', 'fulltext', 'header',
     'name', 'name-citation', 'name-header', 'patent', 'reference-segmenter',
@@ -65,6 +76,10 @@ class Tasks:
     TRAIN_EVAL = 'train_eval'
     EVAL = 'eval'
     TAG = 'tag'
+    WAPITI_TRAIN = 'wapiti_train'
+    WAPITI_TRAIN_EVAL = 'wapiti_train_eval'
+    WAPITI_EVAL = 'wapiti_eval'
+    WAPITI_TAG = 'wapiti_tag'
     INPUT_INFO = 'input_info'
 
 
@@ -169,6 +184,42 @@ def load_data_and_labels(
     return x_all, y_all, f_all
 
 
+def do_train(
+        model: Union[Sequence, WapitiModelTrainAdapter],
+        input_paths: List[str] = None,
+        output_path: str = None,
+        limit: int = None,
+        shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
+        download_manager: DownloadManager = None):
+    x_all, y_all, features_all = load_data_and_labels(
+        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        random_seed=random_seed,
+        download_manager=download_manager
+    )
+    x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
+        x_all, y_all, features_all, test_size=0.1
+    )
+
+    LOGGER.info('%d train sequences', len(x_train))
+    LOGGER.info('%d validation sequences', len(x_valid))
+
+    start_time = time.time()
+    model.train(
+        x_train, y_train, x_valid, y_valid,
+        features_train=features_train, features_valid=features_valid
+    )
+    runtime = round(time.time() - start_time, 3)
+    LOGGER.info("training runtime: %s seconds ", runtime)
+
+    # saving the model
+    if output_path:
+        LOGGER.info('saving model to: %s', output_path)
+        model.save(output_path)
+    else:
+        model.save()
+
+
 # train a GROBID model with all available data
 def train(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
@@ -182,17 +233,6 @@ def train(
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
-    x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
-        random_seed=random_seed,
-        download_manager=download_manager
-    )
-    x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
-        x_all, y_all, features_all, test_size=0.1
-    )
-
-    LOGGER.info('%d train sequences', len(x_train))
-    LOGGER.info('%d validation sequences', len(x_valid))
 
     if output_path:
         model_name = model
@@ -213,27 +253,50 @@ def train(
         use_ELMo=use_ELMo,
         **kwargs
     )
-    # model.save = wrap_save(model.save)
 
-    start_time = time.time()
-    model.train(
-        x_train, y_train, x_valid, y_valid,
-        features_train=features_train, features_valid=features_valid
+    do_train(
+        model,
+        input_paths=input_paths,
+        output_path=output_path,
+        limit=limit,
+        shuffle_input=shuffle_input,
+        random_seed=random_seed,
+        download_manager=download_manager
     )
-    runtime = round(time.time() - start_time, 3)
-    LOGGER.info("training runtime: %s seconds ", runtime)
-
-    # saving the model
-    if output_path:
-        LOGGER.info('saving model to: %s', output_path)
-        model.save(output_path)
-    else:
-        model.save()
 
 
-# split data, train a GROBID model and evaluate it
-def train_eval(
-        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+def wapiti_train(
+        model: str,
+        template_path: str,
+        output_path: str,
+        input_paths: List[str] = None,
+        limit: int = None,
+        shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
+        max_epoch: int = 100,
+        download_manager: DownloadManager = None):
+    with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
+        temp_model_path = os.path.join(temp_dir, 'model.wapiti')
+        model = WapitiModelTrainAdapter(
+            model_name=model,
+            template_path=template_path,
+            temp_model_path=temp_model_path,
+            max_epoch=max_epoch,
+            download_manager=download_manager
+        )
+        do_train(
+            model,
+            input_paths=input_paths,
+            output_path=output_path,
+            limit=limit,
+            shuffle_input=shuffle_input,
+            random_seed=random_seed,
+            download_manager=download_manager
+        )
+
+
+def do_train_eval(
+        model: Union[Sequence, WapitiModelTrainAdapter],
         input_paths: List[str] = None,
         output_path: str = None,
         limit: int = None,
@@ -241,11 +304,8 @@ def train_eval(
         random_seed: int = DEFAULT_RANDOM_SEED,
         eval_input_paths: List[str] = None,
         eval_limit: int = None,
-        max_sequence_length: int = 100,
-        fold_count=1, max_epoch=100, batch_size=20,
-        download_manager: DownloadManager = None,
-        embedding_manager: EmbeddingManager = None,
-        **kwargs):
+        fold_count: int = 1,
+        download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
@@ -272,30 +332,6 @@ def train_eval(
     LOGGER.info('%d train sequences', len(x_train))
     LOGGER.info('%d validation sequences', len(x_valid))
     LOGGER.info('%d evaluation sequences', len(x_eval))
-
-    if output_path:
-        model_name = model
-    else:
-        model_name = 'grobid-' + model
-
-    if use_ELMo:
-        model_name += '-with_ELMo'
-        if model_name in {'software-with_ELMo', 'grobid-software-with_ELMo'}:
-            batch_size = 3
-
-    model = Sequence(
-        model_name,
-        max_epoch=max_epoch,
-        recurrent_dropout=0.50,
-        embeddings_name=embeddings_name,
-        embedding_manager=embedding_manager,
-        max_sequence_length=max_sequence_length,
-        model_type=architecture,
-        use_ELMo=use_ELMo,
-        batch_size=batch_size,
-        fold_number=fold_count,
-        **kwargs
-    )
 
     start_time = time.time()
 
@@ -325,23 +361,102 @@ def train_eval(
         model.save()
 
 
-def eval_model(
-        model,
-        embeddings_name: str = None,
-        architecture: str = 'BidLSTM_CRF',
-        use_ELMo: bool = False,
+# split data, train a GROBID model and evaluate it
+def train_eval(
+        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_paths: List[str] = None,
         output_path: str = None,
-        model_path: str = None,
         limit: int = None,
         shuffle_input: bool = False,
-        split_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
+        eval_input_paths: List[str] = None,
+        eval_limit: int = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
+
+    if output_path:
+        model_name = model
+    else:
+        model_name = 'grobid-' + model
+
+    if use_ELMo:
+        model_name += '-with_ELMo'
+        if model_name in {'software-with_ELMo', 'grobid-software-with_ELMo'}:
+            batch_size = 3
+
+    model = Sequence(
+        model_name,
+        max_epoch=max_epoch,
+        recurrent_dropout=0.50,
+        embeddings_name=embeddings_name,
+        embedding_manager=embedding_manager,
+        max_sequence_length=max_sequence_length,
+        model_type=architecture,
+        use_ELMo=use_ELMo,
+        batch_size=batch_size,
+        fold_number=fold_count,
+        **kwargs
+    )
+    do_train_eval(
+        model,
+        input_paths=input_paths,
+        output_path=output_path,
+        limit=limit,
+        shuffle_input=shuffle_input,
+        random_seed=random_seed,
+        eval_input_paths=eval_input_paths,
+        eval_limit=eval_limit,
+        download_manager=download_manager
+    )
+
+
+def wapiti_train_eval(
+        model: str,
+        template_path: str,
+        input_paths: List[str] = None,
+        output_path: str = None,
+        limit: int = None,
+        shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
+        eval_input_paths: List[str] = None,
+        eval_limit: int = None,
+        fold_count: int = 1,
+        max_epoch: int = 100,
+        download_manager: DownloadManager = None):
+    assert fold_count == 1, 'only fold_count == 1 supported'
+    with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
+        temp_model_path = os.path.join(temp_dir, 'model.wapiti')
+        model = WapitiModelTrainAdapter(
+            model_name=model,
+            template_path=template_path,
+            temp_model_path=temp_model_path,
+            max_epoch=max_epoch,
+            download_manager=download_manager
+        )
+        do_train_eval(
+            model,
+            input_paths=input_paths,
+            output_path=output_path,
+            limit=limit,
+            shuffle_input=shuffle_input,
+            random_seed=random_seed,
+            eval_input_paths=eval_input_paths,
+            eval_limit=eval_limit,
+            download_manager=download_manager
+        )
+
+
+def do_eval_model(
+        model: Union[Sequence, WapitiModelAdapter],
+        input_paths: List[str] = None,
+        limit: int = None,
+        shuffle_input: bool = False,
+        split_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
+        download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
@@ -359,42 +474,13 @@ def eval_model(
 
     LOGGER.info('%d evaluation sequences', len(x_eval))
 
-    if output_path or model_path:
-        model_name = model
-    else:
-        model_name = 'grobid-' + model
-
-    if use_ELMo:
-        model_name += '-with_ELMo'
-
-    # set embeddings_name to None, it will be loaded from the model
-    embeddings_name = None
-
-    model = Sequence(
-        model_name,
-        max_epoch=max_epoch,
-        recurrent_dropout=0.50,
-        embeddings_name=embeddings_name,
-        embedding_manager=embedding_manager,
-        max_sequence_length=max_sequence_length,
-        model_type=architecture,
-        use_ELMo=use_ELMo,
-        batch_size=batch_size,
-        fold_number=fold_count,
-        **kwargs
-    )
-
-    assert model_path
-    model.load_from(model_path)
-
     # evaluation
     print("\nEvaluation:")
     model.eval(x_eval, y_eval, features=features_eval)
 
 
-def tag_input(
+def eval_model(
         model,
-        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
         embeddings_name: str = None,
         architecture: str = 'BidLSTM_CRF',
         use_ELMo: bool = False,
@@ -403,19 +489,13 @@ def tag_input(
         model_path: str = None,
         limit: int = None,
         shuffle_input: bool = False,
+        split_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
-        max_sequence_length: int = None,
+        max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
-    x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
-        random_seed=random_seed,
-        download_manager=download_manager
-    )
-
-    LOGGER.info('%d input sequences', len(x_all))
 
     if output_path or model_path:
         model_name = model
@@ -442,8 +522,56 @@ def tag_input(
         **kwargs
     )
 
-    assert model_path
-    model.load_from(model_path)
+    do_eval_model(
+        model,
+        input_paths=input_paths,
+        limit=limit,
+        shuffle_input=shuffle_input,
+        random_seed=random_seed,
+        split_input=split_input,
+        download_manager=download_manager
+    )
+
+
+def wapiti_eval_model(
+        model: str = None,
+        input_paths: List[str] = None,
+        model_path: str = None,
+        limit: int = None,
+        shuffle_input: bool = False,
+        split_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
+        fold_count: int = 1,
+        download_manager: DownloadManager = None):
+    assert fold_count == 1, 'only fold_count == 1 supported'
+
+    model = WapitiModelAdapter.load_from(model_path, download_manager=download_manager)
+    do_eval_model(
+        model,
+        input_paths=input_paths,
+        limit=limit,
+        shuffle_input=shuffle_input,
+        random_seed=random_seed,
+        split_input=split_input,
+        download_manager=download_manager
+    )
+
+
+def do_tag_input(
+        model: Union[Sequence, WapitiModelAdapter],
+        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+        input_paths: List[str] = None,
+        limit: int = None,
+        shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
+        download_manager: DownloadManager = None):
+    x_all, y_all, features_all = load_data_and_labels(
+        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        random_seed=random_seed,
+        download_manager=download_manager
+    )
+
+    LOGGER.info('%d input sequences', len(x_all))
 
     tag_result = model.tag(
         x_all,
@@ -464,6 +592,83 @@ def tag_input(
     )
     LOGGER.info('tag_result:')
     print(formatted_tag_result)
+
+
+def tag_input(
+        model,
+        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+        embeddings_name: str = None,
+        architecture: str = 'BidLSTM_CRF',
+        use_ELMo: bool = False,
+        input_paths: List[str] = None,
+        output_path: str = None,
+        model_path: str = None,
+        limit: int = None,
+        shuffle_input: bool = False,
+        random_seed: int = DEFAULT_RANDOM_SEED,
+        max_sequence_length: int = None,
+        fold_count=1, max_epoch=100, batch_size=20,
+        download_manager: DownloadManager = None,
+        embedding_manager: EmbeddingManager = None,
+        **kwargs):
+    if output_path or model_path:
+        model_name = model
+    else:
+        model_name = 'grobid-' + model
+
+    if use_ELMo:
+        model_name += '-with_ELMo'
+
+    # set embeddings_name to None, it will be loaded from the model
+    embeddings_name = None
+
+    model = Sequence(
+        model_name,
+        max_epoch=max_epoch,
+        recurrent_dropout=0.50,
+        embeddings_name=embeddings_name,
+        embedding_manager=embedding_manager,
+        max_sequence_length=max_sequence_length,
+        model_type=architecture,
+        use_ELMo=use_ELMo,
+        batch_size=batch_size,
+        fold_number=fold_count,
+        **kwargs
+    )
+
+    assert model_path
+    model.load_from(model_path)
+
+    do_tag_input(
+        model,
+        tag_output_format=tag_output_format,
+        input_paths=input_paths,
+        limit=limit,
+        shuffle_input=shuffle_input,
+        random_seed=random_seed,
+        download_manager=download_manager
+    )
+
+
+def wapiti_tag_input(
+        model: str = None,
+        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+        input_paths: List[str] = None,
+        model_path: str = None,
+        limit: int = None,
+        random_seed: int = DEFAULT_RANDOM_SEED,
+        shuffle_input: bool = False,
+        download_manager: DownloadManager = None):
+    model = WapitiModelAdapter.load_from(model_path, download_manager=download_manager)
+    do_tag_input(
+        model,
+        tag_output_format=tag_output_format,
+        input_paths=input_paths,
+        limit=limit,
+        shuffle_input=shuffle_input,
+        random_seed=random_seed,
+        download_manager=download_manager
+    )
 
 
 def print_input_info(
@@ -576,6 +781,52 @@ def add_model_path_argument(parser: argparse.ArgumentParser, **kwargs):
     parser.add_argument("--model-path", **kwargs)
 
 
+def add_fold_count_argument(parser: argparse.ArgumentParser, **kwargs):
+    parser.add_argument("--fold-count", type=int, default=1, **kwargs)
+
+
+def add_eval_input_arguments(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--eval-input",
+        nargs='+',
+        action='append',
+        help=' '.join([
+            "Evaluation data at the end of training. If not specified,",
+            "it will use a slice of the training data"
+        ])
+    )
+    parser.add_argument(
+        "--eval-limit",
+        type=int,
+        help=' '.join([
+            "Limit the number of documents to use for evaluation.",
+            "This is mostly for testing to make evaluation faster."
+        ])
+    )
+
+
+def add_tag_output_format_argument(parser: argparse.ArgumentParser, **kwargs):
+    parser.add_argument(
+        "--tag-output-format",
+        default=DEFAULT_TAG_OUTPUT_FORMAT,
+        choices=TAG_OUTPUT_FORMATS,
+        help="output format for tag results",
+        **kwargs
+    )
+
+
+def add_output_argument(parser: argparse.ArgumentParser, **kwargs):
+    parser.add_argument("--output", help="directory where to save a trained model", **kwargs)
+
+
+def add_max_epoch_argument(parser: argparse.ArgumentParser, **kwargs):
+    parser.add_argument(
+        "--max-epoch", type=int, default=10,
+        help="max epoch to train to",
+        **kwargs
+    )
+
+
 def add_train_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--architecture", default='BidLSTM_CRF',
@@ -605,7 +856,7 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     )
 
     output_group = parser.add_argument_group('output')
-    output_group.add_argument("--output", help="directory where to save a trained model")
+    add_output_argument(output_group)
     output_group.add_argument("--checkpoint", help="directory where to save a checkpoint model")
 
     parser.add_argument(
@@ -616,14 +867,17 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--word-lstm-units", type=int, default=100,
         help="number of words in lstm units"
     )
-    parser.add_argument(
-        "--max-epoch", type=int, default=10,
-        help="max epoch to train to"
-    )
+    add_max_epoch_argument(parser)
     parser.add_argument(
         "--early-stopping-patience", type=int, default=10,
         help="how many epochs to continue training after the f1 score hasn't improved"
     )
+
+
+def add_wapiti_train_arguments(parser: argparse.ArgumentParser):
+    add_output_argument(parser)
+    add_max_epoch_argument(parser)
+    parser.add_argument("--wapiti-template", required=True)
 
 
 def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
@@ -750,29 +1004,32 @@ class TrainSubCommand(GrobidTrainerSubCommand):
         )
 
 
+class WapitiTrainSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+        add_wapiti_train_arguments(parser)
+
+    def do_run(self, args: argparse.Namespace):
+        if not args.model:
+            raise ValueError("model required")
+        wapiti_train(
+            model=args.model,
+            template_path=args.wapiti_template,
+            input_paths=args.input,
+            limit=args.limit,
+            output_path=args.output,
+            max_epoch=args.max_epoch,
+            download_manager=self.download_manager
+        )
+
+
 class TrainEvalSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_train_arguments(parser)
         add_model_path_argument(parser, help='directory to the saved model')
-        parser.add_argument("--fold-count", type=int, default=1)
-        parser.add_argument(
-            "--eval-input",
-            nargs='+',
-            action='append',
-            help=' '.join([
-                "Evaluation data at the end of training. If not specified,",
-                "it will use a slice of the training data"
-            ])
-        )
-        parser.add_argument(
-            "--eval-limit",
-            type=int,
-            help=' '.join([
-                "Limit the number of documents to use for evaluation.",
-                "This is mostly for testing to make evaluation faster."
-            ])
-        )
+        add_fold_count_argument(parser)
+        add_eval_input_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         if not args.model:
@@ -789,6 +1046,28 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
             eval_input_paths=args.eval_input,
             eval_limit=args.eval_limit,
             **self.get_train_args(args)
+        )
+
+
+class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+        add_wapiti_train_arguments(parser)
+        add_eval_input_arguments(parser)
+
+    def do_run(self, args: argparse.Namespace):
+        if not args.model:
+            raise ValueError("model required")
+        wapiti_train_eval(
+            model=args.model,
+            template_path=args.wapiti_template,
+            input_paths=args.input,
+            limit=args.limit,
+            eval_input_paths=args.eval_input,
+            eval_limit=args.eval_limit,
+            output_path=args.output,
+            max_epoch=args.max_epoch,
+            download_manager=self.download_manager
         )
 
 
@@ -813,22 +1092,49 @@ class EvalSubCommand(GrobidTrainerSubCommand):
         )
 
 
+class WapitiEvalSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+        add_model_path_argument(parser, required=True, help='directory to load the model from')
+
+    def do_run(self, args: argparse.Namespace):
+        wapiti_eval_model(
+            model_path=args.model_path,
+            model=args.model,
+            input_paths=args.input,
+            limit=args.limit,
+            download_manager=self.download_manager
+        )
+
+
 class TagSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser, max_sequence_length_default=None)
         add_model_path_argument(parser, required=True, help='directory to load the model from')
-        parser.add_argument(
-            "--tag-output-format",
-            default=DEFAULT_TAG_OUTPUT_FORMAT,
-            choices=TAG_OUTPUT_FORMATS,
-            help="output format for tag results"
-        )
+        add_tag_output_format_argument(parser)
 
     def do_run(self, args: argparse.Namespace):
         tag_input(
             model_path=args.model_path,
             tag_output_format=args.tag_output_format,
             **self.get_common_args(args)
+        )
+
+
+class WapitiTagSubCommand(GrobidTrainerSubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser, max_sequence_length_default=None)
+        add_model_path_argument(parser, required=True, help='directory to load the model from')
+        add_tag_output_format_argument(parser)
+
+    def do_run(self, args: argparse.Namespace):
+        wapiti_tag_input(
+            model_path=args.model_path,
+            tag_output_format=args.tag_output_format,
+            model=args.model,
+            input_paths=args.input,
+            limit=args.limit,
+            download_manager=self.download_manager
         )
 
 
@@ -860,6 +1166,22 @@ SUB_COMMANDS = [
     ),
     TagSubCommand(
         Tasks.TAG,
+        'Tag inputs and show results. Optionally also show a diff to the expected labels'
+    ),
+    WapitiTrainSubCommand(
+        Tasks.WAPITI_TRAIN,
+        'Train the model using the provided input(s)'
+    ),
+    WapitiTrainEvalSubCommand(
+        Tasks.WAPITI_TRAIN_EVAL,
+        'Train and reserve a slice of the input data for evaluation'
+    ),
+    WapitiEvalSubCommand(
+        Tasks.WAPITI_EVAL,
+        'Evaluate the already trained model on the provided input(s)'
+    ),
+    WapitiTagSubCommand(
+        Tasks.WAPITI_TAG,
         'Tag inputs and show results. Optionally also show a diff to the expected labels'
     ),
     InputInfoSubCommand(

@@ -14,7 +14,6 @@ from delft.utilities.layers import ChainCRF
 from delft.sequenceLabelling.models import BaseModel
 from delft.sequenceLabelling.models import get_model as _get_model
 
-
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 
 

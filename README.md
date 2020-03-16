@@ -13,6 +13,7 @@ Some of the main features:
   - Google Storage (`gs://`)
 - on-demand embedding download
 - Docker container(s)
+- Support for Wapiti models
 
 ## Example Notebooks
 

@@ -635,9 +635,18 @@ def add_model_positional_argument(parser: argparse.ArgumentParser):
     parser.add_argument("model", nargs='?', choices=GROBID_MODEL_NAMES)
 
 
+def _flatten_input_paths(input_paths_list: List[List[str]]) -> List[str]:
+    if not input_paths_list:
+        return input_paths_list
+    return [input_path for input_paths in input_paths_list for input_path in input_paths]
+
+
 def process_args(args: argparse.Namespace) -> argparse.Namespace:
-    if args.input:
-        args.input = [input_path for input_paths in args.input for input_path in input_paths]
+    args.input = _flatten_input_paths(args.input)
+    try:
+        args.eval_input = _flatten_input_paths(args.eval_input)
+    except AttributeError:
+        pass
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -777,6 +786,8 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         train_eval(
             fold_count=args.fold_count,
             embeddings_name=embedding_name,
+            eval_input_paths=args.eval_input,
+            eval_limit=args.eval_limit,
             **self.get_train_args(args)
         )
 

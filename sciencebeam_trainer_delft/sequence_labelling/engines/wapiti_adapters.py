@@ -3,7 +3,6 @@ import tempfile
 import os
 from pathlib import Path
 from typing import Iterable, IO
-from shutil import copyfile
 
 import numpy as np
 
@@ -11,6 +10,7 @@ from delft.sequenceLabelling.evaluation import classification_report
 from delft.sequenceLabelling.evaluation import f1_score
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
+from sciencebeam_trainer_delft.utils.io import copy_file
 
 from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti import (
     WapitiModel,
@@ -166,4 +166,4 @@ class WapitiModelTrainAdapter:
         model_file_path = os.path.join(output_path, self.model_name, 'model.wapiti')
         os.makedirs(os.path.dirname(model_file_path), exist_ok=True)
         LOGGER.info('saving to %s', model_file_path)
-        copyfile(self.temp_model_path, model_file_path)
+        copy_file(self.temp_model_path, model_file_path)

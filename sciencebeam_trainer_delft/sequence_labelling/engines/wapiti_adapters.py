@@ -34,7 +34,7 @@ class WapitiModelAdapter:
             local_model_file_path = download_manager.download_if_url(model_file_path)
         except FileNotFoundError:
             pass
-        if not os.path.isfile(local_model_file_path):
+        if not os.path.isfile(str(local_model_file_path)):
             model_file_path = os.path.splitext(model_file_path)[0]
             local_model_file_path = download_manager.download_if_url(model_file_path)
         LOGGER.debug('local_model_file_path: %s', local_model_file_path)

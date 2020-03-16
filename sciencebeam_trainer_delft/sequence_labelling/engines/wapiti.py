@@ -1,5 +1,6 @@
 import logging
 import threading
+import os
 import sys
 from collections import Counter
 from itertools import islice
@@ -100,6 +101,8 @@ class WapitiWrapper:
             model_path: str,
             output_only_labels: bool = True,
             stderr_to_log_enabled: bool = True) -> WapitiModel:
+        if not os.path.isfile(model_path):
+            raise FileNotFoundError('wapiti model not found: %s' % model_path)
         args = [
             'label',
             '--model',
@@ -149,8 +152,12 @@ class WapitiWrapper:
             output_model_path: str,
             template_path: str = None,
             max_iter: str = None):
+        if not os.path.isfile(data_path):
+            raise FileNotFoundError('data file not found: %s' % data_path)
         args = ['train']
         if template_path:
+            if not os.path.isfile(template_path):
+                raise FileNotFoundError('template file not found: %s' % template_path)
             args.append('--pattern')
             args.append(str(template_path))
         if max_iter:

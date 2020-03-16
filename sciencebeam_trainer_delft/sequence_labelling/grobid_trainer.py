@@ -274,7 +274,8 @@ def wapiti_train(
         shuffle_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_epoch: int = 100,
-        download_manager: DownloadManager = None):
+        download_manager: DownloadManager = None,
+        gzip_enabled: bool = False):
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
         model = WapitiModelTrainAdapter(
@@ -282,7 +283,8 @@ def wapiti_train(
             template_path=template_path,
             temp_model_path=temp_model_path,
             max_epoch=max_epoch,
-            download_manager=download_manager
+            download_manager=download_manager,
+            gzip_enabled=gzip_enabled
         )
         do_train(
             model,
@@ -425,7 +427,8 @@ def wapiti_train_eval(
         eval_limit: int = None,
         fold_count: int = 1,
         max_epoch: int = 100,
-        download_manager: DownloadManager = None):
+        download_manager: DownloadManager = None,
+        gzip_enabled: bool = False):
     assert fold_count == 1, 'only fold_count == 1 supported'
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
@@ -434,7 +437,8 @@ def wapiti_train_eval(
             template_path=template_path,
             temp_model_path=temp_model_path,
             max_epoch=max_epoch,
-            download_manager=download_manager
+            download_manager=download_manager,
+            gzip_enabled=gzip_enabled
         )
         do_train_eval(
             model,
@@ -878,6 +882,11 @@ def add_wapiti_train_arguments(parser: argparse.ArgumentParser):
     add_output_argument(parser)
     add_max_epoch_argument(parser)
     parser.add_argument("--wapiti-template", required=True)
+    parser.add_argument(
+        "--wapiti-gzip",
+        action="store_true",
+        help="whether to gzip wapiti models before saving"
+    )
 
 
 def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
@@ -1019,7 +1028,8 @@ class WapitiTrainSubCommand(GrobidTrainerSubCommand):
             limit=args.limit,
             output_path=args.output,
             max_epoch=args.max_epoch,
-            download_manager=self.download_manager
+            download_manager=self.download_manager,
+            gzip_enabled=args.wapiti_gzip
         )
 
 
@@ -1067,7 +1077,8 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
             eval_limit=args.eval_limit,
             output_path=args.output,
             max_epoch=args.max_epoch,
-            download_manager=self.download_manager
+            download_manager=self.download_manager,
+            gzip_enabled=args.wapiti_gzip
         )
 
 

@@ -106,7 +106,7 @@ def _shuffle_arrays_mock():
 @pytest.fixture(name='download_manager_mock')
 def _download_manager_mock():
     mock = MagicMock(name='download_manager_mock')
-    mock.download_if_url.side_effect = lambda file_url: str(file_url)
+    mock.download_if_url.side_effect = str
     return mock
 
 
@@ -335,7 +335,8 @@ class TestGrobidTrainer:
                 template_path=template_path,
                 input_paths=default_args['input_paths'],
                 output_path=default_args['output_path'],
-                download_manager=default_args['download_manager']
+                download_manager=default_args['download_manager'],
+                gzip_enabled=False
             )
             wapiti_eval_model(
                 model_path=default_model_directory,
@@ -359,6 +360,31 @@ class TestGrobidTrainer:
                 template_path=template_path,
                 input_paths=default_args['input_paths'],
                 output_path=default_args['output_path'],
+                download_manager=default_args['download_manager']
+            )
+            wapiti_tag_input(
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager']
+            )
+
+        @log_on_exception
+        def test_should_be_able_to_train_and_gzip_wapiti(
+                self, default_args: dict, default_model_directory: str,
+                temp_dir: Path):
+            template_path = temp_dir.joinpath('template')
+            template_path.write_text('U00:%x[-4,0]')
+            wapiti_train(
+                model=default_args['model'],
+                template_path=template_path,
+                input_paths=default_args['input_paths'],
+                output_path=default_args['output_path'],
+                download_manager=default_args['download_manager'],
+                gzip_enabled=True
+            )
+            wapiti_eval_model(
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
                 download_manager=default_args['download_manager']
             )
             wapiti_tag_input(

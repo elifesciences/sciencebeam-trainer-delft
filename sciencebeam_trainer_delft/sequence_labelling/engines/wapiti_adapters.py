@@ -2,8 +2,7 @@ import logging
 import tempfile
 import os
 from pathlib import Path
-from typing import Iterable
-from shutil import copyfile
+from typing import Iterable, IO
 
 import numpy as np
 
@@ -11,6 +10,7 @@ from delft.sequenceLabelling.evaluation import classification_report
 from delft.sequenceLabelling.evaluation import f1_score
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
+from sciencebeam_trainer_delft.utils.io import copy_file
 
 from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti import (
     WapitiModel,
@@ -29,8 +29,19 @@ class WapitiModelAdapter:
 
     @staticmethod
     def load_from(model_path: str, download_manager: DownloadManager) -> 'WapitiModelAdapter':
-        model_file_path = os.path.join(model_path, 'model.wapiti')
-        local_model_file_path = download_manager.download_if_url(model_file_path)
+        model_file_path = os.path.join(model_path, 'model.wapiti.gz')
+        try:
+            local_model_file_path = download_manager.download_if_url(model_file_path)
+        except FileNotFoundError:
+            pass
+        if not os.path.isfile(str(local_model_file_path)):
+            model_file_path = os.path.splitext(model_file_path)[0]
+            local_model_file_path = download_manager.download_if_url(model_file_path)
+        LOGGER.debug('local_model_file_path: %s', local_model_file_path)
+        if local_model_file_path.endswith('.gz'):
+            local_uncompressed_file_path = os.path.splitext(local_model_file_path)[0]
+            copy_file(local_model_file_path, local_uncompressed_file_path, overwrite=False)
+            local_model_file_path = local_uncompressed_file_path
         return WapitiModelAdapter(
             WapitiWrapper().load_model(local_model_file_path),
             model_file_path=local_model_file_path
@@ -83,10 +94,8 @@ class WapitiModelAdapter:
 
 def iter_doc_formatted_training_data(
         x_doc: np.array, y_doc: np.array, features_doc: np.array) -> Iterable[str]:
-    yield from (
-        format_feature_line([x_token] + f_token + [y_token])
-        for x_token, y_token, f_token in zip(x_doc, y_doc, features_doc)
-    )
+    for x_token, y_token, f_token in zip(x_doc, y_doc, features_doc):
+        yield format_feature_line([x_token] + f_token + [y_token])
     # blank lines to mark the end of the document
     yield ''
     yield ''
@@ -95,10 +104,16 @@ def iter_doc_formatted_training_data(
 def iter_formatted_training_data(
         x: np.array, y: np.array, features: np.array) -> Iterable[str]:
     return (
-        line
+        line + '\n'
         for x_doc, y_doc, f_doc in zip(x, y, features)
         for line in iter_doc_formatted_training_data(x_doc, y_doc, f_doc)
     )
+
+
+def write_wapiti_train_data(fp: IO, x: np.array, y: np.array, features: np.array):
+    fp.writelines(iter_formatted_training_data(
+        x, y, features
+    ))
 
 
 class WapitiModelTrainAdapter:
@@ -108,12 +123,14 @@ class WapitiModelTrainAdapter:
             template_path: str,
             temp_model_path: str,
             max_epoch: str,
-            download_manager: DownloadManager):
+            download_manager: DownloadManager,
+            gzip_enabled: bool = False):
         self.model_name = model_name
         self.template_path = template_path
         self.temp_model_path = temp_model_path
         self.max_epoch = max_epoch
         self.download_manager = download_manager
+        self.gzip_enabled = gzip_enabled
 
     def train(
             self,
@@ -130,13 +147,13 @@ class WapitiModelTrainAdapter:
         with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
             data_path = Path(temp_dir).joinpath('train.data')
             with data_path.open(mode='w') as fp:
-                fp.writelines(iter_formatted_training_data(
-                    x_train, y_train, features_train
-                ))
+                write_wapiti_train_data(
+                    fp, x=x_train, y=y_train, features=features_train
+                )
                 if x_valid is not None:
-                    fp.writelines(iter_formatted_training_data(
-                        x_valid, y_valid, features_valid
-                    ))
+                    write_wapiti_train_data(
+                        fp, x=x_valid, y=y_valid, features=features_valid
+                    )
             WapitiWrapper().train(
                 data_path=data_path,
                 output_model_path=self.temp_model_path,
@@ -160,6 +177,7 @@ class WapitiModelTrainAdapter:
         if not Path(self.temp_model_path).exists():
             raise FileNotFoundError("temp_model_path does not exist: %s" % self.temp_model_path)
         model_file_path = os.path.join(output_path, self.model_name, 'model.wapiti')
-        os.makedirs(os.path.dirname(model_file_path), exist_ok=True)
+        if self.gzip_enabled:
+            model_file_path += '.gz'
         LOGGER.info('saving to %s', model_file_path)
-        copyfile(self.temp_model_path, model_file_path)
+        copy_file(self.temp_model_path, model_file_path)

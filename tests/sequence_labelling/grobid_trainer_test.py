@@ -22,6 +22,10 @@ from sciencebeam_trainer_delft.sequence_labelling.grobid_trainer import (
     train,
     train_eval,
     tag_input,
+    wapiti_train,
+    wapiti_train_eval,
+    wapiti_eval_model,
+    wapiti_tag_input,
     main
 )
 
@@ -102,6 +106,7 @@ def _shuffle_arrays_mock():
 @pytest.fixture(name='download_manager_mock')
 def _download_manager_mock():
     mock = MagicMock(name='download_manager_mock')
+    mock.download_if_url.side_effect = str
     return mock
 
 
@@ -116,14 +121,16 @@ def _model_base_path(temp_dir: Path):
 def _default_args(
         sample_train_file: str,
         model_base_path: Path,
-        embedding_registry_path: Path):
-    download_manager = MagicMock(name='download_manager')
-    download_manager.download_if_url.return_value = str(sample_train_file)
+        embedding_registry_path: Path,
+        download_manager_mock: MagicMock):
+    # download_manager = MagicMock(name='download_manager')
+    # download_manager.download_if_url.return_value = str(sample_train_file)
+    # download_manager.download_if_url.side_effect = lambda file_url: str(file_url)
     return dict(
         model='header',
         embeddings_name=EMBEDDING_NAME_1,
         input_paths=[sample_train_file],
-        download_manager=download_manager,
+        download_manager=download_manager_mock,
         output_path=str(model_base_path),
         architecture='CustomBidLSTM_CRF',
         word_lstm_units=11,
@@ -176,6 +183,7 @@ class TestGrobidTrainer:
                 get_default_training_data_mock: MagicMock,
                 load_data_and_labels_crf_file_mock: MagicMock,
                 download_manager_mock: MagicMock):
+            get_default_training_data_mock.return_value = '/tmp/dummy/training/data'
             load_data_and_labels(
                 MODEL_NAME_1,
                 [],
@@ -186,7 +194,7 @@ class TestGrobidTrainer:
                 get_default_training_data_mock.return_value
             )
             load_data_and_labels_crf_file_mock.assert_called_with(
-                download_manager_mock.download_if_url.return_value,
+                get_default_training_data_mock.return_value,
                 limit=None
             )
 
@@ -213,7 +221,7 @@ class TestGrobidTrainer:
                 download_manager=download_manager_mock
             )
             load_data_and_labels_crf_file_mock.assert_called_with(
-                download_manager_mock.download_if_url.return_value,
+                INPUT_PATH_1,
                 limit=123
             )
 
@@ -315,6 +323,75 @@ class TestGrobidTrainer:
             tag_input(
                 model_path=default_model_directory,
                 **train_args
+            )
+
+        @log_on_exception
+        def test_should_be_able_to_train_wapiti(
+                self, default_args: dict, default_model_directory: str,
+                temp_dir: Path):
+            template_path = temp_dir.joinpath('template')
+            template_path.write_text('U00:%x[-4,0]')
+            wapiti_train(
+                model=default_args['model'],
+                template_path=template_path,
+                input_paths=default_args['input_paths'],
+                output_path=default_args['output_path'],
+                download_manager=default_args['download_manager'],
+                gzip_enabled=False
+            )
+            wapiti_eval_model(
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager']
+            )
+            wapiti_tag_input(
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager']
+            )
+
+        @log_on_exception
+        def test_should_be_able_to_train_eval_wapiti(
+                self, default_args: dict, default_model_directory: str,
+                temp_dir: Path):
+            template_path = temp_dir.joinpath('template')
+            template_path.write_text('U00:%x[-4,0]')
+            wapiti_train_eval(
+                model=default_args['model'],
+                template_path=template_path,
+                input_paths=default_args['input_paths'],
+                output_path=default_args['output_path'],
+                download_manager=default_args['download_manager']
+            )
+            wapiti_tag_input(
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager']
+            )
+
+        @log_on_exception
+        def test_should_be_able_to_train_and_gzip_wapiti(
+                self, default_args: dict, default_model_directory: str,
+                temp_dir: Path):
+            template_path = temp_dir.joinpath('template')
+            template_path.write_text('U00:%x[-4,0]')
+            wapiti_train(
+                model=default_args['model'],
+                template_path=template_path,
+                input_paths=default_args['input_paths'],
+                output_path=default_args['output_path'],
+                download_manager=default_args['download_manager'],
+                gzip_enabled=True
+            )
+            wapiti_eval_model(
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager']
+            )
+            wapiti_tag_input(
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager']
             )
 
         def test_should_be_able_to_train_eval(self, default_args: dict):

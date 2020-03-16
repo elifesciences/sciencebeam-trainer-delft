@@ -28,7 +28,10 @@ class WapitiModelAdapter:
         self.model_file_path = model_file_path
 
     @staticmethod
-    def load_from(model_path: str, download_manager: DownloadManager) -> 'WapitiModelAdapter':
+    def load_from(
+            model_path: str,
+            download_manager: DownloadManager,
+            wapiti_binary_path: str = None) -> 'WapitiModelAdapter':
         model_file_path = os.path.join(model_path, 'model.wapiti.gz')
         try:
             local_model_file_path = download_manager.download_if_url(model_file_path)
@@ -43,7 +46,9 @@ class WapitiModelAdapter:
             copy_file(local_model_file_path, local_uncompressed_file_path, overwrite=False)
             local_model_file_path = local_uncompressed_file_path
         return WapitiModelAdapter(
-            WapitiWrapper().load_model(local_model_file_path),
+            WapitiWrapper(
+                wapiti_binary_path=wapiti_binary_path
+            ).load_model(local_model_file_path),
             model_file_path=local_model_file_path
         )
 
@@ -124,13 +129,15 @@ class WapitiModelTrainAdapter:
             temp_model_path: str,
             max_epoch: str,
             download_manager: DownloadManager,
-            gzip_enabled: bool = False):
+            gzip_enabled: bool = False,
+            wapiti_binary_path: str = None):
         self.model_name = model_name
         self.template_path = template_path
         self.temp_model_path = temp_model_path
         self.max_epoch = max_epoch
         self.download_manager = download_manager
         self.gzip_enabled = gzip_enabled
+        self.wapiti_binary_path = wapiti_binary_path
 
     def train(
             self,
@@ -154,7 +161,7 @@ class WapitiModelTrainAdapter:
                     write_wapiti_train_data(
                         fp, x=x_valid, y=y_valid, features=features_valid
                     )
-            WapitiWrapper().train(
+            WapitiWrapper(wapiti_binary_path=self.wapiti_binary_path).train(
                 data_path=data_path,
                 output_model_path=self.temp_model_path,
                 template_path=local_template_path,
@@ -166,7 +173,8 @@ class WapitiModelTrainAdapter:
         assert self.temp_model_path, "temp_model_path required"
         WapitiModelAdapter.load_from(
             os.path.dirname(self.temp_model_path),
-            download_manager=self.download_manager
+            download_manager=self.download_manager,
+            wapiti_binary_path=self.wapiti_binary_path
         ).eval(
             x_test, y_test, features=features
         )

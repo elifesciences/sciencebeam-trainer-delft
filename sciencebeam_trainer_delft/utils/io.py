@@ -6,6 +6,7 @@ from shutil import copyfileobj
 from contextlib import contextmanager
 from gzip import GzipFile
 from lzma import LZMAFile
+from urllib.error import HTTPError
 from urllib.request import urlopen
 from typing import List, IO
 
@@ -133,8 +134,13 @@ def get_compression_wrapper(filepath: str):
 @contextmanager
 def _open_raw(filepath: str, mode: str):
     if filepath.startswith('https://'):
-        with urlopen(filepath) as fp:
-            yield fp
+        try:
+            with urlopen(filepath) as fp:
+                yield fp
+        except HTTPError as error:
+            if error.code == 404:
+                raise FileNotFoundError('file not found: %s' % filepath) from error
+            raise
     else:
         try:
             with tf_file_io.FileIO(filepath, mode=mode) as fp:

@@ -4,6 +4,7 @@ import os
 import sys
 from collections import Counter
 from itertools import islice
+from multiprocessing import cpu_count
 from typing import List, Iterable
 
 import subprocess
@@ -129,7 +130,7 @@ class WapitiWrapper:
 
     def run_wapiti(self, args: List[str]):
         command = [self.wapiti_binary_path] + args
-        LOGGER.debug('calling wapiti: %s', command)
+        LOGGER.info('calling wapiti: %s', command)
         process = subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
@@ -162,6 +163,10 @@ class WapitiWrapper:
         if max_iter:
             args.append('--maxiter')
             args.append(str(max_iter))
+
+        args.append('--nthread')
+        args.append(str(cpu_count()))
+
         args.append(str(data_path))
         args.append(str(output_model_path))
         self.run_wapiti(args)

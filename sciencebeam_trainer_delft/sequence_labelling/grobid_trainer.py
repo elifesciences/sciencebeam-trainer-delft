@@ -37,6 +37,9 @@ from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti_adapters import
     WapitiModelAdapter,
     WapitiModelTrainAdapter
 )
+from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti_install import (
+    install_wapiti_and_get_path_or_none
+)
 
 from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     TagOutputFormats,
@@ -275,7 +278,8 @@ def wapiti_train(
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_epoch: int = 100,
         download_manager: DownloadManager = None,
-        gzip_enabled: bool = False):
+        gzip_enabled: bool = False,
+        wapiti_binary_path: str = None):
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
         model = WapitiModelTrainAdapter(
@@ -284,7 +288,8 @@ def wapiti_train(
             temp_model_path=temp_model_path,
             max_epoch=max_epoch,
             download_manager=download_manager,
-            gzip_enabled=gzip_enabled
+            gzip_enabled=gzip_enabled,
+            wapiti_binary_path=wapiti_binary_path
         )
         do_train(
             model,
@@ -428,7 +433,8 @@ def wapiti_train_eval(
         fold_count: int = 1,
         max_epoch: int = 100,
         download_manager: DownloadManager = None,
-        gzip_enabled: bool = False):
+        gzip_enabled: bool = False,
+        wapiti_binary_path: str = None):
     assert fold_count == 1, 'only fold_count == 1 supported'
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
@@ -438,7 +444,8 @@ def wapiti_train_eval(
             temp_model_path=temp_model_path,
             max_epoch=max_epoch,
             download_manager=download_manager,
-            gzip_enabled=gzip_enabled
+            gzip_enabled=gzip_enabled,
+            wapiti_binary_path=wapiti_binary_path
         )
         do_train_eval(
             model,
@@ -546,10 +553,15 @@ def wapiti_eval_model(
         split_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         fold_count: int = 1,
-        download_manager: DownloadManager = None):
+        download_manager: DownloadManager = None,
+        wapiti_binary_path: str = None):
     assert fold_count == 1, 'only fold_count == 1 supported'
 
-    model = WapitiModelAdapter.load_from(model_path, download_manager=download_manager)
+    model = WapitiModelAdapter.load_from(
+        model_path,
+        download_manager=download_manager,
+        wapiti_binary_path=wapiti_binary_path
+    )
     do_eval_model(
         model,
         input_paths=input_paths,
@@ -662,8 +674,13 @@ def wapiti_tag_input(
         limit: int = None,
         random_seed: int = DEFAULT_RANDOM_SEED,
         shuffle_input: bool = False,
-        download_manager: DownloadManager = None):
-    model = WapitiModelAdapter.load_from(model_path, download_manager=download_manager)
+        download_manager: DownloadManager = None,
+        wapiti_binary_path: str = None):
+    model = WapitiModelAdapter.load_from(
+        model_path,
+        download_manager=download_manager,
+        wapiti_binary_path=wapiti_binary_path
+    )
     do_tag_input(
         model,
         tag_output_format=tag_output_format,
@@ -889,6 +906,14 @@ def add_wapiti_train_arguments(parser: argparse.ArgumentParser):
     )
 
 
+def add_wapiti_install_arguments(parser: argparse.ArgumentParser):
+    example_url = "https://github.com/kermitt2/Wapiti/archive/master.tar.gz"
+    parser.add_argument(
+        "--wapiti-install-source",
+        help="source file to install wapiti from, e.g. %s" % example_url
+    )
+
+
 def add_all_non_positional_arguments(parser: argparse.ArgumentParser):
     add_common_arguments(parser)
     add_train_arguments(parser)
@@ -1017,6 +1042,7 @@ class WapitiTrainSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_wapiti_train_arguments(parser)
+        add_wapiti_install_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         if not args.model:
@@ -1029,7 +1055,11 @@ class WapitiTrainSubCommand(GrobidTrainerSubCommand):
             output_path=args.output,
             max_epoch=args.max_epoch,
             download_manager=self.download_manager,
-            gzip_enabled=args.wapiti_gzip
+            gzip_enabled=args.wapiti_gzip,
+            wapiti_binary_path=install_wapiti_and_get_path_or_none(
+                args.wapiti_install_source,
+                download_manager=self.download_manager
+            )
         )
 
 
@@ -1064,6 +1094,7 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
         add_common_arguments(parser)
         add_wapiti_train_arguments(parser)
         add_eval_input_arguments(parser)
+        add_wapiti_install_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         if not args.model:
@@ -1078,7 +1109,11 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
             output_path=args.output,
             max_epoch=args.max_epoch,
             download_manager=self.download_manager,
-            gzip_enabled=args.wapiti_gzip
+            gzip_enabled=args.wapiti_gzip,
+            wapiti_binary_path=install_wapiti_and_get_path_or_none(
+                args.wapiti_install_source,
+                download_manager=self.download_manager
+            )
         )
 
 
@@ -1107,6 +1142,7 @@ class WapitiEvalSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_model_path_argument(parser, required=True, help='directory to load the model from')
+        add_wapiti_install_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         wapiti_eval_model(
@@ -1114,7 +1150,11 @@ class WapitiEvalSubCommand(GrobidTrainerSubCommand):
             model=args.model,
             input_paths=args.input,
             limit=args.limit,
-            download_manager=self.download_manager
+            download_manager=self.download_manager,
+            wapiti_binary_path=install_wapiti_and_get_path_or_none(
+                args.wapiti_install_source,
+                download_manager=self.download_manager
+            )
         )
 
 
@@ -1137,6 +1177,7 @@ class WapitiTagSubCommand(GrobidTrainerSubCommand):
         add_common_arguments(parser, max_sequence_length_default=None)
         add_model_path_argument(parser, required=True, help='directory to load the model from')
         add_tag_output_format_argument(parser)
+        add_wapiti_install_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         wapiti_tag_input(
@@ -1145,7 +1186,11 @@ class WapitiTagSubCommand(GrobidTrainerSubCommand):
             model=args.model,
             input_paths=args.input,
             limit=args.limit,
-            download_manager=self.download_manager
+            download_manager=self.download_manager,
+            wapiti_binary_path=install_wapiti_and_get_path_or_none(
+                args.wapiti_install_source,
+                download_manager=self.download_manager
+            )
         )
 
 

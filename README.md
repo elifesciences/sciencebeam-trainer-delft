@@ -214,7 +214,7 @@ Markov Chain Algorithms for Planar Lattice Structures Michael Luby y Dana Randal
 
 The Wapiti sub commands allow to use a similar process for training, evaluating and tagging Wapiti models, as the sub commands for the other DL model(s) above.
 
-Currently you would need to install [Wapiti](https://wapiti.limsi.fr/) and make the `wapiti` command available in the path.
+Currently you would need to either install [Wapiti](https://wapiti.limsi.fr/) and make the `wapiti` command available in the path, or use the `--wapiti-install-source` switch to download and install a version from source.
 
 #### Wapiti Train Sub Command
 
@@ -223,6 +223,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     header wapiti_train \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
     --wapiti-template=https://raw.githubusercontent.com/kermitt2/grobid/0.5.6/grobid-trainer/resources/dataset/header/crfpp-templates/header.template \
+    --wapiti-install-source=https://github.com/kermitt2/Wapiti/archive/5f9a52351fddf21916008daa4becd41d56e7f608.tar.gz \
     --output="data/models" \
     --limit="100" \
     --max-epoch="10"

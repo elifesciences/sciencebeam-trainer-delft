@@ -89,8 +89,8 @@ class WapitiModel:
 
 
 class WapitiWrapper:
-    def __init__(self, wapiti_binary_path: str = 'wapiti'):
-        self.wapiti_binary_path = wapiti_binary_path
+    def __init__(self, wapiti_binary_path: str = None):
+        self.wapiti_binary_path = wapiti_binary_path or 'wapiti'
 
     def check_available(self):
         self.run_wapiti(['--version'])

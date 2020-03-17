@@ -167,6 +167,12 @@ class WapitiWrapper:
         args.append('--nthread')
         args.append(str(cpu_count()))
 
+        args.append('--stopeps')
+        args.append('0.00001')
+
+        args.append('--stopwin')
+        args.append('20')
+
         args.append(str(data_path))
         args.append(str(output_model_path))
         self.run_wapiti(args)

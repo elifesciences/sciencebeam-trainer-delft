@@ -130,7 +130,8 @@ class WapitiModelTrainAdapter:
             max_epoch: str,
             download_manager: DownloadManager,
             gzip_enabled: bool = False,
-            wapiti_binary_path: str = None):
+            wapiti_binary_path: str = None,
+            wapiti_train_args: dict = None):
         self.model_name = model_name
         self.template_path = template_path
         self.temp_model_path = temp_model_path
@@ -138,6 +139,7 @@ class WapitiModelTrainAdapter:
         self.download_manager = download_manager
         self.gzip_enabled = gzip_enabled
         self.wapiti_binary_path = wapiti_binary_path
+        self.wapiti_train_args = wapiti_train_args
 
     def train(
             self,
@@ -165,7 +167,8 @@ class WapitiModelTrainAdapter:
                 data_path=data_path,
                 output_model_path=self.temp_model_path,
                 template_path=local_template_path,
-                max_iter=self.max_epoch
+                max_iter=self.max_epoch,
+                **(self.wapiti_train_args or {})
             )
             LOGGER.info('wapiti model trained: %s', self.temp_model_path)
 

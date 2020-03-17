@@ -33,6 +33,10 @@ from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_labels_crf_file
 
+from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti import (
+    DEFAULT_STOP_EPSILON_VALUE,
+    DEFAULT_STOP_WINDOW_SIZE
+)
 from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti_adapters import (
     WapitiModelAdapter,
     WapitiModelTrainAdapter
@@ -279,7 +283,8 @@ def wapiti_train(
         max_epoch: int = 100,
         download_manager: DownloadManager = None,
         gzip_enabled: bool = False,
-        wapiti_binary_path: str = None):
+        wapiti_binary_path: str = None,
+        wapiti_train_args: dict = None):
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
         model = WapitiModelTrainAdapter(
@@ -289,7 +294,8 @@ def wapiti_train(
             max_epoch=max_epoch,
             download_manager=download_manager,
             gzip_enabled=gzip_enabled,
-            wapiti_binary_path=wapiti_binary_path
+            wapiti_binary_path=wapiti_binary_path,
+            wapiti_train_args=wapiti_train_args
         )
         do_train(
             model,
@@ -434,7 +440,8 @@ def wapiti_train_eval(
         max_epoch: int = 100,
         download_manager: DownloadManager = None,
         gzip_enabled: bool = False,
-        wapiti_binary_path: str = None):
+        wapiti_binary_path: str = None,
+        wapiti_train_args: dict = None):
     assert fold_count == 1, 'only fold_count == 1 supported'
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
@@ -445,7 +452,8 @@ def wapiti_train_eval(
             max_epoch=max_epoch,
             download_manager=download_manager,
             gzip_enabled=gzip_enabled,
-            wapiti_binary_path=wapiti_binary_path
+            wapiti_binary_path=wapiti_binary_path,
+            wapiti_train_args=wapiti_train_args
         )
         do_train_eval(
             model,
@@ -904,6 +912,22 @@ def add_wapiti_train_arguments(parser: argparse.ArgumentParser):
         action="store_true",
         help="whether to gzip wapiti models before saving"
     )
+    parser.add_argument(
+        "--wapiti-stop-epsilon-value",
+        default=DEFAULT_STOP_EPSILON_VALUE
+    )
+    parser.add_argument(
+        "--wapiti-stop-window-size",
+        type=int,
+        default=DEFAULT_STOP_WINDOW_SIZE
+    )
+
+
+def get_wapiti_train_args(args: argparse.Namespace) -> dict:
+    return dict(
+        stop_epsilon_value=args.wapiti_stop_epsilon_value,
+        stop_window_size=args.wapiti_stop_window_size
+    )
 
 
 def add_wapiti_install_arguments(parser: argparse.ArgumentParser):
@@ -1059,7 +1083,8 @@ class WapitiTrainSubCommand(GrobidTrainerSubCommand):
             wapiti_binary_path=install_wapiti_and_get_path_or_none(
                 args.wapiti_install_source,
                 download_manager=self.download_manager
-            )
+            ),
+            wapiti_train_args=get_wapiti_train_args(args)
         )
 
 
@@ -1113,7 +1138,8 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
             wapiti_binary_path=install_wapiti_and_get_path_or_none(
                 args.wapiti_install_source,
                 download_manager=self.download_manager
-            )
+            ),
+            wapiti_train_args=get_wapiti_train_args(args)
         )
 
 

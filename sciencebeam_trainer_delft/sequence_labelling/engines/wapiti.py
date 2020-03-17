@@ -4,12 +4,17 @@ import os
 import sys
 from collections import Counter
 from itertools import islice
+from multiprocessing import cpu_count
 from typing import List, Iterable
 
 import subprocess
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+DEFAULT_STOP_EPSILON_VALUE = '0.00001'
+DEFAULT_STOP_WINDOW_SIZE = 20
 
 
 DEFAULT_INVALID_CHARACTER_PLACEHOLDER = '?'
@@ -129,7 +134,7 @@ class WapitiWrapper:
 
     def run_wapiti(self, args: List[str]):
         command = [self.wapiti_binary_path] + args
-        LOGGER.debug('calling wapiti: %s', command)
+        LOGGER.info('calling wapiti: %s', command)
         process = subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
@@ -150,9 +155,20 @@ class WapitiWrapper:
             data_path: str,
             output_model_path: str,
             template_path: str = None,
-            max_iter: str = None):
+            max_iter: str = None,
+            num_threads: int = None,
+            stop_epsilon_value: str = None,
+            stop_window_size: int = None):
         if not os.path.isfile(str(data_path)):
             raise FileNotFoundError('data file not found: %s' % data_path)
+
+        if not num_threads:
+            num_threads = cpu_count()
+        if not stop_epsilon_value:
+            stop_epsilon_value = DEFAULT_STOP_EPSILON_VALUE
+        if not stop_window_size:
+            stop_window_size = DEFAULT_STOP_WINDOW_SIZE
+
         args = ['train']
         if template_path:
             if not os.path.isfile(str(template_path)):
@@ -162,6 +178,16 @@ class WapitiWrapper:
         if max_iter:
             args.append('--maxiter')
             args.append(str(max_iter))
+
+        args.append('--nthread')
+        args.append(str(num_threads))
+
+        args.append('--stopeps')
+        args.append(str(stop_epsilon_value))
+
+        args.append('--stopwin')
+        args.append(str(stop_window_size))
+
         args.append(str(data_path))
         args.append(str(output_model_path))
         self.run_wapiti(args)

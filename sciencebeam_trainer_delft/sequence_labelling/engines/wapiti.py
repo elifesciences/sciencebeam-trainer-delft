@@ -13,9 +13,14 @@ import subprocess
 LOGGER = logging.getLogger(__name__)
 
 
+DEFAULT_STOP_EPS = '0.00001'
+DEFAULT_STOP_WINDOW = 20
+
+
 DEFAULT_INVALID_CHARACTER_PLACEHOLDER = '?'
 
 INVAID_CHARACTER_START_ORD = 0x6EE80
+
 
 
 def format_feature_line(feature_line: List[str]) -> str:
@@ -151,9 +156,20 @@ class WapitiWrapper:
             data_path: str,
             output_model_path: str,
             template_path: str = None,
-            max_iter: str = None):
+            max_iter: str = None,
+            num_threads: int = None,
+            stop_eps: str = None,
+            stop_window: int = None):
         if not os.path.isfile(str(data_path)):
             raise FileNotFoundError('data file not found: %s' % data_path)
+
+        if not num_threads:
+            num_threads = cpu_count()
+        if not stop_eps:
+            stop_eps = DEFAULT_STOP_EPS
+        if not stop_window:
+            stop_window = DEFAULT_STOP_WINDOW
+
         args = ['train']
         if template_path:
             if not os.path.isfile(str(template_path)):
@@ -165,13 +181,13 @@ class WapitiWrapper:
             args.append(str(max_iter))
 
         args.append('--nthread')
-        args.append(str(cpu_count()))
+        args.append(str(num_threads))
 
         args.append('--stopeps')
-        args.append('0.00001')
+        args.append(str(stop_eps))
 
         args.append('--stopwin')
-        args.append('20')
+        args.append(str(stop_window))
 
         args.append(str(data_path))
         args.append(str(output_model_path))

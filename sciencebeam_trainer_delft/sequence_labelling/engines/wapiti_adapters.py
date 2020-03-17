@@ -33,11 +33,12 @@ class WapitiModelAdapter:
             download_manager: DownloadManager,
             wapiti_binary_path: str = None) -> 'WapitiModelAdapter':
         model_file_path = os.path.join(model_path, 'model.wapiti.gz')
+        local_model_file_path = None
         try:
             local_model_file_path = download_manager.download_if_url(model_file_path)
         except FileNotFoundError:
             pass
-        if not os.path.isfile(str(local_model_file_path)):
+        if not local_model_file_path or not os.path.isfile(str(local_model_file_path)):
             model_file_path = os.path.splitext(model_file_path)[0]
             local_model_file_path = download_manager.download_if_url(model_file_path)
         LOGGER.debug('local_model_file_path: %s', local_model_file_path)

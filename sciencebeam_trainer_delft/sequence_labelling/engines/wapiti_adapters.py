@@ -93,6 +93,8 @@ class WapitiModelAdapter:
         return os.path.basename(os.path.dirname(self.model_file_path))
 
     def iter_tag_using_model(self, x: np.array, features: np.array, output_format: str = None):
+        # Note: this method doesn't currently seem to work reliable and needs to be investigated
+        #   The evaluation always shows zero.
         assert not output_format, 'output_format not supported'
         for x_doc, f_doc in zip(x, features):
             LOGGER.debug('x_doc=%s, f_doc=%s', x_doc, f_doc)

@@ -25,7 +25,12 @@ LOGGER = logging.getLogger(__name__)
 def iter_doc_formatted_input_data(
         x_doc: np.array, features_doc: np.array) -> Iterable[str]:
     for x_token, f_token in zip(x_doc, features_doc):
-        yield format_feature_line([x_token] + f_token)
+        try:
+            yield format_feature_line([x_token] + list(f_token))
+        except TypeError as error:
+            raise RuntimeError(
+                'failed to concatenate: x=<%s>, f=<%s>' % (x_token, f_token)
+            ) from error
     # blank lines to mark the end of the document
     yield ''
     yield ''

@@ -150,6 +150,27 @@ class WapitiWrapper:
             )
         LOGGER.debug('wapiti call succeeded')
 
+    def label(
+            self,
+            model_path: str,
+            data_path: str,
+            output_data_path: str,
+            output_only_labels: bool = True):
+        if not os.path.isfile(str(model_path)):
+            raise FileNotFoundError('model file not found: %s' % model_path)
+        if not os.path.isfile(str(data_path)):
+            raise FileNotFoundError('data file not found: %s' % data_path)
+        args = [
+            'label',
+            '--model',
+            str(model_path)
+        ]
+        if output_only_labels:
+            args.append('--label')
+        args.append(str(data_path))
+        args.append(str(output_data_path))
+        self.run_wapiti(args)
+
     def train(
             self,
             data_path: str,

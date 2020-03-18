@@ -288,9 +288,11 @@ class TestGrobidTrainer:
                 **default_args
             )
             tag_input(
-                use_features=False,
+                model=default_args['model'],
                 model_path=default_model_directory,
-                **default_args
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager'],
+                embedding_registry_path=default_args['embedding_registry_path']
             )
 
         @log_on_exception
@@ -301,9 +303,11 @@ class TestGrobidTrainer:
                 **default_args
             )
             tag_input(
-                use_features=True,
+                model=default_args['model'],
                 model_path=default_model_directory,
-                **default_args
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager'],
+                embedding_registry_path=default_args['embedding_registry_path']
             )
 
         @log_on_exception
@@ -321,8 +325,11 @@ class TestGrobidTrainer:
                 **train_args
             )
             tag_input(
+                model=default_args['model'],
                 model_path=default_model_directory,
-                **train_args
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager'],
+                embedding_registry_path=default_args['embedding_registry_path']
             )
 
         @log_on_exception

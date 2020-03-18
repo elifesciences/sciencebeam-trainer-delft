@@ -498,10 +498,53 @@ def do_eval_model(
     model.eval(x_eval, y_eval, features=features_eval)
 
 
+def get_model_name(
+        model: str,
+        use_ELMo: bool = False,
+        output_path: str = None,
+        model_path: str = None):
+    if output_path or model_path:
+        model_name = model
+    else:
+        model_name = 'grobid-' + model
+
+    if use_ELMo:
+        model_name += '-with_ELMo'
+    return model_name
+
+
+def load_delft_model(
+        model: str,
+        use_ELMo: bool = False,
+        output_path: str = None,
+        model_path: str = None,
+        max_sequence_length: int = 100,
+        fold_count: int = 1,
+        batch_size: int = 20,
+        embedding_manager: EmbeddingManager = None,
+        **kwargs):
+    model = Sequence(
+        get_model_name(
+            model,
+            use_ELMo=use_ELMo,
+            output_path=output_path,
+            model_path=model_path
+        ),
+        embeddings_name=None,
+        embedding_manager=embedding_manager,
+        max_sequence_length=max_sequence_length,
+        batch_size=batch_size,
+        fold_number=fold_count,
+        **kwargs
+    )
+
+    assert model_path
+    model.load_from(model_path)
+    return model
+
+
 def eval_model(
         model,
-        embeddings_name: str = None,
-        architecture: str = 'BidLSTM_CRF',
         use_ELMo: bool = False,
         input_paths: List[str] = None,
         output_path: str = None,
@@ -511,38 +554,23 @@ def eval_model(
         split_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
-        fold_count=1, max_epoch=100, batch_size=20,
+        fold_count: int = 1,
+        batch_size: int = 20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
 
-    if output_path or model_path:
-        model_name = model
-    else:
-        model_name = 'grobid-' + model
-
-    if use_ELMo:
-        model_name += '-with_ELMo'
-
-    # set embeddings_name to None, it will be loaded from the model
-    embeddings_name = None
-
-    model = Sequence(
-        model_name,
-        max_epoch=max_epoch,
-        recurrent_dropout=0.50,
-        embeddings_name=embeddings_name,
-        embedding_manager=embedding_manager,
-        max_sequence_length=max_sequence_length,
-        model_type=architecture,
+    model = load_delft_model(
+        model=model,
         use_ELMo=use_ELMo,
+        output_path=output_path,
+        model_path=model_path,
+        max_sequence_length=max_sequence_length,
+        fold_count=fold_count,
         batch_size=batch_size,
-        fold_number=fold_count,
+        embedding_manager=embedding_manager,
         **kwargs
     )
-
-    assert model_path
-    model.load_from(model_path)
 
     do_eval_model(
         model,
@@ -622,10 +650,8 @@ def do_tag_input(
 
 
 def tag_input(
-        model,
+        model: str,
         tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
-        embeddings_name: str = None,
-        architecture: str = 'BidLSTM_CRF',
         use_ELMo: bool = False,
         input_paths: List[str] = None,
         output_path: str = None,
@@ -634,37 +660,23 @@ def tag_input(
         shuffle_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = None,
-        fold_count=1, max_epoch=100, batch_size=20,
+        fold_count: int = 1,
+        batch_size: int = 20,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
-    if output_path or model_path:
-        model_name = model
-    else:
-        model_name = 'grobid-' + model
 
-    if use_ELMo:
-        model_name += '-with_ELMo'
-
-    # set embeddings_name to None, it will be loaded from the model
-    embeddings_name = None
-
-    model = Sequence(
-        model_name,
-        max_epoch=max_epoch,
-        recurrent_dropout=0.50,
-        embeddings_name=embeddings_name,
-        embedding_manager=embedding_manager,
-        max_sequence_length=max_sequence_length,
-        model_type=architecture,
+    model = load_delft_model(
+        model=model,
         use_ELMo=use_ELMo,
+        output_path=output_path,
+        model_path=model_path,
+        max_sequence_length=max_sequence_length,
+        fold_count=fold_count,
         batch_size=batch_size,
-        fold_number=fold_count,
+        embedding_manager=embedding_manager,
         **kwargs
     )
-
-    assert model_path
-    model.load_from(model_path)
 
     do_tag_input(
         model,

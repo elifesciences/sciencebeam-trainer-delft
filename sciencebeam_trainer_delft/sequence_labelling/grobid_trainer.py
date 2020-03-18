@@ -541,6 +541,9 @@ def eval_model(
         **kwargs
     )
 
+    assert model_path
+    model.load_from(model_path)
+
     do_eval_model(
         model,
         input_paths=input_paths,

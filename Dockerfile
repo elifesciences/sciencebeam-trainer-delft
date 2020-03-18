@@ -53,3 +53,8 @@ COPY config/embedding-registry.json ./
 
 COPY .flake8 .pylintrc pytest.ini ./
 COPY tests ./tests
+
+# add additional wrapper entrypoint for OVERRIDE_EMBEDDING_URL
+COPY ./docker/entrypoint.sh ${PROJECT_FOLDER}/entrypoint.sh
+ENTRYPOINT ["/opt/sciencebeam-trainer-delft/entrypoint.sh"]
+CMD ["bash"]

@@ -23,9 +23,16 @@ LOGGER = logging.getLogger(__name__)
 
 
 class WapitiModelAdapter:
-    def __init__(self, wapiti_model: WapitiModel, model_file_path: str):
-        self.wapiti_model = wapiti_model
+    def __init__(self, wapiti_wrapper: WapitiWrapper, model_file_path: str):
+        self.wapiti_wrapper = wapiti_wrapper
         self.model_file_path = model_file_path
+        self._wapiti_model: WapitiModel = None
+
+    @property
+    def wapiti_model(self) -> WapitiModel:
+        if self._wapiti_model is None:
+            self._wapiti_model = self.wapiti_wrapper.load_model(self.model_file_path)
+        return self._wapiti_model
 
     @staticmethod
     def load_from(
@@ -49,7 +56,7 @@ class WapitiModelAdapter:
         return WapitiModelAdapter(
             WapitiWrapper(
                 wapiti_binary_path=wapiti_binary_path
-            ).load_model(local_model_file_path),
+            ),
             model_file_path=local_model_file_path
         )
 

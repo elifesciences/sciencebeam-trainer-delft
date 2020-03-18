@@ -22,10 +22,46 @@ from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti import (
 LOGGER = logging.getLogger(__name__)
 
 
+def iter_doc_formatted_input_data(
+        x_doc: np.array, features_doc: np.array) -> Iterable[str]:
+    for x_token, f_token in zip(x_doc, features_doc):
+        try:
+            yield format_feature_line([x_token] + list(f_token))
+        except TypeError as error:
+            raise RuntimeError(
+                'failed to concatenate: x=<%s>, f=<%s>' % (x_token, f_token)
+            ) from error
+    # blank lines to mark the end of the document
+    yield ''
+    yield ''
+
+
+def iter_formatted_input_data(
+        x: np.array, features: np.array) -> Iterable[str]:
+    return (
+        line + '\n'
+        for x_doc, f_doc in zip(x, features)
+        for line in iter_doc_formatted_input_data(x_doc, f_doc)
+    )
+
+
+def write_wapiti_input_data(fp: IO, x: np.array, features: np.array):
+    fp.writelines(iter_formatted_input_data(
+        x, features
+    ))
+
+
 class WapitiModelAdapter:
-    def __init__(self, wapiti_model: WapitiModel, model_file_path: str):
-        self.wapiti_model = wapiti_model
+    def __init__(self, wapiti_wrapper: WapitiWrapper, model_file_path: str):
+        self.wapiti_wrapper = wapiti_wrapper
         self.model_file_path = model_file_path
+        self._wapiti_model = None
+
+    @property
+    def wapiti_model(self) -> WapitiModel:
+        if self._wapiti_model is None:
+            self._wapiti_model = self.wapiti_wrapper.load_model(self.model_file_path)
+        return self._wapiti_model
 
     @staticmethod
     def load_from(
@@ -49,14 +85,16 @@ class WapitiModelAdapter:
         return WapitiModelAdapter(
             WapitiWrapper(
                 wapiti_binary_path=wapiti_binary_path
-            ).load_model(local_model_file_path),
+            ),
             model_file_path=local_model_file_path
         )
 
     def _get_model_name(self) -> str:
         return os.path.basename(os.path.dirname(self.model_file_path))
 
-    def iter_tag(self, x: np.array, features: np.array, output_format: str = None):
+    def iter_tag_using_model(self, x: np.array, features: np.array, output_format: str = None):
+        # Note: this method doesn't currently seem to work reliable and needs to be investigated
+        #   The evaluation always shows zero.
         assert not output_format, 'output_format not supported'
         for x_doc, f_doc in zip(x, features):
             LOGGER.debug('x_doc=%s, f_doc=%s', x_doc, f_doc)
@@ -69,6 +107,44 @@ class WapitiModelAdapter:
                 for x_token, result_token in zip(x_doc, result)
             ]
             yield token_and_label_pairs
+
+    def iter_tag_using_wrapper(self, x: np.array, features: np.array, output_format: str = None):
+        assert not output_format, 'output_format not supported'
+        with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
+            data_path = Path(temp_dir).joinpath('input.data')
+            output_data_path = Path(temp_dir).joinpath('output.data')
+            with data_path.open(mode='w') as fp:
+                write_wapiti_input_data(
+                    fp, x=x, features=features
+                )
+            self.wapiti_wrapper.label(
+                model_path=self.model_file_path,
+                data_path=data_path,
+                output_data_path=output_data_path,
+                output_only_labels=False
+            )
+            token_and_label_pairs = []
+            with output_data_path.open(mode='r') as output_data_fp:
+                for line in output_data_fp:
+                    line = line.rstrip()
+                    if not line:
+                        if token_and_label_pairs:
+                            yield token_and_label_pairs
+                        token_and_label_pairs = []
+                        continue
+                    values = line.replace('\t', ' ').split(' ')
+                    if len(values) < 2:
+                        raise ValueError('should have multiple values, but got: [%s]' % line)
+                    token_and_label_pairs.append((
+                        values[0],
+                        values[-1]
+                    ))
+
+            if token_and_label_pairs:
+                yield token_and_label_pairs
+
+    def iter_tag(self, x: np.array, features: np.array, output_format: str = None):
+        return self.iter_tag_using_wrapper(x, features, output_format)
 
     def tag(self, x: np.array, features: np.array, output_format: str = None):
         assert not output_format, 'output_format not supported'

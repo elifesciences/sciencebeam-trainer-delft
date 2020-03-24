@@ -20,13 +20,20 @@ def left_pad_batch_values(batch_values: np.array, max_sequence_length: int, dtyp
     if dtype is None:
         dtype = batch_values.dtype
     batch_size = len(batch_values)
-    value_dimension = len(batch_values[0][0])
+    value_dimension = 0
+    for batch_value in batch_values:
+        try:
+            value_dimension = len(batch_value[0])
+            continue
+        except IndexError:
+            pass
     result = np.zeros((batch_size, max_sequence_length, value_dimension), dtype=dtype)
     for batch_index in range(batch_size):
         values = batch_values[batch_index]
         if len(values) > max_sequence_length:
             values = values[:max_sequence_length]
-        result[batch_index, :len(values)] = values
+        if len(values) > 0:
+            result[batch_index, :len(values)] = values
     return result
 
 

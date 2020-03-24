@@ -179,6 +179,23 @@ class TestLeftPadBatchValues:
             ])
         )
 
+    def test_should_left_pad_zero_length_values(self):
+        all_close(
+            left_pad_batch_values(
+                np.asarray([
+                    [],
+                    [[1, 1], [2, 2]],
+                    [[1, 1]]
+                ]),
+                2,
+                dtype='float32'
+            ), np.asarray([
+                [[0, 0], [0, 0]],
+                [[1, 1], [2, 2]],
+                [[1, 1], [0, 0]]
+            ])
+        )
+
 
 class TestGenerateBatchWindowIndicesAndOffset:
     def test_should_return_single_sequence_offset_as_is(self):

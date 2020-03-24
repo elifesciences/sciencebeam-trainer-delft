@@ -22,7 +22,8 @@ def get_callbacks(
         log_dir: str = None,
         valid: tuple = (),
         early_stopping: bool = True,
-        early_stopping_patience: int = 5):
+        early_stopping_patience: int = 5,
+        meta: dict = None):
     """
     Get callbacks.
 
@@ -45,7 +46,8 @@ def get_callbacks(
         save_callback = ModelWithMetadataCheckpoint(
             os.path.join(log_dir, epoch_dirname),
             model_saver=model_saver,
-            monitor='f1'
+            monitor='f1',
+            meta=meta
         )
         callbacks.append(save_callback)
 
@@ -93,6 +95,11 @@ class Trainer(_Trainer):
             features_train=features_train, features_valid=features_valid
         )
 
+    def get_meta(self):
+        return {
+            'training_config': vars(self.training_config)
+        }
+
     def train_model(  # pylint: disable=arguments-differ
             self, local_model,
             x_train, y_train,
@@ -137,7 +144,8 @@ class Trainer(_Trainer):
                 log_dir=self.checkpoint_path,
                 early_stopping=True,
                 early_stopping_patience=self.training_config.patience,
-                valid=(validation_generator, self.preprocessor)
+                valid=(validation_generator, self.preprocessor),
+                meta=self.get_meta()
             )
         else:
             x_train = np.concatenate((x_train, x_valid), axis=0)
@@ -161,7 +169,8 @@ class Trainer(_Trainer):
             callbacks = get_callbacks(
                 model_saver=self.model_saver,
                 log_dir=self.checkpoint_path,
-                early_stopping=False
+                early_stopping=False,
+                meta=self.get_meta()
             )
         nb_workers = 6
         multiprocessing = self.multiprocessing

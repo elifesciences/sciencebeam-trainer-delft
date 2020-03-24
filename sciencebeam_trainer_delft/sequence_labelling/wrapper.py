@@ -369,11 +369,16 @@ class Sequence(_Sequence):
             )
         return embeddings
 
+    def get_meta(self):
+        return {
+            'training_config': vars(self.training_config)
+        }
+
     def save(self, dir_path=None):
         # create subfolder for the model if not already exists
         directory = self._get_model_directory(dir_path)
         os.makedirs(directory, exist_ok=True)
-        self.get_model_saver().save_to(directory, model=self.model)
+        self.get_model_saver().save_to(directory, model=self.model, meta=self.get_meta())
 
     def load(self, dir_path=None):
         directory = self._get_model_directory(dir_path)

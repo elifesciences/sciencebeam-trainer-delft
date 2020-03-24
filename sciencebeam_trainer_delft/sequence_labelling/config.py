@@ -18,6 +18,7 @@ class ModelConfig(_ModelConfig):
             features_vocabulary_size: int = DEFAULT_FEATURES_VOCABULARY_SIZE,
             features_lstm_units: int = None,
             use_features_indices_input: bool = False,
+            stateful: bool = False,
             **kwargs):
         super().__init__(*args)
         self.use_features = use_features
@@ -27,6 +28,7 @@ class ModelConfig(_ModelConfig):
         self.features_vocabulary_size = features_vocabulary_size
         self.features_lstm_units = features_lstm_units
         self.use_features_indices_input = use_features_indices_input
+        self.stateful = stateful
         for key, val in kwargs.items():
             setattr(self, key, val)
 

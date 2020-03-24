@@ -52,11 +52,24 @@ class CustomBidLSTM_CRF(CustomModel):
             require_casing=False, use_crf=True, supports_features=True
         )
 
+        stateful = config.stateful
+        # stateful RNNs require the batch size to be passed in
+        input_batch_size = config.batch_size if stateful else None
+
         # build input, directly feed with word embedding by the data generator
-        word_input = Input(shape=(None, config.word_embedding_size), name='word_input')
+        word_input = Input(
+            shape=(None, config.word_embedding_size),
+            batch_shape=(input_batch_size, None, config.word_embedding_size),
+            name='word_input'
+        )
 
         # build character based embedding
-        char_input = Input(shape=(None, config.max_char_length), dtype='int32', name='char_input')
+        char_input = Input(
+            shape=(None, config.max_char_length),
+            batch_shape=(input_batch_size, None, config.max_char_length),
+            dtype='int32',
+            name='char_input'
+        )
         char_embeddings = TimeDistributed(Embedding(
             input_dim=config.char_vocab_size,
             output_dim=config.char_embedding_size,
@@ -66,7 +79,11 @@ class CustomBidLSTM_CRF(CustomModel):
         ), name='char_embeddings')(char_input)
 
         chars = TimeDistributed(
-            Bidirectional(LSTM(config.num_char_lstm_units, return_sequences=False)),
+            Bidirectional(LSTM(
+                config.num_char_lstm_units,
+                return_sequences=False,
+                stateful=stateful
+            )),
             name='char_lstm'
         )(char_embeddings)
 
@@ -79,7 +96,8 @@ class CustomBidLSTM_CRF(CustomModel):
             LOGGER.info('model using features')
             assert config.max_feature_size > 0
             features_input = Input(
-                batch_shape=(None, None, config.max_feature_size), name='features_input'
+                batch_shape=(input_batch_size, None, config.max_feature_size),
+                name='features_input'
             )
             features = features_input
             if config.feature_embedding_size:
@@ -99,7 +117,8 @@ class CustomBidLSTM_CRF(CustomModel):
         x = Bidirectional(LSTM(
             units=config.num_word_lstm_units,
             return_sequences=True,
-            recurrent_dropout=config.recurrent_dropout
+            recurrent_dropout=config.recurrent_dropout,
+            stateful=stateful
         ))(x)
         x = Dropout(config.dropout)(x)
         x = Dense(config.num_word_lstm_units, activation='tanh')(x)

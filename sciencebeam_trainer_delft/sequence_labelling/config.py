@@ -1,7 +1,10 @@
 import json
 from typing import List
 
-from delft.sequenceLabelling.config import ModelConfig as _ModelConfig
+from delft.sequenceLabelling.config import (
+    ModelConfig as _ModelConfig,
+    TrainingConfig as _TrainingConfig
+)
 
 
 class ModelConfig(_ModelConfig):
@@ -62,3 +65,13 @@ class ModelConfig(_ModelConfig):
     @features_embedding_size.setter
     def features_embedding_size(self, feature_embedding_size: List[int]):
         self.feature_embedding_size = feature_embedding_size
+
+
+class TrainingConfig(_TrainingConfig):
+    def __init__(
+            self,
+            *args,
+            input_window_size: int = None,
+            **kwargs):
+        super().__init__(*args, **kwargs)
+        self.input_window_size = input_window_size

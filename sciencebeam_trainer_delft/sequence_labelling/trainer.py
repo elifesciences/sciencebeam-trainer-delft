@@ -8,6 +8,7 @@ from keras.callbacks import EarlyStopping
 from delft.sequenceLabelling.trainer import Trainer as _Trainer
 from delft.sequenceLabelling.trainer import Scorer
 
+from sciencebeam_trainer_delft.sequence_labelling.config import TrainingConfig
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
 from sciencebeam_trainer_delft.sequence_labelling.callbacks import ModelWithMetadataCheckpoint
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver
@@ -59,10 +60,16 @@ def get_callbacks(
 
 
 class Trainer(_Trainer):
-    def __init__(self, *args, model_saver: ModelSaver, multiprocessing: bool = True, **kwargs):
+    def __init__(
+            self,
+            *args,
+            model_saver: ModelSaver,
+            training_config: TrainingConfig,
+            multiprocessing: bool = True,
+            **kwargs):
         self.model_saver = model_saver
         self.multiprocessing = multiprocessing
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, training_config=training_config, **kwargs)
 
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid, y_valid,
@@ -103,20 +110,26 @@ class Trainer(_Trainer):
         if self.training_config.early_stop:
             training_generator = DataGenerator(
                 x_train, y_train,
-                batch_size=self.training_config.batch_size, preprocessor=self.preprocessor,
+                batch_size=self.training_config.batch_size,
+                input_window_size=self.training_config.input_window_size,
+                preprocessor=self.preprocessor,
                 char_embed_size=self.model_config.char_embedding_size,
                 max_sequence_length=self.model_config.max_sequence_length,
                 embeddings=self.embeddings, shuffle=True,
-                features=features_train
+                features=features_train,
+                name='training_generator'
             )
 
             validation_generator = DataGenerator(
                 x_valid, y_valid,
-                batch_size=self.training_config.batch_size, preprocessor=self.preprocessor,
+                batch_size=self.training_config.batch_size,
+                input_window_size=self.training_config.input_window_size,
+                preprocessor=self.preprocessor,
                 char_embed_size=self.model_config.char_embedding_size,
                 max_sequence_length=self.model_config.max_sequence_length,
                 embeddings=self.embeddings, shuffle=False,
-                features=features_valid
+                features=features_valid,
+                name='validation_generator'
             )
 
             callbacks = get_callbacks(
@@ -134,11 +147,15 @@ class Trainer(_Trainer):
                 features_all = np.concatenate((features_train, features_valid), axis=0)
             training_generator = DataGenerator(
                 x_train, y_train,
-                batch_size=self.training_config.batch_size, preprocessor=self.preprocessor,
+                batch_size=self.training_config.batch_size,
+                input_window_size=self.training_config.input_window_size,
+                preprocessor=self.preprocessor,
                 char_embed_size=self.model_config.char_embedding_size,
                 max_sequence_length=self.model_config.max_sequence_length,
-                embeddings=self.embeddings, shuffle=True,
-                features=features_all
+                embeddings=self.embeddings,
+                shuffle=True,
+                features=features_all,
+                name='training_generator'
             )
 
             callbacks = get_callbacks(

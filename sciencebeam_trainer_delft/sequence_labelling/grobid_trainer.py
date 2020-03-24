@@ -902,6 +902,11 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--stateful", action="store_true",
         help="Make RNNs stateful (required for truncated BPTT)"
     )
+    features_group.add_argument(
+        "--input-window-size",
+        type=int,
+        help="Should be equal or less than max sequence length"
+    )
 
     output_group = parser.add_argument_group('output')
     add_output_argument(output_group)
@@ -1039,6 +1044,9 @@ class GrobidTrainerSubCommand(SubCommand):
                 use_features_indices_input=args.use_features_indices_input,
                 features_lstm_units=args.features_lstm_units,
                 stateful=args.stateful
+            ),
+            training_props=dict(
+                input_window_size=args.input_window_size
             ),
             **self.get_common_args(args)
         )

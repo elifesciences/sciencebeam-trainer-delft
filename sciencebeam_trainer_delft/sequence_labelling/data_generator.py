@@ -1,4 +1,5 @@
 import logging
+from typing import List, Tuple
 
 import numpy as np
 import keras
@@ -36,6 +37,59 @@ def truncate_batch_values(batch_values: list, max_sequence_length: int) -> list:
     ]
 
 
+def iter_generate_batch_window_indices_and_offset(
+        sequence_lengths: List[int],
+        window_size: int,
+        batch_size: int) -> List[List[Tuple[int, int]]]:
+    if len(sequence_lengths) < batch_size:
+        batch_size = len(sequence_lengths)
+    next_sequence_indices = list(range(len(sequence_lengths)))
+    batch_sequence_indices = next_sequence_indices[:batch_size]
+    next_sequence_indices = next_sequence_indices[batch_size:]
+    batch_offsets = [0] * batch_size
+    batch_complete = [False] * batch_size
+    yield list(zip(batch_sequence_indices, batch_offsets))
+    while True:
+        for batch_item_index in range(batch_size):
+            current_sequence_length = sequence_lengths[batch_sequence_indices[batch_item_index]]
+            batch_offsets[batch_item_index] += window_size
+            if batch_offsets[batch_item_index] >= current_sequence_length:
+                # we already reached the end of the sequence
+                if not next_sequence_indices:
+                    batch_complete[batch_item_index] = True
+                    continue
+                batch_offsets[batch_item_index] = 0
+                batch_sequence_indices[batch_item_index] = next_sequence_indices.pop(0)
+        if all(batch_complete):
+            return
+        while batch_complete[-1]:
+            batch_complete.pop()
+            batch_sequence_indices.pop()
+            batch_offsets.pop()
+            batch_size -= 1
+        yield list(zip(batch_sequence_indices, batch_offsets))
+
+
+def generate_batch_window_indices_and_offset(
+        sequence_lengths: List[int],
+        window_size: int,
+        batch_size: int) -> List[List[Tuple[int, int]]]:
+    return list(iter_generate_batch_window_indices_and_offset(
+        sequence_lengths=sequence_lengths,
+        window_size=window_size,
+        batch_size=batch_size
+    ))
+
+
+def take_with_offset(
+        sequences: list,
+        indices_and_offset: List[Tuple[int, int]]) -> list:
+    return [
+        sequences[index][offset:]
+        for index, offset in indices_and_offset
+    ]
+
+
 # generate batch of data to feed sequence labelling model, both for training and prediction
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -43,17 +97,20 @@ class DataGenerator(keras.utils.Sequence):
             self, x, y,
             batch_size=24,
             preprocessor: Preprocessor = None,
+            input_window_size: int = None,
             char_embed_size=25,
             embeddings=None,
             max_sequence_length=None,
             tokenize=False,
             shuffle=True,
-            features=None):
+            features=None,
+            name: str = None):
         'Initialization'
         self.x = x
         self.y = y
         # features here are optional additional features provided
         # in the case of GROBID input for instance
+        self.input_window_size = input_window_size
         self.features = features
         self.preprocessor = preprocessor
         if preprocessor:
@@ -66,11 +123,21 @@ class DataGenerator(keras.utils.Sequence):
         self.max_sequence_length = max_sequence_length
         if preprocessor.return_features and self.features is None:
             raise ValueError('features required')
+        self.batch_window_indices_and_offset = None
         self.on_epoch_end()
+        LOGGER.info(
+            'input window size: %s (%d samples -> %d batches) (name=%s)',
+            self.input_window_size,
+            len(self.x),
+            len(self),
+            name
+        )
 
     def __len__(self):
         'Denotes the number of batches per epoch'
         # The number of batches is set so that each training sample is seen at most once per epoch
+        if self.input_window_size:
+            return len(self.batch_window_indices_and_offset)
         if (len(self.x) % self.batch_size) == 0:
             return int(np.floor(len(self.x) / self.batch_size))
         else:
@@ -89,17 +156,37 @@ class DataGenerator(keras.utils.Sequence):
             arrays_to_shuffle.append(self.features)
         shuffle_arrays(arrays_to_shuffle)
 
+    def get_sequence_lengths(self) -> List[int]:
+        return [len(item) for item in self.x]
+
+    def update_batch_window_indices_and_offset(self):
+        self.batch_window_indices_and_offset = generate_batch_window_indices_and_offset(
+            sequence_lengths=self.get_sequence_lengths(),
+            window_size=self.input_window_size,
+            batch_size=self.batch_size
+        )
+
     def on_epoch_end(self):
         # shuffle dataset at each epoch
         if self.shuffle:
             self._shuffle_dataset()
+        if self.input_window_size:
+            self.update_batch_window_indices_and_offset()
 
     def __data_generation(self, index):  # pylint: disable=too-many-statements
         'Generates data containing batch_size samples'
-        max_iter = min(self.batch_size, len(self.x) - self.batch_size * index)
+        if self.batch_window_indices_and_offset:
+            window_indices_and_offsets = self.batch_window_indices_and_offset[index]
+            max_iter = len(window_indices_and_offsets)
+            indices = []
+        else:
+            max_iter = min(self.batch_size, len(self.x) - self.batch_size * index)
+            indices = list(range(index * self.batch_size, (index * self.batch_size) + max_iter))
+            window_indices_and_offsets = [(index, 0) for index in indices]
 
         # restrict data to index window
-        sub_x = self.x[(index * self.batch_size):(index * self.batch_size) + max_iter]
+        # sub_x = self.x[(index * self.batch_size):(index * self.batch_size) + max_iter]
+        sub_x = take_with_offset(self.x, window_indices_and_offsets)
 
         # tokenize texts in self.x if not already done
         if self.tokenize:
@@ -148,7 +235,7 @@ class DataGenerator(keras.utils.Sequence):
         batch_y = None
         # store tag embeddings
         if self.y is not None:
-            batch_y = self.y[(index*self.batch_size):(index*self.batch_size)+max_iter]
+            batch_y = take_with_offset(self.y, window_indices_and_offsets)
             max_length_y = max((len(y_row) for y_row in batch_y))
             if self.max_sequence_length and max_length_y > self.max_sequence_length:
                 max_length_y = self.max_sequence_length
@@ -167,7 +254,7 @@ class DataGenerator(keras.utils.Sequence):
         if self.preprocessor.return_casing:
             inputs.append(batch_a)
         if self.preprocessor.return_features:
-            sub_f = self.features[(index * self.batch_size):(index * self.batch_size) + max_iter]
+            sub_f = take_with_offset(self.features, window_indices_and_offsets)
             LOGGER.debug('extend: %s', extend)
             try:
                 batch_features, _ = self.preprocessor.transform_features(sub_f, extend=extend)

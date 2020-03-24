@@ -10,6 +10,7 @@ from delft.sequenceLabelling.preprocess import to_casing_single
 
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     left_pad_batch_values,
+    generate_batch_window_indices_and_offset,
     DataGenerator
 )
 
@@ -20,6 +21,7 @@ LOGGER = logging.getLogger(__name__)
 # Note: don't use numerics in words due to num_norm flag
 WORD_1 = 'word_a'
 WORD_2 = 'word_b'
+WORD_3 = 'word_c'
 
 SENTENCE_TOKENS_1 = [WORD_1, WORD_2]
 
@@ -38,22 +40,28 @@ SENTENCE_FEATURES_1 = [WORD_FEATURES_1, WORD_FEATURES_2]
 
 LABEL_1 = 'label1'
 LABEL_2 = 'label2'
+LABEL_3 = 'label3'
 
 EMBEDDING_MAP = {
+    None: [0, 0, 0],
     WORD_1: [1, 1, 1],
-    WORD_2: [2, 2, 2]
+    WORD_2: [2, 2, 2],
+    WORD_3: [3, 3, 3]
 }
 
 
 WORD_INDEX_MAP = {
+    None: 0,
     WORD_1: 1,
-    WORD_2: 2
+    WORD_2: 2,
+    WORD_3: 3
 }
 
 
 LABEL_INDEX_MAP = {
     LABEL_1: 1,
-    LABEL_2: 2
+    LABEL_2: 2,
+    LABEL_3: 3
 }
 
 
@@ -89,8 +97,14 @@ def get_transformed_features(sentence_features: List[str]):
 
 
 def preprocess_transform(X, y=None, extend=False):
-    assert not extend
-    x_words_transformed = [get_word_indices(sentence_tokens) for sentence_tokens in X]
+    X_extend = X
+    if extend:
+        LOGGER.debug('extending X: %s', X)
+        X_extend = [
+            list(sentence_tokens) + [None]
+            for sentence_tokens in X
+        ]
+    x_words_transformed = [get_word_indices(sentence_tokens) for sentence_tokens in X_extend]
     x_lengths_transformed = [len(sentence_tokens) for sentence_tokens in X]
     LOGGER.debug('x_lengths_transformed: %s', x_lengths_transformed)
     if y is None:
@@ -166,6 +180,43 @@ class TestLeftPadBatchValues:
         )
 
 
+class TestGenerateBatchWindowIndicesAndOffset:
+    def test_should_return_single_sequence_offset_as_is(self):
+        assert generate_batch_window_indices_and_offset(
+            sequence_lengths=[5],
+            window_size=10,
+            batch_size=1
+        ) == [[(0, 0)]]
+
+    def test_should_return_multiple_sequence_offset_across_batches(self):
+        assert generate_batch_window_indices_and_offset(
+            sequence_lengths=[1, 2, 3, 4],
+            window_size=10,
+            batch_size=2
+        ) == [[(0, 0), (1, 0)], [(2, 0), (3, 0)]]
+
+    def test_should_return_shorter_last_batch(self):
+        assert generate_batch_window_indices_and_offset(
+            sequence_lengths=[1, 2, 3],
+            window_size=10,
+            batch_size=2
+        ) == [[(0, 0), (1, 0)], [(2, 0)]]
+
+    def test_should_slice_single_longer_sequence_across_multiple_batches(self):
+        assert generate_batch_window_indices_and_offset(
+            sequence_lengths=[25],
+            window_size=10,
+            batch_size=1
+        ) == [[(0, 0)], [(0, 10)], [(0, 20)]]
+
+    def test_should_slice_multiple_longer_and_shorter_sequences_across_multiple_batches(self):
+        assert generate_batch_window_indices_and_offset(
+            sequence_lengths=[1, 25, 3],
+            window_size=10,
+            batch_size=2
+        ) == [[(0, 0), (1, 0)], [(2, 0), (1, 10)], [(2, 10), (1, 20)]]
+
+
 class TestDataGenerator:
     def test_should_be_able_to_instantiate(self, preprocessor, embeddings):
         DataGenerator(
@@ -191,6 +242,40 @@ class TestDataGenerator:
         assert all_close(x[0], get_word_vectors(SENTENCE_TOKENS_1))
         assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
         assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])
+
+    def test_should_generate_windows(self, preprocessor, embeddings):
+        batches = DataGenerator(
+            np.asarray([[WORD_1, WORD_2, WORD_3]]),
+            np.asarray([[LABEL_1, LABEL_2, LABEL_3]]),
+            preprocessor=preprocessor,
+            embeddings=embeddings,
+            input_window_size=2,
+            max_sequence_length=2,
+            **DEFAULT_ARGS
+        )
+        LOGGER.debug('batches: %s', batches)
+        assert len(batches) == 2
+
+        batch_0 = batches[0]
+        LOGGER.debug('batch_0: %s', batch_0)
+        assert len(batch_0) == 2
+        x, labels = batch_0
+        LOGGER.debug('labels: %s', labels)
+        assert all_close(labels, get_label_indices([LABEL_1, LABEL_2]))
+        assert all_close(x[0], get_word_vectors([WORD_1, WORD_2]))
+        assert all_close(x[1], [get_word_indices([WORD_1, WORD_2])])
+        assert all_close(x[-1], [2])
+
+        batch_1 = batches[1]
+        LOGGER.debug('batch_1: %s', batch_1)
+        # due to extend, the minimum length is 2
+        assert len(batch_1) == 2
+        x, labels = batch_1
+        LOGGER.debug('labels: %s', labels)
+        assert all_close(labels, get_label_indices([LABEL_3]))
+        assert all_close(x[0], get_word_vectors([WORD_3, None]))
+        assert all_close(x[1], [get_word_indices([WORD_3, None])])
+        assert all_close(x[-1], [1])
 
     def test_should_return_casing(self, preprocessor, embeddings):
         preprocessor.return_casing = True

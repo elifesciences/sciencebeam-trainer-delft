@@ -898,6 +898,10 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--features-lstm-units", type=int,
         help="Number of LSTM units used by the features"
     )
+    features_group.add_argument(
+        "--stateful", action="store_true",
+        help="Make RNNs stateful (required for truncated BPTT)"
+    )
 
     output_group = parser.add_argument_group('output')
     add_output_argument(output_group)
@@ -1033,7 +1037,8 @@ class GrobidTrainerSubCommand(SubCommand):
             patience=args.early_stopping_patience,
             config_props=dict(
                 use_features_indices_input=args.use_features_indices_input,
-                features_lstm_units=args.features_lstm_units
+                features_lstm_units=args.features_lstm_units,
+                stateful=args.stateful
             ),
             **self.get_common_args(args)
         )

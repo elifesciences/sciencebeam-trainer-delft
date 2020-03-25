@@ -260,7 +260,7 @@ class TestDataGenerator:
         assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
         assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])
 
-    def test_should_generate_windows(self, preprocessor, embeddings):
+    def test_should_generate_windows_and_disable_shuffle(self, preprocessor, embeddings):
         batches = DataGenerator(
             np.asarray([[WORD_1, WORD_2, WORD_3]]),
             np.asarray([[LABEL_1, LABEL_2, LABEL_3]]),
@@ -268,8 +268,13 @@ class TestDataGenerator:
             embeddings=embeddings,
             input_window_size=2,
             max_sequence_length=2,
-            **DEFAULT_ARGS
+            **{
+                **DEFAULT_ARGS,
+                'shuffle': True
+            }
         )
+        assert not batches.shuffle
+
         LOGGER.debug('batches: %s', batches)
         assert len(batches) == 2
 

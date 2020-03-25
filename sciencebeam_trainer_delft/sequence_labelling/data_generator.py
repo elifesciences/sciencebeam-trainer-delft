@@ -131,14 +131,14 @@ class DataGenerator(keras.utils.Sequence):
         if preprocessor.return_features and self.features is None:
             raise ValueError('features required')
         self.batch_window_indices_and_offset = None
-        self.on_epoch_end()
-        LOGGER.info(
-            'input window size: %s (%d samples -> %d batches) (name=%s)',
-            self.input_window_size,
-            len(self.x),
-            len(self),
-            name
-        )
+        self.name = name
+        if self.shuffle and self.input_window_size:
+            LOGGER.info('not shuffling between epochs as number of batch windows could change')
+            self.shuffle = False
+        elif self.shuffle:
+            self._shuffle_dataset()
+        if self.input_window_size and not self.batch_window_indices_and_offset:
+            self.batch_window_indices_and_offset = self.generate_batch_window_indices_and_offset()
 
     def __len__(self):
         'Denotes the number of batches per epoch'
@@ -166,19 +166,25 @@ class DataGenerator(keras.utils.Sequence):
     def get_sequence_lengths(self) -> List[int]:
         return [len(item) for item in self.x]
 
-    def update_batch_window_indices_and_offset(self):
-        self.batch_window_indices_and_offset = generate_batch_window_indices_and_offset(
+    def generate_batch_window_indices_and_offset(self):
+        batch_window_indices_and_offset = generate_batch_window_indices_and_offset(
             sequence_lengths=self.get_sequence_lengths(),
             window_size=self.input_window_size,
             batch_size=self.batch_size
         )
+        LOGGER.info(
+            'input window size: %s (%d samples -> %d batches) (name=%s)',
+            self.input_window_size,
+            len(self.x),
+            len(batch_window_indices_and_offset),
+            self.name
+        )
+        return batch_window_indices_and_offset
 
     def on_epoch_end(self):
         # shuffle dataset at each epoch
         if self.shuffle:
             self._shuffle_dataset()
-        if self.input_window_size:
-            self.update_batch_window_indices_and_offset()
 
     def __data_generation(self, index):  # pylint: disable=too-many-statements
         'Generates data containing batch_size samples'

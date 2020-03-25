@@ -99,7 +99,7 @@ class DataGenerator(keras.utils.Sequence):
             self, x, y,
             batch_size=24,
             preprocessor: Preprocessor = None,
-            input_window_size: int = None,
+            input_window_stride: int = None,
             char_embed_size=25,
             embeddings=None,
             max_sequence_length=None,
@@ -112,7 +112,7 @@ class DataGenerator(keras.utils.Sequence):
         self.y = y
         # features here are optional additional features provided
         # in the case of GROBID input for instance
-        self.input_window_size = input_window_size
+        self.input_window_stride = input_window_stride
         self.features = features
         self.preprocessor = preprocessor
         if preprocessor:
@@ -127,18 +127,18 @@ class DataGenerator(keras.utils.Sequence):
             raise ValueError('features required')
         self.batch_window_indices_and_offset = None
         self.name = name
-        if self.shuffle and self.input_window_size:
+        if self.shuffle and self.input_window_stride:
             LOGGER.info('not shuffling between epochs as number of batch windows could change')
             self.shuffle = False
         elif self.shuffle:
             self._shuffle_dataset()
-        if self.input_window_size and not self.batch_window_indices_and_offset:
+        if self.input_window_stride and not self.batch_window_indices_and_offset:
             self.batch_window_indices_and_offset = self.generate_batch_window_indices_and_offset()
 
     def __len__(self):
         'Denotes the number of batches per epoch'
         # The number of batches is set so that each training sample is seen at most once per epoch
-        if self.input_window_size:
+        if self.input_window_stride:
             return len(self.batch_window_indices_and_offset)
         if (len(self.x) % self.batch_size) == 0:
             return int(np.floor(len(self.x) / self.batch_size))
@@ -164,12 +164,12 @@ class DataGenerator(keras.utils.Sequence):
     def generate_batch_window_indices_and_offset(self):
         batch_window_indices_and_offset = generate_batch_window_indices_and_offset(
             sequence_lengths=self.get_sequence_lengths(),
-            window_size=self.input_window_size,
+            window_size=self.input_window_stride,
             batch_size=self.batch_size
         )
         LOGGER.info(
             'input window size: %s (%d samples -> %d batches) (name=%s)',
-            self.input_window_size,
+            self.input_window_stride,
             len(self.x),
             len(batch_window_indices_and_offset),
             self.name

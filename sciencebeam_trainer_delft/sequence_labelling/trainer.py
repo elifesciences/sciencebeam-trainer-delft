@@ -118,7 +118,7 @@ class Trainer(_Trainer):
             training_generator = DataGenerator(
                 x_train, y_train,
                 batch_size=self.training_config.batch_size,
-                input_window_size=self.training_config.input_window_size,
+                input_window_stride=self.training_config.input_window_stride,
                 preprocessor=self.preprocessor,
                 char_embed_size=self.model_config.char_embedding_size,
                 max_sequence_length=self.model_config.max_sequence_length,
@@ -130,7 +130,7 @@ class Trainer(_Trainer):
             validation_generator = DataGenerator(
                 x_valid, y_valid,
                 batch_size=self.training_config.batch_size,
-                input_window_size=self.training_config.input_window_size,
+                input_window_stride=self.training_config.input_window_stride,
                 preprocessor=self.preprocessor,
                 char_embed_size=self.model_config.char_embedding_size,
                 max_sequence_length=self.model_config.max_sequence_length,
@@ -156,7 +156,7 @@ class Trainer(_Trainer):
             training_generator = DataGenerator(
                 x_train, y_train,
                 batch_size=self.training_config.batch_size,
-                input_window_size=self.training_config.input_window_size,
+                input_window_stride=self.training_config.input_window_stride,
                 preprocessor=self.preprocessor,
                 char_embed_size=self.model_config.char_embedding_size,
                 max_sequence_length=self.model_config.max_sequence_length,

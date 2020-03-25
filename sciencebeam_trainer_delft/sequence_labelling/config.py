@@ -71,7 +71,7 @@ class TrainingConfig(_TrainingConfig):
     def __init__(
             self,
             *args,
-            input_window_size: int = None,
+            input_window_stride: int = None,
             **kwargs):
         super().__init__(*args, **kwargs)
-        self.input_window_size = input_window_size
+        self.input_window_stride = input_window_stride

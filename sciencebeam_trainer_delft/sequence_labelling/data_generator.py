@@ -69,11 +69,6 @@ def iter_generate_batch_window_indices_and_offset(
                 batch_sequence_indices[batch_item_index] = next_sequence_indices.pop(0)
         if all(batch_complete):
             return
-        while batch_complete[-1]:
-            batch_complete.pop()
-            batch_sequence_indices.pop()
-            batch_offsets.pop()
-            batch_size -= 1
         yield list(zip(batch_sequence_indices, batch_offsets))
 
 

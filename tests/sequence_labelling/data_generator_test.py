@@ -212,12 +212,12 @@ class TestGenerateBatchWindowIndicesAndOffset:
             batch_size=2
         ) == [[(0, 0), (1, 0)], [(2, 0), (3, 0)]]
 
-    def test_should_return_shorter_last_batch(self):
+    def test_should_always_shorter_same_size_batches(self):
         assert generate_batch_window_indices_and_offset(
             sequence_lengths=[1, 2, 3],
             window_size=10,
             batch_size=2
-        ) == [[(0, 0), (1, 0)], [(2, 0)]]
+        ) == [[(0, 0), (1, 0)], [(2, 0), (1, 10)]]
 
     def test_should_slice_single_longer_sequence_across_multiple_batches(self):
         assert generate_batch_window_indices_and_offset(

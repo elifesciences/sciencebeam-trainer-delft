@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple
+from typing import Iterable, List, Tuple
 
 import numpy as np
 import keras
@@ -46,8 +46,8 @@ def truncate_batch_values(batch_values: list, max_sequence_length: int) -> list:
 
 def iter_generate_batch_window_indices_and_offset(
         sequence_lengths: List[int],
-        window_size: int,
-        batch_size: int) -> List[List[Tuple[int, int]]]:
+        window_stride: int,
+        batch_size: int) -> Iterable[List[Tuple[int, int]]]:
     if len(sequence_lengths) < batch_size:
         batch_size = len(sequence_lengths)
     next_sequence_indices = list(range(len(sequence_lengths)))
@@ -59,7 +59,7 @@ def iter_generate_batch_window_indices_and_offset(
     while True:
         for batch_item_index in range(batch_size):
             current_sequence_length = sequence_lengths[batch_sequence_indices[batch_item_index]]
-            batch_offsets[batch_item_index] += window_size
+            batch_offsets[batch_item_index] += window_stride
             if batch_offsets[batch_item_index] >= current_sequence_length:
                 # we already reached the end of the sequence
                 if not next_sequence_indices:
@@ -74,11 +74,11 @@ def iter_generate_batch_window_indices_and_offset(
 
 def generate_batch_window_indices_and_offset(
         sequence_lengths: List[int],
-        window_size: int,
+        window_stride: int,
         batch_size: int) -> List[List[Tuple[int, int]]]:
     return list(iter_generate_batch_window_indices_and_offset(
         sequence_lengths=sequence_lengths,
-        window_size=window_size,
+        window_stride=window_stride,
         batch_size=batch_size
     ))
 
@@ -164,7 +164,7 @@ class DataGenerator(keras.utils.Sequence):
     def generate_batch_window_indices_and_offset(self):
         batch_window_indices_and_offset = generate_batch_window_indices_and_offset(
             sequence_lengths=self.get_sequence_lengths(),
-            window_size=self.input_window_stride,
+            window_stride=self.input_window_stride,
             batch_size=self.batch_size
         )
         LOGGER.info(

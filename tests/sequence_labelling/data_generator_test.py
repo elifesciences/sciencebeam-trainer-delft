@@ -201,35 +201,35 @@ class TestGenerateBatchWindowIndicesAndOffset:
     def test_should_return_single_sequence_offset_as_is(self):
         assert generate_batch_window_indices_and_offset(
             sequence_lengths=[5],
-            window_size=10,
+            window_stride=10,
             batch_size=1
         ) == [[(0, 0)]]
 
     def test_should_return_multiple_sequence_offset_across_batches(self):
         assert generate_batch_window_indices_and_offset(
             sequence_lengths=[1, 2, 3, 4],
-            window_size=10,
+            window_stride=10,
             batch_size=2
         ) == [[(0, 0), (1, 0)], [(2, 0), (3, 0)]]
 
     def test_should_always_shorter_same_size_batches(self):
         assert generate_batch_window_indices_and_offset(
             sequence_lengths=[1, 2, 3],
-            window_size=10,
+            window_stride=10,
             batch_size=2
         ) == [[(0, 0), (1, 0)], [(2, 0), (1, 10)]]
 
     def test_should_slice_single_longer_sequence_across_multiple_batches(self):
         assert generate_batch_window_indices_and_offset(
             sequence_lengths=[25],
-            window_size=10,
+            window_stride=10,
             batch_size=1
         ) == [[(0, 0)], [(0, 10)], [(0, 20)]]
 
     def test_should_slice_multiple_longer_and_shorter_sequences_across_multiple_batches(self):
         assert generate_batch_window_indices_and_offset(
             sequence_lengths=[1, 25, 3],
-            window_size=10,
+            window_stride=10,
             batch_size=2
         ) == [[(0, 0), (1, 0)], [(2, 0), (1, 10)], [(2, 10), (1, 20)]]
 
@@ -266,7 +266,7 @@ class TestDataGenerator:
             np.asarray([[LABEL_1, LABEL_2, LABEL_3]]),
             preprocessor=preprocessor,
             embeddings=embeddings,
-            input_window_size=2,
+            input_window_stride=2,
             max_sequence_length=2,
             **{
                 **DEFAULT_ARGS,

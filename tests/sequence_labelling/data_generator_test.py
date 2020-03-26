@@ -10,6 +10,7 @@ from delft.sequenceLabelling.preprocess import to_casing_single
 
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     left_pad_batch_values,
+    get_stateless_window_indices_and_offset,
     generate_batch_window_indices_and_offset,
     DataGenerator
 )
@@ -195,6 +196,26 @@ class TestLeftPadBatchValues:
                 [[1, 1], [0, 0]]
             ])
         )
+
+
+class TestGetStatelessWindowIndicesAndOffset:
+    def test_should_return_single_sequence_offset_as_is(self):
+        assert get_stateless_window_indices_and_offset(
+            sequence_lengths=[5],
+            window_stride=10
+        ) == [(0, 0)]
+
+    def test_should_return_split_sequence_after_window_stride(self):
+        assert get_stateless_window_indices_and_offset(
+            sequence_lengths=[15],
+            window_stride=10
+        ) == [(0, 0), (0, 10)]
+
+    def test_should_return_not_split_sequence_if_window_stride_is_none(self):
+        assert get_stateless_window_indices_and_offset(
+            sequence_lengths=[15],
+            window_stride=None
+        ) == [(0, 0)]
 
 
 class TestGenerateBatchWindowIndicesAndOffset:

@@ -64,7 +64,7 @@ def get_stateless_window_indices_and_offset(
     ))
 
 
-def iter_generate_batch_window_indices_and_offset(
+def iter_batch_window_indices_and_offset(
         sequence_lengths: List[int],
         window_stride: int,
         batch_size: int) -> Iterable[List[Tuple[int, int]]]:
@@ -92,11 +92,11 @@ def iter_generate_batch_window_indices_and_offset(
         yield list(zip(batch_sequence_indices, batch_offsets))
 
 
-def generate_batch_window_indices_and_offset(
+def get_batch_window_indices_and_offset(
         sequence_lengths: List[int],
         window_stride: int,
         batch_size: int) -> List[List[Tuple[int, int]]]:
-    return list(iter_generate_batch_window_indices_and_offset(
+    return list(iter_batch_window_indices_and_offset(
         sequence_lengths=sequence_lengths,
         window_stride=window_stride,
         batch_size=batch_size
@@ -209,7 +209,7 @@ class DataGenerator(keras.utils.Sequence):
         return window_indices_and_offset
 
     def generate_batch_window_indices_and_offset(self):
-        batch_window_indices_and_offset = generate_batch_window_indices_and_offset(
+        batch_window_indices_and_offset = get_batch_window_indices_and_offset(
             sequence_lengths=self.get_sequence_lengths(),
             window_stride=self.input_window_stride,
             batch_size=self.batch_size

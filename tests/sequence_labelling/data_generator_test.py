@@ -11,7 +11,7 @@ from delft.sequenceLabelling.preprocess import to_casing_single
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     left_pad_batch_values,
     get_stateless_window_indices_and_offset,
-    generate_batch_window_indices_and_offset,
+    get_batch_window_indices_and_offset,
     DataGenerator
 )
 
@@ -218,37 +218,37 @@ class TestGetStatelessWindowIndicesAndOffset:
         ) == [(0, 0)]
 
 
-class TestGenerateBatchWindowIndicesAndOffset:
+class TestGetBatchWindowIndicesAndOffset:
     def test_should_return_single_sequence_offset_as_is(self):
-        assert generate_batch_window_indices_and_offset(
+        assert get_batch_window_indices_and_offset(
             sequence_lengths=[5],
             window_stride=10,
             batch_size=1
         ) == [[(0, 0)]]
 
     def test_should_return_multiple_sequence_offset_across_batches(self):
-        assert generate_batch_window_indices_and_offset(
+        assert get_batch_window_indices_and_offset(
             sequence_lengths=[1, 2, 3, 4],
             window_stride=10,
             batch_size=2
         ) == [[(0, 0), (1, 0)], [(2, 0), (3, 0)]]
 
     def test_should_always_shorter_same_size_batches(self):
-        assert generate_batch_window_indices_and_offset(
+        assert get_batch_window_indices_and_offset(
             sequence_lengths=[1, 2, 3],
             window_stride=10,
             batch_size=2
         ) == [[(0, 0), (1, 0)], [(2, 0), (1, 10)]]
 
     def test_should_slice_single_longer_sequence_across_multiple_batches(self):
-        assert generate_batch_window_indices_and_offset(
+        assert get_batch_window_indices_and_offset(
             sequence_lengths=[25],
             window_stride=10,
             batch_size=1
         ) == [[(0, 0)], [(0, 10)], [(0, 20)]]
 
     def test_should_slice_multiple_longer_and_shorter_sequences_across_multiple_batches(self):
-        assert generate_batch_window_indices_and_offset(
+        assert get_batch_window_indices_and_offset(
             sequence_lengths=[1, 25, 3],
             window_stride=10,
             batch_size=2

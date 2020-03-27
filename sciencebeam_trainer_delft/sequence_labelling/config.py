@@ -1,7 +1,10 @@
 import json
 from typing import List
 
-from delft.sequenceLabelling.config import ModelConfig as _ModelConfig
+from delft.sequenceLabelling.config import (
+    ModelConfig as _ModelConfig,
+    TrainingConfig as _TrainingConfig
+)
 
 
 class ModelConfig(_ModelConfig):
@@ -18,6 +21,7 @@ class ModelConfig(_ModelConfig):
             features_vocabulary_size: int = DEFAULT_FEATURES_VOCABULARY_SIZE,
             features_lstm_units: int = None,
             use_features_indices_input: bool = False,
+            stateful: bool = False,
             **kwargs):
         super().__init__(*args)
         self.use_features = use_features
@@ -27,6 +31,7 @@ class ModelConfig(_ModelConfig):
         self.features_vocabulary_size = features_vocabulary_size
         self.features_lstm_units = features_lstm_units
         self.use_features_indices_input = use_features_indices_input
+        self.stateful = stateful
         for key, val in kwargs.items():
             setattr(self, key, val)
 
@@ -60,3 +65,13 @@ class ModelConfig(_ModelConfig):
     @features_embedding_size.setter
     def features_embedding_size(self, feature_embedding_size: List[int]):
         self.feature_embedding_size = feature_embedding_size
+
+
+class TrainingConfig(_TrainingConfig):
+    def __init__(
+            self,
+            *args,
+            input_window_stride: int = None,
+            **kwargs):
+        super().__init__(*args, **kwargs)
+        self.input_window_stride = input_window_stride

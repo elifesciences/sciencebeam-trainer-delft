@@ -49,6 +49,12 @@ class TestCustomBidLSTM_CRF:
         model_config.feature_embedding_size = 11
         CustomBidLSTM_CRF(model_config, ntags=5)
 
+    def test_should_be_able_to_build_stateful_lstms(self, model_config: ModelConfig):
+        model_config.use_features = True
+        model_config.feature_embedding_size = 11
+        model_config.stateful = True
+        CustomBidLSTM_CRF(model_config, ntags=5)
+
 
 @pytest.mark.slow
 class TestBidLSTM_CRF_FEATURES:

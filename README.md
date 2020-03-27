@@ -84,6 +84,69 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
+### Training very long sequences
+
+Some training sequences can be very long and may exceed the available memory. This is in particular an issue when training the sequences.
+
+Some approches to deal with the issue.
+
+#### Truncate the sequences to a maximum length
+
+By passing in the `--max-sequence-length`, sequences are being truncated.
+In that case the model will not be trained on any data beyond the max sequence length.
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+#### Training using [truncated BPTT](https://en.wikipedia.org/wiki/Backpropagation_through_time#Pseudocode) (Backpropagation through time)
+
+This requires the LSTMs to be *stateful* (the state from the previous batch is passed on to the next). The `--stateful` flag should be passed in, and the `--input-window-stride` should be the same as `--max-sequence-length`
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="100" \
+    --input-window-stride="100" \
+    --stateful \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+Unfortunately the current implementation is very slow and training time might increase significantly.
+
+#### Training using window slices
+
+The alternative to the above is to not use *stateful* LSTMs but still pass in the input data using sliding windows.
+To do that, do not pass `--stateful`. But use `--input-window-stride` which is equal or less to `--max-sequence-length`.
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="100" \
+    --input-window-stride="50" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+This will not allow the LSTM to capture long term dependencies beyond the max sequence length but it will allow it to have seen all of the data, in chunks. Therefore max sequence length should be large enough, which depends on the model.
+
 ### Eval Sub Command
 
 ```bash

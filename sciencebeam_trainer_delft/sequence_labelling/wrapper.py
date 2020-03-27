@@ -13,7 +13,7 @@ from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
 
 from sciencebeam_trainer_delft.embedding import Embeddings, EmbeddingManager
 
-from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
+from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig, TrainingConfig
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
 from sciencebeam_trainer_delft.sequence_labelling.trainer import Trainer
 from sciencebeam_trainer_delft.sequence_labelling.models import (
@@ -82,6 +82,7 @@ class Sequence(_Sequence):
             embedding_registry_path: str = None,
             embedding_manager: EmbeddingManager = None,
             config_props: dict = None,
+            training_props: dict = None,
             **kwargs):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
@@ -104,6 +105,11 @@ class Sequence(_Sequence):
             feature_embedding_size=feature_embedding_size
         )
         updated_implicit_model_config_props(self.model_config)
+        self.training_config = TrainingConfig(
+            **vars(self.training_config),
+            **(training_props or {})
+        )
+        LOGGER.info('training_config: %s', vars(self.training_config))
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
 
@@ -145,7 +151,7 @@ class Sequence(_Sequence):
             self.models,
             self.embeddings,
             self.model_config,
-            self.training_config,
+            training_config=self.training_config,
             model_saver=self.get_model_saver(),
             multiprocessing=self.multiprocessing,
             checkpoint_path=self.log_dir,
@@ -200,7 +206,7 @@ class Sequence(_Sequence):
             self.models,
             self.embeddings,
             self.model_config,
-            self.training_config,
+            training_config=self.training_config,
             model_saver=self.get_model_saver(),
             checkpoint_path=self.log_dir,
             preprocessor=self.p
@@ -363,11 +369,16 @@ class Sequence(_Sequence):
             )
         return embeddings
 
+    def get_meta(self):
+        return {
+            'training_config': vars(self.training_config)
+        }
+
     def save(self, dir_path=None):
         # create subfolder for the model if not already exists
         directory = self._get_model_directory(dir_path)
         os.makedirs(directory, exist_ok=True)
-        self.get_model_saver().save_to(directory, model=self.model)
+        self.get_model_saver().save_to(directory, model=self.model, meta=self.get_meta())
 
     def load(self, dir_path=None):
         directory = self._get_model_directory(dir_path)

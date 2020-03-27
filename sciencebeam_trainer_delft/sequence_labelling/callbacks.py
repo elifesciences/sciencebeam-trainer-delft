@@ -91,10 +91,12 @@ class ModelWithMetadataCheckpoint(ModelSaverCallback):
             self, base_path: str,
             model_saver: ModelSaver,
             add_checkpoint_meta: bool = True,
+            meta: dict = None,
             **kwargs):
         self.base_path = base_path
         self.model_saver = model_saver
         self.add_checkpoint_meta = add_checkpoint_meta
+        self.meta = meta
         super().__init__(save_fn=self._save_model, **kwargs)
 
     def _get_meta(self, epoch: int, logs: dict) -> dict:
@@ -103,6 +105,7 @@ class ModelWithMetadataCheckpoint(ModelSaverCallback):
         optimizer_fullname = '%s.%s' % (optimizer_type.__module__, optimizer_type.__name__)
         return {
             **logs,
+            **(self.meta or {}),
             'epoch': 1 + epoch,
             'optimizer': {
                 'type': optimizer_fullname,

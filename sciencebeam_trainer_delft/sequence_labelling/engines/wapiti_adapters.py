@@ -6,9 +6,9 @@ from typing import Iterable, IO
 
 import numpy as np
 
-from delft.sequenceLabelling.evaluation import classification_report
 from delft.sequenceLabelling.evaluation import f1_score
 
+from sciencebeam_trainer_delft.sequence_labelling.evaluation import classification_report
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.io import copy_file
 

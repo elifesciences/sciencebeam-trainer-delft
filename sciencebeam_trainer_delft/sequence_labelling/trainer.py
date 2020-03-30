@@ -5,9 +5,17 @@ import numpy as np
 
 from keras.callbacks import EarlyStopping
 
-from delft.sequenceLabelling.trainer import Trainer as _Trainer
-from delft.sequenceLabelling.trainer import Scorer
+from delft.sequenceLabelling.evaluation import (
+    f1_score,
+    accuracy_score,
+    precision_score,
+    recall_score
+)
 
+from delft.sequenceLabelling.trainer import Trainer as _Trainer
+from delft.sequenceLabelling.trainer import Scorer as _Scorer
+
+from sciencebeam_trainer_delft.sequence_labelling.evaluation import classification_report
 from sciencebeam_trainer_delft.sequence_labelling.config import TrainingConfig
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
 from sciencebeam_trainer_delft.sequence_labelling.callbacks import ModelWithMetadataCheckpoint
@@ -59,6 +67,49 @@ def get_callbacks(
         ))
 
     return callbacks
+
+
+class Scorer(_Scorer):
+    def on_epoch_end(self, epoch: int, logs: dict = None):
+        for i, (data, label) in enumerate(self.valid_batches):
+            if i == self.valid_steps:
+                break
+            y_true_batch = label
+            y_true_batch = np.argmax(y_true_batch, -1)
+            sequence_lengths = data[-1]  # shape of (batch_size, 1)
+            sequence_lengths = np.reshape(sequence_lengths, (-1,))
+
+            y_pred_batch = self.model.predict_on_batch(data)
+            y_pred_batch = np.argmax(y_pred_batch, -1)
+
+            y_pred_batch = [
+                self.p.inverse_transform(y[:l]) for y, l in zip(y_pred_batch, sequence_lengths)
+            ]
+            y_true_batch = [
+                self.p.inverse_transform(y[:l]) for y, l in zip(y_true_batch, sequence_lengths)
+            ]
+
+            if i == 0:
+                y_pred = y_pred_batch
+                y_true = y_true_batch
+            else:
+                y_pred = y_pred + y_pred_batch
+                y_true = y_true + y_true_batch
+
+        f1 = f1_score(y_true, y_pred)
+        print("\tf1 (micro): {:04.2f}".format(f1 * 100))
+
+        if self.evaluation:
+            self.accuracy = accuracy_score(y_true, y_pred)
+            self.precision = precision_score(y_true, y_pred)
+            self.recall = recall_score(y_true, y_pred)
+            self.report = classification_report(y_true, y_pred, digits=4)
+            print(self.report)
+
+        # save eval
+        if logs:
+            logs['f1'] = f1
+        self.f1 = f1
 
 
 class Trainer(_Trainer):

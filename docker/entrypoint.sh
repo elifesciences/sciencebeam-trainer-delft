@@ -2,7 +2,7 @@
 
 set -e
 
-GROBID_MODELS_DIRECTORY=/opt/grobid/grobid-home/models
+GROBID_MODELS_DIRECTORY=${GROBID_MODELS_DIRECTORY:-/opt/grobid/grobid-home/models}
 EMBEDDING_REGISTRY_PATH="${PROJECT_FOLDER}/embedding-registry.json"
 
 if [ ! -z "${OVERRIDE_MODELS}" ]; then
@@ -48,4 +48,4 @@ if [ ! -z "${PRELOAD_EMBEDDING}" ]; then
     cd -
 fi
 
-exec $@
+exec "$@"

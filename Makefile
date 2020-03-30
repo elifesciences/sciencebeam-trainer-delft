@@ -17,6 +17,7 @@ DELFT_RUN = $(DOCKER_COMPOSE) run --rm delft
 DELFT_DEV_RUN = $(DELFT_RUN)
 PYTEST_WATCH = $(DELFT_DEV_RUN) pytest-watch
 RUN_PYTHON = $(DELFT_RUN) python
+TRAINER_GROBID_RUN = $(DOCKER_COMPOSE) run --rm --no-deps trainer-grobid
 
 JUPYTER_DOCKER_COMPOSE = NB_UID="$(NB_UID)" NB_GID="$(NB_GID)" $(DOCKER_COMPOSE)
 JUPYTER_RUN = $(JUPYTER_DOCKER_COMPOSE) run --rm jupyter
@@ -35,6 +36,11 @@ WORD_LSTM_UNITS = 100
 FEATURE_INDICES =
 FEATURE_EMBEDDING_SIZE = 0
 GROBID_TRAIN_ACTION = train
+
+PDF_DATA_DIR = /data/pdf
+DATASET_DIR = /data/dataset
+USER_AGENT = Dummy/user-agent
+SAMPLE_PDF_URL = https://cdn.elifesciences.org/articles/32671/elife-32671-v2.pdf
 
 GCLOUD = gcloud
 GCLOUD_JOB_NAME = sciencebeam_$(GROBID_TRAIN_ACTION)_$(ARCHITECTURE)_$(LIMIT)_$(shell date +%s -u)
@@ -284,6 +290,22 @@ trainer-grobid-build:
 
 trainer-grobid-shell:
 	$(DOCKER_COMPOSE) run --rm --no-deps trainer-grobid bash $(ARGS)
+
+
+get-example-data:
+	$(TRAINER_GROBID_RUN) bash -c '\
+		mkdir -p "$(PDF_DATA_DIR)" \
+		&& curl --fail --show-error --connect-timeout 60 --user-agent "$(USER_AGENT)" --location \
+			"$(SAMPLE_PDF_URL)" --silent -o "$(PDF_DATA_DIR)/sample.pdf" \
+		&& ls -l "$(PDF_DATA_DIR)" \
+		'
+
+
+generate-grobid-training-data:
+	$(TRAINER_GROBID_RUN) \
+		generate-grobid-training-data.sh \
+		"${PDF_DATA_DIR}" \
+		"$(DATASET_DIR)"
 
 
 update-test-notebook:

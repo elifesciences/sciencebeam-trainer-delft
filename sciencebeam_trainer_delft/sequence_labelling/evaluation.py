@@ -10,6 +10,7 @@ from delft.sequenceLabelling.evaluation import (
 # mostly copied from delft/sequenceLabelling/evaluation.py
 # with the following differences:
 # - types are sorted
+# - types are including keys from both true or prediction (not just true labels)
 
 def classification_report(y_true, y_pred, digits=2):
     """Build a text report showing the main classification metrics.
@@ -59,7 +60,7 @@ def classification_report(y_true, y_pred, digits=2):
     total_nb_correct = 0
     total_nb_pred = 0
     total_nb_true = 0
-    sorted_type_names = sorted(d1.keys())
+    sorted_type_names = sorted(set(d1.keys()) | set(d2.keys()))
     for type_name in sorted_type_names:
         true_entities = d1[type_name]
         pred_entities = d2[type_name]

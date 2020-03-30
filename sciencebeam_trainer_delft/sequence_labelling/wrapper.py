@@ -6,7 +6,6 @@ from typing import List
 import numpy as np
 
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
-from delft.sequenceLabelling.trainer import Scorer
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
@@ -15,7 +14,7 @@ from sciencebeam_trainer_delft.embedding import Embeddings, EmbeddingManager
 
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig, TrainingConfig
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
-from sciencebeam_trainer_delft.sequence_labelling.trainer import Trainer
+from sciencebeam_trainer_delft.sequence_labelling.trainer import Scorer, Trainer
 from sciencebeam_trainer_delft.sequence_labelling.models import (
     get_model,
     updated_implicit_model_config_props

@@ -48,4 +48,4 @@ if [ ! -z "${PRELOAD_EMBEDDING}" ]; then
     cd -
 fi
 
-exec $@
+exec "$@"

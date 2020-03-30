@@ -76,7 +76,7 @@ class Scorer(_Scorer):
                 break
             y_true_batch = label
             y_true_batch = np.argmax(y_true_batch, -1)
-            sequence_lengths = data[-1] # shape of (batch_size, 1)
+            sequence_lengths = data[-1]  # shape of (batch_size, 1)
             sequence_lengths = np.reshape(sequence_lengths, (-1,))
 
             y_pred_batch = self.model.predict_on_batch(data)
@@ -96,10 +96,6 @@ class Scorer(_Scorer):
                 y_pred = y_pred + y_pred_batch
                 y_true = y_true + y_true_batch
 
-
-        #for i in range(0,len(y_pred)):
-        #    print("pred", y_pred[i])
-        #    print("true", y_true[i])
         f1 = f1_score(y_true, y_pred)
         print("\tf1 (micro): {:04.2f}".format(f1 * 100))
 

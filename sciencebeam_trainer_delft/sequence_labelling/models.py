@@ -34,6 +34,12 @@ class CustomModel(BaseModel):
         self.require_features_indices_input = require_features_indices_input
 
 
+def _concatenate_inputs(inputs: list):
+    if len(inputs) == 1:
+        return inputs[0]
+    return Concatenate()(inputs)
+
+
 # renamed copy of BidLSTM_CRF to demonstrate a custom model
 class CustomBidLSTM_CRF(CustomModel):
     """
@@ -56,12 +62,17 @@ class CustomBidLSTM_CRF(CustomModel):
         # stateful RNNs require the batch size to be passed in
         input_batch_size = config.batch_size if stateful else None
 
+        model_inputs = []
+        lstm_inputs = []
         # build input, directly feed with word embedding by the data generator
-        word_input = Input(
-            shape=(None, config.word_embedding_size),
-            batch_shape=(input_batch_size, None, config.word_embedding_size),
-            name='word_input'
-        )
+        if config.use_word_embeddings:
+            word_input = Input(
+                shape=(None, config.word_embedding_size),
+                batch_shape=(input_batch_size, None, config.word_embedding_size),
+                name='word_input'
+            )
+            model_inputs.append(word_input)
+            lstm_inputs.append(word_input)
 
         # build character based embedding
         char_input = Input(
@@ -70,6 +81,8 @@ class CustomBidLSTM_CRF(CustomModel):
             dtype='int32',
             name='char_input'
         )
+        model_inputs.append(char_input)
+
         char_embeddings = TimeDistributed(Embedding(
             input_dim=config.char_vocab_size,
             output_dim=config.char_embedding_size,
@@ -86,6 +99,7 @@ class CustomBidLSTM_CRF(CustomModel):
             )),
             name='char_lstm'
         )(char_embeddings)
+        lstm_inputs.append(chars)
 
         # length of sequence not used for the moment (but used for f1 communication)
         length_input = Input(batch_shape=(None, 1), dtype='int32', name='length_input')
@@ -99,6 +113,7 @@ class CustomBidLSTM_CRF(CustomModel):
                 batch_shape=(input_batch_size, None, config.max_feature_size),
                 name='features_input'
             )
+            model_inputs.append(features_input)
             features = features_input
             if config.feature_embedding_size:
                 features = TimeDistributed(Dense(
@@ -109,9 +124,9 @@ class CustomBidLSTM_CRF(CustomModel):
                 'word_input=%s, charts=%s, features=%s',
                 word_input, chars, features
             )
-            x = Concatenate()([word_input, chars, features])
-        else:
-            x = Concatenate()([word_input, chars])
+            lstm_inputs.append(features)
+
+        x = _concatenate_inputs(lstm_inputs)
         x = Dropout(config.dropout)(x)
 
         x = Bidirectional(LSTM(
@@ -126,11 +141,9 @@ class CustomBidLSTM_CRF(CustomModel):
         self.crf = ChainCRF()
         pred = self.crf(x)
 
-        inputs = [word_input, char_input]
-        if config.use_features:
-            inputs.append(features_input)
-        inputs.append(length_input)
-        self.model = Model(inputs=inputs, outputs=[pred])
+        model_inputs.append(length_input)
+
+        self.model = Model(inputs=model_inputs, outputs=[pred])
         self.config = config
 
 

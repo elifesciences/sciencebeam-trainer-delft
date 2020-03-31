@@ -125,6 +125,12 @@ def to_batch_embedding_vector(
     return batch_x
 
 
+def to_dummy_batch_embedding_vector(
+        batch_tokens: List[List[str]],
+        max_length: int = 300):
+    return np.zeros((len(batch_tokens), max_length, 0), dtype='float32')
+
+
 def to_batch_casing(
         batch_tokens: List[List[str]],
         max_length: int = 300):
@@ -146,7 +152,7 @@ class DataGenerator(keras.utils.Sequence):
             input_window_stride: int = None,
             stateful: bool = True,
             char_embed_size: int = 25,
-            use_word_embeddings: bool = True,
+            use_word_embeddings: bool = None,
             embeddings: Embeddings = None,
             max_sequence_length: int = None,
             tokenize=False,
@@ -154,6 +160,8 @@ class DataGenerator(keras.utils.Sequence):
             features=None,
             name: str = None):
         'Initialization'
+        if use_word_embeddings is None:
+            use_word_embeddings = embeddings is not None
         self.x = x
         self.y = y
         # features here are optional additional features provided
@@ -306,13 +314,14 @@ class DataGenerator(keras.utils.Sequence):
 
         batch_y = None
 
-        if self.use_word_embeddings:
-            if self.embeddings.use_ELMo:
-                batch_x = to_vector_simple_with_elmo(x_tokenized, self.embeddings, max_length_x)
-            elif self.embeddings.use_BERT:
-                batch_x = to_vector_simple_with_bert(x_tokenized, self.embeddings, max_length_x)
-            else:
-                batch_x = to_batch_embedding_vector(x_tokenized, self.embeddings, max_length_x)
+        if not self.use_word_embeddings:
+            batch_x = to_dummy_batch_embedding_vector(x_tokenized, max_length_x)
+        elif self.embeddings.use_ELMo:
+            batch_x = to_vector_simple_with_elmo(x_tokenized, self.embeddings, max_length_x)
+        elif self.embeddings.use_BERT:
+            batch_x = to_vector_simple_with_bert(x_tokenized, self.embeddings, max_length_x)
+        else:
+            batch_x = to_batch_embedding_vector(x_tokenized, self.embeddings, max_length_x)
 
         if self.preprocessor.return_casing:
             batch_a = to_batch_casing(x_tokenized, max_length_x)
@@ -336,8 +345,8 @@ class DataGenerator(keras.utils.Sequence):
         batch_l = batches[1]
 
         inputs = []
-        if self.use_word_embeddings:
-            inputs.append(batch_x)
+        # if self.use_word_embeddings:
+        inputs.append(batch_x)
         inputs.append(batch_c)
         if self.preprocessor.return_casing:
             inputs.append(batch_a)

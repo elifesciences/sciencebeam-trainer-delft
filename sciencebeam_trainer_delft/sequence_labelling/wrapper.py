@@ -93,6 +93,7 @@ class Sequence(_Sequence):
                 download_manager=DownloadManager()
             )
         self.embedding_manager = embedding_manager
+        self.embeddings = None
         self.max_sequence_length = kwargs.get('max_sequence_length')
         super().__init__(*args, **kwargs)
         LOGGER.debug('use_features=%s', use_features)
@@ -111,6 +112,14 @@ class Sequence(_Sequence):
         LOGGER.info('training_config: %s', vars(self.training_config))
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
+
+    def clear_embedding_cache(self):
+        if not self.embeddings:
+            return
+        if self.embeddings.use_ELMo:
+            self.embeddings.clean_ELMo_cache()
+        if self.embeddings.use_BERT:
+            self.embeddings.clean_BERT_cache()
 
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid=None, y_valid=None,
@@ -160,10 +169,7 @@ class Sequence(_Sequence):
             x_train, y_train, x_valid, y_valid,
             features_train=features_train, features_valid=features_valid
         )
-        if self.embeddings.use_ELMo:
-            self.embeddings.clean_ELMo_cache()
-        if self.embeddings.use_BERT:
-            self.embeddings.clean_BERT_cache()
+        self.clear_embedding_cache()
 
     def get_model_saver(self):
         return ModelSaver(
@@ -354,6 +360,8 @@ class Sequence(_Sequence):
 
     def get_embedding_for_model_config(self, model_config: ModelConfig):
         embedding_name = model_config.embeddings_name
+        if not model_config.use_word_embeddings or not embedding_name:
+            return None
         embedding_name = self.embedding_manager.ensure_available(embedding_name)
         LOGGER.info('embedding_name: %s', embedding_name)
         embeddings = Embeddings(
@@ -391,7 +399,8 @@ class Sequence(_Sequence):
         # load embeddings
         LOGGER.info('loading embeddings: %s', self.model_config.embeddings_name)
         self.embeddings = self.get_embedding_for_model_config(self.model_config)
-        self.model_config.word_embedding_size = self.embeddings.embed_size
+        if self.embeddings:
+            self.model_config.word_embedding_size = self.embeddings.embed_size
 
         self.model = get_model(self.model_config, self.p, ntags=len(self.p.vocab_tag))
         model_loader.load_model_from_directory(directory, model=self.model)

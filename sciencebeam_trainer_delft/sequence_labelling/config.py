@@ -14,6 +14,7 @@ class ModelConfig(_ModelConfig):
     def __init__(
             self,
             *args,
+            use_word_embeddings: bool = True,
             use_features: bool = False,
             max_feature_size: int = 50,
             feature_indices: List[int] = None,
@@ -24,6 +25,7 @@ class ModelConfig(_ModelConfig):
             stateful: bool = False,
             **kwargs):
         super().__init__(*args)
+        self.use_word_embeddings = use_word_embeddings
         self.use_features = use_features
         self.max_feature_size = max_feature_size
         self.feature_indices = feature_indices

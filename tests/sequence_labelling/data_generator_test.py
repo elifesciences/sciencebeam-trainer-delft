@@ -320,6 +320,24 @@ class TestDataGenerator:
         assert all_close(x[1], [get_word_indices([WORD_3, None])])
         assert all_close(x[-1], [1])
 
+    def test_should_use_dummy_word_embeddings_if_disabled(self, preprocessor):
+        preprocessor.return_casing = False
+        item = DataGenerator(
+            np.asarray([SENTENCE_TOKENS_1]),
+            np.asarray([[LABEL_1]]),
+            preprocessor=preprocessor,
+            use_word_embeddings=False,
+            embeddings=None,
+            **DEFAULT_ARGS
+        )[0]
+        LOGGER.debug('item: %s', item)
+        assert len(item) == 2
+        x, labels = item
+        assert all_close(labels, get_label_indices([LABEL_1]))
+        assert all_close(x[0], [np.zeros((len(SENTENCE_TOKENS_1), 0), dtype='float32')])
+        assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
+        assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])
+
     def test_should_return_casing(self, preprocessor, embeddings):
         preprocessor.return_casing = True
         item = DataGenerator(

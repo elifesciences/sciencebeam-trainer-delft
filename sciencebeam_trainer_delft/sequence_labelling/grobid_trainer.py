@@ -916,6 +916,13 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--embedding", default="glove-6B-50d",
         help="name of word embedding"
     )
+    features_group.add_argument(
+        "--no-embedding",
+        dest="use_word_embeddings",
+        default=True,
+        action="store_false",
+        help="Disable the use of word embedding"
+    )
     parser.add_argument(
         "--word-lstm-units", type=int, default=100,
         help="number of words in lstm units"
@@ -1008,7 +1015,12 @@ class GrobidTrainerSubCommand(SubCommand):
     def do_run(self, args: argparse.Namespace):
         pass
 
-    def preload_and_validate_embedding(self, embedding_name: str) -> str:
+    def preload_and_validate_embedding(
+            self,
+            embedding_name: str,
+            use_word_embeddings: bool = True) -> str:
+        if not use_word_embeddings:
+            return None
         embedding_name = self.embedding_manager.ensure_available(embedding_name)
         LOGGER.info('embedding_name: %s', embedding_name)
         self.embedding_manager.validate_embedding(embedding_name)
@@ -1041,6 +1053,7 @@ class GrobidTrainerSubCommand(SubCommand):
             feature_embedding_size=args.feature_embedding_size,
             patience=args.early_stopping_patience,
             config_props=dict(
+                use_word_embeddings=args.use_word_embeddings,
                 use_features_indices_input=args.use_features_indices_input,
                 features_lstm_units=args.features_lstm_units,
                 stateful=args.stateful
@@ -1081,7 +1094,8 @@ class TrainSubCommand(GrobidTrainerSubCommand):
         if not args.model:
             raise ValueError("model required")
         embedding_name = self.preload_and_validate_embedding(
-            args.embedding
+            args.embedding,
+            use_word_embeddings=args.use_word_embeddings
         )
         LOGGER.info('get_tf_info: %s', get_tf_info())
         train(
@@ -1130,7 +1144,8 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         if args.fold_count < 1:
             raise ValueError("fold-count should be equal or more than 1")
         embedding_name = self.preload_and_validate_embedding(
-            args.embedding
+            args.embedding,
+            use_word_embeddings=args.use_word_embeddings
         )
         LOGGER.info('get_tf_info: %s', get_tf_info())
         train_eval(

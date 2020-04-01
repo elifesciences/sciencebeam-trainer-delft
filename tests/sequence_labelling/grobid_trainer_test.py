@@ -311,6 +311,27 @@ class TestGrobidTrainer:
             )
 
         @log_on_exception
+        def test_should_be_able_to_train_without_word_embeddings(
+                self, default_args: dict, default_model_directory: str):
+            train(
+                **{
+                    **default_args,
+                    'embeddings_name': None,
+                    'config_props': {
+                        **default_args.get('config_props', {}),
+                        'use_word_embeddings': False
+                    }
+                }
+            )
+            tag_input(
+                model=default_args['model'],
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager'],
+                embedding_registry_path=default_args['embedding_registry_path']
+            )
+
+        @log_on_exception
         def test_should_be_able_to_train_BidLSTM_CRF_FEATURES(
                 self, default_args: dict, default_model_directory: str):
             train_args = {

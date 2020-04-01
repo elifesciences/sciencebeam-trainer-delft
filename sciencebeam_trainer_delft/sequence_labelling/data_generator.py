@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Union
 
 import numpy as np
 import keras
@@ -129,6 +129,43 @@ def to_dummy_batch_embedding_vector(
         batch_tokens: List[List[str]],
         max_length: int = 300):
     return np.zeros((len(batch_tokens), max_length, 0), dtype='float32')
+
+
+def is_batch_multi_tokens(batch_tokens: List[List[Union[str, List[str]]]]) -> bool:
+    first_batch_token = batch_tokens[0][0]
+    LOGGER.debug('first_batch_token: %s (%s)', first_batch_token, type(first_batch_token))
+    return isinstance(first_batch_token, (tuple, list, np.ndarray))
+
+
+def get_batch_multi_token_count(batch_tokens: List[List[List[str]]]) -> int:
+    return len(batch_tokens[0][0])
+
+
+def iter_multi_batch_tokens(batch_tokens: List[List[List[str]]]) -> Iterable[List[str]]:
+    return (
+        [
+            [multi_token[i] for multi_token in multi_tokens]
+            for multi_tokens in batch_tokens
+        ]
+        for i in range(get_batch_multi_token_count(batch_tokens))
+    )
+
+
+def to_concatenated_batch_vector(
+        to_batch_vector_fn: callable,
+        batch_tokens: List[List[Union[str, List[str]]]],
+        *args,
+        **kwargs):
+    if not is_batch_multi_tokens(batch_tokens):
+        LOGGER.debug('not multi batch tokens: %s', batch_tokens)
+        return to_batch_vector_fn(batch_tokens, *args, **kwargs)
+    return np.concatenate(
+        [
+            to_batch_vector_fn(simple_batch_tokens, *args, **kwargs)
+            for simple_batch_tokens in iter_multi_batch_tokens(batch_tokens)
+        ],
+        axis=-1
+    )
 
 
 def to_batch_casing(
@@ -281,6 +318,29 @@ class DataGenerator(keras.utils.Sequence):
             self.get_batch_window_indices_and_offsets(index)
         )
 
+    def to_batch_embedding_vector(
+            self,
+            batch_tokens: List[List[str]],
+            max_length: int) -> np.array:
+        if not self.use_word_embeddings:
+            return to_dummy_batch_embedding_vector(batch_tokens, max_length)
+        elif self.embeddings.use_ELMo:
+            return to_vector_simple_with_elmo(batch_tokens, self.embeddings, max_length)
+        elif self.embeddings.use_BERT:
+            return to_vector_simple_with_bert(batch_tokens, self.embeddings, max_length)
+        else:
+            return to_batch_embedding_vector(batch_tokens, self.embeddings, max_length)
+
+    def to_concatenated_batch_vector(
+            self,
+            batch_tokens: List[List[Union[str, List[str]]]],
+            max_length: int) -> np.array:
+        return to_concatenated_batch_vector(
+            self.to_batch_embedding_vector,
+            batch_tokens,
+            max_length
+        )
+
     def get_window_batch_data(  # pylint: disable=too-many-statements
             self,
             window_indices_and_offsets: List[Tuple[int, int]]):
@@ -314,14 +374,7 @@ class DataGenerator(keras.utils.Sequence):
 
         batch_y = None
 
-        if not self.use_word_embeddings:
-            batch_x = to_dummy_batch_embedding_vector(x_tokenized, max_length_x)
-        elif self.embeddings.use_ELMo:
-            batch_x = to_vector_simple_with_elmo(x_tokenized, self.embeddings, max_length_x)
-        elif self.embeddings.use_BERT:
-            batch_x = to_vector_simple_with_bert(x_tokenized, self.embeddings, max_length_x)
-        else:
-            batch_x = to_batch_embedding_vector(x_tokenized, self.embeddings, max_length_x)
+        batch_x = self.to_concatenated_batch_vector(x_tokenized, max_length_x)
 
         if self.preprocessor.return_casing:
             batch_a = to_batch_casing(x_tokenized, max_length_x)
@@ -345,7 +398,6 @@ class DataGenerator(keras.utils.Sequence):
         batch_l = batches[1]
 
         inputs = []
-        # if self.use_word_embeddings:
         inputs.append(batch_x)
         inputs.append(batch_c)
         if self.preprocessor.return_casing:

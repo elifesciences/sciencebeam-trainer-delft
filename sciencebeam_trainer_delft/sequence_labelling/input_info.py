@@ -12,7 +12,6 @@ def iter_flat_batch_tokens(batch_tokens: List[List[str]]):
     )
 
 
-
 def iter_flat_features(features: np.ndarray):
     return (
         features_vector

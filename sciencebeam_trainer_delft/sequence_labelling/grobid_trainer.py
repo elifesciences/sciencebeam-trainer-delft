@@ -745,7 +745,7 @@ def print_input_info(
     )))
     print('number of features: %d' % len(features_all[0][0]))
     if len(feature_lengths) > 1:
-        print('inconsistent feature lengths: %s' % feature_lengths)
+        print('inconsistent feature length counts: %s' % format_dict(feature_lengths))
         for feature_length in feature_lengths:
             print('examples with feature length=%d:\n%s' % (
                 feature_length,

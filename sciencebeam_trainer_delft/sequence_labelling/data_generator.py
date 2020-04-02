@@ -149,6 +149,19 @@ def get_all_batch_tokens(
     ]
 
 
+def concatenate_all_batch_tokens(
+        all_batch_tokens: List[List[List[str]]]) -> List[List[str]]:
+    if len(all_batch_tokens) == 1:
+        return all_batch_tokens[0]
+    return [
+        [
+            ' '.join(all_tokens)
+            for all_tokens in zip(*all_doc_tokens)
+        ]
+        for all_doc_tokens in zip(*all_batch_tokens)
+    ]
+
+
 def to_concatenated_batch_vector(
         to_batch_vector_fn: callable,
         all_batch_tokens: List[List[List[str]]],
@@ -389,6 +402,8 @@ class DataGenerator(keras.utils.Sequence):
             max_length_x
         )
 
+        concatenated_batch_tokens = concatenate_all_batch_tokens(all_batch_tokens)
+
         if self.preprocessor.return_casing:
             batch_a = to_batch_casing(x_tokenized, max_length_x)
 
@@ -402,19 +417,15 @@ class DataGenerator(keras.utils.Sequence):
                 # truncation of sequence at max_sequence_length
                 batch_y = truncate_batch_values(batch_y, self.max_sequence_length)
 
-            batches, batch_y = self.preprocessor.transform(x_tokenized, batch_y, extend=extend)
+            batches, batch_y = self.preprocessor.transform(
+                concatenated_batch_tokens, batch_y, extend=extend
+            )
         else:
-            batches = self.preprocessor.transform(x_tokenized, extend=extend)
+            batches = self.preprocessor.transform(
+                concatenated_batch_tokens, extend=extend
+            )
 
         batch_c = np.asarray(batches[0])
-        if len(all_batch_tokens) > 1:
-            batch_c = np.concatenate(
-                [batch_c] + [
-                    self.preprocessor.transform(batch_tokens, extend=extend)[0]
-                    for batch_tokens in all_batch_tokens[1:]
-                ],
-                axis=-1
-            )
 
         batch_l = batches[1]
 

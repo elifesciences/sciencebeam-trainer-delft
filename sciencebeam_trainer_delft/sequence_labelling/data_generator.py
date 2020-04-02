@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, List, Tuple, Union
+from typing import Iterable, List, Tuple
 
 import numpy as np
 import keras
@@ -131,38 +131,33 @@ def to_dummy_batch_embedding_vector(
     return np.zeros((len(batch_tokens), max_length, 0), dtype='float32')
 
 
-def is_batch_multi_tokens(batch_tokens: List[List[Union[str, List[str]]]]) -> bool:
-    first_batch_token = batch_tokens[0][0]
-    LOGGER.debug('first_batch_token: %s (%s)', first_batch_token, type(first_batch_token))
-    return isinstance(first_batch_token, (tuple, list, np.ndarray))
-
-
-def get_batch_multi_token_count(batch_tokens: List[List[List[str]]]) -> int:
-    return len(batch_tokens[0][0])
-
-
-def iter_multi_batch_tokens(batch_tokens: List[List[List[str]]]) -> Iterable[List[str]]:
-    return (
+def get_all_batch_tokens(
+        batch_tokens: List[List[str]],
+        batch_features: List[List[List[str]]],
+        additional_token_feature_indices: List[int]) -> List[List[List[str]]]:
+    if not additional_token_feature_indices:
+        return [batch_tokens]
+    return [batch_tokens] + [
         [
-            [multi_token[i] for multi_token in multi_tokens]
-            for multi_tokens in batch_tokens
+            [
+                token_features[additional_token_feature_index]
+                for token_features in doc_features
+            ]
+            for doc_features in batch_features
         ]
-        for i in range(get_batch_multi_token_count(batch_tokens))
-    )
+        for additional_token_feature_index in additional_token_feature_indices
+    ]
 
 
 def to_concatenated_batch_vector(
         to_batch_vector_fn: callable,
-        batch_tokens: List[List[Union[str, List[str]]]],
+        all_batch_tokens: List[List[List[str]]],
         *args,
         **kwargs):
-    if not is_batch_multi_tokens(batch_tokens):
-        LOGGER.debug('not multi batch tokens: %s', batch_tokens)
-        return to_batch_vector_fn(batch_tokens, *args, **kwargs)
     return np.concatenate(
         [
-            to_batch_vector_fn(simple_batch_tokens, *args, **kwargs)
-            for simple_batch_tokens in iter_multi_batch_tokens(batch_tokens)
+            to_batch_vector_fn(batch_tokens, *args, **kwargs)
+            for batch_tokens in all_batch_tokens
         ],
         axis=-1
     )
@@ -182,8 +177,8 @@ class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
     def __init__(
             self,
-            x,
-            y,
+            x: List[List[str]],
+            y: List[List[str]],
             batch_size: int = 24,
             preprocessor: Preprocessor = None,
             input_window_stride: int = None,
@@ -192,9 +187,10 @@ class DataGenerator(keras.utils.Sequence):
             use_word_embeddings: bool = None,
             embeddings: Embeddings = None,
             max_sequence_length: int = None,
-            tokenize=False,
-            shuffle=True,
-            features=None,
+            tokenize: bool = False,
+            shuffle: bool = True,
+            features: List[List[List[str]]] = None,
+            additional_token_feature_indices: List[int] = None,
             name: str = None):
         'Initialization'
         if use_word_embeddings is None:
@@ -205,6 +201,7 @@ class DataGenerator(keras.utils.Sequence):
         # in the case of GROBID input for instance
         self.input_window_stride = input_window_stride
         self.features = features
+        self.additional_token_feature_indices = additional_token_feature_indices
         self.preprocessor = preprocessor
         if preprocessor:
             self.labels = preprocessor.vocab_tag
@@ -217,6 +214,8 @@ class DataGenerator(keras.utils.Sequence):
         self.max_sequence_length = max_sequence_length
         if preprocessor.return_features and self.features is None:
             raise ValueError('features required')
+        if additional_token_feature_indices and features is None:
+            raise ValueError('features required for additional token values')
         self.batch_window_indices_and_offset = None
         self.window_indices_and_offset = None
         self.name = name
@@ -333,11 +332,11 @@ class DataGenerator(keras.utils.Sequence):
 
     def to_concatenated_batch_vector(
             self,
-            batch_tokens: List[List[Union[str, List[str]]]],
+            all_batch_tokens: List[List[str]],
             max_length: int) -> np.array:
         return to_concatenated_batch_vector(
             self.to_batch_embedding_vector,
-            batch_tokens,
+            all_batch_tokens,
             max_length
         )
 
@@ -374,7 +373,21 @@ class DataGenerator(keras.utils.Sequence):
 
         batch_y = None
 
-        batch_x = self.to_concatenated_batch_vector(x_tokenized, max_length_x)
+        sub_f = None
+        if self.preprocessor.return_features or self.additional_token_feature_indices:
+            sub_f = take_with_offset(self.features, window_indices_and_offsets)
+
+        all_batch_tokens = get_all_batch_tokens(
+            x_tokenized,
+            batch_features=sub_f,
+            additional_token_feature_indices=self.additional_token_feature_indices
+        )
+        LOGGER.debug('all_batch_tokens: %s', all_batch_tokens)
+
+        batch_x = self.to_concatenated_batch_vector(
+            all_batch_tokens,
+            max_length_x
+        )
 
         if self.preprocessor.return_casing:
             batch_a = to_batch_casing(x_tokenized, max_length_x)
@@ -394,6 +407,14 @@ class DataGenerator(keras.utils.Sequence):
             batches = self.preprocessor.transform(x_tokenized, extend=extend)
 
         batch_c = np.asarray(batches[0])
+        if len(all_batch_tokens) > 1:
+            batch_c = np.concatenate(
+                [batch_c] + [
+                    self.preprocessor.transform(batch_tokens, extend=extend)[0]
+                    for batch_tokens in all_batch_tokens[1:]
+                ],
+                axis=-1
+            )
 
         batch_l = batches[1]
 
@@ -403,7 +424,6 @@ class DataGenerator(keras.utils.Sequence):
         if self.preprocessor.return_casing:
             inputs.append(batch_a)
         if self.preprocessor.return_features:
-            sub_f = take_with_offset(self.features, window_indices_and_offsets)
             LOGGER.debug('extend: %s', extend)
             try:
                 batch_features, _ = self.preprocessor.transform_features(sub_f, extend=extend)

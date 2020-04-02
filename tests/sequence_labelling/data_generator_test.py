@@ -9,8 +9,6 @@ import numpy as np
 from delft.sequenceLabelling.preprocess import to_casing_single
 
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
-    is_batch_multi_tokens,
-    get_batch_multi_token_count,
     left_pad_batch_values,
     get_stateless_window_indices_and_offset,
     get_batch_window_indices_and_offset,
@@ -113,8 +111,6 @@ def preprocess_transform(X, y=None, extend=False):
     if extend:
         LOGGER.debug('extending X: %s', X)
         extend_value = None
-        if is_batch_multi_tokens(X):
-            extend_value = [None] * get_batch_multi_token_count(X)
         X_extend = [
             list(sentence_tokens) + [extend_value]
             for sentence_tokens in X
@@ -355,10 +351,13 @@ class TestDataGenerator:
     def test_should_concatenate_word_embeddings_if_using_multiple_tokens(
             self, preprocessor, embeddings):
         preprocessor.return_casing = False
-        sentence_tokens_1 = [[WORD_1, WORD_2], [WORD_3, WORD_4]]
+        sentence_tokens_1 = [WORD_1, WORD_2]
+        feature_tokens_1 = [WORD_3, WORD_4]
         item = DataGenerator(
             np.asarray([sentence_tokens_1]),
             np.asarray([[LABEL_1]]),
+            features=np.asarray([[[WORD_3], [WORD_4]]]),
+            additional_token_feature_indices=[0],
             preprocessor=preprocessor,
             embeddings=embeddings,
             **DEFAULT_ARGS
@@ -368,10 +367,13 @@ class TestDataGenerator:
         x, labels = item
         assert all_close(labels, get_label_indices([LABEL_1]))
         assert all_close(x[0], np.concatenate(
-            (get_word_vectors([WORD_1, WORD_3]), get_word_vectors([WORD_2, WORD_4])),
+            (get_word_vectors(sentence_tokens_1), get_word_vectors(feature_tokens_1)),
             axis=-1
         ))
-        assert all_close(x[1], [get_word_indices(sentence_tokens_1)])
+        assert all_close(x[1], np.concatenate(
+            ([get_word_indices(sentence_tokens_1)], [get_word_indices(feature_tokens_1)]),
+            axis=-1
+        ))
         assert all_close(x[-1], [len(sentence_tokens_1)])
 
     def test_should_return_casing(self, preprocessor, embeddings):

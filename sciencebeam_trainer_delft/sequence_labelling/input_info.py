@@ -71,8 +71,8 @@ def get_suggested_feature_indices(feature_counts: Dict[int, int], threshold: int
 def format_dict(d: dict) -> str:
     return '{' + ', '.join([
         '%s: %s' % (
-            key,
-            format_dict(value) if isinstance(value, dict) else value
+            repr(key),
+            format_dict(value) if isinstance(value, dict) else repr(value)
         )
         for key, value in d.items()
     ]) + '}'

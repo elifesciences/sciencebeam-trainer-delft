@@ -739,9 +739,7 @@ def print_input_info(
     feature_lengths = Counter(map(len, flat_features))
 
     print('number of input sequences: %d' % len(x_all))
-    print('sequence lengths: min=%d, max=%d, median=%.1f' % (
-        np.min(seq_lengths), np.max(seq_lengths), np.median(seq_lengths)
-    ))
+    print('sequence lengths: %s' % format_dict(get_quantiles(seq_lengths)))
     print('token lengths: %s' % format_dict(get_quantiles(
         map(len, iter_flat_batch_tokens(x_all))
     )))

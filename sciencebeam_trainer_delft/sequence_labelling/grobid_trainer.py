@@ -765,7 +765,7 @@ def print_input_info(
     print('suggested feature indices: %s' % format_indices(
         get_suggested_feature_indices(feature_counts)
     ))
-    print('labels: %s' % y_counts)
+    print('label counts: %s' % format_dict(y_counts))
 
 
 def add_common_arguments(

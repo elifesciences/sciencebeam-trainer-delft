@@ -4,7 +4,16 @@ from typing import Dict, List
 import numpy as np
 
 
-def iter_flat_features(features: np.array):
+def iter_flat_batch_tokens(batch_tokens: List[List[str]]):
+    return (
+        token
+        for doc_tokens in batch_tokens
+        for token in doc_tokens
+    )
+
+
+
+def iter_flat_features(features: np.ndarray):
     return (
         features_vector
         for features_doc in features
@@ -12,7 +21,25 @@ def iter_flat_features(features: np.array):
     )
 
 
-def get_feature_value_counts_by_index(features: np.array, max_feature_values: int = 1000):
+def get_quantiles(values: List[float]) -> Dict[str, float]:
+    arr = np.array(list(values))
+    return OrderedDict([
+        ('q.00', np.quantile(arr, 0)),
+        ('q.25', np.quantile(arr, 0.25)),
+        ('q.50', np.quantile(arr, 0.50)),
+        ('q.75', np.quantile(arr, 0.75)),
+        ('q1.0', np.quantile(arr, 1))
+    ])
+
+
+def get_quantiles_feature_value_length_by_index(features: np.ndarray):
+    return dict(enumerate(map(
+        lambda feature_values: get_quantiles(map(len, feature_values)),
+        zip(*iter_flat_features(features))
+    )))
+
+
+def get_feature_value_counts_by_index(features: np.ndarray, max_feature_values: int = 1000):
     feature_value_counts_by_index = defaultdict(Counter)
     for feature_vector in iter_flat_features(features):
         for index, value in enumerate(feature_vector):
@@ -25,7 +52,7 @@ def get_feature_value_counts_by_index(features: np.array, max_feature_values: in
     return feature_value_counts_by_index
 
 
-def get_feature_counts(features: np.array):
+def get_feature_counts(features: np.ndarray):
     feature_value_counts_by_index = get_feature_value_counts_by_index(features)
     return OrderedDict([
         (index, len(feature_value_counts_by_index[index]))
@@ -42,10 +69,13 @@ def get_suggested_feature_indices(feature_counts: Dict[int, int], threshold: int
 
 
 def format_dict(d: dict) -> str:
-    return ', '.join([
-        '%s: %s' % (key, value)
+    return '{' + ', '.join([
+        '%s: %s' % (
+            key,
+            format_dict(value) if isinstance(value, dict) else value
+        )
         for key, value in d.items()
-    ])
+    ]) + '}'
 
 
 def iter_index_groups(indices: List[int]) -> str:

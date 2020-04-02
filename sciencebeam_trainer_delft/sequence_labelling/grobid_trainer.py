@@ -53,7 +53,10 @@ from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.input_info import (
+    iter_flat_batch_tokens,
     iter_flat_features,
+    get_quantiles,
+    get_quantiles_feature_value_length_by_index,
     get_feature_counts,
     get_suggested_feature_indices,
     format_dict,
@@ -739,6 +742,9 @@ def print_input_info(
     print('sequence lengths: min=%d, max=%d, median=%.1f' % (
         np.min(seq_lengths), np.max(seq_lengths), np.median(seq_lengths)
     ))
+    print('token lengths: %s' % format_dict(get_quantiles(
+        map(len, iter_flat_batch_tokens(x_all))
+    )))
     print('number of features: %d' % len(features_all[0][0]))
     if len(feature_lengths) > 1:
         print('inconsistent feature lengths: %s' % feature_lengths)
@@ -754,7 +760,9 @@ def print_input_info(
         (x_all, y_all, features_all) = get_clean_x_y_features(
             x_all, y_all, features_all
         )
+    quantiles_feature_value_lengths = get_quantiles_feature_value_length_by_index(features_all)
     feature_counts = get_feature_counts(features_all)
+    print('feature value lengths: %s' % format_dict(quantiles_feature_value_lengths))
     print('feature counts: %s' % format_dict(feature_counts))
     print('suggested feature indices: %s' % format_indices(
         get_suggested_feature_indices(feature_counts)

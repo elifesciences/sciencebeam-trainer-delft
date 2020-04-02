@@ -879,6 +879,16 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     )
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
 
+    parser.add_argument(
+        "--additional-token-feature-indices",
+        type=parse_number_ranges,
+        help="".join([
+            "Additional feature values that should be used as tokens.",
+            " e.g. 0 or 0-3.",
+            " If blank, no additional token features will be used."
+        ])
+    )
+
     features_group = parser.add_argument_group('features')
     features_group.add_argument("--use-features", action="store_true", help="Use features")
     features_group.add_argument(
@@ -898,11 +908,13 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--features-lstm-units", type=int,
         help="Number of LSTM units used by the features"
     )
-    features_group.add_argument(
+
+    parser.add_argument(
         "--stateful", action="store_true",
         help="Make RNNs stateful (required for truncated BPTT)"
     )
-    features_group.add_argument(
+
+    parser.add_argument(
         "--input-window-stride",
         type=int,
         help="Should be equal or less than max sequence length"
@@ -1053,6 +1065,7 @@ class GrobidTrainerSubCommand(SubCommand):
             feature_embedding_size=args.feature_embedding_size,
             patience=args.early_stopping_patience,
             config_props=dict(
+                additional_token_feature_indices=args.additional_token_feature_indices,
                 use_word_embeddings=args.use_word_embeddings,
                 use_features_indices_input=args.use_features_indices_input,
                 features_lstm_units=args.features_lstm_units,

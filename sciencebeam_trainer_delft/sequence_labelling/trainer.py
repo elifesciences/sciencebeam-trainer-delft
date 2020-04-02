@@ -158,6 +158,7 @@ class Trainer(_Trainer):
             input_window_stride=self.training_config.input_window_stride,
             stateful=self.model_config.stateful,
             preprocessor=self.preprocessor,
+            additional_token_feature_indices=self.model_config.additional_token_feature_indices,
             char_embed_size=self.model_config.char_embedding_size,
             max_sequence_length=self.model_config.max_sequence_length,
             embeddings=self.embeddings,

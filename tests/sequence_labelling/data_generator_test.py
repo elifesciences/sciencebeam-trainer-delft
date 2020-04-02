@@ -371,7 +371,10 @@ class TestDataGenerator:
             axis=-1
         ))
         assert all_close(x[1], np.concatenate(
-            ([get_words_char_indices(sentence_tokens_1)], [get_words_char_indices(feature_tokens_1)]),
+            (
+                [get_words_char_indices(sentence_tokens_1)],
+                [get_words_char_indices(feature_tokens_1)]
+            ),
             axis=-1
         ))
         assert all_close(x[-1], [len(sentence_tokens_1)])

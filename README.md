@@ -98,6 +98,21 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
+Train with additional token features:
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --additional-token-feature-indices="0" \
+    --max-sequence-length="100" \
+    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-segmentation.train.gz" \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
 ### Training very long sequences
 
 Some training sequences can be very long and may exceed the available memory. This is in particular an issue when training the sequences.

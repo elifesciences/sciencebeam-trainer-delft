@@ -104,6 +104,7 @@ class Sequence(_Sequence):
             feature_indices=feature_indices,
             feature_embedding_size=feature_embedding_size
         )
+        self.update_model_config_word_embedding_size()
         updated_implicit_model_config_props(self.model_config)
         self.training_config = TrainingConfig(
             **vars(self.training_config),
@@ -112,6 +113,15 @@ class Sequence(_Sequence):
         LOGGER.info('training_config: %s', vars(self.training_config))
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
+
+    def update_model_config_word_embedding_size(self):
+        if self.embeddings:
+            additional_token_feature_count = len(
+                self.model_config.additional_token_feature_indices or []
+            )
+            self.model_config.word_embedding_size = (
+                self.embeddings.embed_size * (1 + additional_token_feature_count)
+            )
 
     def clear_embedding_cache(self):
         if not self.embeddings:
@@ -239,17 +249,26 @@ class Sequence(_Sequence):
         else:
             self.eval_single(x_test, y_test, features=features)
 
+    def create_data_generator(self, *args, **kwargs) -> DataGenerator:
+        return DataGenerator(
+            *args,
+            batch_size=self.training_config.batch_size,
+            preprocessor=self.p,
+            additional_token_feature_indices=self.model_config.additional_token_feature_indices,
+            char_embed_size=self.model_config.char_embedding_size,
+            max_sequence_length=self.model_config.max_sequence_length,
+            embeddings=self.embeddings,
+            **kwargs
+        )
+
     def eval_single(  # pylint: disable=arguments-differ
             self, x_test, y_test, features: np.array = None):
         self._require_model()
         # Prepare test data(steps, generator)
-        test_generator = DataGenerator(
+        test_generator = self.create_data_generator(
             x_test, y_test,
             features=features,
-            batch_size=self.training_config.batch_size, preprocessor=self.p,
-            char_embed_size=self.model_config.char_embedding_size,
-            max_sequence_length=self.model_config.max_sequence_length,
-            embeddings=self.embeddings, shuffle=False
+            shuffle=False
         )
 
         # Build the evaluator and evaluate the model
@@ -275,13 +294,10 @@ class Sequence(_Sequence):
                 )
 
                 # Prepare test data(steps, generator)
-                test_generator = DataGenerator(
+                test_generator = self.create_data_generator(
                     x_test, y_test,
                     features=features,
-                    batch_size=self.training_config.batch_size, preprocessor=self.p,
-                    char_embed_size=self.model_config.char_embedding_size,
-                    max_sequence_length=self.model_config.max_sequence_length,
-                    embeddings=self.embeddings, shuffle=False
+                    shuffle=False
                 )
 
                 # Build the evaluator and evaluate the model
@@ -399,8 +415,7 @@ class Sequence(_Sequence):
         # load embeddings
         LOGGER.info('loading embeddings: %s', self.model_config.embeddings_name)
         self.embeddings = self.get_embedding_for_model_config(self.model_config)
-        if self.embeddings:
-            self.model_config.word_embedding_size = self.embeddings.embed_size
+        self.update_model_config_word_embedding_size()
 
         self.model = get_model(self.model_config, self.p, ntags=len(self.p.vocab_tag))
         model_loader.load_model_from_directory(directory, model=self.model)

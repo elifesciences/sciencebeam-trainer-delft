@@ -13,7 +13,11 @@ from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
 from sciencebeam_trainer_delft.embedding import Embeddings, EmbeddingManager
 
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig, TrainingConfig
-from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
+from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
+    DataGenerator,
+    get_all_batch_tokens,
+    concatenate_all_batch_tokens
+)
 from sciencebeam_trainer_delft.sequence_labelling.trainer import Scorer, Trainer
 from sciencebeam_trainer_delft.sequence_labelling.models import (
     get_model,
@@ -57,7 +61,13 @@ def prepare_preprocessor(X, y, model_config, features: np.array = None):
         max_char_length=model_config.max_char_length,
         feature_preprocessor=feature_preprocessor
     )
-    preprocessor.fit(X, y)
+    concatenated_batch_tokens = concatenate_all_batch_tokens(
+        get_all_batch_tokens(
+            X, features,
+            additional_token_feature_indices=model_config.additional_token_feature_indices
+        )
+    )
+    preprocessor.fit(concatenated_batch_tokens, y)
     if features is not None:
         preprocessor.fit_features(features)
         if model_config.features_indices != preprocessor.feature_preprocessor.features_indices:

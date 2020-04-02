@@ -106,6 +106,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --additional-token-feature-indices="0" \
+    --max-char-length="60" \
     --max-sequence-length="100" \
     --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-segmentation.train.gz" \
     --limit="100" \

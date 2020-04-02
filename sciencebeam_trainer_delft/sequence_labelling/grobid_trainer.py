@@ -880,6 +880,13 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
 
     parser.add_argument(
+        "--max-char-length",
+        type=int,
+        default=30,
+        help="The maximum number of chars used by the model"
+    )
+
+    parser.add_argument(
         "--additional-token-feature-indices",
         type=parse_number_ranges,
         help="".join([
@@ -1065,6 +1072,7 @@ class GrobidTrainerSubCommand(SubCommand):
             feature_embedding_size=args.feature_embedding_size,
             patience=args.early_stopping_patience,
             config_props=dict(
+                max_char_length=args.max_char_length,
                 additional_token_feature_indices=args.additional_token_feature_indices,
                 use_word_embeddings=args.use_word_embeddings,
                 use_features_indices_input=args.use_features_indices_input,

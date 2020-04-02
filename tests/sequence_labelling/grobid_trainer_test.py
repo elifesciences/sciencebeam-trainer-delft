@@ -339,6 +339,7 @@ class TestGrobidTrainer:
                     **default_args,
                     'config_props': {
                         **default_args.get('config_props', {}),
+                        'max_char_length': 60,
                         'additional_token_feature_indices': [0]
                     }
                 }

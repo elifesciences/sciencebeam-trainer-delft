@@ -39,12 +39,16 @@ class Tagger:
             tokeniz = True
 
         predict_generator = DataGenerator(
-            texts, None,
+            texts,
+            None,
             batch_size=self.model_config.batch_size,
             preprocessor=self.preprocessor,
+            additional_token_feature_indices=self.model_config.additional_token_feature_indices,
             char_embed_size=self.model_config.char_embedding_size,
             max_sequence_length=self.max_sequence_length,
-            embeddings=self.embeddings, tokenize=tokeniz, shuffle=False,
+            embeddings=self.embeddings,
+            tokenize=tokeniz,
+            shuffle=False,
             features=features
         )
 

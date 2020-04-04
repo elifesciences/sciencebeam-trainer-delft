@@ -53,7 +53,10 @@ from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.input_info import (
+    iter_flat_batch_tokens,
     iter_flat_features,
+    get_quantiles,
+    get_quantiles_feature_value_length_by_index,
     get_feature_counts,
     get_suggested_feature_indices,
     format_dict,
@@ -736,12 +739,13 @@ def print_input_info(
     feature_lengths = Counter(map(len, flat_features))
 
     print('number of input sequences: %d' % len(x_all))
-    print('sequence lengths: min=%d, max=%d, median=%.1f' % (
-        np.min(seq_lengths), np.max(seq_lengths), np.median(seq_lengths)
-    ))
+    print('sequence lengths: %s' % format_dict(get_quantiles(seq_lengths)))
+    print('token lengths: %s' % format_dict(get_quantiles(
+        map(len, iter_flat_batch_tokens(x_all))
+    )))
     print('number of features: %d' % len(features_all[0][0]))
     if len(feature_lengths) > 1:
-        print('inconsistent feature lengths: %s' % feature_lengths)
+        print('inconsistent feature length counts: %s' % format_dict(feature_lengths))
         for feature_length in feature_lengths:
             print('examples with feature length=%d:\n%s' % (
                 feature_length,
@@ -754,12 +758,14 @@ def print_input_info(
         (x_all, y_all, features_all) = get_clean_x_y_features(
             x_all, y_all, features_all
         )
+    quantiles_feature_value_lengths = get_quantiles_feature_value_length_by_index(features_all)
     feature_counts = get_feature_counts(features_all)
+    print('feature value lengths: %s' % format_dict(quantiles_feature_value_lengths))
     print('feature counts: %s' % format_dict(feature_counts))
     print('suggested feature indices: %s' % format_indices(
         get_suggested_feature_indices(feature_counts)
     ))
-    print('labels: %s' % y_counts)
+    print('label counts: %s' % format_dict(y_counts))
 
 
 def add_common_arguments(
@@ -879,6 +885,23 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     )
     parser.add_argument("--use-ELMo", action="store_true", help="Use ELMo contextual embeddings")
 
+    parser.add_argument(
+        "--max-char-length",
+        type=int,
+        default=30,
+        help="The maximum number of chars used by the model"
+    )
+
+    parser.add_argument(
+        "--additional-token-feature-indices",
+        type=parse_number_ranges,
+        help="".join([
+            "Additional feature values that should be used as tokens.",
+            " e.g. 0 or 0-3.",
+            " If blank, no additional token features will be used."
+        ])
+    )
+
     features_group = parser.add_argument_group('features')
     features_group.add_argument("--use-features", action="store_true", help="Use features")
     features_group.add_argument(
@@ -898,11 +921,13 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--features-lstm-units", type=int,
         help="Number of LSTM units used by the features"
     )
-    features_group.add_argument(
+
+    parser.add_argument(
         "--stateful", action="store_true",
         help="Make RNNs stateful (required for truncated BPTT)"
     )
-    features_group.add_argument(
+
+    parser.add_argument(
         "--input-window-stride",
         type=int,
         help="Should be equal or less than max sequence length"
@@ -1053,6 +1078,8 @@ class GrobidTrainerSubCommand(SubCommand):
             feature_embedding_size=args.feature_embedding_size,
             patience=args.early_stopping_patience,
             config_props=dict(
+                max_char_length=args.max_char_length,
+                additional_token_feature_indices=args.additional_token_feature_indices,
                 use_word_embeddings=args.use_word_embeddings,
                 use_features_indices_input=args.use_features_indices_input,
                 features_lstm_units=args.features_lstm_units,

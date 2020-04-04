@@ -151,6 +151,20 @@ class Trainer(_Trainer):
             'training_config': vars(self.training_config)
         }
 
+    def create_data_generator(self, *args, **kwargs) -> DataGenerator:
+        return DataGenerator(
+            *args,
+            batch_size=self.training_config.batch_size,
+            input_window_stride=self.training_config.input_window_stride,
+            stateful=self.model_config.stateful,
+            preprocessor=self.preprocessor,
+            additional_token_feature_indices=self.model_config.additional_token_feature_indices,
+            char_embed_size=self.model_config.char_embedding_size,
+            max_sequence_length=self.model_config.max_sequence_length,
+            embeddings=self.embeddings,
+            **kwargs
+        )
+
     def train_model(  # pylint: disable=arguments-differ
             self, local_model,
             x_train, y_train,
@@ -166,28 +180,16 @@ class Trainer(_Trainer):
             raise ValueError('features required')
 
         if self.training_config.early_stop:
-            training_generator = DataGenerator(
+            training_generator = self.create_data_generator(
                 x_train, y_train,
-                batch_size=self.training_config.batch_size,
-                input_window_stride=self.training_config.input_window_stride,
-                stateful=self.model_config.stateful,
-                preprocessor=self.preprocessor,
-                char_embed_size=self.model_config.char_embedding_size,
-                max_sequence_length=self.model_config.max_sequence_length,
-                embeddings=self.embeddings, shuffle=True,
+                shuffle=True,
                 features=features_train,
                 name='training_generator'
             )
 
-            validation_generator = DataGenerator(
+            validation_generator = self.create_data_generator(
                 x_valid, y_valid,
-                batch_size=self.training_config.batch_size,
-                input_window_stride=self.training_config.input_window_stride,
-                stateful=self.model_config.stateful,
-                preprocessor=self.preprocessor,
-                char_embed_size=self.model_config.char_embedding_size,
-                max_sequence_length=self.model_config.max_sequence_length,
-                embeddings=self.embeddings, shuffle=False,
+                shuffle=False,
                 features=features_valid,
                 name='validation_generator'
             )
@@ -206,15 +208,8 @@ class Trainer(_Trainer):
             features_all = None
             if features_train is not None:
                 features_all = np.concatenate((features_train, features_valid), axis=0)
-            training_generator = DataGenerator(
+            training_generator = self.create_data_generator(
                 x_train, y_train,
-                batch_size=self.training_config.batch_size,
-                input_window_stride=self.training_config.input_window_stride,
-                stateful=self.model_config.stateful,
-                preprocessor=self.preprocessor,
-                char_embed_size=self.model_config.char_embedding_size,
-                max_sequence_length=self.model_config.max_sequence_length,
-                embeddings=self.embeddings,
                 shuffle=True,
                 features=features_all,
                 name='training_generator'

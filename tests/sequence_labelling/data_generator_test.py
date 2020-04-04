@@ -23,6 +23,7 @@ LOGGER = logging.getLogger(__name__)
 WORD_1 = 'word_a'
 WORD_2 = 'word_b'
 WORD_3 = 'word_c'
+WORD_4 = 'word_d'
 
 SENTENCE_TOKENS_1 = [WORD_1, WORD_2]
 
@@ -47,7 +48,8 @@ EMBEDDING_MAP = {
     None: [0, 0, 0],
     WORD_1: [1, 1, 1],
     WORD_2: [2, 2, 2],
-    WORD_3: [3, 3, 3]
+    WORD_3: [3, 3, 3],
+    WORD_4: [4, 4, 4]
 }
 
 
@@ -55,7 +57,8 @@ WORD_INDEX_MAP = {
     None: 0,
     WORD_1: 1,
     WORD_2: 2,
-    WORD_3: 3
+    WORD_3: 3,
+    WORD_4: 4
 }
 
 
@@ -81,8 +84,14 @@ def get_word_vectors(words: List[str]):
     return np.stack([get_word_vector(word) for word in words])
 
 
-def get_word_indices(words: List[str]):
-    return np.asarray([WORD_INDEX_MAP[word] for word in words])
+def get_word_char_indices(word: str):
+    if word is None:
+        return [0]
+    return [WORD_INDEX_MAP[token] for token in word.split(' ')]
+
+
+def get_words_char_indices(words: List[str]):
+    return np.asarray([get_word_char_indices(word) for word in words])
 
 
 def get_label_indices(labels: List[str]):
@@ -101,11 +110,12 @@ def preprocess_transform(X, y=None, extend=False):
     X_extend = X
     if extend:
         LOGGER.debug('extending X: %s', X)
+        extend_value = None
         X_extend = [
-            list(sentence_tokens) + [None]
+            list(sentence_tokens) + [extend_value]
             for sentence_tokens in X
         ]
-    x_words_transformed = [get_word_indices(sentence_tokens) for sentence_tokens in X_extend]
+    x_words_transformed = [get_words_char_indices(sentence_tokens) for sentence_tokens in X_extend]
     x_lengths_transformed = [len(sentence_tokens) for sentence_tokens in X]
     LOGGER.debug('x_lengths_transformed: %s', x_lengths_transformed)
     if y is None:
@@ -278,7 +288,7 @@ class TestDataGenerator:
         x, labels = item
         assert all_close(labels, get_label_indices([LABEL_1]))
         assert all_close(x[0], get_word_vectors(SENTENCE_TOKENS_1))
-        assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
+        assert all_close(x[1], [get_words_char_indices(SENTENCE_TOKENS_1)])
         assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])
 
     def test_should_generate_windows_and_disable_shuffle(self, preprocessor, embeddings):
@@ -306,7 +316,7 @@ class TestDataGenerator:
         LOGGER.debug('labels: %s', labels)
         assert all_close(labels, get_label_indices([LABEL_1, LABEL_2]))
         assert all_close(x[0], get_word_vectors([WORD_1, WORD_2]))
-        assert all_close(x[1], [get_word_indices([WORD_1, WORD_2])])
+        assert all_close(x[1], [get_words_char_indices([WORD_1, WORD_2])])
         assert all_close(x[-1], [2])
 
         batch_1 = batches[1]
@@ -317,7 +327,7 @@ class TestDataGenerator:
         LOGGER.debug('labels: %s', labels)
         assert all_close(labels, get_label_indices([LABEL_3]))
         assert all_close(x[0], get_word_vectors([WORD_3, None]))
-        assert all_close(x[1], [get_word_indices([WORD_3, None])])
+        assert all_close(x[1], [get_words_char_indices([WORD_3, None])])
         assert all_close(x[-1], [1])
 
     def test_should_use_dummy_word_embeddings_if_disabled(self, preprocessor):
@@ -335,8 +345,39 @@ class TestDataGenerator:
         x, labels = item
         assert all_close(labels, get_label_indices([LABEL_1]))
         assert all_close(x[0], [np.zeros((len(SENTENCE_TOKENS_1), 0), dtype='float32')])
-        assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
+        assert all_close(x[1], [get_words_char_indices(SENTENCE_TOKENS_1)])
         assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])
+
+    def test_should_concatenate_word_embeddings_if_using_multiple_tokens(
+            self, preprocessor, embeddings):
+        preprocessor.return_casing = False
+        sentence_tokens_1 = [WORD_1, WORD_2]
+        feature_tokens_1 = [WORD_3, WORD_4]
+        item = DataGenerator(
+            np.asarray([sentence_tokens_1]),
+            np.asarray([[LABEL_1]]),
+            features=np.asarray([[[WORD_3], [WORD_4]]]),
+            additional_token_feature_indices=[0],
+            preprocessor=preprocessor,
+            embeddings=embeddings,
+            **DEFAULT_ARGS
+        )[0]
+        LOGGER.debug('item: %s', item)
+        assert len(item) == 2
+        x, labels = item
+        assert all_close(labels, get_label_indices([LABEL_1]))
+        assert all_close(x[0], np.concatenate(
+            (get_word_vectors(sentence_tokens_1), get_word_vectors(feature_tokens_1)),
+            axis=-1
+        ))
+        assert all_close(x[1], np.concatenate(
+            (
+                [get_words_char_indices(sentence_tokens_1)],
+                [get_words_char_indices(feature_tokens_1)]
+            ),
+            axis=-1
+        ))
+        assert all_close(x[-1], [len(sentence_tokens_1)])
 
     def test_should_return_casing(self, preprocessor, embeddings):
         preprocessor.return_casing = True
@@ -352,7 +393,7 @@ class TestDataGenerator:
         x, labels = item
         assert all_close(labels, get_label_indices([LABEL_1]))
         assert all_close(x[0], get_word_vectors(SENTENCE_TOKENS_1))
-        assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
+        assert all_close(x[1], [get_words_char_indices(SENTENCE_TOKENS_1)])
         assert all_close(x[2], [
             to_casing_single(SENTENCE_TOKENS_1, maxlen=len(SENTENCE_TOKENS_1))
         ])
@@ -373,7 +414,7 @@ class TestDataGenerator:
         x, labels = item
         assert all_close(labels, get_label_indices([LABEL_1]))
         assert all_close(x[0], get_word_vectors(SENTENCE_TOKENS_1))
-        assert all_close(x[1], [get_word_indices(SENTENCE_TOKENS_1)])
+        assert all_close(x[1], [get_words_char_indices(SENTENCE_TOKENS_1)])
         assert all_close(x[2], [get_transformed_features(SENTENCE_FEATURES_1)])
         assert all_close(x[-1], [len(SENTENCE_TOKENS_1)])
 

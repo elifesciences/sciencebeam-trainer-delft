@@ -131,6 +131,51 @@ def to_dummy_batch_embedding_vector(
     return np.zeros((len(batch_tokens), max_length, 0), dtype='float32')
 
 
+def get_all_batch_tokens(
+        batch_tokens: List[List[str]],
+        batch_features: List[List[List[str]]],
+        additional_token_feature_indices: List[int]) -> List[List[List[str]]]:
+    if not additional_token_feature_indices:
+        return [batch_tokens]
+    return [batch_tokens] + [
+        [
+            [
+                token_features[additional_token_feature_index]
+                for token_features in doc_features
+            ]
+            for doc_features in batch_features
+        ]
+        for additional_token_feature_index in additional_token_feature_indices
+    ]
+
+
+def concatenate_all_batch_tokens(
+        all_batch_tokens: List[List[List[str]]]) -> List[List[str]]:
+    if len(all_batch_tokens) == 1:
+        return all_batch_tokens[0]
+    return [
+        [
+            ' '.join(all_tokens)
+            for all_tokens in zip(*all_doc_tokens)
+        ]
+        for all_doc_tokens in zip(*all_batch_tokens)
+    ]
+
+
+def to_concatenated_batch_vector(
+        to_batch_vector_fn: callable,
+        all_batch_tokens: List[List[List[str]]],
+        *args,
+        **kwargs):
+    return np.concatenate(
+        [
+            to_batch_vector_fn(batch_tokens, *args, **kwargs)
+            for batch_tokens in all_batch_tokens
+        ],
+        axis=-1
+    )
+
+
 def to_batch_casing(
         batch_tokens: List[List[str]],
         max_length: int = 300):
@@ -145,8 +190,8 @@ class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
     def __init__(
             self,
-            x,
-            y,
+            x: List[List[str]],
+            y: List[List[str]],
             batch_size: int = 24,
             preprocessor: Preprocessor = None,
             input_window_stride: int = None,
@@ -155,9 +200,10 @@ class DataGenerator(keras.utils.Sequence):
             use_word_embeddings: bool = None,
             embeddings: Embeddings = None,
             max_sequence_length: int = None,
-            tokenize=False,
-            shuffle=True,
-            features=None,
+            tokenize: bool = False,
+            shuffle: bool = True,
+            features: List[List[List[str]]] = None,
+            additional_token_feature_indices: List[int] = None,
             name: str = None):
         'Initialization'
         if use_word_embeddings is None:
@@ -168,6 +214,7 @@ class DataGenerator(keras.utils.Sequence):
         # in the case of GROBID input for instance
         self.input_window_stride = input_window_stride
         self.features = features
+        self.additional_token_feature_indices = additional_token_feature_indices
         self.preprocessor = preprocessor
         if preprocessor:
             self.labels = preprocessor.vocab_tag
@@ -180,6 +227,8 @@ class DataGenerator(keras.utils.Sequence):
         self.max_sequence_length = max_sequence_length
         if preprocessor.return_features and self.features is None:
             raise ValueError('features required')
+        if additional_token_feature_indices and features is None:
+            raise ValueError('features required for additional token values')
         self.batch_window_indices_and_offset = None
         self.window_indices_and_offset = None
         self.name = name
@@ -281,6 +330,29 @@ class DataGenerator(keras.utils.Sequence):
             self.get_batch_window_indices_and_offsets(index)
         )
 
+    def to_batch_embedding_vector(
+            self,
+            batch_tokens: List[List[str]],
+            max_length: int) -> np.array:
+        if not self.use_word_embeddings:
+            return to_dummy_batch_embedding_vector(batch_tokens, max_length)
+        elif self.embeddings.use_ELMo:
+            return to_vector_simple_with_elmo(batch_tokens, self.embeddings, max_length)
+        elif self.embeddings.use_BERT:
+            return to_vector_simple_with_bert(batch_tokens, self.embeddings, max_length)
+        else:
+            return to_batch_embedding_vector(batch_tokens, self.embeddings, max_length)
+
+    def to_concatenated_batch_vector(
+            self,
+            all_batch_tokens: List[List[str]],
+            max_length: int) -> np.array:
+        return to_concatenated_batch_vector(
+            self.to_batch_embedding_vector,
+            all_batch_tokens,
+            max_length
+        )
+
     def get_window_batch_data(  # pylint: disable=too-many-statements
             self,
             window_indices_and_offsets: List[Tuple[int, int]]):
@@ -314,14 +386,23 @@ class DataGenerator(keras.utils.Sequence):
 
         batch_y = None
 
-        if not self.use_word_embeddings:
-            batch_x = to_dummy_batch_embedding_vector(x_tokenized, max_length_x)
-        elif self.embeddings.use_ELMo:
-            batch_x = to_vector_simple_with_elmo(x_tokenized, self.embeddings, max_length_x)
-        elif self.embeddings.use_BERT:
-            batch_x = to_vector_simple_with_bert(x_tokenized, self.embeddings, max_length_x)
-        else:
-            batch_x = to_batch_embedding_vector(x_tokenized, self.embeddings, max_length_x)
+        sub_f = None
+        if self.preprocessor.return_features or self.additional_token_feature_indices:
+            sub_f = take_with_offset(self.features, window_indices_and_offsets)
+
+        all_batch_tokens = get_all_batch_tokens(
+            x_tokenized,
+            batch_features=sub_f,
+            additional_token_feature_indices=self.additional_token_feature_indices
+        )
+        LOGGER.debug('all_batch_tokens: %s', all_batch_tokens)
+
+        batch_x = self.to_concatenated_batch_vector(
+            all_batch_tokens,
+            max_length_x
+        )
+
+        concatenated_batch_tokens = concatenate_all_batch_tokens(all_batch_tokens)
 
         if self.preprocessor.return_casing:
             batch_a = to_batch_casing(x_tokenized, max_length_x)
@@ -336,22 +417,24 @@ class DataGenerator(keras.utils.Sequence):
                 # truncation of sequence at max_sequence_length
                 batch_y = truncate_batch_values(batch_y, self.max_sequence_length)
 
-            batches, batch_y = self.preprocessor.transform(x_tokenized, batch_y, extend=extend)
+            batches, batch_y = self.preprocessor.transform(
+                concatenated_batch_tokens, batch_y, extend=extend
+            )
         else:
-            batches = self.preprocessor.transform(x_tokenized, extend=extend)
+            batches = self.preprocessor.transform(
+                concatenated_batch_tokens, extend=extend
+            )
 
         batch_c = np.asarray(batches[0])
 
         batch_l = batches[1]
 
         inputs = []
-        # if self.use_word_embeddings:
         inputs.append(batch_x)
         inputs.append(batch_c)
         if self.preprocessor.return_casing:
             inputs.append(batch_a)
         if self.preprocessor.return_features:
-            sub_f = take_with_offset(self.features, window_indices_and_offsets)
             LOGGER.debug('extend: %s', extend)
             try:
                 batch_features, _ = self.preprocessor.transform_features(sub_f, extend=extend)

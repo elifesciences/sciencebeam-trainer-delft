@@ -98,6 +98,22 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
+Train with additional token features:
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --additional-token-feature-indices="0" \
+    --max-char-length="60" \
+    --max-sequence-length="100" \
+    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-segmentation.train.gz" \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
 ### Training very long sequences
 
 Some training sequences can be very long and may exceed the available memory. This is in particular an issue when training the sequences.
@@ -354,9 +370,10 @@ Result:
 
 ```text
 number of input sequences: 2538
-sequence lengths: min=1, max=6606, median=178.0
+sequence lengths: {'q.00': 1, 'q.25': 61.0, 'q.50': 178.0, 'q.75': 300.75, 'q1.0': 6606}
+token lengths: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 7.0, 'q1.0': 142}
 number of features: 31
-inconsistent feature lengths: Counter({31: 536893, 30: 12855})
+inconsistent feature length counts: {31: 536893, 30: 12855}
 examples with feature length=31:
 die D Di Die Die e ie Die Die BLOCKSTART LINESTART NEWFONT HIGHERFONT 0 0 0 INITCAP NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0
 abscheidung A Ab Abs Absc g ng ung dung BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0
@@ -365,9 +382,10 @@ examples with feature length=30:
 gudina G Gu Gud Gudi a na ina dina BLOCKSTART LINESTART LINEINDENT NEWFONT HIGHERFONT 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 NOPUNCT 0 0
 et e et et et t et et et BLOCKIN LINEIN LINEINDENT NEWFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 0 0 0 0 0 0 0 NOPUNCT 0 0
 al a al al al l al al al BLOCKIN LINEIN LINEINDENT SAMEFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 1 0 0 0 0 0 0 NOPUNCT 0 0
-feature counts: 0: 1000, 1: 247, 2: 1000, 3: 1000, 4: 1000, 5: 265, 6: 1000, 7: 1000, 8: 1000, 9: 3, 10: 3, 11: 2, 12: 3, 13: 2, 14: 2, 15: 2, 16: 3, 17: 3, 18: 2, 19: 2, 20: 2, 21: 1, 22: 1, 23: 2, 24: 2, 25: 1, 26: 2, 27: 2, 28: 8, 29: 1, 30: 1
+feature value lengths: {0: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 7.0, 'q1.0': 142}, 1: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 2: {'q.00': 1, 'q.25': 1.0, 'q.50': 2.0, 'q.75': 2.0, 'q1.0': 2}, 3: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 3.0, 'q1.0': 3}, 4: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 4.0, 'q1.0': 4}, 5: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 6: {'q.00': 1, 'q.25': 1.0, 'q.50': 2.0, 'q.75': 2.0, 'q1.0': 2}, 7: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 3.0, 'q1.0': 3}, 8: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 4.0, 'q1.0': 4}, 9: {'q.00': 7, 'q.25': 7.0, 'q.50': 7.0, 'q.75': 7.0, 'q1.0': 10}, 10: {'q.00': 6, 'q.25': 6.0, 'q.50': 6.0, 'q.75': 6.0, 'q1.0': 9}, 11: {'q.00': 7, 'q.25': 8.0, 'q.50': 8.0, 'q.75': 8.0, 'q1.0': 8}, 12: {'q.00': 9, 'q.25': 12.0, 'q.50': 12.0, 'q.75': 12.0, 'q1.0': 12}, 13: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 14: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 15: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 16: {'q.00': 6, 'q.25': 6.0, 'q.50': 6.0, 'q.75': 6.0, 'q1.0': 7}, 17: {'q.00': 7, 'q.25': 7.0, 'q.50': 7.0, 'q.75': 7.0, 'q1.0': 14}, 18: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 19: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 20: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 21: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 22: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 23: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 24: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 25: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 26: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 27: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 28: {'q.00': 3, 'q.25': 7.0, 'q.50': 7.0, 'q.75': 7.0, 'q1.0': 11}, 29: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 30: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}}
+feature counts: {0: 1000, 1: 247, 2: 1000, 3: 1000, 4: 1000, 5: 265, 6: 1000, 7: 1000, 8: 1000, 9: 3, 10: 3, 11: 2, 12: 3, 13: 2, 14: 2, 15: 2, 16: 3, 17: 3, 18: 2, 19: 2, 20: 2, 21: 1, 22: 1, 23: 2, 24: 2, 25: 1, 26: 2, 27: 2, 28: 8, 29: 1, 30: 1}
 suggested feature indices: 9-30
-labels: Counter({'I-<abstract>': 269983, 'I-<intro>': 96944, 'I-<note>': 26033, 'I-<author>': 25830, 'I-<title>': 24481, 'I-<affiliation>': 23886, 'I-<address>': 13963, 'I-<reference>': 10121, 'I-<keyword>': 7804, 'I-<email>': 7796, 'I-<copyright>': 5152, 'I-<grant>': 4509, 'I-<pubnum>': 3755, 'I-<submission>': 3729, 'I-<web>': 3162, 'B-<affiliation>': 2782, 'B-<title>': 2363, 'B-<address>': 2330, 'B-<author>': 2241, 'I-<date>': 2204, 'B-<note>': 1823, 'B-<abstract>': 1528, 'I-<degree>': 1355, 'B-<email>': 891, 'I-<phone>': 710, 'B-<date>': 658, 'B-<intro>': 439, 'B-<keyword>': 424, 'I-<entitle>': 421, 'B-<pubnum>': 421, 'B-<reference>': 414, 'B-<submission>': 409, 'B-<copyright>': 281, 'I-<dedication>': 243, 'B-<web>': 187, 'I-<date-submission>': 166, 'B-<grant>': 105, 'B-<phone>': 71, 'B-<degree>': 59, 'B-<date-submission>': 29, 'B-<entitle>': 24, 'B-<dedication>': 22})
+label counts: {'B-<title>': 2363, 'I-<title>': 24481, 'B-<author>': 2241, 'I-<author>': 25830, 'B-<reference>': 414, 'I-<reference>': 10121, 'B-<submission>': 409, 'I-<submission>': 3729, 'B-<abstract>': 1528, 'I-<abstract>': 269983, 'B-<affiliation>': 2782, 'I-<affiliation>': 23886, 'B-<address>': 2330, 'I-<address>': 13963, 'B-<date>': 658, 'I-<date>': 2204, 'B-<grant>': 105, 'I-<grant>': 4509, 'B-<email>': 891, 'I-<email>': 7796, 'B-<keyword>': 424, 'I-<keyword>': 7804, 'B-<entitle>': 24, 'I-<entitle>': 421, 'B-<pubnum>': 421, 'I-<pubnum>': 3755, 'B-<note>': 1823, 'I-<note>': 26033, 'B-<copyright>': 281, 'I-<copyright>': 5152, 'B-<date-submission>': 29, 'I-<date-submission>': 166, 'B-<intro>': 439, 'I-<intro>': 96944, 'B-<web>': 187, 'I-<web>': 3162, 'B-<phone>': 71, 'I-<phone>': 710, 'B-<dedication>': 22, 'I-<dedication>': 243, 'B-<degree>': 59, 'I-<degree>': 1355}
 ```
 
 ## Training in Google's AI Platform

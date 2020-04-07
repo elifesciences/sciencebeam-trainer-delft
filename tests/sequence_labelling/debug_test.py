@@ -21,10 +21,10 @@ from .tag_formatter_test import (
 
 FILE_1_PREFIX = 'file1'
 
-JSON_FILE_1 = FILE_1_PREFIX + '.json'
-DATA_FILE_1 = FILE_1_PREFIX + '.data'
-TXT_FILE_1 = FILE_1_PREFIX + '.txt'
-XML_FILE_1 = FILE_1_PREFIX + '.xml'
+JSON_FILE_1 = FILE_1_PREFIX + '-1.json'
+DATA_FILE_1 = FILE_1_PREFIX + '-1.data'
+TXT_FILE_1 = FILE_1_PREFIX + '-1.txt'
+XML_FILE_1 = FILE_1_PREFIX + '-1.xml'
 
 
 @pytest.fixture(name='tag_debug_reporter')

@@ -66,10 +66,11 @@ venv-clean:
 
 
 venv-create:
-	virtualenv -p python3 $(VENV)
+	python3 -m venv $(VENV)
 
 
 dev-install:
+	$(PIP) install -r requirements.build.txt
 	$(PIP) install -r requirements.txt
 	$(PIP) install -r requirements.cpu.txt
 	$(PIP) install -r requirements.dev.txt

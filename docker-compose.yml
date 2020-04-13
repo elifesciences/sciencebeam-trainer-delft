@@ -1,4 +1,18 @@
-version: '3'
+version: '3.4'
+
+x-grobid-env:
+    &grobid-env
+      - OVERRIDE_MODELS=${OVERRIDE_MODELS}
+      - OVERRIDE_EMBEDDING_URL=${OVERRIDE_EMBEDDING_URL}
+      - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
+      - EMBEDDING_LMDB_PATH=${EMBEDDING_LMDB_PATH}
+      - PRELOAD_EMBEDDING=${PRELOAD_EMBEDDING}
+      - GROBID__HEADER__USE_HEURISTICS=${GROBID__HEADER__USE_HEURISTICS}
+      - GROBID__CRF__ENGINE=${GROBID__CRF__ENGINE}
+      - GROBID__CRF__ENGINE__SEGMENTATION=${GROBID__CRF__ENGINE__SEGMENTATION}
+      - GROBID__CRF__ENGINE__HEADER=${GROBID__CRF__ENGINE__HEADER}
+      - GROBID__CRF__ENGINE__FULLTEXT=${GROBID__CRF__ENGINE__FULLTEXT}
+      - GROBID__CRF__ENGINE__REFERENCE_SEGMENTER=${GROBID__CRF__ENGINE__REFERENCE_SEGMENTER}
 
 services:
   # the main delft image that we are going to push
@@ -21,13 +35,7 @@ services:
       args:
         base_image: ${BASE_GROBID_REPO}:${BASE_GROBID_TAG}
     image: elifesciences/sciencebeam-trainer-delft-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
-    environment:
-      - OVERRIDE_MODELS=${OVERRIDE_MODELS}
-      - OVERRIDE_EMBEDDING_URL=${OVERRIDE_EMBEDDING_URL}
-      - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
-      - EMBEDDING_LMDB_PATH=${EMBEDDING_LMDB_PATH}
-      - PRELOAD_EMBEDDING=${PRELOAD_EMBEDDING}
-      - GROBID__HEADER__USE_HEURISTICS=${GROBID__HEADER__USE_HEURISTICS}
+    environment: *grobid-env
     volumes:
       - data:/data
     ports:
@@ -54,15 +62,7 @@ services:
     image: elifesciences/sciencebeam-trainer-delft-trainer-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
     depends_on:
       - trainer-grobid-base
-    environment:
-      - OVERRIDE_MODELS=${OVERRIDE_MODELS}
-      - OVERRIDE_EMBEDDING_URL=${OVERRIDE_EMBEDDING_URL}
-      - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
-      - EMBEDDING_LMDB_PATH=${EMBEDDING_LMDB_PATH}
-      - PRELOAD_EMBEDDING=${PRELOAD_EMBEDDING}
-      - GROBID__HEADER__USE_HEURISTICS=${GROBID__HEADER__USE_HEURISTICS}
-      - GROBID__CRF__ENGINE=${GROBID__CRF__ENGINE}
-      - GROBID__CRF__ENGINE__SEGMENTATION=${GROBID__CRF__ENGINE__SEGMENTATION}
+    environment: *grobid-env
     volumes:
       - data:/data
 

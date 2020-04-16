@@ -2,11 +2,14 @@ import logging
 import tempfile
 import os
 from pathlib import Path
-from typing import Iterable, IO
+from typing import Iterable, IO, List, Tuple
 
 import numpy as np
 
 from delft.sequenceLabelling.evaluation import f1_score
+from delft.sequenceLabelling.reader import (
+    _translate_tags_grobid_to_IOB as translate_tags_grobid_to_IOB
+)
 
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import classification_report
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
@@ -68,6 +71,28 @@ def write_wapiti_input_data(fp: IO, x: np.array, features: np.array):
     ))
 
 
+def iter_read_tagged_result(fp: IO) -> Iterable[Tuple[str, str]]:
+    token_and_label_pairs = []
+    for line in fp:
+        LOGGER.debug('line: %r', line)
+        line = line.rstrip()
+        if not line:
+            if token_and_label_pairs:
+                yield token_and_label_pairs
+            token_and_label_pairs = []
+            continue
+        values = line.replace('\t', ' ').split(' ')
+        if len(values) < 2:
+            raise ValueError('should have multiple values, but got: [%s]' % line)
+        token_and_label_pairs.append((
+            values[0],
+            translate_tags_grobid_to_IOB(values[-1])
+        ))
+
+    if token_and_label_pairs:
+        yield token_and_label_pairs
+
+
 class WapitiModelAdapter:
     def __init__(self, wapiti_wrapper: WapitiWrapper, model_file_path: str):
         self.wapiti_wrapper = wapiti_wrapper
@@ -125,7 +150,11 @@ class WapitiModelAdapter:
             ]
             yield token_and_label_pairs
 
-    def iter_tag_using_wrapper(self, x: np.array, features: np.array, output_format: str = None):
+    def iter_tag_using_wrapper(
+            self,
+            x: np.array,
+            features: np.array,
+            output_format: str = None) -> Iterable[Tuple[str, str]]:
         assert not output_format, 'output_format not supported'
         with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
             data_path = Path(temp_dir).joinpath('input.data')
@@ -140,30 +169,21 @@ class WapitiModelAdapter:
                 output_data_path=output_data_path,
                 output_only_labels=False
             )
-            token_and_label_pairs = []
             with output_data_path.open(mode='r') as output_data_fp:
-                for line in output_data_fp:
-                    line = line.rstrip()
-                    if not line:
-                        if token_and_label_pairs:
-                            yield token_and_label_pairs
-                        token_and_label_pairs = []
-                        continue
-                    values = line.replace('\t', ' ').split(' ')
-                    if len(values) < 2:
-                        raise ValueError('should have multiple values, but got: [%s]' % line)
-                    token_and_label_pairs.append((
-                        values[0],
-                        values[-1]
-                    ))
+                yield from iter_read_tagged_result(output_data_fp)
 
-            if token_and_label_pairs:
-                yield token_and_label_pairs
-
-    def iter_tag(self, x: np.array, features: np.array, output_format: str = None):
+    def iter_tag(
+            self,
+            x: np.array,
+            features: np.array,
+            output_format: str = None) -> Iterable[Tuple[str, str]]:
         return self.iter_tag_using_wrapper(x, features, output_format)
 
-    def tag(self, x: np.array, features: np.array, output_format: str = None):
+    def tag(
+            self,
+            x: np.array,
+            features: np.array,
+            output_format: str = None) -> List[Tuple[str, str]]:
         assert not output_format, 'output_format not supported'
         return list(self.iter_tag(x, features))
 

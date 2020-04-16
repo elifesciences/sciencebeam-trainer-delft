@@ -7,6 +7,9 @@ from contextlib import contextmanager
 from typing import Callable, IO, List
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 def configure_logging(level='INFO', secondary_level='WARN'):
     logging.basicConfig(level=secondary_level)
     logging.getLogger('delft').setLevel(level)
@@ -115,16 +118,26 @@ class LineWriterLoggingHandler(logging.Handler):
             **kwargs):
         self.line_writers = line_writers
         self.append_line_feed = append_line_feed
+        self._logging = False
         super().__init__(**kwargs)
 
     def _write_line(self, line: str):
         if self.append_line_feed:
             line += '\n'
         for line_writer in self.line_writers:
-            line_writer(line)
+            try:
+                line_writer(line)
+            except Exception as e:  # pylint: disable=broad-except
+                LOGGER.warning('failed to write: %r due to %s', line, e, exc_info=1)
 
     def emit(self, record: logging.LogRecord):
-        self._write_line(self.format(record))
+        if self._logging:
+            return
+        try:
+            self._logging = True
+            self._write_line(self.format(record))
+        finally:
+            self._logging = False
 
 
 def get_default_logging_formatter() -> logging.Formatter:

@@ -2,11 +2,14 @@ import logging
 import tempfile
 import os
 from pathlib import Path
-from typing import Iterable, IO
+from typing import Iterable, IO, List, Tuple
 
 import numpy as np
 
 from delft.sequenceLabelling.evaluation import f1_score
+from delft.sequenceLabelling.reader import (
+    _translate_tags_grobid_to_IOB as translate_tags_grobid_to_IOB
+)
 
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import classification_report
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
@@ -20,6 +23,23 @@ from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti import (
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+def translate_tags_IOB_to_grobid(tag: str) -> str:
+    """
+    Convert labels from IOB2 to the ones used by GROBID (expected by the wapiti model)
+    """
+    if tag == 'O':
+        # outside
+        return '<other>'
+    elif tag.startswith('B-'):
+        # begin
+        return 'I-' + tag[2:]
+    elif tag.startswith('I-'):
+        # inside
+        return '' + tag[2:]
+    else:
+        return tag
 
 
 def iter_doc_formatted_input_data(
@@ -49,6 +69,40 @@ def write_wapiti_input_data(fp: IO, x: np.array, features: np.array):
     fp.writelines(iter_formatted_input_data(
         x, features
     ))
+
+
+def iter_read_tagged_result(fp: IO) -> Iterable[List[Tuple[str, str]]]:
+    token_and_label_pairs = []
+    for line in fp:
+        LOGGER.debug('line: %r', line)
+        line = line.rstrip()
+        if not line:
+            if token_and_label_pairs:
+                yield token_and_label_pairs
+            token_and_label_pairs = []
+            continue
+        values = line.replace('\t', ' ').split(' ')
+        if len(values) < 2:
+            raise ValueError('should have multiple values, but got: [%s]' % line)
+        token_and_label_pairs.append((
+            values[0],
+            translate_tags_grobid_to_IOB(values[-1])
+        ))
+
+    if token_and_label_pairs:
+        yield token_and_label_pairs
+
+
+def convert_wapiti_model_result_to_document_tagged_result(
+        x_doc: List[str],
+        wapiti_model_result: List[List[str]]) -> List[Tuple[str, str]]:
+    return [
+        (
+            x_token,
+            translate_tags_grobid_to_IOB(result_token[-1])
+        )
+        for x_token, result_token in zip(x_doc, wapiti_model_result)
+    ]
 
 
 class WapitiModelAdapter:
@@ -92,7 +146,11 @@ class WapitiModelAdapter:
     def _get_model_name(self) -> str:
         return os.path.basename(os.path.dirname(self.model_file_path))
 
-    def iter_tag_using_model(self, x: np.array, features: np.array, output_format: str = None):
+    def iter_tag_using_model(
+            self,
+            x: np.array,
+            features: np.array,
+            output_format: str = None) -> Iterable[List[Tuple[str, str]]]:
         # Note: this method doesn't currently seem to work reliable and needs to be investigated
         #   The evaluation always shows zero.
         assert not output_format, 'output_format not supported'
@@ -102,13 +160,16 @@ class WapitiModelAdapter:
                 [x_token] + list(f_token)
                 for x_token, f_token in zip(x_doc, f_doc)
             ])
-            token_and_label_pairs = [
-                (x_token, result_token[-1])
-                for x_token, result_token in zip(x_doc, result)
-            ]
-            yield token_and_label_pairs
+            yield convert_wapiti_model_result_to_document_tagged_result(
+                x_doc,
+                result
+            )
 
-    def iter_tag_using_wrapper(self, x: np.array, features: np.array, output_format: str = None):
+    def iter_tag_using_wrapper(
+            self,
+            x: np.array,
+            features: np.array,
+            output_format: str = None) -> Iterable[List[Tuple[str, str]]]:
         assert not output_format, 'output_format not supported'
         with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
             data_path = Path(temp_dir).joinpath('input.data')
@@ -123,30 +184,21 @@ class WapitiModelAdapter:
                 output_data_path=output_data_path,
                 output_only_labels=False
             )
-            token_and_label_pairs = []
             with output_data_path.open(mode='r') as output_data_fp:
-                for line in output_data_fp:
-                    line = line.rstrip()
-                    if not line:
-                        if token_and_label_pairs:
-                            yield token_and_label_pairs
-                        token_and_label_pairs = []
-                        continue
-                    values = line.replace('\t', ' ').split(' ')
-                    if len(values) < 2:
-                        raise ValueError('should have multiple values, but got: [%s]' % line)
-                    token_and_label_pairs.append((
-                        values[0],
-                        values[-1]
-                    ))
+                yield from iter_read_tagged_result(output_data_fp)
 
-            if token_and_label_pairs:
-                yield token_and_label_pairs
-
-    def iter_tag(self, x: np.array, features: np.array, output_format: str = None):
+    def iter_tag(
+            self,
+            x: np.array,
+            features: np.array,
+            output_format: str = None) -> Iterable[List[Tuple[str, str]]]:
         return self.iter_tag_using_wrapper(x, features, output_format)
 
-    def tag(self, x: np.array, features: np.array, output_format: str = None):
+    def tag(
+            self,
+            x: np.array,
+            features: np.array,
+            output_format: str = None) -> List[List[Tuple[str, str]]]:
         assert not output_format, 'output_format not supported'
         return list(self.iter_tag(x, features))
 
@@ -177,7 +229,7 @@ class WapitiModelAdapter:
 def iter_doc_formatted_training_data(
         x_doc: np.array, y_doc: np.array, features_doc: np.array) -> Iterable[str]:
     for x_token, y_token, f_token in zip(x_doc, y_doc, features_doc):
-        yield format_feature_line([x_token] + f_token + [y_token])
+        yield format_feature_line([x_token] + f_token + [translate_tags_IOB_to_grobid(y_token)])
     # blank lines to mark the end of the document
     yield ''
     yield ''

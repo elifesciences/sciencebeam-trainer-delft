@@ -25,7 +25,7 @@ from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.cloud_support import patch_cloud_support
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.tf import get_tf_info
-from sciencebeam_trainer_delft.utils.io import copy_file
+from sciencebeam_trainer_delft.utils.io import copy_file, auto_uploading_output_file
 from sciencebeam_trainer_delft.utils.logging import (
     redirect_stdout_and_stderr_lines_to,
     redirect_logging_to
@@ -1131,7 +1131,7 @@ class GrobidTrainerSubCommand(SubCommand):
             return
 
         if args.log_file:
-            with open(args.log_file, mode='w') as log_fp:
+            with auto_uploading_output_file(args.log_file, mode='w') as log_fp:
                 with redirect_stdout_and_stderr_lines_to(log_fp.write, append_line_feed=True):
                     with redirect_logging_to(log_fp.write, append_line_feed=True):
                         self._run(args)

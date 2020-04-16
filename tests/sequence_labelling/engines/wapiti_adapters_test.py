@@ -69,6 +69,7 @@ class TestWriteWapitiTrainData:
             ''
         ]
 
+
 class TestIterReadTaggedResult:
     def test_should_read_single_document_and_translate_label(self):
         tagged_data = '\n'.join([

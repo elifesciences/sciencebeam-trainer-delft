@@ -239,6 +239,8 @@ class DataGenerator(keras.utils.Sequence):
             self.window_indices_and_offset = self.generate_stateless_window_indices_and_offset()
         elif stateful and self.input_window_stride:
             self.batch_window_indices_and_offset = self.generate_batch_window_indices_and_offset()
+        else:
+            self.log_window_config()
         if self.shuffle and self.input_window_stride and stateful:
             LOGGER.info('not shuffling between epochs as number of batch windows could change')
             self.shuffle = False
@@ -277,13 +279,27 @@ class DataGenerator(keras.utils.Sequence):
     def get_sequence_lengths(self) -> List[int]:
         return [len(item) for item in self.x]
 
+    def log_window_config(self):
+        LOGGER.info(
+            ' '.join([
+                'max sequence length: %s, input window stride: %s'
+                ' (%d samples -> %d batches) (name=%s)'
+            ]),
+            self.max_sequence_length,
+            self.input_window_stride,
+            len(self.x),
+            self.get_batch_count(),
+            self.name
+        )
+
     def generate_stateless_window_indices_and_offset(self):
         window_indices_and_offset = get_stateless_window_indices_and_offset(
             sequence_lengths=self.get_sequence_lengths(),
             window_stride=self.input_window_stride
         )
         LOGGER.info(
-            'input window size: %s (%d samples -> %s windows) (name=%s)',
+            'max sequence length: %s, input window stride: %s (%d samples -> %s windows) (name=%s)',
+            self.max_sequence_length,
             self.input_window_stride,
             len(self.x),
             len(window_indices_and_offset),
@@ -298,7 +314,11 @@ class DataGenerator(keras.utils.Sequence):
             batch_size=self.batch_size
         )
         LOGGER.info(
-            'input window size: %s (%d samples -> %d batches) (name=%s)',
+            ' '.join([
+                'max sequence length: %s, input window stride: %s'
+                ' (%d samples -> %d batches) (name=%s)'
+            ]),
+            self.max_sequence_length,
             self.input_window_stride,
             len(self.x),
             len(batch_window_indices_and_offset),

@@ -92,6 +92,7 @@ class Sequence(_Sequence):
             embedding_manager: EmbeddingManager = None,
             config_props: dict = None,
             training_props: dict = None,
+            eval_max_sequence_length: int = None,
             **kwargs):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
@@ -105,6 +106,7 @@ class Sequence(_Sequence):
         self.embedding_manager = embedding_manager
         self.embeddings = None
         self.max_sequence_length = kwargs.get('max_sequence_length')
+        self.eval_max_sequence_length = eval_max_sequence_length
         super().__init__(*args, **kwargs)
         LOGGER.debug('use_features=%s', use_features)
         self.model_config = ModelConfig(
@@ -261,14 +263,14 @@ class Sequence(_Sequence):
         else:
             self.eval_single(x_test, y_test, features=features)
 
-    def create_data_generator(self, *args, **kwargs) -> DataGenerator:
+    def create_eval_data_generator(self, *args, **kwargs) -> DataGenerator:
         return DataGenerator(
             *args,
             batch_size=self.training_config.batch_size,
             preprocessor=self.p,
             additional_token_feature_indices=self.model_config.additional_token_feature_indices,
             char_embed_size=self.model_config.char_embedding_size,
-            max_sequence_length=self.model_config.max_sequence_length,
+            max_sequence_length=self.eval_max_sequence_length,
             embeddings=self.embeddings,
             **kwargs
         )
@@ -277,7 +279,7 @@ class Sequence(_Sequence):
             self, x_test, y_test, features: np.array = None):
         self._require_model()
         # Prepare test data(steps, generator)
-        test_generator = self.create_data_generator(
+        test_generator = self.create_eval_data_generator(
             x_test, y_test,
             features=features,
             shuffle=False
@@ -306,7 +308,7 @@ class Sequence(_Sequence):
                 )
 
                 # Prepare test data(steps, generator)
-                test_generator = self.create_data_generator(
+                test_generator = self.create_eval_data_generator(
                     x_test, y_test,
                     features=features,
                     shuffle=False

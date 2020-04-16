@@ -198,6 +198,7 @@ def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
         os.makedirs(os.path.basename(filepath), exist_ok=True)
         with open(filepath, mode=mode, **kwargs) as fp:
             yield fp
+            return
     with tempfile.TemporaryDirectory(suffix='-logs') as temp_dir:
         temp_file = os.path.join(
             temp_dir,

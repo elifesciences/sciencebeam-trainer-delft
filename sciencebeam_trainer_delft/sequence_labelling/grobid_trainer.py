@@ -26,6 +26,10 @@ from sciencebeam_trainer_delft.utils.cloud_support import patch_cloud_support
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.tf import get_tf_info
 from sciencebeam_trainer_delft.utils.io import copy_file
+from sciencebeam_trainer_delft.utils.logging import (
+    redirect_stdout_and_stderr_lines_to,
+    redirect_logging_to
+)
 
 from sciencebeam_trainer_delft.embedding import EmbeddingManager
 
@@ -826,6 +830,11 @@ def add_common_arguments(
         )
     )
 
+    parser.add_argument(
+        "--log-file",
+        help="If set, saves the output to the specified log file."
+    )
+
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
 
 
@@ -1101,11 +1110,7 @@ class GrobidTrainerSubCommand(SubCommand):
             **self.get_common_args(args)
         )
 
-    def run(self, args: argparse.Namespace):
-        if args.save_input_to_and_exit:
-            save_input_to(args.input, args.save_input_to_and_exit)
-            return
-
+    def _run(self, args: argparse.Namespace):
         self.download_manager = DownloadManager()
         self.embedding_manager = EmbeddingManager(
             download_manager=self.download_manager
@@ -1119,6 +1124,19 @@ class GrobidTrainerSubCommand(SubCommand):
 
         # see https://github.com/tensorflow/tensorflow/issues/3388
         K.clear_session()
+
+    def run(self, args: argparse.Namespace):
+        if args.save_input_to_and_exit:
+            save_input_to(args.input, args.save_input_to_and_exit)
+            return
+
+        if args.log_file:
+            with open(args.log_file, mode='w') as log_fp:
+                with redirect_stdout_and_stderr_lines_to(log_fp.write, append_line_feed=True):
+                    with redirect_logging_to(log_fp.write, append_line_feed=True):
+                        self._run(args)
+        else:
+            self._run(args)
 
 
 class TrainSubCommand(GrobidTrainerSubCommand):

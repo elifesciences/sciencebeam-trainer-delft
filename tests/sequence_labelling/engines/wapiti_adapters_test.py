@@ -4,7 +4,8 @@ from io import StringIO
 from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti_adapters import (
     translate_tags_IOB_to_grobid,
     write_wapiti_train_data,
-    iter_read_tagged_result
+    iter_read_tagged_result,
+    convert_wapiti_model_result_to_document_tagged_result
 )
 
 
@@ -103,3 +104,24 @@ class TestIterReadTaggedResult:
             ('token2.1', 'B-<label2.1>'),
             ('token2.2', 'I-<label2.2>')
         ]]
+
+
+class TestConvertWapitiModelResultToDocumentTaggedResult:
+    def test_should_convert_single_document_and_translate_label(self):
+        x_doc = [
+            'token1',
+            'token2'
+        ]
+        wapiti_model_result = [
+            ['dummy', 'I-<label1>'],
+            ['dummy', '<label1>']
+        ]
+        doc_tagged_result = convert_wapiti_model_result_to_document_tagged_result(
+            x_doc,
+            wapiti_model_result
+        )
+        LOGGER.debug('doc_tagged_result:\n%s', doc_tagged_result)
+        assert doc_tagged_result == [
+            ('token1', 'B-<label1>'),
+            ('token2', 'I-<label1>')
+        ]

@@ -71,7 +71,7 @@ def write_wapiti_input_data(fp: IO, x: np.array, features: np.array):
     ))
 
 
-def iter_read_tagged_result(fp: IO) -> Iterable[Tuple[str, str]]:
+def iter_read_tagged_result(fp: IO) -> Iterable[List[Tuple[str, str]]]:
     token_and_label_pairs = []
     for line in fp:
         LOGGER.debug('line: %r', line)
@@ -91,6 +91,18 @@ def iter_read_tagged_result(fp: IO) -> Iterable[Tuple[str, str]]:
 
     if token_and_label_pairs:
         yield token_and_label_pairs
+
+
+def convert_wapiti_model_result_to_document_tagged_result(
+        x_doc: List[str],
+        wapiti_model_result: List[List[str]]) -> List[Tuple[str, str]]:
+    return [
+        (
+            x_token,
+            translate_tags_grobid_to_IOB(result_token[-1])
+        )
+        for x_token, result_token in zip(x_doc, wapiti_model_result)
+    ]
 
 
 class WapitiModelAdapter:
@@ -134,7 +146,11 @@ class WapitiModelAdapter:
     def _get_model_name(self) -> str:
         return os.path.basename(os.path.dirname(self.model_file_path))
 
-    def iter_tag_using_model(self, x: np.array, features: np.array, output_format: str = None):
+    def iter_tag_using_model(
+            self,
+            x: np.array,
+            features: np.array,
+            output_format: str = None) -> Iterable[List[Tuple[str, str]]]:
         # Note: this method doesn't currently seem to work reliable and needs to be investigated
         #   The evaluation always shows zero.
         assert not output_format, 'output_format not supported'
@@ -144,17 +160,16 @@ class WapitiModelAdapter:
                 [x_token] + list(f_token)
                 for x_token, f_token in zip(x_doc, f_doc)
             ])
-            token_and_label_pairs = [
-                (x_token, result_token[-1])
-                for x_token, result_token in zip(x_doc, result)
-            ]
-            yield token_and_label_pairs
+            yield convert_wapiti_model_result_to_document_tagged_result(
+                x_doc,
+                result
+            )
 
     def iter_tag_using_wrapper(
             self,
             x: np.array,
             features: np.array,
-            output_format: str = None) -> Iterable[Tuple[str, str]]:
+            output_format: str = None) -> Iterable[List[Tuple[str, str]]]:
         assert not output_format, 'output_format not supported'
         with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
             data_path = Path(temp_dir).joinpath('input.data')
@@ -176,14 +191,14 @@ class WapitiModelAdapter:
             self,
             x: np.array,
             features: np.array,
-            output_format: str = None) -> Iterable[Tuple[str, str]]:
+            output_format: str = None) -> Iterable[List[Tuple[str, str]]]:
         return self.iter_tag_using_wrapper(x, features, output_format)
 
     def tag(
             self,
             x: np.array,
             features: np.array,
-            output_format: str = None) -> List[Tuple[str, str]]:
+            output_format: str = None) -> List[List[Tuple[str, str]]]:
         assert not output_format, 'output_format not supported'
         return list(self.iter_tag(x, features))
 

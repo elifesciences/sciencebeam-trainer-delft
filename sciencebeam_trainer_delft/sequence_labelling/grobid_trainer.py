@@ -387,6 +387,7 @@ def train_eval(
         random_seed: int = DEFAULT_RANDOM_SEED,
         eval_input_paths: List[str] = None,
         eval_limit: int = None,
+        eval_max_sequence_length: int = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
@@ -410,6 +411,7 @@ def train_eval(
         embeddings_name=embeddings_name,
         embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
+        eval_max_sequence_length=eval_max_sequence_length,
         model_type=architecture,
         use_ELMo=use_ELMo,
         batch_size=batch_size,
@@ -853,6 +855,14 @@ def add_eval_input_arguments(parser: argparse.ArgumentParser):
             "This is mostly for testing to make evaluation faster."
         ])
     )
+    parser.add_argument(
+        "--eval-max-sequence-length",
+        type=int,
+        help=' '.join([
+            "Limit the number of documents to use for evaluation.",
+            "This is mostly for testing to make evaluation faster."
+        ])
+    )
 
 
 def add_tag_output_format_argument(parser: argparse.ArgumentParser, **kwargs):
@@ -1180,6 +1190,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
             embeddings_name=embedding_name,
             eval_input_paths=args.eval_input,
             eval_limit=args.eval_limit,
+            eval_max_sequence_length=args.eval_max_sequence_length,
             **self.get_train_args(args)
         )
 

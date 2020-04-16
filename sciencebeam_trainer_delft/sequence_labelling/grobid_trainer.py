@@ -1114,7 +1114,11 @@ class GrobidTrainerSubCommand(SubCommand):
             **self.get_common_args(args)
         )
 
-    def _run(self, args: argparse.Namespace):
+    def run(self, args: argparse.Namespace):
+        if args.save_input_to_and_exit:
+            save_input_to(args.input, args.save_input_to_and_exit)
+            return
+
         self.download_manager = DownloadManager()
         self.embedding_manager = EmbeddingManager(
             download_manager=self.download_manager
@@ -1128,19 +1132,6 @@ class GrobidTrainerSubCommand(SubCommand):
 
         # see https://github.com/tensorflow/tensorflow/issues/3388
         K.clear_session()
-
-    def run(self, args: argparse.Namespace):
-        if args.save_input_to_and_exit:
-            save_input_to(args.input, args.save_input_to_and_exit)
-            return
-
-        if args.log_file:
-            with auto_uploading_output_file(args.log_file, mode='w') as log_fp:
-                with redirect_stdout_and_stderr_lines_to(log_fp.write, append_line_feed=True):
-                    with redirect_logging_to(log_fp.write, append_line_feed=True):
-                        self._run(args)
-        else:
-            self._run(args)
 
 
 class TrainSubCommand(GrobidTrainerSubCommand):
@@ -1396,7 +1387,11 @@ def parse_args(argv: List[str] = None, subcommand_processor: SubCommandProcessor
 def run(args: argparse.Namespace, subcommand_processor: SubCommandProcessor = None):
     if subcommand_processor is None:
         subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
-    subcommand_processor.run(args)
+    try:
+        subcommand_processor.run(args)
+    except BaseException as e:
+        LOGGER.error('uncaught exception: %s', e, exc_info=1)
+        raise
 
 
 def main(argv: List[str] = None):
@@ -1407,11 +1402,14 @@ def main(argv: List[str] = None):
     elif args.debug:
         for name in [__name__, 'sciencebeam_trainer_delft', 'delft']:
             logging.getLogger(name).setLevel('DEBUG')
-    try:
-        subcommand_processor.run(args)
-    except BaseException as e:
-        LOGGER.error('uncaught exception: %s', e, exc_info=1)
-        raise
+    if args.log_file:
+        with auto_uploading_output_file(args.log_file, mode='w') as log_fp:
+            with redirect_stdout_and_stderr_lines_to(log_fp.write, append_line_feed=True):
+                with redirect_logging_to(log_fp.write, append_line_feed=True):
+                    run(args, subcommand_processor=subcommand_processor)
+            logging.shutdown()
+    else:
+        run(args, subcommand_processor=subcommand_processor)
 
 
 if __name__ == "__main__":

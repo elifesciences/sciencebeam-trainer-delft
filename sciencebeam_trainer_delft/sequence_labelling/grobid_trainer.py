@@ -832,7 +832,11 @@ def add_common_arguments(
 
     parser.add_argument(
         "--log-file",
-        help="If set, saves the output to the specified log file."
+        help=(
+            "If set, saves the output to the specified log file."
+            " This may also be a file in a bucket, in which case it will be uploaded at the end."
+            " Add the .gz extension if you wish to compress the file."
+        )
     )
 
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")

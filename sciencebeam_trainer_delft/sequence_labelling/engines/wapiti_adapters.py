@@ -22,6 +22,23 @@ from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti import (
 LOGGER = logging.getLogger(__name__)
 
 
+def translate_tags_IOB_to_grobid(tag: str) -> str:
+    """
+    Convert labels from IOB2 to the ones used by GROBID (expected by the wapiti model)
+    """
+    if tag == 'O':
+        # outside
+        return '<other>'
+    elif tag.startswith('B-'):
+        # begin
+        return 'I-' + tag[2:]
+    elif tag.startswith('I-'):
+        # inside
+        return '' + tag[2:]
+    else:
+        return tag
+
+
 def iter_doc_formatted_input_data(
         x_doc: np.array, features_doc: np.array) -> Iterable[str]:
     for x_token, f_token in zip(x_doc, features_doc):
@@ -177,7 +194,7 @@ class WapitiModelAdapter:
 def iter_doc_formatted_training_data(
         x_doc: np.array, y_doc: np.array, features_doc: np.array) -> Iterable[str]:
     for x_token, y_token, f_token in zip(x_doc, y_doc, features_doc):
-        yield format_feature_line([x_token] + f_token + [y_token])
+        yield format_feature_line([x_token] + f_token + [translate_tags_IOB_to_grobid(y_token)])
     # blank lines to mark the end of the document
     yield ''
     yield ''

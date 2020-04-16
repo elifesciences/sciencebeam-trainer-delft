@@ -1404,10 +1404,12 @@ def main(argv: List[str] = None):
             logging.getLogger(name).setLevel('DEBUG')
     if args.log_file:
         with auto_uploading_output_file(args.log_file, mode='w') as log_fp:
-            with redirect_stdout_and_stderr_lines_to(log_fp.write, append_line_feed=True):
-                with redirect_logging_to(log_fp.write, append_line_feed=True):
-                    run(args, subcommand_processor=subcommand_processor)
-            logging.shutdown()
+            try:
+                with redirect_stdout_and_stderr_lines_to(log_fp.write, append_line_feed=True):
+                    with redirect_logging_to(log_fp.write, append_line_feed=True):
+                        run(args, subcommand_processor=subcommand_processor)
+            finally:
+                logging.shutdown()
     else:
         run(args, subcommand_processor=subcommand_processor)
 

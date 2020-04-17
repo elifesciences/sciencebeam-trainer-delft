@@ -36,7 +36,7 @@ class TestClassificationResult:
             'f1': 0.5,
             'support': 2
         }
-        formatted_report = result.get_formatted_report()
+        formatted_report = result.get_formatted_report(digits=2)
         LOGGER.debug('formatted_report:\n%s', formatted_report)
         LOGGER.debug('formatted_report lines: %s', formatted_report.splitlines())
         assert formatted_report.splitlines() == [

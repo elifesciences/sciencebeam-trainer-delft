@@ -333,6 +333,8 @@ def output_classification_result(
         eval_input_paths: List[str] = None,
         model_path: str = None,
         model_summary_props: dict = None):
+    if not output_format:
+        output_format = EvaluationOutputFormats.TEXT
     meta = {}
     meta['eval_timestamp'] = datetime.now(timezone.utc).isoformat()
     if eval_input_paths:

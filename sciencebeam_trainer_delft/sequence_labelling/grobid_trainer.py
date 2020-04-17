@@ -328,14 +328,23 @@ def wapiti_train(
 def output_classification_result(
         classification_result: ClassificationResult,
         output_format: str,
-        output_path: str = None):
+        output_path: str = None,
+        eval_input_paths: List[str] = None,
+        model_path: str = None):
+    meta = {}
+    if eval_input_paths:
+        meta['eval_input_paths'] = eval_input_paths
+    if model_path:
+        meta['model_path'] = model_path
     if output_path:
         LOGGER.info('writing evaluation to: %s', output_path)
-        write_text(output_path, classification_result.get_json_formatted_report())
+        write_text(output_path, classification_result.get_json_formatted_report(meta=meta))
     if output_format == EvaluationOutputFormats.TEXT:
         print("\nEvaluation:\n%s" % classification_result.get_text_formatted_report(
             digits=4
         ))
+    if output_format == EvaluationOutputFormats.JSON:
+        print(classification_result.get_json_formatted_report(meta=meta))
     else:
         print(classification_result.get_formatted_report(
             output_format=output_format
@@ -406,7 +415,9 @@ def do_train_eval(
     output_classification_result(
         classification_result,
         output_format=eval_output_format,
-        output_path=eval_output_path
+        output_path=eval_output_path,
+        eval_input_paths=eval_input_paths,
+        model_path=output_path
     )
 
     # saving the model
@@ -554,7 +565,9 @@ def do_eval_model(
     output_classification_result(
         classification_result,
         output_format=eval_output_format,
-        output_path=eval_output_path
+        output_path=eval_output_path,
+        eval_input_paths=input_paths,
+        model_path=model.model_path
     )
 
 

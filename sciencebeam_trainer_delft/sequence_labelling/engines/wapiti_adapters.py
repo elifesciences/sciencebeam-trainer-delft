@@ -108,6 +108,7 @@ class WapitiModelAdapter:
     def __init__(self, wapiti_wrapper: WapitiWrapper, model_file_path: str):
         self.wapiti_wrapper = wapiti_wrapper
         self.model_file_path = model_file_path
+        self.model_path = os.path.dirname(model_file_path)
         self._wapiti_model = None
 
     @property

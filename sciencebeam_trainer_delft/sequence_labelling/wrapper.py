@@ -112,6 +112,7 @@ class Sequence(_Sequence):
         self.embeddings = None
         self.max_sequence_length = kwargs.get('max_sequence_length')
         self.eval_max_sequence_length = eval_max_sequence_length
+        self.model_path = None
         super().__init__(*args, **kwargs)
         LOGGER.debug('use_features=%s', use_features)
         self.model_config = ModelConfig(
@@ -448,6 +449,7 @@ class Sequence(_Sequence):
 
     def load_from(self, directory: str):
         model_loader = ModelLoader()
+        self.model_path = directory
         self.p = model_loader.load_preprocessor_from_directory(directory)
         self.model_config = model_loader.load_model_config_from_directory(directory)
 

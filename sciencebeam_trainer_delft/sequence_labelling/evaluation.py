@@ -156,9 +156,12 @@ class ClassificationResult:
             'micro_averages': self.micro_averages
         }
 
-    def get_json_formatted_report(self):
+    def get_json_formatted_report(self, meta: dict = None):
+        dict_report = self.get_dict_formatted_report()
+        if meta:
+            dict_report['meta'] = meta
         return json.dumps(
-            self.get_dict_formatted_report(),
+            dict_report,
             indent=2,
             cls=NpJsonEncoder
         )

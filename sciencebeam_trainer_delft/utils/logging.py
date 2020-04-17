@@ -70,7 +70,7 @@ class TeeStreamToLineWriter:
 
 
 @contextmanager
-def redirect_stdout_lines_to(
+def tee_stdout_lines_to(
         *line_writers: List[Callable[[str], None]],
         **kwargs):
     prev_stdout = sys.stdout
@@ -86,7 +86,7 @@ def redirect_stdout_lines_to(
 
 
 @contextmanager
-def redirect_stderr_lines_to(
+def tee_stderr_lines_to(
         *line_writers: List[Callable[[str], None]],
         **kwargs):
     prev_stderr = sys.stderr
@@ -102,11 +102,11 @@ def redirect_stderr_lines_to(
 
 
 @contextmanager
-def redirect_stdout_and_stderr_lines_to(
+def tee_stdout_and_stderr_lines_to(
         *line_writers: List[Callable[[str], None]],
         **kwargs):
-    with redirect_stdout_lines_to(*line_writers, **kwargs) as stdout:
-        with redirect_stderr_lines_to(*line_writers, **kwargs) as stderr:
+    with tee_stdout_lines_to(*line_writers, **kwargs) as stdout:
+        with tee_stderr_lines_to(*line_writers, **kwargs) as stderr:
             yield (stdout, stderr)
 
 
@@ -153,7 +153,7 @@ def flush_logging_handlers(handlers: List[logging.Handler]):
 
 
 @contextmanager
-def redirect_logging_to(
+def tee_logging_lines_to(
         *line_writers: List[Callable[[str], None]],
         logger: logging.Logger = None,
         formatter: logging.Formatter = None,

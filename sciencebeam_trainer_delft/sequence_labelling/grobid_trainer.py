@@ -27,8 +27,8 @@ from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.tf import get_tf_info
 from sciencebeam_trainer_delft.utils.io import copy_file, auto_uploading_output_file
 from sciencebeam_trainer_delft.utils.logging import (
-    redirect_stdout_and_stderr_lines_to,
-    redirect_logging_to
+    tee_stdout_and_stderr_lines_to,
+    tee_logging_lines_to
 )
 
 from sciencebeam_trainer_delft.embedding import EmbeddingManager
@@ -1405,8 +1405,8 @@ def main(argv: List[str] = None):
     if args.log_file:
         with auto_uploading_output_file(args.log_file, mode='w') as log_fp:
             try:
-                with redirect_stdout_and_stderr_lines_to(log_fp.write, append_line_feed=True):
-                    with redirect_logging_to(log_fp.write, append_line_feed=True):
+                with tee_stdout_and_stderr_lines_to(log_fp.write, append_line_feed=True):
+                    with tee_logging_lines_to(log_fp.write, append_line_feed=True):
                         run(args, subcommand_processor=subcommand_processor)
             finally:
                 logging.shutdown()

@@ -6,12 +6,11 @@ from typing import Iterable, IO, List, Tuple
 
 import numpy as np
 
-from delft.sequenceLabelling.evaluation import f1_score
 from delft.sequenceLabelling.reader import (
     _translate_tags_grobid_to_IOB as translate_tags_grobid_to_IOB
 )
 
-from sciencebeam_trainer_delft.sequence_labelling.evaluation import classification_report
+from sciencebeam_trainer_delft.sequence_labelling.evaluation import ClassificationResult
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.io import copy_file
 
@@ -106,9 +105,10 @@ def convert_wapiti_model_result_to_document_tagged_result(
 
 
 class WapitiModelAdapter:
-    def __init__(self, wapiti_wrapper: WapitiWrapper, model_file_path: str):
+    def __init__(self, wapiti_wrapper: WapitiWrapper, model_file_path: str, model_path: str = None):
         self.wapiti_wrapper = wapiti_wrapper
         self.model_file_path = model_file_path
+        self.model_path = model_path
         self._wapiti_model = None
 
     @property
@@ -140,7 +140,8 @@ class WapitiModelAdapter:
             WapitiWrapper(
                 wapiti_binary_path=wapiti_binary_path
             ),
-            model_file_path=local_model_file_path
+            model_file_path=local_model_file_path,
+            model_path=model_path
         )
 
     def _get_model_name(self) -> str:
@@ -205,8 +206,17 @@ class WapitiModelAdapter:
     def eval(self, x_test, y_test, features: np.array = None):
         self.eval_single(x_test, y_test, features=features)
 
-    def eval_single(self, x_test, y_test, features: np.array = None):
-        # Build the evaluator and evaluate the model
+    @property
+    def model_summary_props(self) -> str:
+        return {
+            'model_type': 'wapiti'
+        }
+
+    def get_evaluation_result(
+            self,
+            x_test: List[List[str]],
+            y_test: List[List[str]],
+            features: List[List[List[str]]] = None) -> ClassificationResult:
         tag_result = self.tag(x_test, features)
         y_true = [
             y_token
@@ -218,12 +228,22 @@ class WapitiModelAdapter:
             for tag_result_doc in tag_result
             for tag_result_token in tag_result_doc
         ]
+        return ClassificationResult(
+            y_pred=y_pred,
+            y_true=y_true
+        )
 
-        f1 = f1_score(y_true, y_pred)
-        print("\tf1 (micro): {:04.2f}".format(f1 * 100))
-
-        report = classification_report(y_true, y_pred, digits=4)
-        print(report)
+    def eval_single(
+            self,
+            x_test: List[List[str]],
+            y_test: List[List[str]],
+            features: List[List[List[str]]] = None):
+        classification_result = self.get_evaluation_result(
+            x_test=x_test,
+            y_test=y_test,
+            features=features
+        )
+        print(classification_result.get_formatted_report(digits=4))
 
 
 def iter_doc_formatted_training_data(
@@ -269,6 +289,7 @@ class WapitiModelTrainAdapter:
         self.gzip_enabled = gzip_enabled
         self.wapiti_binary_path = wapiti_binary_path
         self.wapiti_train_args = wapiti_train_args
+        self._model_adapter = None
 
     def train(
             self,
@@ -301,22 +322,48 @@ class WapitiModelTrainAdapter:
             )
             LOGGER.info('wapiti model trained: %s', self.temp_model_path)
 
-    def eval(self, x_test, y_test, features: np.array = None):
-        assert self.temp_model_path, "temp_model_path required"
-        WapitiModelAdapter.load_from(
-            os.path.dirname(self.temp_model_path),
-            download_manager=self.download_manager,
-            wapiti_binary_path=self.wapiti_binary_path
-        ).eval(
+    def get_model_adapter(self) -> WapitiModelAdapter:
+        if self._model_adapter is None:
+            assert self.temp_model_path, "temp_model_path required"
+            self._model_adapter = WapitiModelAdapter.load_from(
+                os.path.dirname(self.temp_model_path),
+                download_manager=self.download_manager,
+                wapiti_binary_path=self.wapiti_binary_path
+            )
+        return self._model_adapter
+
+    @property
+    def model_summary_props(self) -> str:
+        return self.get_model_adapter().model_summary_props
+
+    def get_evaluation_result(
+            self,
+            x_test: List[List[str]],
+            y_test: List[List[str]],
+            features: List[List[List[str]]] = None) -> ClassificationResult:
+        return self.get_model_adapter().get_evaluation_result(
             x_test, y_test, features=features
         )
 
-    def save(self, output_path: str = None):
+    def eval(
+            self,
+            x_test: List[List[str]],
+            y_test: List[List[str]],
+            features: List[List[List[str]]] = None):
+        self.get_model_adapter().eval(
+            x_test, y_test, features=features
+        )
+
+    def get_model_output_path(self, output_path: str = None) -> str:
         assert output_path, "output_path required"
+        return os.path.join(output_path, self.model_name)
+
+    def save(self, output_path: str = None):
+        model_output_path = self.get_model_output_path(output_path)
         assert self.temp_model_path, "temp_model_path required"
         if not Path(self.temp_model_path).exists():
             raise FileNotFoundError("temp_model_path does not exist: %s" % self.temp_model_path)
-        model_file_path = os.path.join(output_path, self.model_name, 'model.wapiti')
+        model_file_path = os.path.join(model_output_path, 'model.wapiti')
         if self.gzip_enabled:
             model_file_path += '.gz'
         LOGGER.info('saving to %s', model_file_path)

@@ -18,7 +18,11 @@ from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     get_all_batch_tokens,
     concatenate_all_batch_tokens
 )
-from sciencebeam_trainer_delft.sequence_labelling.trainer import Scorer, Trainer
+from sciencebeam_trainer_delft.sequence_labelling.trainer import (
+    get_model_results,
+    Scorer,
+    Trainer
+)
 from sciencebeam_trainer_delft.sequence_labelling.models import (
     get_model,
     updated_implicit_model_config_props
@@ -31,6 +35,7 @@ from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
 )
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver, ModelLoader
 from sciencebeam_trainer_delft.sequence_labelling.tagger import Tagger
+from sciencebeam_trainer_delft.sequence_labelling.evaluation import ClassificationResult
 
 from sciencebeam_trainer_delft.sequence_labelling.debug import get_tag_debug_reporter_if_enabled
 
@@ -107,6 +112,7 @@ class Sequence(_Sequence):
         self.embeddings = None
         self.max_sequence_length = kwargs.get('max_sequence_length')
         self.eval_max_sequence_length = eval_max_sequence_length
+        self.model_path = None
         super().__init__(*args, **kwargs)
         LOGGER.debug('use_features=%s', use_features)
         self.model_config = ModelConfig(
@@ -275,8 +281,11 @@ class Sequence(_Sequence):
             **kwargs
         )
 
-    def eval_single(  # pylint: disable=arguments-differ
-            self, x_test, y_test, features: np.array = None):
+    def get_evaluation_result(
+            self,
+            x_test: List[List[str]],
+            y_test: List[List[str]],
+            features: List[List[List[str]]] = None) -> ClassificationResult:
         self._require_model()
         # Prepare test data(steps, generator)
         test_generator = self.create_eval_data_generator(
@@ -285,10 +294,27 @@ class Sequence(_Sequence):
             shuffle=False
         )
 
-        # Build the evaluator and evaluate the model
-        scorer = Scorer(test_generator, self.p, evaluation=True)
-        scorer.model = self.model
-        scorer.on_epoch_end(epoch=-1)
+        prediction_result = get_model_results(
+            model=self.model,
+            valid_batches=test_generator,
+            preprocessor=self.p
+        )
+        return ClassificationResult(
+            y_pred=prediction_result.y_pred,
+            y_true=prediction_result.y_true
+        )
+
+    def eval_single(  # pylint: disable=arguments-differ
+            self,
+            x_test: List[List[str]],
+            y_test: List[List[str]],
+            features: List[List[List[str]]] = None):
+        classification_result = self.get_evaluation_result(
+            x_test=x_test,
+            y_test=y_test,
+            features=features
+        )
+        print(classification_result.get_formatted_report(digits=4))
 
     def eval_nfold(  # pylint: disable=arguments-differ
             self, x_test, y_test, features: np.array = None):
@@ -385,8 +411,19 @@ class Sequence(_Sequence):
     def _get_model_name(self):
         return self.model_config.model_name
 
-    def _get_model_directory(self, dir_path=None):
+    @property
+    def model_summary_props(self) -> str:
+        return {
+            'model_type': 'delft',
+            'architecture': self.model_config.model_type,
+            'model_config': vars(self.model_config)
+        }
+
+    def get_model_output_path(self, dir_path: str = None) -> str:
         return get_model_directory(model_name=self.model_config.model_name, dir_path=dir_path)
+
+    def _get_model_directory(self, dir_path: str = None) -> str:
+        return self.get_model_output_path(dir_path=dir_path)
 
     def get_embedding_for_model_config(self, model_config: ModelConfig):
         embedding_name = model_config.embeddings_name
@@ -423,6 +460,7 @@ class Sequence(_Sequence):
 
     def load_from(self, directory: str):
         model_loader = ModelLoader()
+        self.model_path = directory
         self.p = model_loader.load_preprocessor_from_directory(directory)
         self.model_config = model_loader.load_model_config_from_directory(directory)
 

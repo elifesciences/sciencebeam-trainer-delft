@@ -189,6 +189,9 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --quiet
 ```
 
+The evaluation format can be changed to `json` using the `--eval-output-format`.
+It can also be saved using `--eval-output-path`.
+
 ### Tag Sub Command
 
 The `tag` sub command supports multiple output formats:

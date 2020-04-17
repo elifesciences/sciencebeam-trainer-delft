@@ -1,4 +1,6 @@
-from collections import defaultdict
+import json
+from collections import defaultdict, OrderedDict
+from typing import List, Union
 
 import numpy as np
 
@@ -11,93 +13,181 @@ from delft.sequenceLabelling.evaluation import (
 # with the following differences:
 # - types are sorted
 # - types are including keys from both true or prediction (not just true labels)
+# - separated calculation from formatting
 
-def classification_report(y_true, y_pred, digits=2):
-    """Build a text report showing the main classification metrics.
-    Args:
-        y_true : 2d array. Ground truth (correct) target values.
-        y_pred : 2d array. Estimated targets as returned by a classifier.
-        digits : int. Number of digits for formatting output floating point values.
-    Returns:
-        report : string. Text summary of the precision, recall, F1 score for each class.
-    Examples:
-        >>> from seqeval.metrics import classification_report
-        >>> y_true = [['O', 'O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'O'], ['B-PER', 'I-PER', 'O']]
-        >>> y_pred = [['O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'I-MISC', 'O'],
-            ['B-PER', 'I-PER', 'O']]
-        >>> print(classification_report(y_true, y_pred))
-                     precision    recall  f1-score   support
-        <BLANKLINE>
-               MISC       0.00      0.00      0.00         1
-                PER       1.00      1.00      1.00         1
-        <BLANKLINE>
-        avg / total       0.50      0.50      0.50         2
-        <BLANKLINE>
-    """
-    true_entities = set(get_entities(y_true))
-    pred_entities = set(get_entities(y_pred))
 
-    name_width = 0
-    d1 = defaultdict(set)
-    d2 = defaultdict(set)
-    for e in true_entities:
-        d1[e[0]].add((e[1], e[2]))
-        name_width = max(name_width, len(e[0]))
-    for e in pred_entities:
-        d2[e[0]].add((e[1], e[2]))
+class EvaluationOutputFormats:
+    TEXT = 'text'
+    JSON = 'json'
 
-    last_line_heading = 'all (micro avg.)'
-    width = max(name_width, len(last_line_heading), digits)
 
-    headers = ["precision", "recall", "f1-score", "support"]
-    head_fmt = u'{:>{width}s} ' + u' {:>9}' * len(headers)
-    report = head_fmt.format(u'', *headers, width=width)
-    report += u'\n\n'
+EVALUATION_OUTPUT_FORMATS = [
+    EvaluationOutputFormats.TEXT,
+    EvaluationOutputFormats.JSON
+]
 
-    row_fmt = u'{:>{width}s} ' + u' {:>9.{digits}f}' * 3 + u' {:>9}\n'
 
-    ps, rs, f1s, s = [], [], [], []
-    total_nb_correct = 0
-    total_nb_pred = 0
-    total_nb_true = 0
-    sorted_type_names = sorted(set(d1.keys()) | set(d2.keys()))
-    for type_name in sorted_type_names:
-        true_entities = d1[type_name]
-        pred_entities = d2[type_name]
-        nb_correct = len(true_entities & pred_entities)
-        nb_pred = len(pred_entities)
-        nb_true = len(true_entities)
+# copied from https://stackoverflow.com/a/57915246/8676953
+class NpJsonEncoder(json.JSONEncoder):
+    def default(self, obj):  # pylint: disable=arguments-differ, method-hidden
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super().default(obj)
 
-        p = nb_correct / nb_pred if nb_pred > 0 else 0
-        r = nb_correct / nb_true if nb_true > 0 else 0
-        f1 = 2 * p * r / (p + r) if p + r > 0 else 0
 
-        report += row_fmt.format(*[type_name, p, r, f1, nb_true], width=width, digits=digits)
+class ClassificationResult:
+    def __init__(
+            self,
+            y_true: List[Union[str, List[str]]],
+            y_pred: List[Union[str, List[str]]]):
+        true_entities = set(get_entities(y_true))
+        pred_entities = set(get_entities(y_pred))
 
-        ps.append(p)
-        rs.append(r)
-        f1s.append(f1)
-        s.append(nb_true)
+        d1 = defaultdict(set)
+        d2 = defaultdict(set)
+        for e in true_entities:
+            d1[e[0]].add((e[1], e[2]))
+        for e in pred_entities:
+            d2[e[0]].add((e[1], e[2]))
 
-        total_nb_correct += nb_correct
-        total_nb_true += nb_true
-        total_nb_pred += nb_pred
+        ps, rs, f1s, s = [], [], [], []
+        total_nb_correct = 0
+        total_nb_pred = 0
+        total_nb_true = 0
+        sorted_type_names = sorted(set(d1.keys()) | set(d2.keys()))
+        self.scores = OrderedDict()
+        for type_name in sorted_type_names:
+            true_entities = d1[type_name]
+            pred_entities = d2[type_name]
+            nb_correct = len(true_entities & pred_entities)
+            nb_pred = len(pred_entities)
+            nb_true = len(true_entities)
 
-    report += u'\n'
+            precision = nb_correct / nb_pred if nb_pred > 0 else 0
+            recall = nb_correct / nb_true if nb_true > 0 else 0
+            f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0
 
-    # micro average
-    micro_precision = total_nb_correct / total_nb_pred if total_nb_pred > 0 else 0
-    micro_recall = total_nb_correct / total_nb_true if total_nb_true > 0 else 0
-    micro_f1 = (
-        2 * micro_precision * micro_recall / (micro_precision + micro_recall)
-        if micro_precision + micro_recall > 0
-        else 0
+            self.scores[type_name] = {
+                'precision': precision,
+                'recall': recall,
+                'f1': f1,
+                'support': nb_true
+            }
+
+            ps.append(precision)
+            rs.append(recall)
+            f1s.append(f1)
+            s.append(nb_true)
+
+            total_nb_correct += nb_correct
+            total_nb_true += nb_true
+            total_nb_pred += nb_pred
+
+        # micro average
+        micro_precision = total_nb_correct / total_nb_pred if total_nb_pred > 0 else 0
+        micro_recall = total_nb_correct / total_nb_true if total_nb_true > 0 else 0
+        micro_f1 = (
+            2 * micro_precision * micro_recall / (micro_precision + micro_recall)
+            if micro_precision + micro_recall > 0
+            else 0
+        )
+        self.micro_averages = {
+            'precision': micro_precision,
+            'recall': micro_recall,
+            'f1': micro_f1,
+            'support': np.sum(s)
+        }
+
+    def get_text_formatted_report(
+            self,
+            digits: int = 4,
+            exclude_no_support: bool = False):
+        name_width = max(map(len, self.scores.keys()))
+
+        last_line_heading = 'all (micro avg.)'
+        width = max(name_width, len(last_line_heading), digits)
+
+        headers = ["precision", "recall", "f1-score", "support"]
+        head_fmt = u'{:>{width}s} ' + u' {:>9}' * len(headers)
+        report = head_fmt.format(u'', *headers, width=width)
+        report += u'\n\n'
+
+        row_fmt = u'{:>{width}s} ' + u' {:>9.{digits}f}' * 3 + u' {:>9}\n'
+
+        for type_name in sorted(self.scores.keys()):
+            item_scores = self.scores[type_name]
+            if exclude_no_support and not item_scores['support']:
+                continue
+
+            report += row_fmt.format(
+                *[
+                    type_name,
+                    item_scores['precision'],
+                    item_scores['recall'],
+                    item_scores['f1'],
+                    item_scores['support']
+                ],
+                width=width,
+                digits=digits
+            )
+
+        report += u'\n'
+
+        report += row_fmt.format(
+            *[
+                last_line_heading,
+                self.micro_averages['precision'],
+                self.micro_averages['recall'],
+                self.micro_averages['f1'],
+                self.micro_averages['support']
+            ],
+            width=width,
+            digits=digits
+        )
+
+        return report
+
+    def get_dict_formatted_report(self):
+        return {
+            'scores': self.scores,
+            'micro_averages': self.micro_averages
+        }
+
+    def get_json_formatted_report(self, meta: dict = None):
+        dict_report = self.get_dict_formatted_report()
+        if meta:
+            dict_report['meta'] = meta
+        return json.dumps(
+            dict_report,
+            indent=2,
+            cls=NpJsonEncoder
+        )
+
+    def get_formatted_report(
+            self,
+            output_format: str = EvaluationOutputFormats.TEXT,
+            **kwargs):
+        if output_format == EvaluationOutputFormats.TEXT:
+            return self.get_text_formatted_report(**kwargs)
+        if output_format == EvaluationOutputFormats.JSON:
+            return self.get_json_formatted_report()
+        raise ValueError('unsupported output format: %s' % output_format)
+
+
+def classification_report(
+        y_true: List[Union[str, List[str]]],
+        y_pred: List[Union[str, List[str]]],
+        digits: int = 2,
+        exclude_no_support: bool = False):
+    return ClassificationResult(
+        y_true=y_true,
+        y_pred=y_pred
+    ).get_formatted_report(
+        digits=digits,
+        exclude_no_support=exclude_no_support
     )
-    report += row_fmt.format(last_line_heading,
-                             micro_precision,
-                             micro_recall,
-                             micro_f1,
-                             np.sum(s),
-                             width=width, digits=digits)
-
-    return report

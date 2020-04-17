@@ -105,10 +105,10 @@ def convert_wapiti_model_result_to_document_tagged_result(
 
 
 class WapitiModelAdapter:
-    def __init__(self, wapiti_wrapper: WapitiWrapper, model_file_path: str):
+    def __init__(self, wapiti_wrapper: WapitiWrapper, model_file_path: str, model_path: str = None):
         self.wapiti_wrapper = wapiti_wrapper
         self.model_file_path = model_file_path
-        self.model_path = os.path.dirname(model_file_path)
+        self.model_path = model_path
         self._wapiti_model = None
 
     @property
@@ -140,7 +140,8 @@ class WapitiModelAdapter:
             WapitiWrapper(
                 wapiti_binary_path=wapiti_binary_path
             ),
-            model_file_path=local_model_file_path
+            model_file_path=local_model_file_path,
+            model_path=model_path
         )
 
     def _get_model_name(self) -> str:

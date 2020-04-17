@@ -103,6 +103,10 @@ class ClassificationResult:
             'support': np.sum(s)
         }
 
+    @property
+    def f1(self):
+        return self.micro_averages['f1']
+
     def get_text_formatted_report(
             self,
             digits: int = 4,

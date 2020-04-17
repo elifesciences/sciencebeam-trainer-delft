@@ -371,8 +371,10 @@ def do_train_eval(
     LOGGER.info("training runtime: %s seconds ", runtime)
 
     # evaluation
-    print("\nEvaluation:")
-    model.eval(x_eval, y_eval, features=features_eval)
+    classification_result = model.get_evaluation_result(
+        x_eval, y_eval, features=features_eval
+    )
+    print("\nEvaluation:\n%s" % classification_result.get_formatted_report(digits=4))
 
     # saving the model
     if output_path:
@@ -503,8 +505,10 @@ def do_eval_model(
     LOGGER.info('%d evaluation sequences', len(x_eval))
 
     # evaluation
-    print("\nEvaluation:")
-    model.eval(x_eval, y_eval, features=features_eval)
+    classification_result = model.get_evaluation_result(
+        x_eval, y_eval, features=features_eval
+    )
+    print("\nEvaluation:\n%s" % classification_result.get_formatted_report(digits=4))
 
 
 def get_model_name(

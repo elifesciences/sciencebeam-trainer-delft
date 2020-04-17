@@ -25,7 +25,11 @@ from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.cloud_support import patch_cloud_support
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.tf import get_tf_info
-from sciencebeam_trainer_delft.utils.io import copy_file, auto_uploading_output_file
+from sciencebeam_trainer_delft.utils.io import (
+    copy_file,
+    auto_uploading_output_file,
+    write_text
+)
 from sciencebeam_trainer_delft.utils.logging import (
     tee_stdout_and_stderr_lines_to,
     tee_logging_lines_to
@@ -323,7 +327,11 @@ def wapiti_train(
 
 def output_classification_result(
         classification_result: ClassificationResult,
-        output_format: str):
+        output_format: str,
+        output_path: str = None):
+    if output_path:
+        LOGGER.info('writing evaluation to: %s', output_path)
+        write_text(output_path, classification_result.get_json_formatted_report())
     if output_format == EvaluationOutputFormats.TEXT:
         print("\nEvaluation:\n%s" % classification_result.get_text_formatted_report(
             digits=4
@@ -344,6 +352,7 @@ def do_train_eval(
         eval_input_paths: List[str] = None,
         eval_limit: int = None,
         eval_output_format: str = None,
+        eval_output_path: str = None,
         fold_count: int = 1,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
@@ -394,7 +403,11 @@ def do_train_eval(
     classification_result = model.get_evaluation_result(
         x_eval, y_eval, features=features_eval
     )
-    output_classification_result(classification_result, output_format=eval_output_format)
+    output_classification_result(
+        classification_result,
+        output_format=eval_output_format,
+        output_path=eval_output_path
+    )
 
     # saving the model
     if output_path:
@@ -415,6 +428,7 @@ def train_eval(
         eval_limit: int = None,
         eval_max_sequence_length: int = None,
         eval_output_format: str = None,
+        eval_output_path: str = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         download_manager: DownloadManager = None,
@@ -455,6 +469,7 @@ def train_eval(
         eval_input_paths=eval_input_paths,
         eval_limit=eval_limit,
         eval_output_format=eval_output_format,
+        eval_output_path=eval_output_path,
         download_manager=download_manager
     )
 
@@ -470,6 +485,7 @@ def wapiti_train_eval(
         eval_input_paths: List[str] = None,
         eval_limit: int = None,
         eval_output_format: str = None,
+        eval_output_path: str = None,
         fold_count: int = 1,
         max_epoch: int = 100,
         download_manager: DownloadManager = None,
@@ -499,6 +515,7 @@ def wapiti_train_eval(
             eval_input_paths=eval_input_paths,
             eval_limit=eval_limit,
             eval_output_format=eval_output_format,
+            eval_output_path=eval_output_path,
             download_manager=download_manager
         )
 
@@ -511,6 +528,7 @@ def do_eval_model(
         split_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         eval_output_format: str = None,
+        eval_output_path: str = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
@@ -533,7 +551,11 @@ def do_eval_model(
     classification_result = model.get_evaluation_result(
         x_eval, y_eval, features=features_eval
     )
-    output_classification_result(classification_result, output_format=eval_output_format)
+    output_classification_result(
+        classification_result,
+        output_format=eval_output_format,
+        output_path=eval_output_path
+    )
 
 
 def get_model_name(
@@ -595,6 +617,7 @@ def eval_model(
         fold_count: int = 1,
         batch_size: int = 20,
         eval_output_format: str = None,
+        eval_output_path: str = None,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
@@ -619,6 +642,7 @@ def eval_model(
         random_seed=random_seed,
         split_input=split_input,
         eval_output_format=eval_output_format,
+        eval_output_path=eval_output_path,
         download_manager=download_manager
     )
 
@@ -633,6 +657,7 @@ def wapiti_eval_model(
         random_seed: int = DEFAULT_RANDOM_SEED,
         fold_count: int = 1,
         eval_output_format: str = None,
+        eval_output_path: str = None,
         download_manager: DownloadManager = None,
         wapiti_binary_path: str = None):
     assert fold_count == 1, 'only fold_count == 1 supported'
@@ -650,6 +675,7 @@ def wapiti_eval_model(
         random_seed=random_seed,
         split_input=split_input,
         eval_output_format=eval_output_format,
+        eval_output_path=eval_output_path,
         download_manager=download_manager
     )
 
@@ -891,6 +917,18 @@ def add_eval_output_format_argument(parser: argparse.ArgumentParser):
     )
 
 
+def add_eval_output_path_argument(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--eval-output-path",
+        help='If specified, saves the evaluation to the specified path in the JSON format'
+    )
+
+
+def add_eval_output_arguments(parser: argparse.ArgumentParser):
+    add_eval_output_format_argument(parser)
+    add_eval_output_path_argument(parser)
+
+
 def add_eval_input_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--eval-input",
@@ -1094,6 +1132,13 @@ def save_input_to(input_paths: List[str], output_path: str):
     copy_file(input_path, output_path)
 
 
+def get_eval_output_args(args: argparse.Namespace) -> dict:
+    return dict(
+        eval_output_format=args.eval_output_format,
+        eval_output_path=args.eval_output_path
+    )
+
+
 class GrobidTrainerSubCommand(SubCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1228,7 +1273,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         add_model_path_argument(parser, help='directory to the saved model')
         add_fold_count_argument(parser)
         add_eval_input_arguments(parser)
-        add_eval_output_format_argument(parser)
+        add_eval_output_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         if not args.model:
@@ -1246,7 +1291,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
             eval_input_paths=args.eval_input,
             eval_limit=args.eval_limit,
             eval_max_sequence_length=args.eval_max_sequence_length,
-            eval_output_format=args.eval_output_format,
+            **get_eval_output_args(args),
             **self.get_train_args(args)
         )
 
@@ -1256,7 +1301,7 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
         add_common_arguments(parser)
         add_wapiti_train_arguments(parser)
         add_eval_input_arguments(parser)
-        add_eval_output_format_argument(parser)
+        add_eval_output_arguments(parser)
         add_wapiti_install_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
@@ -1269,7 +1314,6 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
             limit=args.limit,
             eval_input_paths=args.eval_input,
             eval_limit=args.eval_limit,
-            eval_output_format=args.eval_output_format,
             output_path=args.output,
             max_epoch=args.max_epoch,
             download_manager=self.download_manager,
@@ -1278,7 +1322,8 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
                 args.wapiti_install_source,
                 download_manager=self.download_manager
             ),
-            wapiti_train_args=get_wapiti_train_args(args)
+            wapiti_train_args=get_wapiti_train_args(args),
+            **get_eval_output_args(args),
         )
 
 
@@ -1294,13 +1339,13 @@ class EvalSubCommand(GrobidTrainerSubCommand):
                 "(in the same way it is split for 'train_eval')"
             ])
         )
-        add_eval_output_format_argument(parser)
+        add_eval_output_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         eval_model(
             model_path=args.model_path,
             split_input=args.use_eval_train_test_split,
-            eval_output_format=args.eval_output_format,
+            **get_eval_output_args(args),
             **self.get_common_args(args)
         )
 
@@ -1309,7 +1354,7 @@ class WapitiEvalSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_model_path_argument(parser, required=True, help='directory to load the model from')
-        add_eval_output_format_argument(parser)
+        add_eval_output_arguments(parser)
         add_wapiti_install_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
@@ -1318,7 +1363,7 @@ class WapitiEvalSubCommand(GrobidTrainerSubCommand):
             model=args.model,
             input_paths=args.input,
             limit=args.limit,
-            eval_output_format=args.eval_output_format,
+            **get_eval_output_args(args),
             download_manager=self.download_manager,
             wapiti_binary_path=install_wapiti_and_get_path_or_none(
                 args.wapiti_install_source,

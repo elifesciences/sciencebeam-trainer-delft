@@ -195,7 +195,7 @@ def list_files(directory_path: str) -> List[str]:
 @contextmanager
 def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
     if not is_external_location(filepath):
-        os.makedirs(os.path.basename(filepath), exist_ok=True)
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, mode=mode, **kwargs) as fp:
             yield fp
             return
@@ -212,3 +212,8 @@ def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
         finally:
             if os.path.exists(temp_file):
                 copy_file(temp_file, filepath)
+
+
+def write_text(filepath: str, text: str, **kwargs):
+    with auto_uploading_output_file(filepath, mode='w', **kwargs) as fp:
+        fp.write(text)

@@ -8,11 +8,13 @@ from delft.sequenceLabelling.evaluation import (
     get_entities
 )
 
+
 # mostly copied from delft/sequenceLabelling/evaluation.py
 # with the following differences:
 # - types are sorted
 # - types are including keys from both true or prediction (not just true labels)
 # - separated calculation from formatting
+
 
 class EvaluationOutputFormats:
     TEXT = 'text'

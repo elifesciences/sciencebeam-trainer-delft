@@ -206,6 +206,12 @@ class WapitiModelAdapter:
     def eval(self, x_test, y_test, features: np.array = None):
         self.eval_single(x_test, y_test, features=features)
 
+    @property
+    def model_summary_props(self) -> str:
+        return {
+            'model_type': 'wapiti'
+        }
+
     def get_evaluation_result(
             self,
             x_test: List[List[str]],
@@ -283,6 +289,7 @@ class WapitiModelTrainAdapter:
         self.gzip_enabled = gzip_enabled
         self.wapiti_binary_path = wapiti_binary_path
         self.wapiti_train_args = wapiti_train_args
+        self._model_adapter = None
 
     def train(
             self,
@@ -316,12 +323,18 @@ class WapitiModelTrainAdapter:
             LOGGER.info('wapiti model trained: %s', self.temp_model_path)
 
     def get_model_adapter(self) -> WapitiModelAdapter:
-        assert self.temp_model_path, "temp_model_path required"
-        return WapitiModelAdapter.load_from(
-            os.path.dirname(self.temp_model_path),
-            download_manager=self.download_manager,
-            wapiti_binary_path=self.wapiti_binary_path
-        )
+        if self._model_adapter is None:
+            assert self.temp_model_path, "temp_model_path required"
+            self._model_adapter = WapitiModelAdapter.load_from(
+                os.path.dirname(self.temp_model_path),
+                download_manager=self.download_manager,
+                wapiti_binary_path=self.wapiti_binary_path
+            )
+        return self._model_adapter
+
+    @property
+    def model_summary_props(self) -> str:
+        return self.get_model_adapter().model_summary_props
 
     def get_evaluation_result(
             self,

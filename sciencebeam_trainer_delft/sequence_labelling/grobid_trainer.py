@@ -330,12 +330,15 @@ def output_classification_result(
         output_format: str,
         output_path: str = None,
         eval_input_paths: List[str] = None,
-        model_path: str = None):
+        model_path: str = None,
+        model_summary_props: dict = None):
     meta = {}
     if eval_input_paths:
         meta['eval_input_paths'] = eval_input_paths
     if model_path:
         meta['model_path'] = model_path
+    if model_summary_props:
+        meta.update(model_summary_props)
     if output_path:
         LOGGER.info('writing evaluation to: %s', output_path)
         write_text(output_path, classification_result.get_json_formatted_report(meta=meta))
@@ -417,7 +420,8 @@ def do_train_eval(
         output_format=eval_output_format,
         output_path=eval_output_path,
         eval_input_paths=eval_input_paths,
-        model_path=model.get_model_output_path(output_path)
+        model_path=model.get_model_output_path(output_path),
+        model_summary_props=model.model_summary_props
     )
 
     # saving the model
@@ -567,7 +571,8 @@ def do_eval_model(
         output_format=eval_output_format,
         output_path=eval_output_path,
         eval_input_paths=input_paths,
-        model_path=model.model_path
+        model_path=model.model_path,
+        model_summary_props=model.model_summary_props
     )
 
 

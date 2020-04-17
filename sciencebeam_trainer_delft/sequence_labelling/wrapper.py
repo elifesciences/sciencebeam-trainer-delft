@@ -411,6 +411,13 @@ class Sequence(_Sequence):
     def _get_model_name(self):
         return self.model_config.model_name
 
+    @property
+    def model_summary_props(self) -> str:
+        return {
+            'model_type': 'delft',
+            'architecture': self.model_config.model_type
+        }
+
     def get_model_output_path(self, dir_path: str = None) -> str:
         return get_model_directory(model_name=self.model_config.model_name, dir_path=dir_path)
 

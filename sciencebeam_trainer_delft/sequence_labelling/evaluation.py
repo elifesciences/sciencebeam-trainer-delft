@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict, OrderedDict
 from typing import List, Union
 
@@ -7,12 +8,35 @@ from delft.sequenceLabelling.evaluation import (
     get_entities
 )
 
-
 # mostly copied from delft/sequenceLabelling/evaluation.py
 # with the following differences:
 # - types are sorted
 # - types are including keys from both true or prediction (not just true labels)
 # - separated calculation from formatting
+
+class EvaluationOutputFormats:
+    TEXT = 'text'
+    JSON = 'json'
+
+
+EVALUATION_OUTPUT_FORMATS = [
+    EvaluationOutputFormats.TEXT,
+    EvaluationOutputFormats.JSON
+]
+
+
+# copied from https://stackoverflow.com/a/57915246/8676953
+class NpJsonEncoder(json.JSONEncoder):
+    def default(self, obj):  # pylint: disable=arguments-differ, method-hidden
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super().default(obj)
+
 
 class ClassificationResult:
     def __init__(
@@ -77,9 +101,9 @@ class ClassificationResult:
             'support': np.sum(s)
         }
 
-    def get_formatted_report(
+    def get_text_formatted_report(
             self,
-            digits: int = 2,
+            digits: int = 4,
             exclude_no_support: bool = False):
         name_width = max(map(len, self.scores.keys()))
 
@@ -125,6 +149,29 @@ class ClassificationResult:
         )
 
         return report
+
+    def get_dict_formatted_report(self):
+        return {
+            'scores': self.scores,
+            'micro_averages': self.micro_averages
+        }
+
+    def get_json_formatted_report(self):
+        return json.dumps(
+            self.get_dict_formatted_report(),
+            indent=2,
+            cls=NpJsonEncoder
+        )
+
+    def get_formatted_report(
+            self,
+            output_format: str = EvaluationOutputFormats.TEXT,
+            **kwargs):
+        if output_format == EvaluationOutputFormats.TEXT:
+            return self.get_text_formatted_report(**kwargs)
+        if output_format == EvaluationOutputFormats.JSON:
+            return self.get_json_formatted_report()
+        raise ValueError('unsupported output format: %s' % output_format)
 
 
 def classification_report(

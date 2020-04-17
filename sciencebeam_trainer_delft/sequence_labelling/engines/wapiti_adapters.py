@@ -314,22 +314,42 @@ class WapitiModelTrainAdapter:
             )
             LOGGER.info('wapiti model trained: %s', self.temp_model_path)
 
-    def eval(self, x_test, y_test, features: np.array = None):
+    def get_model_adapter(self) -> WapitiModelAdapter:
         assert self.temp_model_path, "temp_model_path required"
-        WapitiModelAdapter.load_from(
+        return WapitiModelAdapter.load_from(
             os.path.dirname(self.temp_model_path),
             download_manager=self.download_manager,
             wapiti_binary_path=self.wapiti_binary_path
-        ).eval(
+        )
+
+    def get_evaluation_result(
+            self,
+            x_test: List[List[str]],
+            y_test: List[List[str]],
+            features: List[List[List[str]]] = None) -> ClassificationResult:
+        return self.get_model_adapter().get_evaluation_result(
             x_test, y_test, features=features
         )
 
-    def save(self, output_path: str = None):
+    def eval(
+            self,
+            x_test: List[List[str]],
+            y_test: List[List[str]],
+            features: List[List[List[str]]] = None):
+        self.get_model_adapter().eval(
+            x_test, y_test, features=features
+        )
+
+    def get_model_output_path(self, output_path: str = None) -> str:
         assert output_path, "output_path required"
+        return os.path.join(output_path, self.model_name)
+
+    def save(self, output_path: str = None):
+        model_output_path = self.get_model_output_path(output_path)
         assert self.temp_model_path, "temp_model_path required"
         if not Path(self.temp_model_path).exists():
             raise FileNotFoundError("temp_model_path does not exist: %s" % self.temp_model_path)
-        model_file_path = os.path.join(output_path, self.model_name, 'model.wapiti')
+        model_file_path = os.path.join(model_output_path, 'model.wapiti')
         if self.gzip_enabled:
             model_file_path += '.gz'
         LOGGER.info('saving to %s', model_file_path)

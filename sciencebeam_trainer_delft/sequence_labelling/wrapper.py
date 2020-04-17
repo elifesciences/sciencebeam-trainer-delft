@@ -411,8 +411,11 @@ class Sequence(_Sequence):
     def _get_model_name(self):
         return self.model_config.model_name
 
-    def _get_model_directory(self, dir_path=None):
+    def get_model_output_path(self, dir_path: str = None) -> str:
         return get_model_directory(model_name=self.model_config.model_name, dir_path=dir_path)
+
+    def _get_model_directory(self, dir_path: str = None) -> str:
+        return self.get_model_output_path(dir_path=dir_path)
 
     def get_embedding_for_model_config(self, model_config: ModelConfig):
         embedding_name = model_config.embeddings_name

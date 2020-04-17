@@ -417,7 +417,7 @@ def do_train_eval(
         output_format=eval_output_format,
         output_path=eval_output_path,
         eval_input_paths=eval_input_paths,
-        model_path=output_path
+        model_path=model.get_model_output_path(output_path)
     )
 
     # saving the model

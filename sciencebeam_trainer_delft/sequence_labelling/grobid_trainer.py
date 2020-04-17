@@ -7,6 +7,7 @@ import tempfile
 import os
 from abc import abstractmethod
 from collections import Counter
+from datetime import datetime, timezone
 from itertools import islice
 from typing import List, Tuple, Union
 
@@ -333,6 +334,7 @@ def output_classification_result(
         model_path: str = None,
         model_summary_props: dict = None):
     meta = {}
+    meta['eval_timestamp'] = datetime.now(timezone.utc).isoformat()
     if eval_input_paths:
         meta['eval_input_paths'] = eval_input_paths
     if model_path:

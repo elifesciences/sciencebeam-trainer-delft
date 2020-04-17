@@ -388,6 +388,14 @@ suggested feature indices: 9-30
 label counts: {'B-<title>': 2363, 'I-<title>': 24481, 'B-<author>': 2241, 'I-<author>': 25830, 'B-<reference>': 414, 'I-<reference>': 10121, 'B-<submission>': 409, 'I-<submission>': 3729, 'B-<abstract>': 1528, 'I-<abstract>': 269983, 'B-<affiliation>': 2782, 'I-<affiliation>': 23886, 'B-<address>': 2330, 'I-<address>': 13963, 'B-<date>': 658, 'I-<date>': 2204, 'B-<grant>': 105, 'I-<grant>': 4509, 'B-<email>': 891, 'I-<email>': 7796, 'B-<keyword>': 424, 'I-<keyword>': 7804, 'B-<entitle>': 24, 'I-<entitle>': 421, 'B-<pubnum>': 421, 'I-<pubnum>': 3755, 'B-<note>': 1823, 'I-<note>': 26033, 'B-<copyright>': 281, 'I-<copyright>': 5152, 'B-<date-submission>': 29, 'I-<date-submission>': 166, 'B-<intro>': 439, 'I-<intro>': 96944, 'B-<web>': 187, 'I-<web>': 3162, 'B-<phone>': 71, 'I-<phone>': 710, 'B-<dedication>': 22, 'I-<dedication>': 243, 'B-<degree>': 59, 'I-<degree>': 1355}
 ```
 
+### Other CLI Parameters
+
+#### `--log-file`
+
+Specifying a log file (can also be gzipped by adding the `.gz` extension), will save the logging output to the file. This is mainly intended for cloud usage. Locally you could also use `tee` for that.
+
+If the specified file is a remote file, then it will be uploaded when the program finishes (no streaming logs).
+
 ## Training in Google's AI Platform
 
 You can train a model using Google's [AI Platform](https://cloud.google.com/ai-platform/). e.g.

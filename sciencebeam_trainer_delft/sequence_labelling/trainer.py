@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import List
 
 import numpy as np
 
@@ -69,32 +70,48 @@ def get_callbacks(
     return callbacks
 
 
+class PredictedResults:
+    def __init__(self, y_pred: List[List[str]], y_true: List[List[str]] = None):
+        self.y_pred = y_pred
+        self.y_true = y_true
+
+
+def get_model_results(model, valid_batches: list, preprocessor=None) -> PredictedResults:
+    valid_steps = len(valid_batches)
+    for i, (data, label) in enumerate(valid_batches):
+        if i == valid_steps:
+            break
+        y_true_batch = label
+        y_true_batch = np.argmax(y_true_batch, -1)
+        sequence_lengths = data[-1]  # shape of (batch_size, 1)
+        sequence_lengths = np.reshape(sequence_lengths, (-1,))
+
+        y_pred_batch = model.predict_on_batch(data)
+        y_pred_batch = np.argmax(y_pred_batch, -1)
+
+        y_pred_batch = [
+            preprocessor.inverse_transform(y[:l]) for y, l in zip(y_pred_batch, sequence_lengths)
+        ]
+        y_true_batch = [
+            preprocessor.inverse_transform(y[:l]) for y, l in zip(y_true_batch, sequence_lengths)
+        ]
+
+        if i == 0:
+            y_pred = y_pred_batch
+            y_true = y_true_batch
+        else:
+            y_pred = y_pred + y_pred_batch
+            y_true = y_true + y_true_batch
+    return PredictedResults(y_pred=y_pred, y_true=y_true)
+
+
 class Scorer(_Scorer):
     def on_epoch_end(self, epoch: int, logs: dict = None):
-        for i, (data, label) in enumerate(self.valid_batches):
-            if i == self.valid_steps:
-                break
-            y_true_batch = label
-            y_true_batch = np.argmax(y_true_batch, -1)
-            sequence_lengths = data[-1]  # shape of (batch_size, 1)
-            sequence_lengths = np.reshape(sequence_lengths, (-1,))
-
-            y_pred_batch = self.model.predict_on_batch(data)
-            y_pred_batch = np.argmax(y_pred_batch, -1)
-
-            y_pred_batch = [
-                self.p.inverse_transform(y[:l]) for y, l in zip(y_pred_batch, sequence_lengths)
-            ]
-            y_true_batch = [
-                self.p.inverse_transform(y[:l]) for y, l in zip(y_true_batch, sequence_lengths)
-            ]
-
-            if i == 0:
-                y_pred = y_pred_batch
-                y_true = y_true_batch
-            else:
-                y_pred = y_pred + y_pred_batch
-                y_true = y_true + y_true_batch
+        prediction_results = get_model_results(
+            self.model, self.valid_batches, preprocessor=self.p
+        )
+        y_pred = prediction_results.y_pred
+        y_true = prediction_results.y_true
 
         f1 = f1_score(y_true, y_pred)
         print("\tf1 (micro): {:04.2f}".format(f1 * 100))

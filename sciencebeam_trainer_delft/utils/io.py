@@ -190,3 +190,25 @@ def copy_file(source_filepath: str, target_filepath: str, overwrite: bool = True
 def list_files(directory_path: str) -> List[str]:
     _require_tf_file_io()
     return tf_file_io.list_directory(directory_path)
+
+
+@contextmanager
+def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
+    if not is_external_location(filepath):
+        os.makedirs(os.path.basename(filepath), exist_ok=True)
+        with open(filepath, mode=mode, **kwargs) as fp:
+            yield fp
+            return
+    with tempfile.TemporaryDirectory(suffix='-logs') as temp_dir:
+        temp_file = os.path.join(
+            temp_dir,
+            get_compression_wrapper(filepath).strip_compression_filename_ext(
+                os.path.basename(filepath)
+            )
+        )
+        try:
+            with open(temp_file, mode=mode, **kwargs) as fp:
+                yield fp
+        finally:
+            if os.path.exists(temp_file):
+                copy_file(temp_file, filepath)

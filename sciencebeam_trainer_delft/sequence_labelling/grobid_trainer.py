@@ -25,7 +25,11 @@ from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.cloud_support import patch_cloud_support
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.tf import get_tf_info
-from sciencebeam_trainer_delft.utils.io import copy_file
+from sciencebeam_trainer_delft.utils.io import copy_file, auto_uploading_output_file
+from sciencebeam_trainer_delft.utils.logging import (
+    tee_stdout_and_stderr_lines_to,
+    tee_logging_lines_to
+)
 
 from sciencebeam_trainer_delft.embedding import EmbeddingManager
 
@@ -826,6 +830,15 @@ def add_common_arguments(
         )
     )
 
+    parser.add_argument(
+        "--log-file",
+        help=(
+            "If set, saves the output to the specified log file."
+            " This may also be a file in a bucket, in which case it will be uploaded at the end."
+            " Add the .gz extension if you wish to compress the file."
+        )
+    )
+
     parser.add_argument("--job-dir", help="job dir (only used when running via ai platform)")
 
 
@@ -1374,7 +1387,11 @@ def parse_args(argv: List[str] = None, subcommand_processor: SubCommandProcessor
 def run(args: argparse.Namespace, subcommand_processor: SubCommandProcessor = None):
     if subcommand_processor is None:
         subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
-    subcommand_processor.run(args)
+    try:
+        subcommand_processor.run(args)
+    except BaseException as e:
+        LOGGER.error('uncaught exception: %s', e, exc_info=1)
+        raise
 
 
 def main(argv: List[str] = None):
@@ -1385,11 +1402,16 @@ def main(argv: List[str] = None):
     elif args.debug:
         for name in [__name__, 'sciencebeam_trainer_delft', 'delft']:
             logging.getLogger(name).setLevel('DEBUG')
-    try:
-        subcommand_processor.run(args)
-    except BaseException as e:
-        LOGGER.error('uncaught exception: %s', e, exc_info=1)
-        raise
+    if args.log_file:
+        with auto_uploading_output_file(args.log_file, mode='w') as log_fp:
+            try:
+                with tee_stdout_and_stderr_lines_to(log_fp.write, append_line_feed=True):
+                    with tee_logging_lines_to(log_fp.write, append_line_feed=True):
+                        run(args, subcommand_processor=subcommand_processor)
+            finally:
+                logging.shutdown()
+    else:
+        run(args, subcommand_processor=subcommand_processor)
 
 
 if __name__ == "__main__":

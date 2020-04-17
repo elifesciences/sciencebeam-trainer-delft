@@ -1,4 +1,15 @@
+from unittest.mock import patch
+
+import pytest
+
+
 # pylint: disable=unused-import, import-outside-toplevel
+
+
+@pytest.fixture(autouse=True)
+def _reset_logging_mock():
+    with patch('sciencebeam_trainer_delft.utils.logging.reset_logging') as mock:
+        yield mock
 
 
 class TestGrobidImports:

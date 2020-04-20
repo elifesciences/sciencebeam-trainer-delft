@@ -401,7 +401,7 @@ If the specified file is a remote file, then it will be uploaded when the progra
 
 #### `--notification-url`
 
-For a long running training process (`train` and `train_eval`), it is possible to get notified via a Webhook URL
+For a long running training process (`train` and `train_eval` or `wapiti_train` and `wapiti_train_eval`), it is possible to get notified via a Webhook URL
 (e.g. [Slack](https://api.slack.com/messaging/webhooks) or [Mattermost](https://docs.mattermost.com/developer/webhooks-incoming.html)).
 In that case, a message will be sent when the training completes or in case of an error (although not all error may be caught).
 

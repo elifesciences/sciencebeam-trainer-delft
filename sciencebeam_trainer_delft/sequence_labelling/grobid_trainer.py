@@ -368,7 +368,7 @@ def output_classification_result(
         print("\nEvaluation:\n%s" % classification_result.get_text_formatted_report(
             digits=4
         ))
-    if output_format == EvaluationOutputFormats.JSON:
+    elif output_format == EvaluationOutputFormats.JSON:
         print(classification_result.get_json_formatted_report(meta=meta))
     else:
         print(classification_result.get_formatted_report(

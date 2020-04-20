@@ -259,6 +259,27 @@ def do_train(
     )
 
 
+def do_train_with_error_notification(
+        model: Union[Sequence, WapitiModelTrainAdapter],
+        output_path: str = None,
+        train_notification_manager: TrainNotificationManager = None,
+        **kwargs):
+    model_path = model.get_model_output_path(output_path)
+    try:
+        do_train(
+            model=model,
+            output_path=output_path,
+            train_notification_manager=train_notification_manager,
+            **kwargs
+        )
+    except BaseException as error:  # pylint: disable=broad-except
+        train_notification_manager.notify_error(
+            model_path=model_path,
+            error=repr(error)
+        )
+        raise
+
+
 # train a GROBID model with all available data
 def train(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
@@ -294,7 +315,7 @@ def train(
         **kwargs
     )
 
-    do_train(
+    do_train_with_error_notification(
         model,
         input_paths=input_paths,
         output_path=output_path,
@@ -332,7 +353,7 @@ def wapiti_train(
             wapiti_binary_path=wapiti_binary_path,
             wapiti_train_args=wapiti_train_args
         )
-        do_train(
+        do_train_with_error_notification(
             model,
             input_paths=input_paths,
             output_path=output_path,
@@ -461,6 +482,27 @@ def do_train_eval(
     )
 
 
+def do_train_eval_with_error_notification(
+        model: Union[Sequence, WapitiModelTrainAdapter],
+        output_path: str = None,
+        train_notification_manager: TrainNotificationManager = None,
+        **kwargs):
+    model_path = model.get_model_output_path(output_path)
+    try:
+        do_train_eval(
+            model=model,
+            output_path=output_path,
+            train_notification_manager=train_notification_manager,
+            **kwargs
+        )
+    except BaseException as error:  # pylint: disable=broad-except
+        train_notification_manager.notify_error(
+            model_path=model_path,
+            error=repr(error)
+        )
+        raise
+
+
 # split data, train a GROBID model and evaluate it
 def train_eval(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
@@ -505,7 +547,7 @@ def train_eval(
         fold_number=fold_count,
         **kwargs
     )
-    do_train_eval(
+    do_train_eval_with_error_notification(
         model,
         input_paths=input_paths,
         output_path=output_path,
@@ -553,7 +595,7 @@ def wapiti_train_eval(
             wapiti_binary_path=wapiti_binary_path,
             wapiti_train_args=wapiti_train_args
         )
-        do_train_eval(
+        do_train_eval_with_error_notification(
             model,
             input_paths=input_paths,
             output_path=output_path,

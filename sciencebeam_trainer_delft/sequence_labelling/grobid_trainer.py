@@ -42,7 +42,8 @@ from sciencebeam_trainer_delft.sequence_labelling.utils.train_notify import (
     TrainNotificationManager,
     add_train_notification_arguments,
     get_train_notification_manager,
-    notify_train_success
+    notify_train_success,
+    notify_train_error
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence
@@ -273,7 +274,8 @@ def do_train_with_error_notification(
             **kwargs
         )
     except BaseException as error:  # pylint: disable=broad-except
-        train_notification_manager.notify_error(
+        notify_train_error(
+            train_notification_manager,
             model_path=model_path,
             error=repr(error)
         )
@@ -496,7 +498,8 @@ def do_train_eval_with_error_notification(
             **kwargs
         )
     except BaseException as error:  # pylint: disable=broad-except
-        train_notification_manager.notify_error(
+        notify_train_error(
+            train_notification_manager,
             model_path=model_path,
             error=repr(error)
         )
@@ -1174,6 +1177,7 @@ def add_wapiti_train_arguments(parser: argparse.ArgumentParser):
         type=int,
         default=DEFAULT_STOP_WINDOW_SIZE
     )
+    add_train_notification_arguments(parser)
 
 
 def get_wapiti_train_args(args: argparse.Namespace) -> dict:
@@ -1358,7 +1362,8 @@ class WapitiTrainSubCommand(GrobidTrainerSubCommand):
                 args.wapiti_install_source,
                 download_manager=self.download_manager
             ),
-            wapiti_train_args=get_wapiti_train_args(args)
+            wapiti_train_args=get_wapiti_train_args(args),
+            train_notification_manager=get_train_notification_manager(args)
         )
 
 
@@ -1419,6 +1424,7 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
                 download_manager=self.download_manager
             ),
             wapiti_train_args=get_wapiti_train_args(args),
+            train_notification_manager=get_train_notification_manager(args),
             **get_eval_output_args(args),
         )
 

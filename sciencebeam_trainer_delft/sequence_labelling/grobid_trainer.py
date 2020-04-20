@@ -38,6 +38,13 @@ from sciencebeam_trainer_delft.utils.logging import (
 
 from sciencebeam_trainer_delft.embedding import EmbeddingManager
 
+from sciencebeam_trainer_delft.sequence_labelling.utils.train_notify import (
+    TrainNotificationManager,
+    add_train_notification_arguments,
+    get_train_notification_manager,
+    notify_train_success
+)
+
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_labels_crf_file
@@ -216,6 +223,7 @@ def do_train(
         limit: int = None,
         shuffle_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
+        train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
@@ -244,6 +252,33 @@ def do_train(
     else:
         model.save()
 
+    notify_train_success(
+        train_notification_manager,
+        model_path=model.get_model_output_path(output_path),
+        last_checkpoint_path=model.last_checkpoint_path
+    )
+
+
+def do_train_with_error_notification(
+        model: Union[Sequence, WapitiModelTrainAdapter],
+        output_path: str = None,
+        train_notification_manager: TrainNotificationManager = None,
+        **kwargs):
+    model_path = model.get_model_output_path(output_path)
+    try:
+        do_train(
+            model=model,
+            output_path=output_path,
+            train_notification_manager=train_notification_manager,
+            **kwargs
+        )
+    except BaseException as error:  # pylint: disable=broad-except
+        train_notification_manager.notify_error(
+            model_path=model_path,
+            error=repr(error)
+        )
+        raise
+
 
 # train a GROBID model with all available data
 def train(
@@ -255,6 +290,7 @@ def train(
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         max_epoch=100,
+        train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
@@ -279,13 +315,14 @@ def train(
         **kwargs
     )
 
-    do_train(
+    do_train_with_error_notification(
         model,
         input_paths=input_paths,
         output_path=output_path,
         limit=limit,
         shuffle_input=shuffle_input,
         random_seed=random_seed,
+        train_notification_manager=train_notification_manager,
         download_manager=download_manager
     )
 
@@ -299,6 +336,7 @@ def wapiti_train(
         shuffle_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_epoch: int = 100,
+        train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None,
         gzip_enabled: bool = False,
         wapiti_binary_path: str = None,
@@ -315,13 +353,14 @@ def wapiti_train(
             wapiti_binary_path=wapiti_binary_path,
             wapiti_train_args=wapiti_train_args
         )
-        do_train(
+        do_train_with_error_notification(
             model,
             input_paths=input_paths,
             output_path=output_path,
             limit=limit,
             shuffle_input=shuffle_input,
             random_seed=random_seed,
+            train_notification_manager=train_notification_manager,
             download_manager=download_manager
         )
 
@@ -350,7 +389,7 @@ def output_classification_result(
         print("\nEvaluation:\n%s" % classification_result.get_text_formatted_report(
             digits=4
         ))
-    if output_format == EvaluationOutputFormats.JSON:
+    elif output_format == EvaluationOutputFormats.JSON:
         print(classification_result.get_json_formatted_report(meta=meta))
     else:
         print(classification_result.get_formatted_report(
@@ -370,6 +409,7 @@ def do_train_eval(
         eval_output_format: str = None,
         eval_output_path: str = None,
         fold_count: int = 1,
+        train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
@@ -434,6 +474,34 @@ def do_train_eval(
     else:
         model.save()
 
+    notify_train_success(
+        train_notification_manager,
+        model_path=model.get_model_output_path(output_path),
+        last_checkpoint_path=model.last_checkpoint_path,
+        classification_result=classification_result
+    )
+
+
+def do_train_eval_with_error_notification(
+        model: Union[Sequence, WapitiModelTrainAdapter],
+        output_path: str = None,
+        train_notification_manager: TrainNotificationManager = None,
+        **kwargs):
+    model_path = model.get_model_output_path(output_path)
+    try:
+        do_train_eval(
+            model=model,
+            output_path=output_path,
+            train_notification_manager=train_notification_manager,
+            **kwargs
+        )
+    except BaseException as error:  # pylint: disable=broad-except
+        train_notification_manager.notify_error(
+            model_path=model_path,
+            error=repr(error)
+        )
+        raise
+
 
 # split data, train a GROBID model and evaluate it
 def train_eval(
@@ -450,6 +518,7 @@ def train_eval(
         eval_output_path: str = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
+        train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
@@ -478,7 +547,7 @@ def train_eval(
         fold_number=fold_count,
         **kwargs
     )
-    do_train_eval(
+    do_train_eval_with_error_notification(
         model,
         input_paths=input_paths,
         output_path=output_path,
@@ -489,6 +558,7 @@ def train_eval(
         eval_limit=eval_limit,
         eval_output_format=eval_output_format,
         eval_output_path=eval_output_path,
+        train_notification_manager=train_notification_manager,
         download_manager=download_manager
     )
 
@@ -507,6 +577,7 @@ def wapiti_train_eval(
         eval_output_path: str = None,
         fold_count: int = 1,
         max_epoch: int = 100,
+        train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None,
         gzip_enabled: bool = False,
         wapiti_binary_path: str = None,
@@ -524,7 +595,7 @@ def wapiti_train_eval(
             wapiti_binary_path=wapiti_binary_path,
             wapiti_train_args=wapiti_train_args
         )
-        do_train_eval(
+        do_train_eval_with_error_notification(
             model,
             input_paths=input_paths,
             output_path=output_path,
@@ -535,6 +606,7 @@ def wapiti_train_eval(
             eval_limit=eval_limit,
             eval_output_format=eval_output_format,
             eval_output_path=eval_output_path,
+            train_notification_manager=train_notification_manager,
             download_manager=download_manager
         )
 
@@ -1081,6 +1153,7 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--early-stopping-patience", type=int, default=10,
         help="how many epochs to continue training after the f1 score hasn't improved"
     )
+    add_train_notification_arguments(parser)
 
 
 def add_wapiti_train_arguments(parser: argparse.ArgumentParser):
@@ -1219,6 +1292,7 @@ class GrobidTrainerSubCommand(SubCommand):
             training_props=dict(
                 input_window_stride=args.input_window_stride
             ),
+            train_notification_manager=get_train_notification_manager(args),
             **self.get_common_args(args)
         )
 

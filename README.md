@@ -399,6 +399,12 @@ Specifying a log file (can also be gzipped by adding the `.gz` extension), will 
 
 If the specified file is a remote file, then it will be uploaded when the program finishes (no streaming logs).
 
+#### `--notification-url`
+
+For a long running training process (`train` and `train_eval`), it is possible to get notified via a Webhook URL
+(e.g. [Slack](https://api.slack.com/messaging/webhooks) or [Mattermost](https://docs.mattermost.com/developer/webhooks-incoming.html)).
+In that case, a message will be sent when the training completes or in case of an error (although not all error may be caught).
+
 ## Training in Google's AI Platform
 
 You can train a model using Google's [AI Platform](https://cloud.google.com/ai-platform/). e.g.

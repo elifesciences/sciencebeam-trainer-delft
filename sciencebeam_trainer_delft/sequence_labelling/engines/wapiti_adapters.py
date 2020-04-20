@@ -333,6 +333,10 @@ class WapitiModelTrainAdapter:
         return self._model_adapter
 
     @property
+    def last_checkpoint_path(self) -> str:
+        return None
+
+    @property
     def model_summary_props(self) -> str:
         return self.get_model_adapter().model_summary_props
 

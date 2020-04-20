@@ -39,6 +39,11 @@ from sciencebeam_trainer_delft.sequence_labelling.evaluation import Classificati
 
 from sciencebeam_trainer_delft.sequence_labelling.debug import get_tag_debug_reporter_if_enabled
 
+from sciencebeam_trainer_delft.sequence_labelling.tools.checkpoints import (
+    get_checkpoints_json,
+    get_last_checkpoint_url
+)
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -410,6 +415,12 @@ class Sequence(_Sequence):
 
     def _get_model_name(self):
         return self.model_config.model_name
+
+    @property
+    def last_checkpoint_path(self) -> str:
+        if not self.log_dir:
+            return None
+        return get_last_checkpoint_url(get_checkpoints_json(self.log_dir))
 
     @property
     def model_summary_props(self) -> str:

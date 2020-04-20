@@ -20,7 +20,8 @@ DEFAULT_TRAIN_SUCCESS_MESSAGE_FORMAT = '\n'.join([
 DEFAULT_TRAIN_EVAL_SUCCESS_MESSAGE_FORMAT = '\n'.join([
     'Model training complete, f1: `{classification_result.f1:.4f}`',
     'model_path: `{model_path}`',
-    'last_checkpoint_path: `{last_checkpoint_path}`'
+    'last_checkpoint_path: `{last_checkpoint_path}`',
+    '```\n{classification_result.text_formatted_report}\n```'
 ])
 
 DEFAULT_TRAIN_ERROR_MESSAGE_FORMAT = (

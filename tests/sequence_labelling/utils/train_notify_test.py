@@ -28,6 +28,7 @@ class TestGetRenderedNotificationMessage:
     def test_should_not_fail_using_default_train_message(self):
         get_rendered_notification_message(
             DEFAULT_TRAIN_SUCCESS_MESSAGE_FORMAT,
+            last_checkpoint_path=None,
             model_path='model_path'
         )
 
@@ -36,6 +37,7 @@ class TestGetRenderedNotificationMessage:
         get_rendered_notification_message(
             DEFAULT_TRAIN_EVAL_SUCCESS_MESSAGE_FORMAT,
             model_path='model_path',
+            last_checkpoint_path=None,
             classification_result=classification_result
         )
 

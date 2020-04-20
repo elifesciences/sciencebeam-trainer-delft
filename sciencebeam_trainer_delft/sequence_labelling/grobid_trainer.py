@@ -254,7 +254,8 @@ def do_train(
 
     notify_train_success(
         train_notification_manager,
-        model_path=model.get_model_output_path(output_path)
+        model_path=model.get_model_output_path(output_path),
+        last_checkpoint_path=model.last_checkpoint_path
     )
 
 
@@ -455,6 +456,7 @@ def do_train_eval(
     notify_train_success(
         train_notification_manager,
         model_path=model.get_model_output_path(output_path),
+        last_checkpoint_path=model.last_checkpoint_path,
         classification_result=classification_result
     )
 

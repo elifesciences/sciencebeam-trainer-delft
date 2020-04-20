@@ -43,6 +43,11 @@ def get_checkpoint_urls(checkpoints_json: dict) -> List[str]:
     })
 
 
+def get_last_checkpoint_url(checkpoints_json: dict) -> str:
+    checkpoint_urls = get_checkpoint_urls(checkpoints_json)
+    return checkpoint_urls[-1] if checkpoint_urls else None
+
+
 def get_checkpoint_meta(checkpoint_path: str) -> dict:
     return read_json(os.path.join(checkpoint_path, 'meta.json'))
 

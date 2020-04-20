@@ -11,11 +11,17 @@ from sciencebeam_trainer_delft.sequence_labelling.evaluation import (
 LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_TRAIN_SUCCESS_MESSAGE_FORMAT = 'Model training complete'
+DEFAULT_TRAIN_SUCCESS_MESSAGE_FORMAT = '\n'.join([
+    'Model training complete',
+    'model_path: `{model_path}`',
+    'last_checkpoint_path: `{last_checkpoint_path}`'
+])
 
-DEFAULT_TRAIN_EVAL_SUCCESS_MESSAGE_FORMAT = (
-    'Model training complete, f1: `{classification_result.f1:.4f}`\nmodel_path: `{model_path}`'
-)
+DEFAULT_TRAIN_EVAL_SUCCESS_MESSAGE_FORMAT = '\n'.join([
+    'Model training complete, f1: `{classification_result.f1:.4f}`',
+    'model_path: `{model_path}`',
+    'last_checkpoint_path: `{last_checkpoint_path}`'
+])
 
 DEFAULT_TRAIN_ERROR_MESSAGE_FORMAT = (
     'Model training failed due to: `{error}`\nmodel_path: `{model_path}`'
@@ -67,16 +73,22 @@ class TrainNotificationManager:
             error=error
         )
 
-    def notify_success(self, model_path: str, classification_result: ClassificationResult = None):
+    def notify_success(
+            self,
+            model_path: str,
+            last_checkpoint_path: str = None,
+            classification_result: ClassificationResult = None):
         if classification_result is None:
             self.send_notification(
                 self.notification_train_success_message,
-                model_path=model_path
+                model_path=model_path,
+                last_checkpoint_path=last_checkpoint_path
             )
         else:
             self.send_notification(
                 self.notification_train_eval_success_message,
                 model_path=model_path,
+                last_checkpoint_path=last_checkpoint_path,
                 classification_result=classification_result
             )
 

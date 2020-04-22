@@ -1166,6 +1166,12 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--resume-train-model-path",
         help="path to the model training should be resumed from (e.g. path to checkpoint)"
     )
+    parser.add_argument(
+        "--initial-epoch",
+        type=int,
+        default=0,
+        help="Sets the initial epoch for model training."
+    )
     add_train_notification_arguments(parser)
 
 
@@ -1304,6 +1310,7 @@ class GrobidTrainerSubCommand(SubCommand):
                 stateful=args.stateful
             ),
             training_props=dict(
+                initial_epoch=args.initial_epoch,
                 input_window_stride=args.input_window_stride
             ),
             resume_train_model_path=args.resume_train_model_path,

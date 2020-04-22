@@ -125,6 +125,7 @@ Note: the model configuration will be loaded from the checkpoint
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     header train \
     --resume-train-model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
+    --initial-epoch="10" \
     --batch-size="10" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
     --limit="100" \
@@ -136,6 +137,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     header train_eval \
     --resume-train-model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
+    --initial-epoch="10" \
     --batch-size="10" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
     --limit="100" \

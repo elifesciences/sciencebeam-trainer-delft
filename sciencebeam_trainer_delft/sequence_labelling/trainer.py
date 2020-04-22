@@ -249,6 +249,7 @@ class Trainer(_Trainer):
 
         local_model.fit_generator(
             generator=training_generator,
+            initial_epoch=self.training_config.initial_epoch,
             epochs=max_epoch,
             use_multiprocessing=multiprocessing,
             workers=nb_workers,

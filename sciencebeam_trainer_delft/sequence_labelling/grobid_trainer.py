@@ -1349,7 +1349,7 @@ class TrainSubCommand(GrobidTrainerSubCommand):
             raise ValueError("model required")
         embedding_name = self.preload_and_validate_embedding(
             args.embedding,
-            use_word_embeddings=args.use_word_embeddings
+            use_word_embeddings=args.use_word_embeddings and not args.resume_train_model_path
         )
         LOGGER.info('get_tf_info: %s', get_tf_info())
         train(
@@ -1401,7 +1401,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
             raise ValueError("fold-count should be equal or more than 1")
         embedding_name = self.preload_and_validate_embedding(
             args.embedding,
-            use_word_embeddings=args.use_word_embeddings
+            use_word_embeddings=args.use_word_embeddings and not args.resume_train_model_path
         )
         LOGGER.info('get_tf_info: %s', get_tf_info())
         train_eval(

@@ -292,6 +292,7 @@ def train(
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = 100,
         max_epoch=100,
+        resume_train_model_path: str = None,
         train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
@@ -316,6 +317,8 @@ def train(
         use_ELMo=use_ELMo,
         **kwargs
     )
+    if resume_train_model_path:
+        model.load_from(resume_train_model_path)
 
     do_train_with_error_notification(
         model,
@@ -521,6 +524,7 @@ def train_eval(
         eval_output_path: str = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
+        resume_train_model_path: str = None,
         train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
@@ -550,6 +554,8 @@ def train_eval(
         fold_number=fold_count,
         **kwargs
     )
+    if resume_train_model_path:
+        model.load_from(resume_train_model_path)
     do_train_eval_with_error_notification(
         model,
         input_paths=input_paths,
@@ -1156,6 +1162,10 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--early-stopping-patience", type=int, default=10,
         help="how many epochs to continue training after the f1 score hasn't improved"
     )
+    parser.add_argument(
+        "--resume-train-model-path",
+        help="path to the model training should be resumed from (e.g. path to checkpoint)"
+    )
     add_train_notification_arguments(parser)
 
 
@@ -1296,6 +1306,7 @@ class GrobidTrainerSubCommand(SubCommand):
             training_props=dict(
                 input_window_stride=args.input_window_stride
             ),
+            resume_train_model_path=args.resume_train_model_path,
             train_notification_manager=get_train_notification_manager(args),
             **self.get_common_args(args)
         )

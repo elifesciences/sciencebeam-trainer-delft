@@ -1146,6 +1146,13 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--embedding", default="glove-6B-50d",
         help="name of word embedding"
     )
+    parser.add_argument(
+        "--preload-embedding",
+        help=" ".join([
+            "Name or URL to embedding to preload.",
+            "This can be useful in combination with resuming model training."
+        ])
+    )
     features_group.add_argument(
         "--no-embedding",
         dest="use_word_embeddings",
@@ -1347,6 +1354,11 @@ class TrainSubCommand(GrobidTrainerSubCommand):
     def do_run(self, args: argparse.Namespace):
         if not args.model:
             raise ValueError("model required")
+        if args.preload_embedding:
+            self.preload_and_validate_embedding(
+                args.preload_embedding,
+                use_word_embeddings=True
+            )
         embedding_name = self.preload_and_validate_embedding(
             args.embedding,
             use_word_embeddings=args.use_word_embeddings and not args.resume_train_model_path
@@ -1399,6 +1411,11 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
             raise ValueError("model required")
         if args.fold_count < 1:
             raise ValueError("fold-count should be equal or more than 1")
+        if args.preload_embedding:
+            self.preload_and_validate_embedding(
+                args.preload_embedding,
+                use_word_embeddings=True
+            )
         embedding_name = self.preload_and_validate_embedding(
             args.embedding,
             use_word_embeddings=args.use_word_embeddings and not args.resume_train_model_path

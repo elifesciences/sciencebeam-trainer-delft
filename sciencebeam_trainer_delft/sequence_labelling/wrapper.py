@@ -164,31 +164,33 @@ class Sequence(_Sequence):
         x_all = np.concatenate((x_train, x_valid), axis=0)
         y_all = np.concatenate((y_train, y_valid), axis=0)
         features_all = concatenate_or_none((features_train, features_valid), axis=0)
-        self.p = prepare_preprocessor(
-            x_all, y_all,
-            features=features_all,
-            model_config=self.model_config
-        )
-        self.model_config.char_vocab_size = len(self.p.vocab_char)
-        self.model_config.case_vocab_size = len(self.p.vocab_case)
+        if self.p is None:
+            self.p = prepare_preprocessor(
+                x_all, y_all,
+                features=features_all,
+                model_config=self.model_config
+            )
+            self.model_config.char_vocab_size = len(self.p.vocab_char)
+            self.model_config.case_vocab_size = len(self.p.vocab_case)
 
-        if features_train is not None:
-            LOGGER.info('x_train.shape: %s', x_train.shape)
-            LOGGER.info('features_train.shape: %s', features_train.shape)
-            sample_transformed_features = self.p.transform_features(features_train[:1])
-            try:
-                if isinstance(sample_transformed_features, tuple):
-                    sample_transformed_features = sample_transformed_features[0]
-                LOGGER.info(
-                    'sample_transformed_features.shape: %s',
-                    sample_transformed_features.shape
-                )
-                self.model_config.max_feature_size = sample_transformed_features.shape[-1]
-                LOGGER.info('max_feature_size: %s', self.model_config.max_feature_size)
-            except Exception:  # pylint: disable=broad-except
-                LOGGER.info('features do not implement shape, set max_feature_size manually')
+            if features_train is not None:
+                LOGGER.info('x_train.shape: %s', x_train.shape)
+                LOGGER.info('features_train.shape: %s', features_train.shape)
+                sample_transformed_features = self.p.transform_features(features_train[:1])
+                try:
+                    if isinstance(sample_transformed_features, tuple):
+                        sample_transformed_features = sample_transformed_features[0]
+                    LOGGER.info(
+                        'sample_transformed_features.shape: %s',
+                        sample_transformed_features.shape
+                    )
+                    self.model_config.max_feature_size = sample_transformed_features.shape[-1]
+                    LOGGER.info('max_feature_size: %s', self.model_config.max_feature_size)
+                except Exception:  # pylint: disable=broad-except
+                    LOGGER.info('features do not implement shape, set max_feature_size manually')
 
-        self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
+        if self.model is None:
+            self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
         trainer = Trainer(
             self.model,
             self.models,

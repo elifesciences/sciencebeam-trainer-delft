@@ -32,23 +32,13 @@ LOGGER = logging.getLogger(__name__)
 DEFAULT_MODEL_PATH = 'data/models/textClassification/toxic'
 DEFAULT_EMBEDDNGS_NAME = 'glove.6B.50d'
 
-DEFAULT_TRAIN_INPUT_PATHS = [
-    "https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/train.csv"
-]
-DEFAULT_TEST_INPUT_PATHS = [
-    "https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/test.csv"
-]
-DEFAULT_TEST_LABEL_INPUT_PATHS = [
-    "https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/test_labels.csv"
-]
-
 
 def add_common_arguments(
         parser: argparse.ArgumentParser):
     parser.add_argument("--quiet", action="store_true", help="Only log errors")
     parser.add_argument(
         "--model-path",
-        default=DEFAULT_MODEL_PATH
+        required=True
     )
     parser.add_argument(
         "--embeddings",
@@ -62,8 +52,9 @@ def add_train_arguments(
     train_group.add_argument(
         "--train-input",
         nargs='+',
-        default=[DEFAULT_TRAIN_INPUT_PATHS],
+        default=[],
         action='append',
+        required=True,
         help="provided training file"
     )
     train_group.add_argument(
@@ -100,7 +91,7 @@ def add_predict_arguments(
     eval_group.add_argument(
         "--predict-input",
         nargs='+',
-        default=[DEFAULT_TEST_INPUT_PATHS],
+        required=True,
         action='append',
         help="provided predict file"
     )
@@ -121,14 +112,14 @@ def add_eval_arguments(
     eval_group.add_argument(
         "--eval-input",
         nargs='+',
-        default=[DEFAULT_TEST_INPUT_PATHS],
+        required=True,
         action='append',
         help="provided evaluation file"
     )
     eval_group.add_argument(
         "--eval-label-input",
         nargs='+',
-        default=[DEFAULT_TEST_LABEL_INPUT_PATHS],
+        required=False,
         action='append',
         help="provided separate evaluation label file"
     )

@@ -509,6 +509,20 @@ python -m sciencebeam_trainer_delft.text_classification \
     --eval-label-input="https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/test_labels.csv"
 ```
 
+
+### Train Eval Text Classification
+
+```bash
+python -m sciencebeam_trainer_delft.text_classification \
+    train_eval \
+    --model-path="data/models/textClassification/toxic" \
+    --train-input-limit=100 \
+    --train-input="https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/train.csv" \
+    --eval-input-limit=100 \
+    --eval-input="https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/test.csv" \
+    --eval-label-input="https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/test_labels.csv"
+```
+
 ## Checkpoints CLI
 
 The checkpoints CLI tool is there to give you a summary of the saved checkpoints. Checkpoints are optionally saved during training, they allow you to resume model training or further evaluate performance at the individual checkpoints. Usually training will stop after the f1 score hasn't improved for a number of epochs. The last checkpoint may not be the best.

@@ -143,8 +143,9 @@ def _flatten_input_paths(input_paths_list: List[List[str]]) -> List[str]:
 
 class SubCommandNames:
     TRAIN = 'train'
-    PREDICT = 'predict'
     EVAL = 'eval'
+    TRAIN_EVAL = 'train_eval'
+    PREDICT = 'predict'
 
 
 class TrainSubCommand(SubCommand):
@@ -208,6 +209,61 @@ class EvalSubCommand(SubCommand):
         print(result.text_formatted_report)
 
 
+class TrainEvalSubCommand(SubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+        add_train_arguments(parser)
+        add_eval_arguments(parser)
+
+    def run(self, args: argparse.Namespace):
+        LOGGER.info('eval')
+        download_manager = DownloadManager()
+
+        train_input_paths = _flatten_input_paths(args.train_input)
+        train_input_texts, train_input_labels, list_classes = load_input_data(
+            train_input_paths,
+            download_manager=download_manager,
+            limit=args.train_input_limit
+        )
+
+        eval_input_paths = _flatten_input_paths(args.eval_input)
+        eval_label_input_paths = _flatten_input_paths(args.eval_label_input)
+        eval_input_texts, eval_input_labels, _ = load_input_data(
+            eval_input_paths,
+            download_manager=download_manager,
+            limit=args.eval_input_limit
+        )
+        if eval_label_input_paths:
+            eval_input_labels, _ = load_label_data(
+                eval_label_input_paths,
+                download_manager=download_manager,
+                limit=args.eval_input_limit
+            )
+
+        LOGGER.info('list_classes: %s', list_classes)
+        train(
+            model_config=ModelConfig(
+                embeddings_name=args.embeddings,
+                model_type=args.architecture,
+                list_classes=list_classes
+            ),
+            training_config=TrainingConfig(
+                batch_size=args.batch_size,
+                max_epoch=args.max_epoch
+            ),
+            train_input_texts=train_input_texts,
+            train_input_labels=train_input_labels,
+            model_path=args.model_path
+        )
+
+        result = evaluate(
+            eval_input_texts=eval_input_texts,
+            eval_input_labels=eval_input_labels,
+            model_path=args.model_path
+        )
+        print(result.text_formatted_report)
+
+
 class PredictSubCommand(SubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
@@ -238,6 +294,10 @@ SUB_COMMANDS = [
     EvalSubCommand(
         SubCommandNames.EVAL,
         'Evaluate the model using the provided input(s)'
+    ),
+    TrainEvalSubCommand(
+        SubCommandNames.TRAIN_EVAL,
+        'Train and then evaluate the model using the provided input(s)'
     ),
     PredictSubCommand(
         SubCommandNames.PREDICT,

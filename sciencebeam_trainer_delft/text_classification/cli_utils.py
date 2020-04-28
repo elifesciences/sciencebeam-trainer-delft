@@ -24,6 +24,7 @@ from sciencebeam_trainer_delft.text_classification.reader import (
     load_classes_pandas
 )
 from sciencebeam_trainer_delft.text_classification.config import (
+    AppConfig,
     ModelConfig,
     TrainingConfig
 )
@@ -83,6 +84,7 @@ def _patch_delft():
 
 
 def train(
+        app_config: AppConfig,
         model_config: ModelConfig,
         training_config: TrainingConfig,
         train_input_texts: List[str],
@@ -91,7 +93,11 @@ def train(
 
     _patch_delft()
 
-    model = Classifier(embeddings_name=model_config.embeddings_name)
+    model = Classifier(
+        embeddings_name=model_config.embeddings_name,
+        download_manager=app_config.download_manager,
+        embedding_manager=app_config.embedding_manager
+    )
     model.embeddings_name = model_config.embeddings_name
     model.model_config = model_config
     model.model_config.word_embedding_size = model.embeddings.embed_size
@@ -103,9 +109,13 @@ def train(
 
 
 def predict(
+        app_config: AppConfig,
         eval_input_texts: List[str],
         model_path: str):
-    model = Classifier()
+    model = Classifier(
+        download_manager=app_config.download_manager,
+        embedding_manager=app_config.embedding_manager
+    )
     model.load_from(model_path)
 
     LOGGER.info('number of texts to classify: %s', len(eval_input_texts))
@@ -116,10 +126,14 @@ def predict(
 
 
 def evaluate(
+        app_config: AppConfig,
         eval_input_texts: List[str],
         eval_input_labels: List[List[int]],
         model_path: str):
-    model = Classifier()
+    model = Classifier(
+        download_manager=app_config.download_manager,
+        embedding_manager=app_config.embedding_manager
+    )
     model.load_from(model_path)
 
     LOGGER.info('number of texts to classify: %s', len(eval_input_texts))

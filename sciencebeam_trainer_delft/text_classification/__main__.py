@@ -18,6 +18,7 @@ from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.embedding import EmbeddingManager
 
 from sciencebeam_trainer_delft.text_classification.config import (
+    AppConfig,
     ModelConfig,
     TrainingConfig
 )
@@ -154,7 +155,6 @@ def add_eval_arguments(
     )
 
 
-
 def _flatten_input_paths(input_paths_list: List[List[str]]) -> List[str]:
     if not input_paths_list:
         return input_paths_list
@@ -173,6 +173,7 @@ class BaseSubCommand(SubCommand):
         super().__init__(*args, **kwargs)
         self.download_manager = None
         self.embedding_manager = None
+        self.app_config = None
 
     @abstractmethod
     def do_run(self, args: argparse.Namespace):
@@ -193,6 +194,10 @@ class BaseSubCommand(SubCommand):
         self.download_manager = DownloadManager()
         self.embedding_manager = EmbeddingManager(
             download_manager=self.download_manager
+        )
+        self.app_config = AppConfig(
+            download_manager=self.download_manager,
+            embedding_manager=self.embedding_manager
         )
         if args.no_use_lmdb:
             self.embedding_manager.disable_embedding_lmdb_cache()
@@ -229,6 +234,7 @@ class TrainSubCommand(BaseSubCommand):
             use_word_embeddings=True
         )
         train(
+            app_config=self.app_config,
             model_config=ModelConfig(
                 embeddings_name=embedding_name,
                 model_type=args.architecture,
@@ -267,6 +273,7 @@ class EvalSubCommand(BaseSubCommand):
             )
         LOGGER.info('list_classes: %s', list_classes)
         result = evaluate(
+            app_config=self.app_config,
             eval_input_texts=eval_input_texts,
             eval_input_labels=eval_input_labels,
             model_path=args.model_path
@@ -313,6 +320,7 @@ class TrainEvalSubCommand(BaseSubCommand):
         )
 
         train(
+            app_config=self.app_config,
             model_config=ModelConfig(
                 embeddings_name=embedding_name,
                 model_type=args.architecture,
@@ -328,6 +336,7 @@ class TrainEvalSubCommand(BaseSubCommand):
         )
 
         result = evaluate(
+            app_config=self.app_config,
             eval_input_texts=eval_input_texts,
             eval_input_labels=eval_input_labels,
             model_path=args.model_path
@@ -351,6 +360,7 @@ class PredictSubCommand(BaseSubCommand):
         )
         LOGGER.info('list_classes: %s', list_classes)
         result = predict(
+            app_config=self.app_config,
             eval_input_texts=predict_input_texts,
             model_path=args.model_path
         )

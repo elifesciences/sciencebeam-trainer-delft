@@ -35,7 +35,7 @@ class ClassificationResult:
             recall = recall_score(y_true_binary_class, y_pred_binary_class, zero_division=0)
             f1 = f1_score(y_true_binary_class, y_pred_binary_class, zero_division=0)
             try:
-                roc_auc = roc_auc_score(y_true_class, y_pred_class, labels=labels)
+                roc_auc = roc_auc_score(y_true_class, y_pred_class)
             except ValueError as e:
                 LOGGER.warning('could not calculate roc (index=%d): %s', j, e)
                 roc_auc = np.nan

@@ -40,3 +40,32 @@ def load_texts_and_classes_pandas(
     classes_label_names = list(classes.columns.values)
 
     return np.asarray(texts_list), np.asarray(classes_list), classes_label_names
+
+
+def load_classes_pandas(
+        filepath: str,
+        limit: int = None,
+        **kwargs) -> Tuple[List[List[int]], List[str]]:
+    """
+    Load texts and classes from a file in csv format using pandas dataframe:
+
+    id      class_0     ... class_n
+    id_0    class_00    ... class_n0
+    id_1    class_01    ... class_n1
+    ...
+    id_m    class_0m    ... class_nm
+
+    It should support any CSV file format.
+
+    Returns:
+        tuple(numpy array, numpy array): texts and classes
+
+    """
+
+    df = pd.read_csv(filepath, nrows=limit, **kwargs)
+
+    classes = df.iloc[:, 1:]
+    classes_list = classes.values.tolist()
+    classes_label_names = list(classes.columns.values)
+
+    return np.asarray(classes_list), classes_label_names

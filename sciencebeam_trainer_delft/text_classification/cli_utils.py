@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import List
+from typing import List, Tuple
 
 # import numpy as np
 # import pandas as pd
@@ -15,8 +15,13 @@ from sciencebeam_trainer_delft.text_classification.models import (
     train_model
 )
 
+from sciencebeam_trainer_delft.text_classification.evaluation import (
+    ClassificationResult
+)
+
 from sciencebeam_trainer_delft.text_classification.reader import (
-    load_texts_and_classes_pandas
+    load_texts_and_classes_pandas,
+    load_classes_pandas
 )
 from sciencebeam_trainer_delft.text_classification.config import (
     ModelConfig,
@@ -39,7 +44,7 @@ def get_downloaded_input_paths(
 def load_input_data(
         input_paths: List[str],
         download_manager: DownloadManager,
-        limit: int = None):
+        limit: int = None) -> Tuple[List[str], List[List[int]], List[str]]:
     assert len(input_paths) == 1
     LOGGER.info('loading data: %s', input_paths)
     downloaded_input_paths = get_downloaded_input_paths(
@@ -52,6 +57,24 @@ def load_input_data(
     )
     LOGGER.info('loaded data: %d rows', len(xtr))
     return xtr, y, y_names
+
+
+def load_label_data(
+        input_paths: List[str],
+        download_manager: DownloadManager,
+        limit: int = None) -> Tuple[List[List[int]], List[str]]:
+    assert len(input_paths) == 1
+    LOGGER.info('loading data: %s', input_paths)
+    downloaded_input_paths = get_downloaded_input_paths(
+        input_paths,
+        download_manager=download_manager
+    )
+    y, y_names = load_classes_pandas(
+        downloaded_input_paths[0],
+        limit=limit
+    )
+    LOGGER.info('loaded data: %d rows', len(y))
+    return y, y_names
 
 
 def _patch_delft():
@@ -90,3 +113,21 @@ def predict(
     result = model.predict(eval_input_texts, output_format="csv")
     LOGGER.info("runtime: %s seconds", round(time.time() - start_time, 3))
     return result
+
+
+def evaluate(
+        eval_input_texts: List[str],
+        eval_input_labels: List[List[int]],
+        model_path: str):
+    model = Classifier()
+    model.load_from(model_path)
+
+    LOGGER.info('number of texts to classify: %s', len(eval_input_texts))
+    start_time = time.time()
+    result = model.predict(eval_input_texts, output_format="csv")
+    LOGGER.info("runtime: %s seconds", round(time.time() - start_time, 3))
+    return ClassificationResult(
+        y_true=eval_input_labels,
+        y_pred=result,
+        label_names=model.model_config.list_classes
+    )

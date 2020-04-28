@@ -19,8 +19,10 @@ from sciencebeam_trainer_delft.text_classification.config import (
 )
 from sciencebeam_trainer_delft.text_classification.cli_utils import (
     load_input_data,
+    load_label_data,
     train,
-    predict
+    predict,
+    evaluate
 )
 
 
@@ -35,6 +37,9 @@ DEFAULT_TRAIN_INPUT_PATHS = [
 ]
 DEFAULT_TEST_INPUT_PATHS = [
     "https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/test.csv"
+]
+DEFAULT_TEST_LABEL_INPUT_PATHS = [
+    "https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/test_labels.csv"
 ]
 
 
@@ -89,6 +94,27 @@ def add_train_arguments(
     )
 
 
+def add_predict_arguments(
+        parser: argparse.ArgumentParser):
+    eval_group = parser.add_argument_group('eval')
+    eval_group.add_argument(
+        "--predict-input",
+        nargs='+',
+        default=[DEFAULT_TEST_INPUT_PATHS],
+        action='append',
+        help="provided predict file"
+    )
+    eval_group.add_argument(
+        "--predict-input-limit",
+        type=int,
+        help=(
+            "limit the number of predict samples."
+            " With more than one input file, the limit will be applied to"
+            " each of the input files individually"
+        )
+    )
+
+
 def add_eval_arguments(
         parser: argparse.ArgumentParser):
     eval_group = parser.add_argument_group('eval')
@@ -98,6 +124,13 @@ def add_eval_arguments(
         default=[DEFAULT_TEST_INPUT_PATHS],
         action='append',
         help="provided evaluation file"
+    )
+    eval_group.add_argument(
+        "--eval-label-input",
+        nargs='+',
+        default=[DEFAULT_TEST_LABEL_INPUT_PATHS],
+        action='append',
+        help="provided separate evaluation label file"
     )
     eval_group.add_argument(
         "--eval-input-limit",
@@ -120,6 +153,7 @@ def _flatten_input_paths(input_paths_list: List[List[str]]) -> List[str]:
 class SubCommandNames:
     TRAIN = 'train'
     PREDICT = 'predict'
+    EVAL = 'eval'
 
 
 class TrainSubCommand(SubCommand):
@@ -153,23 +187,53 @@ class TrainSubCommand(SubCommand):
         )
 
 
-class PredictSubCommand(SubCommand):
+class EvalSubCommand(SubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_eval_arguments(parser)
 
     def run(self, args: argparse.Namespace):
-        LOGGER.info('train')
+        LOGGER.info('eval')
         download_manager = DownloadManager()
         eval_input_paths = _flatten_input_paths(args.eval_input)
-        eval_input_texts, _, list_classes = load_input_data(
+        eval_label_input_paths = _flatten_input_paths(args.eval_label_input)
+        eval_input_texts, eval_input_labels, list_classes = load_input_data(
             eval_input_paths,
             download_manager=download_manager,
             limit=args.eval_input_limit
         )
+        if eval_label_input_paths:
+            eval_input_labels, _ = load_label_data(
+                eval_label_input_paths,
+                download_manager=download_manager,
+                limit=args.eval_input_limit
+            )
+        LOGGER.info('list_classes: %s', list_classes)
+        result = evaluate(
+            eval_input_texts=eval_input_texts,
+            eval_input_labels=eval_input_labels,
+            model_path=args.model_path
+        )
+        print(result.text_formatted_report)
+
+
+class PredictSubCommand(SubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+        add_predict_arguments(parser)
+
+    def run(self, args: argparse.Namespace):
+        LOGGER.info('train')
+        download_manager = DownloadManager()
+        predict_input_paths = _flatten_input_paths(args.predict_input)
+        predict_input_texts, _, list_classes = load_input_data(
+            predict_input_paths,
+            download_manager=download_manager,
+            limit=args.predict_input_limit
+        )
         LOGGER.info('list_classes: %s', list_classes)
         result = predict(
-            eval_input_texts=eval_input_texts,
+            eval_input_texts=predict_input_texts,
             model_path=args.model_path
         )
         print(result)
@@ -179,6 +243,10 @@ SUB_COMMANDS = [
     TrainSubCommand(
         SubCommandNames.TRAIN,
         'Train the model using the provided input(s)'
+    ),
+    EvalSubCommand(
+        SubCommandNames.EVAL,
+        'Evaluate the model using the provided input(s)'
     ),
     PredictSubCommand(
         SubCommandNames.PREDICT,

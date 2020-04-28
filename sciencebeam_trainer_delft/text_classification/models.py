@@ -69,7 +69,7 @@ def train_model(
                 try:
                     roc_auc = roc_auc_score(val_y[:, j], y_pred[:, j], labels=labels)
                 except ValueError as e:
-                    LOGGER.warning('could not calculate roc (index=%d): %s', j, e)
+                    LOGGER.debug('could not calculate roc (index=%d): %s', j, e)
                     roc_auc = np.nan
                 total_roc_auc += roc_auc
 

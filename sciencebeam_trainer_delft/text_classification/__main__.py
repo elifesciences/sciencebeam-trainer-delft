@@ -19,18 +19,22 @@ from sciencebeam_trainer_delft.text_classification.config import (
 )
 from sciencebeam_trainer_delft.text_classification.cli_utils import (
     load_input_data,
-    train
+    train,
+    predict
 )
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_MODEL_PATH = 'data/models/textClassification/'
+DEFAULT_MODEL_PATH = 'data/models/textClassification/toxic'
 DEFAULT_EMBEDDNGS_NAME = 'glove.6B.50d'
 
 DEFAULT_TRAIN_INPUT_PATHS = [
     "https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/train.csv"
+]
+DEFAULT_TEST_INPUT_PATHS = [
+    "https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/test.csv"
 ]
 
 
@@ -85,6 +89,28 @@ def add_train_arguments(
     )
 
 
+def add_eval_arguments(
+        parser: argparse.ArgumentParser):
+    eval_group = parser.add_argument_group('eval')
+    eval_group.add_argument(
+        "--eval-input",
+        nargs='+',
+        default=[DEFAULT_TEST_INPUT_PATHS],
+        action='append',
+        help="provided evaluation file"
+    )
+    eval_group.add_argument(
+        "--eval-input-limit",
+        type=int,
+        help=(
+            "limit the number of evaluation samples."
+            " With more than one input file, the limit will be applied to"
+            " each of the input files individually"
+        )
+    )
+
+
+
 def _flatten_input_paths(input_paths_list: List[List[str]]) -> List[str]:
     if not input_paths_list:
         return input_paths_list
@@ -93,6 +119,7 @@ def _flatten_input_paths(input_paths_list: List[List[str]]) -> List[str]:
 
 class SubCommandNames:
     TRAIN = 'train'
+    PREDICT = 'predict'
 
 
 class TrainSubCommand(SubCommand):
@@ -126,10 +153,36 @@ class TrainSubCommand(SubCommand):
         )
 
 
+class PredictSubCommand(SubCommand):
+    def add_arguments(self, parser: argparse.ArgumentParser):
+        add_common_arguments(parser)
+        add_eval_arguments(parser)
+
+    def run(self, args: argparse.Namespace):
+        LOGGER.info('train')
+        download_manager = DownloadManager()
+        eval_input_paths = _flatten_input_paths(args.eval_input)
+        eval_input_texts, _, list_classes = load_input_data(
+            eval_input_paths,
+            download_manager=download_manager,
+            limit=args.eval_input_limit
+        )
+        LOGGER.info('list_classes: %s', list_classes)
+        result = predict(
+            eval_input_texts=eval_input_texts,
+            model_path=args.model_path
+        )
+        print(result)
+
+
 SUB_COMMANDS = [
     TrainSubCommand(
         SubCommandNames.TRAIN,
         'Train the model using the provided input(s)'
+    ),
+    PredictSubCommand(
+        SubCommandNames.PREDICT,
+        'Predict the model using the provided input(s)'
     ),
 ]
 

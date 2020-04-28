@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import List
 
 # import numpy as np
@@ -6,8 +7,8 @@ from typing import List
 
 import delft.textClassification.models
 import delft.textClassification.wrapper
-from delft.textClassification import Classifier
 
+from sciencebeam_trainer_delft.text_classification.wrapper import Classifier
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.models.Attention import Attention
 from sciencebeam_trainer_delft.text_classification.models import (
@@ -50,9 +51,6 @@ def load_input_data(
         limit=limit
     )
     LOGGER.info('loaded data: %d rows', len(xtr))
-    # LOGGER.info('y:\n%s', y)
-    # LOGGER.info('y value_counts:\n%s', np.bincount(y))
-    # raise RuntimeError('dummy')
     return xtr, y, y_names
 
 
@@ -77,4 +75,18 @@ def train(
     model.training_config = training_config
 
     model.train(train_input_texts, train_input_labels)
-    model.save(model_path)
+    LOGGER.info('saving model to: %s', model_path)
+    model.save_to(model_path)
+
+
+def predict(
+        eval_input_texts: List[str],
+        model_path: str):
+    model = Classifier()
+    model.load_from(model_path)
+
+    LOGGER.info('number of texts to classify: %s', len(eval_input_texts))
+    start_time = time.time()
+    result = model.predict(eval_input_texts, output_format="csv")
+    LOGGER.info("runtime: %s seconds", round(time.time() - start_time, 3))
+    return result

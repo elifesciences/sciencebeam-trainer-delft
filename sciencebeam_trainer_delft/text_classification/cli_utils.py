@@ -1,5 +1,6 @@
 import logging
 import time
+from functools import partial
 from typing import List, Tuple
 
 # import numpy as np
@@ -12,7 +13,12 @@ from sciencebeam_trainer_delft.text_classification.wrapper import Classifier
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.models.Attention import Attention
 from sciencebeam_trainer_delft.text_classification.models import (
+    get_callbacks,
     train_model
+)
+
+from sciencebeam_trainer_delft.text_classification.saving import (
+    ModelSaver
 )
 
 from sciencebeam_trainer_delft.text_classification.evaluation import (
@@ -102,6 +108,16 @@ def train(
     model.model_config = model_config
     model.model_config.word_embedding_size = model.embeddings.embed_size
     model.training_config = training_config
+
+    model_saver = ModelSaver(model_config)
+    callbacks = get_callbacks(
+        model_saver=model_saver,
+        log_dir=training_config.log_dir
+    )
+    delft.textClassification.wrapper.train_model = partial(
+        train_model,
+        callbacks=callbacks
+    )
 
     model.train(train_input_texts, train_input_labels)
     LOGGER.info('saving model to: %s', model_path)

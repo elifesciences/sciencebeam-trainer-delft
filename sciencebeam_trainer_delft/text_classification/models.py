@@ -1,14 +1,44 @@
 import logging
 import math
+import os
 from typing import List
 
 import numpy as np
 from sklearn.metrics import log_loss, roc_auc_score
 
 from keras.models import Model
+from keras.callbacks import Callback
+
+from sciencebeam_trainer_delft.text_classification.saving import (
+    ModelSaver
+)
+
+from sciencebeam_trainer_delft.text_classification.callbacks import (
+    ModelWithMetadataCheckpoint
+)
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+def get_callbacks(
+        model_saver: ModelSaver,
+        log_dir: str = None,
+        meta: dict = None) -> List[Callback]:
+    callbacks = []
+
+    if log_dir:
+        epoch_dirname = 'epoch-{epoch:05d}'
+        assert model_saver
+        save_callback = ModelWithMetadataCheckpoint(
+            os.path.join(log_dir, epoch_dirname),
+            model_saver=model_saver,
+            monitor='f1',
+            meta=meta
+        )
+        callbacks.append(save_callback)
+
+    return callbacks
 
 
 # mostly copied from:
@@ -26,7 +56,8 @@ def train_model(
         validation_generator,
         val_y,
         use_ELMo=False,
-        use_BERT=False):
+        use_BERT=False,
+        callbacks: List[Callback] = None):
     best_loss = -1
     best_roc_auc = -1
     best_weights = None
@@ -47,7 +78,8 @@ def train_model(
             # workers=nb_workers,
             class_weight=class_weights,
             epochs=current_epoch,
-            initial_epoch=(current_epoch - 1))
+            initial_epoch=(current_epoch - 1),
+            callbacks=callbacks)
 
         y_pred = model.predict_generator(
             generator=validation_generator,

@@ -37,4 +37,9 @@ class ModelConfig(_ModelConfig):
 
 
 class TrainingConfig(_TrainingConfig):
-    pass
+    def __init__(
+            self,
+            log_dir: str = None,
+            **kwargs):
+        self.log_dir = log_dir
+        super().__init__(**kwargs)

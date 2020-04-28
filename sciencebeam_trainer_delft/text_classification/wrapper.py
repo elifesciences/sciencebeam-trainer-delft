@@ -47,7 +47,7 @@ class Classifier(_Classifier):
     def save_to(self, model_path: str):
         # create subfolder for the model if not already exists
 
-        saver = ModelSaver()
+        saver = ModelSaver(model_config=self.model_config)
         saver.save_model_config(
             self.model_config,
             os.path.join(model_path, self.config_file)

@@ -65,6 +65,10 @@ def add_common_arguments(
         "--no-use-lmdb", action="store_true",
         help="Do not use LMDB embedding cache (load embeddings into memory instead)"
     )
+    parser.add_argument(
+        "--job-dir",
+        help="job dir (only used when running via ai platform)"
+    )
 
 
 def add_train_arguments(
@@ -92,17 +96,21 @@ def add_train_arguments(
         default='bidLstm',
         help="The desired architecture"
     )
-    parser.add_argument(
+    train_group.add_argument(
         "--max-epoch",
         type=int,
         default=100,
         help="max epoch to train to"
     )
-    parser.add_argument(
+    train_group.add_argument(
         "--batch-size",
         type=int,
         default=256,
         help="batch size"
+    )
+    train_group.add_argument(
+        "--checkpoint",
+        help="directory where to save a checkpoint model"
     )
 
 
@@ -242,7 +250,8 @@ class TrainSubCommand(BaseSubCommand):
             ),
             training_config=TrainingConfig(
                 batch_size=args.batch_size,
-                max_epoch=args.max_epoch
+                max_epoch=args.max_epoch,
+                log_dir=args.checkpoint
             ),
             train_input_texts=train_input_texts,
             train_input_labels=train_input_labels,
@@ -328,7 +337,8 @@ class TrainEvalSubCommand(BaseSubCommand):
             ),
             training_config=TrainingConfig(
                 batch_size=args.batch_size,
-                max_epoch=args.max_epoch
+                max_epoch=args.max_epoch,
+                log_dir=args.checkpoint
             ),
             train_input_texts=train_input_texts,
             train_input_labels=train_input_labels,

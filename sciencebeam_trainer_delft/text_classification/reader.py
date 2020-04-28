@@ -8,6 +8,12 @@ import numpy as np
 # https://github.com/kermitt2/delft/blob/v0.2.3/delft/textClassification/reader.py
 
 
+def get_filepath_csv_separator(filepath: str):
+    if filepath.endswith('.tsv') or filepath.endswith('.tsv.gz'):
+        return '\t'
+    return ','
+
+
 def load_texts_and_classes_pandas(
         filepath: str,
         limit: int = None,
@@ -28,7 +34,8 @@ def load_texts_and_classes_pandas(
 
     """
 
-    df = pd.read_csv(filepath, nrows=limit, **kwargs)
+    sep = get_filepath_csv_separator(filepath)
+    df = pd.read_csv(filepath, nrows=limit, sep=sep, **kwargs)
     df.iloc[:, 1].fillna('MISSINGVALUE', inplace=True)
 
     texts_list = []
@@ -62,7 +69,8 @@ def load_classes_pandas(
 
     """
 
-    df = pd.read_csv(filepath, nrows=limit, **kwargs)
+    sep = get_filepath_csv_separator(filepath)
+    df = pd.read_csv(filepath, nrows=limit, sep=sep, **kwargs)
 
     classes = df.iloc[:, 1:]
     classes_list = classes.values.tolist()

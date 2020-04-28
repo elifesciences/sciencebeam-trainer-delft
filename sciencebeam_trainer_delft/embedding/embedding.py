@@ -4,7 +4,10 @@ from delft.utilities.Embeddings import Embeddings as _Embeddings
 
 
 class Embeddings(_Embeddings):
-    def make_embeddings_lmdb(self, *args, **kwargs):  # pylint: disable=arguments-differ
+    def make_embeddings_lmdb(  # pylint: disable=signature-differs
+            self,
+            *args,
+            **kwargs):
         try:
             super().make_embeddings_lmdb(*args, **kwargs)
         except FileNotFoundError as e:

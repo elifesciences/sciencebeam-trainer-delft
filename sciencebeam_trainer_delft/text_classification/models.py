@@ -46,7 +46,8 @@ def train_model(
             # use_multiprocessing=multiprocessing,
             # workers=nb_workers,
             class_weight=class_weights,
-            epochs=1)
+            epochs=current_epoch,
+            initial_epoch=(current_epoch - 1))
 
         y_pred = model.predict_generator(
             generator=validation_generator,

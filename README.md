@@ -114,6 +114,39 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
+### Resume training
+
+Sometimes it can be useful to continue training a model.
+For example an exception was thrown after epoch 42, you could continue training from the last checkpoint.
+Or you want to fine-tune an existing model by training it on new data.
+Note: the model configuration will be loaded from the checkpoint
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train \
+    --resume-train-model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
+    --initial-epoch="10" \
+    --batch-size="10" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --resume-train-model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
+    --initial-epoch="10" \
+    --batch-size="10" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --eval-input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
+    --eval-limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
 ### Training very long sequences
 
 Some training sequences can be very long and may exceed the available memory. This is in particular an issue when training the sequences.

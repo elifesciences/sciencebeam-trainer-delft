@@ -75,7 +75,9 @@ class TrainingConfig(_TrainingConfig):
     def __init__(
             self,
             *args,
+            initial_epoch: int = None,
             input_window_stride: int = None,
             **kwargs):
         super().__init__(*args, **kwargs)
+        self.initial_epoch = initial_epoch
         self.input_window_stride = input_window_stride

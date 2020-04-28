@@ -1,10 +1,13 @@
 import argparse
 import logging
+from abc import abstractmethod
 from typing import List
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 import sciencebeam_trainer_delft.utils.no_keras_backend_message  # noqa, pylint: disable=unused-import
 # pylint: disable=wrong-import-order, ungrouped-imports
+
+import keras.backend as K
 
 from sciencebeam_trainer_delft.utils.cli import (
     SubCommand,
@@ -12,6 +15,7 @@ from sciencebeam_trainer_delft.utils.cli import (
 )
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
+from sciencebeam_trainer_delft.embedding import EmbeddingManager
 
 from sciencebeam_trainer_delft.text_classification.config import (
     ModelConfig,
@@ -43,6 +47,22 @@ def add_common_arguments(
     parser.add_argument(
         "--embeddings",
         default=DEFAULT_EMBEDDNGS_NAME
+    )
+    parser.add_argument(
+        "--embedding",
+        dest="embeddings",
+        help="Alias for --embeddings"
+    )
+    parser.add_argument(
+        "--preload-embedding",
+        help=" ".join([
+            "Name or URL to embedding to preload.",
+            "This can be useful in combination with resuming model training."
+        ])
+    )
+    parser.add_argument(
+        "--no-use-lmdb", action="store_true",
+        help="Do not use LMDB embedding cache (load embeddings into memory instead)"
     )
 
 
@@ -148,12 +168,53 @@ class SubCommandNames:
     PREDICT = 'predict'
 
 
-class TrainSubCommand(SubCommand):
+class BaseSubCommand(SubCommand):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.download_manager = None
+        self.embedding_manager = None
+
+    @abstractmethod
+    def do_run(self, args: argparse.Namespace):
+        pass
+
+    def preload_and_validate_embedding(
+            self,
+            embedding_name: str,
+            use_word_embeddings: bool = True) -> str:
+        if not use_word_embeddings:
+            return None
+        embedding_name = self.embedding_manager.ensure_available(embedding_name)
+        LOGGER.info('embedding_name: %s', embedding_name)
+        self.embedding_manager.validate_embedding(embedding_name)
+        return embedding_name
+
+    def run(self, args: argparse.Namespace):
+        self.download_manager = DownloadManager()
+        self.embedding_manager = EmbeddingManager(
+            download_manager=self.download_manager
+        )
+        if args.no_use_lmdb:
+            self.embedding_manager.disable_embedding_lmdb_cache()
+
+        if args.preload_embedding:
+            self.preload_and_validate_embedding(
+                args.preload_embedding,
+                use_word_embeddings=True
+            )
+
+        self.do_run(args)
+
+        # see https://github.com/tensorflow/tensorflow/issues/3388
+        K.clear_session()
+
+
+class TrainSubCommand(BaseSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_train_arguments(parser)
 
-    def run(self, args: argparse.Namespace):
+    def do_run(self, args: argparse.Namespace):
         LOGGER.info('train')
         download_manager = DownloadManager()
         train_input_paths = _flatten_input_paths(args.train_input)
@@ -163,9 +224,13 @@ class TrainSubCommand(SubCommand):
             limit=args.train_input_limit
         )
         LOGGER.info('list_classes: %s', list_classes)
+        embedding_name = self.preload_and_validate_embedding(
+            args.embeddings,
+            use_word_embeddings=True
+        )
         train(
             model_config=ModelConfig(
-                embeddings_name=args.embeddings,
+                embeddings_name=embedding_name,
                 model_type=args.architecture,
                 list_classes=list_classes
             ),
@@ -179,12 +244,12 @@ class TrainSubCommand(SubCommand):
         )
 
 
-class EvalSubCommand(SubCommand):
+class EvalSubCommand(BaseSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_eval_arguments(parser)
 
-    def run(self, args: argparse.Namespace):
+    def do_run(self, args: argparse.Namespace):
         LOGGER.info('eval')
         download_manager = DownloadManager()
         eval_input_paths = _flatten_input_paths(args.eval_input)
@@ -209,14 +274,14 @@ class EvalSubCommand(SubCommand):
         print(result.text_formatted_report)
 
 
-class TrainEvalSubCommand(SubCommand):
+class TrainEvalSubCommand(BaseSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_train_arguments(parser)
         add_eval_arguments(parser)
 
-    def run(self, args: argparse.Namespace):
-        LOGGER.info('eval')
+    def do_run(self, args: argparse.Namespace):
+        LOGGER.info('train eval')
         download_manager = DownloadManager()
 
         train_input_paths = _flatten_input_paths(args.train_input)
@@ -241,9 +306,15 @@ class TrainEvalSubCommand(SubCommand):
             )
 
         LOGGER.info('list_classes: %s', list_classes)
+
+        embedding_name = self.preload_and_validate_embedding(
+            args.embeddings,
+            use_word_embeddings=True
+        )
+
         train(
             model_config=ModelConfig(
-                embeddings_name=args.embeddings,
+                embeddings_name=embedding_name,
                 model_type=args.architecture,
                 list_classes=list_classes
             ),
@@ -264,12 +335,12 @@ class TrainEvalSubCommand(SubCommand):
         print(result.text_formatted_report)
 
 
-class PredictSubCommand(SubCommand):
+class PredictSubCommand(BaseSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser)
         add_predict_arguments(parser)
 
-    def run(self, args: argparse.Namespace):
+    def do_run(self, args: argparse.Namespace):
         LOGGER.info('train')
         download_manager = DownloadManager()
         predict_input_paths = _flatten_input_paths(args.predict_input)

@@ -57,6 +57,8 @@ def train_model(
         val_y,
         use_ELMo=False,
         use_BERT=False,
+        multiprocessing: bool = True,
+        nb_workers: int = 6,
         callbacks: List[Callback] = None):
     best_loss = -1
     best_roc_auc = -1
@@ -64,18 +66,15 @@ def train_model(
     best_epoch = 0
     current_epoch = 1
 
+    if use_ELMo or use_BERT:
+        # worker at 0 means the training will be executed in the main thread
+        nb_workers = 0
+        multiprocessing = False
     while current_epoch <= max_epoch:
-
-        nb_workers = 6
-        multiprocessing = True
-        if use_ELMo or use_BERT:
-            # worker at 0 means the training will be executed in the main thread
-            nb_workers = 0
-            multiprocessing = False
         model.fit_generator(
             generator=training_generator,
-            # use_multiprocessing=multiprocessing,
-            # workers=nb_workers,
+            use_multiprocessing=multiprocessing,
+            workers=nb_workers,
             class_weight=class_weights,
             epochs=current_epoch,
             initial_epoch=(current_epoch - 1),

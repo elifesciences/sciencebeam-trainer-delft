@@ -14,6 +14,14 @@ from sciencebeam_trainer_delft.utils.cli import (
     SubCommandProcessor
 )
 
+from sciencebeam_trainer_delft.utils.io import (
+    auto_uploading_output_file
+)
+from sciencebeam_trainer_delft.utils.logging import (
+    tee_stdout_and_stderr_lines_to,
+    tee_logging_lines_to
+)
+
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.embedding import EmbeddingManager
 
@@ -64,6 +72,14 @@ def add_common_arguments(
     parser.add_argument(
         "--no-use-lmdb", action="store_true",
         help="Do not use LMDB embedding cache (load embeddings into memory instead)"
+    )
+    parser.add_argument(
+        "--log-file",
+        help=(
+            "If set, saves the output to the specified log file."
+            " This may also be a file in a bucket, in which case it will be uploaded at the end."
+            " Add the .gz extension if you wish to compress the file."
+        )
     )
     parser.add_argument(
         "--job-dir",
@@ -436,7 +452,16 @@ def main(argv: List[str] = None):
     elif args.debug:
         for name in [__name__, 'sciencebeam_trainer_delft', 'delft']:
             logging.getLogger(name).setLevel('DEBUG')
-    run(args, subcommand_processor=subcommand_processor)
+    if args.log_file:
+        with auto_uploading_output_file(args.log_file, mode='w') as log_fp:
+            try:
+                with tee_stdout_and_stderr_lines_to(log_fp.write, append_line_feed=True):
+                    with tee_logging_lines_to(log_fp.write, append_line_feed=True):
+                        run(args, subcommand_processor=subcommand_processor)
+            finally:
+                logging.shutdown()
+    else:
+        run(args, subcommand_processor=subcommand_processor)
 
 
 if __name__ == '__main__':

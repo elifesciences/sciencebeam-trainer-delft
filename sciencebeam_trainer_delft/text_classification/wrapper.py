@@ -53,7 +53,7 @@ class Classifier(_Classifier):
             os.path.join(model_path, self.config_file)
         )
 
-        if self.model_config.fold_number is 1:
+        if self.model_config.fold_number == 1:
             if self.model is not None:
                 saver.save_model_weights(
                     self.model,
@@ -105,7 +105,7 @@ class Classifier(_Classifier):
         self.model_config.word_embedding_size = self.embeddings.embed_size
 
         self.model = getModel(self.model_config, self.training_config)
-        if self.model_config.fold_number is 1:
+        if self.model_config.fold_number == 1:
             loader.load_model_weights_from_file(
                 os.path.join(
                     model_path,

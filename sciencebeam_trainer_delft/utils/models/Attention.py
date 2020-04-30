@@ -1,12 +1,11 @@
 from keras import backend as K
 from keras.engine.topology import Layer
 from keras import initializers, regularizers, constraints
-from delft.utilities.Utilities import dot_product
 
 
 # mostly copied from:
 # https://github.com/kermitt2/delft/blob/v0.2.3/delft/utilities/Attention.py
-
+# - updated to be compatible with newer Keras version
 
 class Attention(Layer):
     def __init__(self, step_dim,
@@ -25,6 +24,8 @@ class Attention(Layer):
         self.bias = bias
         self.step_dim = step_dim
         self.features_dim = 0
+        self.W = None
+        self.b = None
         super(Attention, self).__init__(**kwargs)
 
     def build(self, input_shape):
@@ -48,15 +49,21 @@ class Attention(Layer):
 
         self.built = True
 
-    def compute_mask(self, input, input_mask=None):
+    def compute_mask(self, inputs, mask=None):
         return None
 
-    def call(self, x, mask=None):
+    def call(self, inputs, mask=None, **kwargs):  # pylint: disable=arguments-differ
+        x = inputs
         features_dim = self.features_dim
         step_dim = self.step_dim
 
-        eij = K.reshape(K.dot(K.reshape(x, (-1, features_dim)),
-                        K.reshape(self.W, (features_dim, 1))), (-1, step_dim))
+        eij = K.reshape(
+            K.dot(
+                K.reshape(x, (-1, features_dim)),
+                K.reshape(self.W, (features_dim, 1))
+            ),
+            (-1, step_dim)
+        )
 
         if self.bias:
             eij += self.b
@@ -75,4 +82,4 @@ class Attention(Layer):
         return K.sum(weighted_input, axis=1)
 
     def compute_output_shape(self, input_shape):
-        return input_shape[0],  self.features_dim
+        return input_shape[0], self.features_dim

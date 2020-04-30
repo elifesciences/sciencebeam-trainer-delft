@@ -45,7 +45,7 @@ def get_callbacks(
 # https://github.com/kermitt2/delft/blob/v0.2.3/delft/textClassification/models.py
 
 
-def train_model(
+def train_model(  # pylint: disable=too-many-statements
         model: Model,
         list_classes: List[str],
         batch_size: int,  # pylint: disable=unused-argument
@@ -89,7 +89,7 @@ def train_model(
         total_roc_auc = 0.0
 
         # we distinguish 1-class and multiclass problems
-        if len(list_classes) is 1:
+        if len(list_classes) == 1:
             total_loss = log_loss(val_y, y_pred)
             total_roc_auc = roc_auc_score(val_y, y_pred)
         else:

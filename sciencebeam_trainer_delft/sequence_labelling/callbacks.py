@@ -1,10 +1,6 @@
 import logging
-import warnings
-
-import numpy as np
 
 import keras.backend as K
-from keras.callbacks import Callback
 
 from sciencebeam_trainer_delft.utils.keras.callbacks import ModelSaverCallback
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver

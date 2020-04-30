@@ -3,8 +3,7 @@ import time
 from functools import partial
 from typing import List, Tuple
 
-# import numpy as np
-# import pandas as pd
+import pandas as pd
 
 import delft.textClassification.models
 import delft.textClassification.wrapper
@@ -26,6 +25,7 @@ from sciencebeam_trainer_delft.text_classification.evaluation import (
 )
 
 from sciencebeam_trainer_delft.text_classification.reader import (
+    load_data_frame,
     load_texts_and_classes_pandas,
     load_classes_pandas
 )
@@ -46,6 +46,24 @@ def get_downloaded_input_paths(
         download_manager.download_if_url(input_path)
         for input_path in input_paths
     ]
+
+
+def load_input_data_frame(
+        input_paths: List[str],
+        download_manager: DownloadManager,
+        limit: int = None) -> pd.DataFrame:
+    assert len(input_paths) == 1
+    LOGGER.info('loading data: %s', input_paths)
+    downloaded_input_paths = get_downloaded_input_paths(
+        input_paths,
+        download_manager=download_manager
+    )
+    df = load_data_frame(
+        downloaded_input_paths[0],
+        limit=limit
+    )
+    LOGGER.info('loaded data: %d rows', len(df))
+    return df
 
 
 def load_input_data(
@@ -138,7 +156,10 @@ def predict(
     start_time = time.time()
     result = model.predict(eval_input_texts, output_format="csv")
     LOGGER.info("runtime: %s seconds", round(time.time() - start_time, 3))
-    return result
+    return {
+        'labels': model.model_config.list_classes,
+        'prediction': result
+    }
 
 
 def evaluate(

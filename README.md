@@ -509,6 +509,16 @@ python -m sciencebeam_trainer_delft.text_classification \
     --eval-label-input="https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/test_labels.csv"
 ```
 
+### Predict Text Classification
+
+```bash
+python -m sciencebeam_trainer_delft.text_classification \
+    predict \
+    --model-path="data/models/textClassification/toxic" \
+    --predict-input-limit=100 \
+    --predict-input="https://github.com/kermitt2/delft/raw/v0.2.3/data/textClassification/toxic/test.csv" \
+    --predict-output="./data/toxic_test_predictions.tsv"
+```
 
 ### Train Eval Text Classification
 

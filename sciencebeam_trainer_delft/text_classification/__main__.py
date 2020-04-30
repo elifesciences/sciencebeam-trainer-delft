@@ -1,5 +1,6 @@
 import argparse
 import logging
+import json
 from abc import abstractmethod
 from typing import List
 
@@ -8,6 +9,8 @@ import sciencebeam_trainer_delft.utils.no_keras_backend_message  # noqa, pylint:
 # pylint: disable=wrong-import-order, ungrouped-imports
 
 import keras.backend as K
+
+import pandas as pd
 
 from sciencebeam_trainer_delft.utils.cli import (
     SubCommand,
@@ -30,7 +33,12 @@ from sciencebeam_trainer_delft.text_classification.config import (
     ModelConfig,
     TrainingConfig
 )
+from sciencebeam_trainer_delft.text_classification.reader import (
+    save_data_frame,
+    get_texts_and_classes_from_data_frame
+)
 from sciencebeam_trainer_delft.text_classification.cli_utils import (
+    load_input_data_frame,
     load_input_data,
     load_label_data,
     train,
@@ -132,15 +140,15 @@ def add_train_arguments(
 
 def add_predict_arguments(
         parser: argparse.ArgumentParser):
-    eval_group = parser.add_argument_group('eval')
-    eval_group.add_argument(
+    predict_group = parser.add_argument_group('predict')
+    predict_group.add_argument(
         "--predict-input",
         nargs='+',
         required=True,
         action='append',
         help="provided predict file"
     )
-    eval_group.add_argument(
+    predict_group.add_argument(
         "--predict-input-limit",
         type=int,
         help=(
@@ -148,6 +156,10 @@ def add_predict_arguments(
             " With more than one input file, the limit will be applied to"
             " each of the input files individually"
         )
+    )
+    predict_group.add_argument(
+        "--predict-output",
+        help="save output as csv / tsv to"
     )
 
 
@@ -379,18 +391,38 @@ class PredictSubCommand(BaseSubCommand):
         LOGGER.info('train')
         download_manager = DownloadManager()
         predict_input_paths = _flatten_input_paths(args.predict_input)
-        predict_input_texts, _, list_classes = load_input_data(
+        predict_df = load_input_data_frame(
             predict_input_paths,
             download_manager=download_manager,
             limit=args.predict_input_limit
         )
-        LOGGER.info('list_classes: %s', list_classes)
+        predict_input_texts, _, _ = get_texts_and_classes_from_data_frame(
+            predict_df
+        )
         result = predict(
             app_config=self.app_config,
             eval_input_texts=predict_input_texts,
             model_path=args.model_path
         )
-        print(result)
+        list_classes = result['labels']
+        prediction = result['prediction']
+        LOGGER.info('list_classes: %s', list_classes)
+        result_df = pd.concat([
+            predict_df[predict_df.columns[:2]],
+            pd.DataFrame(
+                prediction,
+                columns=list_classes,
+                index=predict_df.index
+            )
+        ], axis=1)
+        if args.predict_output:
+            LOGGER.info('writing output to: %s', args.predict_output)
+            save_data_frame(result_df, args.predict_output)
+        else:
+            print(json.dumps(
+                result_df.to_dict(orient='records'),
+                indent=2
+            ))
 
 
 SUB_COMMANDS = [

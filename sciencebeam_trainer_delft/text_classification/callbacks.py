@@ -3,7 +3,8 @@ import logging
 import keras.backend as K
 
 from sciencebeam_trainer_delft.utils.keras.callbacks import ModelSaverCallback
-from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver
+
+from sciencebeam_trainer_delft.text_classification.saving import ModelSaver
 
 
 LOGGER = logging.getLogger(__name__)

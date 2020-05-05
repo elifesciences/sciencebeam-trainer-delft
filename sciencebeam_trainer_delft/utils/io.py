@@ -8,7 +8,7 @@ from gzip import GzipFile
 from lzma import LZMAFile
 from urllib.error import HTTPError
 from urllib.request import urlopen
-from typing import List, IO
+from typing import List, IO, ContextManager
 
 from six import string_types, text_type
 
@@ -217,3 +217,51 @@ def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
 def write_text(filepath: str, text: str, **kwargs):
     with auto_uploading_output_file(filepath, mode='w', **kwargs) as fp:
         fp.write(text)
+
+
+class FileRef(ABC):
+    def __init__(self, file_url: str):
+        self.file_url = file_url
+
+    @property
+    def basename(self):
+        return os.path.basename(self.file_url)
+
+    def __str__(self):
+        return self.file_url
+
+    def __repr__(self):
+        return '%s(%r)' % (type(self).__name__, self.file_url)
+
+
+class FileContainer(ABC):
+    def __init__(self, directory_url: str):
+        self.directory_url = directory_url
+
+    @abstractmethod
+    def list_files(self) -> List[FileRef]:
+        pass
+
+    def __str__(self):
+        return self.directory_url
+
+    def __repr__(self):
+        return '%s(%r)' % (type(self).__name__, self.directory_url)
+
+
+class FileUrlRef(FileRef):
+    def copy_to(self, target_url: str):
+        copy_file(self.file_url, target_url)
+
+
+class DirectoryFileContainer(FileContainer):
+    def list_files(self) -> List[FileRef]:
+        return [
+            FileUrlRef(path_join(self.directory_url, file_url))
+            for file_url in list_files(self.directory_url)
+        ]
+
+
+@contextmanager
+def open_file_container(directory_url: str) -> ContextManager[FileContainer]:
+    yield DirectoryFileContainer(directory_url)

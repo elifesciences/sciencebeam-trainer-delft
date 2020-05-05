@@ -1,7 +1,7 @@
 import gzip
 from pickle import UnpicklingError
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -17,6 +17,7 @@ MODEL_NAME_1 = 'model1'
 MODEL_FILE_1 = 'file.bin'
 MODEL_PICKLE_FILE_1 = 'file.pkl'
 MODEL_DATA_1 = b'model data 1'
+MODEL_DATA_2 = b'model data 2'
 
 
 @pytest.fixture(name='list_files_mock')
@@ -56,20 +57,16 @@ def _source_path(temp_dir: Path) -> Path:
 class TestCopySourceDirectoryWithSourceMeta:
     def test_should_copy_to_not_yet_existing_directory(
             self,
-            list_files_mock: MagicMock,
-            copy_file_mock: MagicMock,
             target_directory: Path,
             source_path: Path):
+        source_path.mkdir(parents=True, exist_ok=True)
+        source_path.joinpath(MODEL_FILE_1).write_bytes(MODEL_DATA_1)
         copy_directory_with_source_meta(
             source_url=str(source_path),
             target_directory=str(target_directory),
             force=False
         )
-        list_files_mock.assert_called_with(str(source_path))
-        copy_file_mock.assert_called_with(
-            str(source_path.joinpath(MODEL_FILE_1)),
-            str(target_directory.joinpath(MODEL_FILE_1))
-        )
+        assert target_directory.joinpath(MODEL_FILE_1).read_bytes() == MODEL_DATA_1
         assert (
             target_directory.joinpath(SOURCE_URL_META_FILENAME).read_text()
             == str(source_path)
@@ -77,51 +74,51 @@ class TestCopySourceDirectoryWithSourceMeta:
 
     def test_should_skip_if_source_url_matches(
             self,
-            list_files_mock: MagicMock,
-            copy_file_mock: MagicMock,
             target_directory: Path,
             source_path: Path):
         target_directory.mkdir(parents=True, exist_ok=True)
         target_directory.joinpath(SOURCE_URL_META_FILENAME).write_text(str(source_path))
+        target_directory.joinpath(MODEL_FILE_1).write_bytes(MODEL_DATA_1)
+        source_path.mkdir(parents=True, exist_ok=True)
+        source_path.joinpath(MODEL_FILE_1).write_bytes(MODEL_DATA_2)
         copy_directory_with_source_meta(
             source_url=str(source_path),
             target_directory=str(target_directory),
             force=False
         )
-        list_files_mock.assert_not_called()
-        copy_file_mock.assert_not_called()
+        assert target_directory.joinpath(MODEL_FILE_1).read_bytes() == MODEL_DATA_1
 
     def test_should_not_skip_if_source_url_is_different(
             self,
-            list_files_mock: MagicMock,
-            copy_file_mock: MagicMock,
             target_directory: Path,
             source_path: Path):
         target_directory.mkdir(parents=True, exist_ok=True)
         target_directory.joinpath(SOURCE_URL_META_FILENAME).write_text("other")
+        target_directory.joinpath(MODEL_FILE_1).write_bytes(MODEL_DATA_1)
+        source_path.mkdir(parents=True, exist_ok=True)
+        source_path.joinpath(MODEL_FILE_1).write_bytes(MODEL_DATA_2)
         copy_directory_with_source_meta(
             source_url=str(source_path),
             target_directory=str(target_directory),
             force=False
         )
-        list_files_mock.assert_called()
-        copy_file_mock.assert_called()
+        assert target_directory.joinpath(MODEL_FILE_1).read_bytes() == MODEL_DATA_2
 
     def test_should_not_skip_if_force_is_true(
             self,
-            list_files_mock: MagicMock,
-            copy_file_mock: MagicMock,
             target_directory: Path,
             source_path: Path):
         target_directory.mkdir(parents=True, exist_ok=True)
         target_directory.joinpath(SOURCE_URL_META_FILENAME).write_text(str(source_path))
+        target_directory.joinpath(MODEL_FILE_1).write_bytes(MODEL_DATA_1)
+        source_path.mkdir(parents=True, exist_ok=True)
+        source_path.joinpath(MODEL_FILE_1).write_bytes(MODEL_DATA_2)
         copy_directory_with_source_meta(
             source_url=str(source_path),
             target_directory=str(target_directory),
             force=True
         )
-        list_files_mock.assert_called()
-        copy_file_mock.assert_called()
+        assert target_directory.joinpath(MODEL_FILE_1).read_bytes() == MODEL_DATA_2
 
 
 class TestMain:

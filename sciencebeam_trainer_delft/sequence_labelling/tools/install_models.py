@@ -7,7 +7,11 @@ from shutil import rmtree
 from typing import Dict, List
 
 from sciencebeam_trainer_delft.utils.misc import parse_dict, merge_dicts
-from sciencebeam_trainer_delft.utils.io import list_files, copy_file, get_compression_wrapper
+from sciencebeam_trainer_delft.utils.io import (
+    get_compression_wrapper,
+    FileContainer,
+    open_file_container
+)
 from sciencebeam_trainer_delft.utils.cli import (
     add_default_arguments,
     process_default_args,
@@ -25,6 +29,30 @@ def get_source_url_meta_file_path(target_directory: str) -> Path:
     return Path(target_directory, SOURCE_URL_META_FILENAME)
 
 
+def copy_file_container_with_source_meta(
+        file_container: FileContainer,
+        target_directory: str):
+    files = file_container.list_files()
+    LOGGER.debug('files: %s', files)
+    if not files:
+        raise FileNotFoundError('no files found in %s' % file_container)
+    if os.path.exists(target_directory):
+        rmtree(target_directory)
+    os.makedirs(target_directory, exist_ok=True)
+    target_filepath_list = []
+    for file_ref in files:
+        relative_filename = file_ref.basename
+        relative_output_filename = get_compression_wrapper(
+            relative_filename
+        ).strip_compression_filename_ext(relative_filename)
+        # source_filepath = os.path.join(source_url, relative_filename)
+        target_filepath = os.path.join(target_directory, relative_output_filename)
+        target_filepath_list.append(target_filepath)
+        LOGGER.debug('copying %s to %s', file_ref, target_filepath)
+        file_ref.copy_to(target_filepath)
+    return target_filepath_list
+
+
 def copy_directory_with_source_meta(source_url: str, target_directory: str, force: bool = False):
     LOGGER.debug('source_url: %s, target_directory: %s', source_url, target_directory)
     source_url_meta_file = get_source_url_meta_file_path(target_directory)
@@ -39,27 +67,14 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
             target_directory, current_source_url
         )
         return []
-    files = list_files(source_url)
-    LOGGER.debug('files: %s', files)
-    if not files:
-        raise FileNotFoundError('no files found in %s' % source_url)
-    if os.path.exists(target_directory):
-        rmtree(target_directory)
-    os.makedirs(target_directory, exist_ok=True)
-    target_filepath_list = []
-    for filename in files:
-        relative_filename = os.path.basename(filename)
-        relative_output_filename = get_compression_wrapper(
-            relative_filename
-        ).strip_compression_filename_ext(relative_filename)
-        source_filepath = os.path.join(source_url, relative_filename)
-        target_filepath = os.path.join(target_directory, relative_output_filename)
-        target_filepath_list.append(target_filepath)
-        LOGGER.debug('copying %s to %s', source_filepath, target_filepath)
-        copy_file(source_filepath, target_filepath)
+    with open_file_container(source_url) as file_container:
+        result = copy_file_container_with_source_meta(
+            file_container,
+            target_directory
+        )
     LOGGER.debug('setting %s to %s', source_url_meta_file, source_url)
     source_url_meta_file.write_text(source_url)
-    return target_filepath_list
+    return result
 
 
 def validate_pickle_file(pickle_file: str):

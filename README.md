@@ -19,6 +19,34 @@ Some of the main features:
 
 - [train-header.ipynb](notebooks/train-header.ipynb) ([open in colab](https://colab.research.google.com/github/elifesciences/sciencebeam-trainer-delft/blob/develop/notebooks/train-header.ipynb))
 
+## GROBID Docker Image with DeLFT
+
+The Docker image `elifesciences/sciencebeam-trainer-delft_unstable` can be used in-place of the main GROBID image.
+It includes DeLFT (currently with CPU support only).
+
+There are several ways to change the configuration or override models.
+
+### Override Models using Docker Image
+
+The `OVERRIDE_MODELS` or `OVERRIDE_MODEL_*` environment variables allow models to be overriden. Both environment variables are equivallent. `OVERRIDE_MODELS` is meant for overriding multiple models via a single environment variable (separated by `|`), whereas `OVERRIDE_MODEL_*` can be used to specify each model separately.
+
+```bash
+docker run --rm \
+    --env "OVERRIDE_MODELS=segmentation=/path/to/segmentation-model|header=/path/to/header-model" \
+    elifesciences/sciencebeam-trainer-delft_unstable
+```
+
+or:
+
+```bash
+docker run --rm \
+    --env "OVERRIDE_MODEL_1=segmentation=/path/to/segmentation-model" \
+    --env "OVERRIDE_MODEL_2=header=/path/to/header-model" \
+    elifesciences/sciencebeam-trainer-delft_unstable
+```
+
+This functionality is mainly intended for loading models from a bucket, such as Google Storage or S3 (you will also need to mount the relevant credentials).
+
 ## GROBID Trainer CLI
 
 The GROBID Trainer CLI is the equivallent to [DeLFT's grobidTagger](https://github.com/kermitt2/delft/blob/master/grobidTagger.py). That is the main interface to interact with this project.

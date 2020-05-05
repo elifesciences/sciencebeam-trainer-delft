@@ -2,6 +2,7 @@ import logging
 import os
 import tarfile
 import tempfile
+import zipfile
 from abc import ABC, abstractmethod
 from shutil import copyfileobj
 from contextlib import contextmanager
@@ -278,6 +279,7 @@ class DirectoryFileContainer(FileContainer):
             for file_url in list_files(self.directory_url)
         ]
 
+
 class TarFileRef(FileRef):
     def __init__(
             self,
@@ -296,6 +298,7 @@ class TarFileRef(FileRef):
                     compression_wrapper=DUMMY_COMPRESSION_WRAPPER) as target_fp:
                 copyfileobj(source_fp, target_fp)
 
+
 class TarFileContainer(FileContainer):
     def __init__(self, directory_url, tar_file: tarfile.TarFile):
         super().__init__(directory_url)
@@ -312,11 +315,51 @@ class TarFileContainer(FileContainer):
         ]
 
 
+class ZipFileRef(FileRef):
+    def __init__(
+            self,
+            file_url: str,
+            zip_file: zipfile.ZipFile,
+            zip_info: zipfile.ZipInfo):
+        super().__init__(file_url)
+        self.zip_file = zip_file
+        self.zip_info = zip_info
+
+    def copy_to(self, target_url: str):
+        with self.zip_file.open(self.zip_info.filename) as source_fp:
+            with open_file(
+                    target_url,
+                    mode='wb',
+                    compression_wrapper=DUMMY_COMPRESSION_WRAPPER) as target_fp:
+                copyfileobj(source_fp, target_fp)
+
+
+class ZipFileContainer(FileContainer):
+    def __init__(self, directory_url, zip_file: zipfile.ZipFile):
+        super().__init__(directory_url)
+        self.zip_file = zip_file
+
+    def list_files(self) -> List[FileRef]:
+        return [
+            ZipFileRef(
+                path_join(self.directory_url, zip_info.filename),
+                zip_file=self.zip_file,
+                zip_info=zip_info
+            )
+            for zip_info in self.zip_file.infolist()
+        ]
+
+
 @contextmanager
 def open_file_container(directory_url: str) -> ContextManager[FileContainer]:
     if str(directory_url).endswith('.tar.gz'):
         with auto_download_input_file(directory_url) as local_tar_file:
             with tarfile.open(local_tar_file) as tar_file:
                 yield TarFileContainer(directory_url, tar_file=tar_file)
+                return
+    if str(directory_url).endswith('.zip'):
+        with auto_download_input_file(directory_url) as local_zip_file:
+            with zipfile.ZipFile(local_zip_file, mode='r') as zip_file:
+                yield ZipFileContainer(directory_url, zip_file=zip_file)
                 return
     yield DirectoryFileContainer(directory_url)

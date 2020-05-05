@@ -1,5 +1,6 @@
 import gzip
 import tarfile
+import zipfile
 from io import BytesIO
 from pickle import UnpicklingError
 from pathlib import Path
@@ -142,6 +143,25 @@ class TestCopySourceDirectoryWithSourceMeta:
         assert (
             target_directory.joinpath(SOURCE_URL_META_FILENAME).read_text()
             == str(tar_gz_file_path)
+        )
+
+    def test_should_extract_from_zip(
+            self,
+            target_directory: Path,
+            source_path: Path):
+        source_path.mkdir(parents=True, exist_ok=True)
+        zip_file_path = source_path.joinpath('archive1.zip')
+        with zipfile.ZipFile(str(zip_file_path), mode='w') as zip_file:
+            zip_file.writestr(MODEL_FILE_1, MODEL_DATA_1)
+        copy_directory_with_source_meta(
+            source_url=str(zip_file_path),
+            target_directory=str(target_directory),
+            force=False
+        )
+        assert target_directory.joinpath(MODEL_FILE_1).read_bytes() == MODEL_DATA_1
+        assert (
+            target_directory.joinpath(SOURCE_URL_META_FILENAME).read_text()
+            == str(zip_file_path)
         )
 
 

@@ -21,7 +21,8 @@ Some of the main features:
 
 ## GROBID Docker Image with DeLFT
 
-The Docker image `elifesciences/sciencebeam-trainer-delft_unstable` can be used in-place of the main GROBID image.
+The Docker image `elifesciences/sciencebeam-trainer-delft-grobid_unstable`
+can be used in-place of the main GROBID image.
 It includes DeLFT (currently with CPU support only).
 
 There are several ways to change the configuration or override models.
@@ -33,7 +34,7 @@ The `OVERRIDE_MODELS` or `OVERRIDE_MODEL_*` environment variables allow models t
 ```bash
 docker run --rm \
     --env "OVERRIDE_MODELS=segmentation=/path/to/segmentation-model|header=/path/to/header-model" \
-    elifesciences/sciencebeam-trainer-delft_unstable
+    elifesciences/sciencebeam-trainer-delft-grobid_unstable
 ```
 
 or:
@@ -42,10 +43,18 @@ or:
 docker run --rm \
     --env "OVERRIDE_MODEL_1=segmentation=/path/to/segmentation-model" \
     --env "OVERRIDE_MODEL_2=header=/path/to/header-model" \
-    elifesciences/sciencebeam-trainer-delft_unstable
+    elifesciences/sciencebeam-trainer-delft-grobid_unstable
 ```
 
-This functionality is mainly intended for loading models from a bucket, such as Google Storage or S3 (you will also need to mount the relevant credentials).
+e.g.:
+
+```bash
+docker run --rm \
+    --env "OVERRIDE_MODEL_1=header=https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/delft-grobid-header-biorxiv-no-word-embedding-2020-05-05.tar.gz" \
+    elifesciences/sciencebeam-trainer-delft-grobid_unstable
+```
+
+This functionality is mainly intended for loading models from a compressed file or bucket, such as Google Storage or S3 (you may also need to mount the relevant credentials).
 
 ## GROBID Trainer CLI
 

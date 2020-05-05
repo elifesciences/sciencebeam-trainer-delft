@@ -1,4 +1,6 @@
 import gzip
+import tarfile
+from io import BytesIO
 from pickle import UnpicklingError
 from pathlib import Path
 from unittest.mock import patch
@@ -119,6 +121,28 @@ class TestCopySourceDirectoryWithSourceMeta:
             force=True
         )
         assert target_directory.joinpath(MODEL_FILE_1).read_bytes() == MODEL_DATA_2
+
+    def test_should_extract_from_tar_gz(
+            self,
+            target_directory: Path,
+            source_path: Path):
+        source_path.mkdir(parents=True, exist_ok=True)
+        tar_gz_file_path = source_path.joinpath('archive1.tar.gz')
+        with tarfile.open(str(tar_gz_file_path), mode='w:gz') as tar_file:
+            buf = BytesIO(MODEL_DATA_1)
+            tar_info = tarfile.TarInfo(name=MODEL_FILE_1)
+            tar_info.size = len(buf.getvalue())
+            tar_file.addfile(tar_info, buf)
+        copy_directory_with_source_meta(
+            source_url=str(tar_gz_file_path),
+            target_directory=str(target_directory),
+            force=False
+        )
+        assert target_directory.joinpath(MODEL_FILE_1).read_bytes() == MODEL_DATA_1
+        assert (
+            target_directory.joinpath(SOURCE_URL_META_FILENAME).read_text()
+            == str(tar_gz_file_path)
+        )
 
 
 class TestMain:

@@ -1,5 +1,6 @@
 import logging
 import os
+import tarfile
 import tempfile
 from abc import ABC, abstractmethod
 from shutil import copyfileobj
@@ -199,7 +200,7 @@ def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
         with open(filepath, mode=mode, **kwargs) as fp:
             yield fp
             return
-    with tempfile.TemporaryDirectory(suffix='-logs') as temp_dir:
+    with tempfile.TemporaryDirectory(suffix='-output') as temp_dir:
         temp_file = os.path.join(
             temp_dir,
             get_compression_wrapper(filepath).strip_compression_filename_ext(
@@ -212,6 +213,22 @@ def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
         finally:
             if os.path.exists(temp_file):
                 copy_file(temp_file, filepath)
+
+
+@contextmanager
+def auto_download_input_file(filepath: str, auto_decompress: bool = False) -> ContextManager[str]:
+    if not is_external_location(filepath):
+        yield filepath
+        return
+    with tempfile.TemporaryDirectory(suffix='-input') as temp_dir:
+        file_basename = os.path.basename(filepath)
+        if auto_decompress:
+            file_basename = get_compression_wrapper(filepath).strip_compression_filename_ext(
+                file_basename
+            )
+        temp_file = os.path.join(temp_dir, file_basename)
+        copy_file(filepath, temp_file, overwrite=True)
+        yield temp_file
 
 
 def write_text(filepath: str, text: str, **kwargs):
@@ -261,7 +278,45 @@ class DirectoryFileContainer(FileContainer):
             for file_url in list_files(self.directory_url)
         ]
 
+class TarFileRef(FileRef):
+    def __init__(
+            self,
+            file_url: str,
+            tar_file: tarfile.TarFile,
+            tar_info: tarfile.TarInfo):
+        super().__init__(file_url)
+        self.tar_file = tar_file
+        self.tar_info = tar_info
+
+    def copy_to(self, target_url: str):
+        with self.tar_file.extractfile(self.tar_info) as source_fp:
+            with open_file(
+                    target_url,
+                    mode='wb',
+                    compression_wrapper=DUMMY_COMPRESSION_WRAPPER) as target_fp:
+                copyfileobj(source_fp, target_fp)
+
+class TarFileContainer(FileContainer):
+    def __init__(self, directory_url, tar_file: tarfile.TarFile):
+        super().__init__(directory_url)
+        self.tar_file = tar_file
+
+    def list_files(self) -> List[FileRef]:
+        return [
+            TarFileRef(
+                path_join(self.directory_url, tar_info.name),
+                tar_file=self.tar_file,
+                tar_info=tar_info
+            )
+            for tar_info in self.tar_file.getmembers()
+        ]
+
 
 @contextmanager
 def open_file_container(directory_url: str) -> ContextManager[FileContainer]:
+    if str(directory_url).endswith('.tar.gz'):
+        with auto_download_input_file(directory_url) as local_tar_file:
+            with tarfile.open(local_tar_file) as tar_file:
+                yield TarFileContainer(directory_url, tar_file=tar_file)
+                return
     yield DirectoryFileContainer(directory_url)

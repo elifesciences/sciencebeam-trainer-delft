@@ -5,7 +5,7 @@ set -e
 GROBID_MODELS_DIRECTORY=${GROBID_MODELS_DIRECTORY:-/opt/grobid/grobid-home/models}
 EMBEDDING_REGISTRY_PATH="${PROJECT_FOLDER}/embedding-registry.json"
 
-# override models via OVERRIDE_MODELS or OVERRIDE_MODELS_*
+# override models via OVERRIDE_MODELS or OVERRIDE_MODEL_*
 # the latter makes it easier to override multiple models as separate env variables
 env -0 | while IFS='=' read -r -d '' env_var_name env_var_value; do
     if [[ -z "${env_var_value}" ]]; then

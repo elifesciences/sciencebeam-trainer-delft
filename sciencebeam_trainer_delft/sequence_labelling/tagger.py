@@ -49,7 +49,8 @@ class Tagger:
             embeddings=self.embeddings,
             tokenize=tokeniz,
             shuffle=False,
-            features=features
+            features=features,
+            name='predict_generator'
         )
 
         steps_done = 0

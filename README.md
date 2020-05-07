@@ -180,6 +180,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --limit="100" \
     --eval-input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --eval-limit="100" \
+    --eval-batch-size="5" \
     --early-stopping-patience="3" \
     --max-epoch="50"
 ```

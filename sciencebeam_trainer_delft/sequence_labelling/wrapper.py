@@ -103,6 +103,7 @@ class Sequence(_Sequence):
             config_props: dict = None,
             training_props: dict = None,
             eval_max_sequence_length: int = None,
+            eval_batch_size: int = None,
             **kwargs):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
@@ -117,6 +118,7 @@ class Sequence(_Sequence):
         self.embeddings = None
         self.max_sequence_length = kwargs.get('max_sequence_length')
         self.eval_max_sequence_length = eval_max_sequence_length
+        self.eval_batch_size = eval_batch_size
         self.model_path = None
         super().__init__(*args, **kwargs)
         LOGGER.debug('use_features=%s', use_features)
@@ -279,7 +281,10 @@ class Sequence(_Sequence):
     def create_eval_data_generator(self, *args, **kwargs) -> DataGenerator:
         return DataGenerator(
             *args,
-            batch_size=self.training_config.batch_size,
+            batch_size=(
+                self.eval_batch_size
+                or self.training_config.batch_size
+            ),
             preprocessor=self.p,
             additional_token_feature_indices=self.model_config.additional_token_feature_indices,
             char_embed_size=self.model_config.char_embedding_size,
@@ -298,7 +303,8 @@ class Sequence(_Sequence):
         test_generator = self.create_eval_data_generator(
             x_test, y_test,
             features=features,
-            shuffle=False
+            shuffle=False,
+            name='test_generator'
         )
 
         prediction_result = get_model_results(

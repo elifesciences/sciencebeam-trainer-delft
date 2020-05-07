@@ -519,7 +519,6 @@ def train_eval(
         random_seed: int = DEFAULT_RANDOM_SEED,
         eval_input_paths: List[str] = None,
         eval_limit: int = None,
-        eval_max_sequence_length: int = None,
         eval_output_format: str = None,
         eval_output_path: str = None,
         max_sequence_length: int = 100,
@@ -547,7 +546,6 @@ def train_eval(
         embeddings_name=embeddings_name,
         embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
-        eval_max_sequence_length=eval_max_sequence_length,
         model_type=architecture,
         use_ELMo=use_ELMo,
         batch_size=batch_size,
@@ -1050,12 +1048,25 @@ def add_eval_input_arguments(parser: argparse.ArgumentParser):
             "This is mostly for testing to make evaluation faster."
         ])
     )
+
+
+def add_eval_model_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--eval-max-sequence-length",
         type=int,
         help=' '.join([
-            "Limit the number of documents to use for evaluation.",
-            "This is mostly for testing to make evaluation faster."
+            "Maximum sequence length to use for evaluation.",
+            "If not specified, no limit will be applied."
+        ])
+    )
+    parser.add_argument(
+        "--eval-batch-size",
+        type=int,
+        help=' '.join([
+            "The batch size to be used for evaluation.",
+            "If not specified, the training batch size is used.",
+            "This may be useful to evaluate on longer sequences",
+            "that could require a smaller batch size."
         ])
     )
 
@@ -1254,10 +1265,24 @@ def save_input_to(input_paths: List[str], output_path: str):
     copy_file(input_path, output_path)
 
 
+def get_eval_input_args(args: argparse.Namespace) -> dict:
+    return dict(
+        eval_input_paths=args.eval_input,
+        eval_limit=args.eval_limit,
+    )
+
+
 def get_eval_output_args(args: argparse.Namespace) -> dict:
     return dict(
         eval_output_format=args.eval_output_format,
         eval_output_path=args.eval_output_path
+    )
+
+
+def get_eval_model_args(args: argparse.Namespace) -> dict:
+    return dict(
+        eval_max_sequence_length=args.eval_max_sequence_length,
+        eval_batch_size=args.eval_batch_size
     )
 
 
@@ -1405,6 +1430,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         add_fold_count_argument(parser)
         add_eval_input_arguments(parser)
         add_eval_output_arguments(parser)
+        add_eval_model_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         if not args.model:
@@ -1424,10 +1450,9 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         train_eval(
             fold_count=args.fold_count,
             embeddings_name=embedding_name,
-            eval_input_paths=args.eval_input,
-            eval_limit=args.eval_limit,
-            eval_max_sequence_length=args.eval_max_sequence_length,
+            **get_eval_input_args(args),
             **get_eval_output_args(args),
+            **get_eval_model_args(args),
             **self.get_train_args(args)
         )
 
@@ -1438,6 +1463,7 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
         add_wapiti_train_arguments(parser)
         add_eval_input_arguments(parser)
         add_eval_output_arguments(parser)
+        add_eval_model_arguments(parser)
         add_wapiti_install_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
@@ -1477,6 +1503,7 @@ class EvalSubCommand(GrobidTrainerSubCommand):
             ])
         )
         add_eval_output_arguments(parser)
+        add_eval_model_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         eval_model(
@@ -1492,6 +1519,7 @@ class WapitiEvalSubCommand(GrobidTrainerSubCommand):
         add_common_arguments(parser)
         add_model_path_argument(parser, required=True, help='directory to load the model from')
         add_eval_output_arguments(parser)
+        add_eval_model_arguments(parser)
         add_wapiti_install_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):

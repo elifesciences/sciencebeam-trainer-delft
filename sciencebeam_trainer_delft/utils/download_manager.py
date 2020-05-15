@@ -6,7 +6,7 @@ from pathlib import Path
 from sciencebeam_trainer_delft.utils.io import (
     copy_file,
     is_external_location,
-    get_compression_wrapper
+    strip_compression_filename_ext
 )
 
 
@@ -26,8 +26,7 @@ class DownloadManager:
             os.path.basename(file_url)
         )
         if auto_uncompress:
-            compression_wrapper = get_compression_wrapper(filename)
-            filename = compression_wrapper.strip_compression_filename_ext(filename)
+            filename = strip_compression_filename_ext(filename)
         return str(self.download_dir.joinpath(filename))
 
     def is_downloaded(self, file_url: str, auto_uncompress: bool = True) -> bool:

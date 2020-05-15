@@ -133,6 +133,10 @@ def get_compression_wrapper(filepath: str):
     return DUMMY_COMPRESSION_WRAPPER
 
 
+def strip_compression_filename_ext(filepath: str) -> str:
+    return get_compression_wrapper(filepath).strip_compression_filename_ext(filepath)
+
+
 @contextmanager
 def _open_raw(filepath: str, mode: str):
     if filepath.startswith('https://'):

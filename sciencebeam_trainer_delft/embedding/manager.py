@@ -9,7 +9,7 @@ from sciencebeam_trainer_delft.embedding.embedding import Embeddings
 
 from sciencebeam_trainer_delft.utils.io import (
     is_external_location,
-    get_compression_wrapper
+    strip_compression_filename_ext
 )
 
 
@@ -137,13 +137,13 @@ class EmbeddingManager:
         return self.get_embedding_aliases().get(embedding_name, embedding_name)
 
     def is_lmdb_cache_file(self, embedding_url: str) -> bool:
-        return get_compression_wrapper(
+        return strip_compression_filename_ext(
             embedding_url
-        ).strip_compression_filename_ext(embedding_url).endswith('.mdb')
+        ).endswith('.mdb')
 
     def download_and_install_source_embedding(self, embedding_url: str) -> str:
         download_file = self.download_manager.download_if_url(embedding_url)
-        filename = os.path.basename(download_file)
+        filename = os.path.basename(strip_compression_filename_ext(embedding_url))
         embedding_config = _get_embedding_config_for_filename(filename)
         embedding_name = embedding_config['name']
         self.add_embedding_config({

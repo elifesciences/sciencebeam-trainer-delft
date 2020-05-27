@@ -67,7 +67,6 @@ ENV PYTHONWARNINGS="ignore"
 RUN mkdir -p /data \
     && ln -s /data ${PROJECT_FOLDER}/data \
     && ln -s /data ./data
-VOLUME ["/data"]
 
 # remove libjep.so because we are providng our own version in the virtual env
 ARG grobid_home=/opt/grobid/grobid-home

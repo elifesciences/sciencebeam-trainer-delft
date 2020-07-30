@@ -172,6 +172,8 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
+In the [referenced training data](https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz), the last feature (`32`) represents the whole line (using non-breaking spaces instead of spaces). To use the model with GROBID, that [feature would need to be enabled](https://github.com/elifesciences/grobid/pull/25).
+
 ### Resume training
 
 Sometimes it can be useful to continue training a model.

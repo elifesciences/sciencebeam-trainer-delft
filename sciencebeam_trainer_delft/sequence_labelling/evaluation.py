@@ -1,12 +1,16 @@
+import logging
 import json
 from collections import defaultdict, OrderedDict
-from typing import List, Union
+from typing import List, Union, T
 
 import numpy as np
 
 from delft.sequenceLabelling.evaluation import (
     get_entities
 )
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 # mostly copied from delft/sequenceLabelling/evaluation.py
@@ -40,30 +44,52 @@ class NpJsonEncoder(json.JSONEncoder):
             return super().default(obj)
 
 
+def _get_first(some_list: List[T], default_value: T = None) -> T:
+    try:
+        return some_list[0]
+    except IndexError:
+        return default_value
+
+
 class ClassificationResult:
     def __init__(
             self,
             y_true: List[Union[str, List[str]]],
-            y_pred: List[Union[str, List[str]]]):
-        true_entities = set(get_entities(y_true))
-        pred_entities = set(get_entities(y_pred))
+            y_pred: List[Union[str, List[str]]],
+            evaluate_first_entities: bool = False):
+        all_true_entities = set(get_entities(y_true))
+        all_pred_entities = set(get_entities(y_pred))
+        LOGGER.debug('all_true_entities: %s', all_true_entities)
+        LOGGER.debug('all_pred_entities: %s', all_pred_entities)
 
-        d1 = defaultdict(set)
-        d2 = defaultdict(set)
-        for e in true_entities:
-            d1[e[0]].add((e[1], e[2]))
-        for e in pred_entities:
-            d2[e[0]].add((e[1], e[2]))
+        true_entities_by_type_name = defaultdict(set)
+        pred_entities_by_type_name = defaultdict(set)
+        for e in all_true_entities:
+            true_entities_by_type_name[e[0]].add((e[1], e[2]))
+        for e in all_pred_entities:
+            pred_entities_by_type_name[e[0]].add((e[1], e[2]))
 
         ps, rs, f1s, s = [], [], [], []
         total_nb_correct = 0
         total_nb_pred = 0
         total_nb_true = 0
-        sorted_type_names = sorted(set(d1.keys()) | set(d2.keys()))
+        sorted_type_names = sorted(
+            set(true_entities_by_type_name.keys()) | set(pred_entities_by_type_name.keys())
+        )
+        if evaluate_first_entities:
+            for type_name in sorted_type_names.copy():
+                first_type_name = 'first_%s' % type_name
+                sorted_type_names.append(first_type_name)
+                true_entities_by_type_name[first_type_name] = set(
+                    sorted(true_entities_by_type_name[type_name])[:1]
+                )
+                pred_entities_by_type_name[first_type_name] = set(
+                    sorted(pred_entities_by_type_name[type_name])[:1]
+                )
         self.scores = OrderedDict()
         for type_name in sorted_type_names:
-            true_entities = d1[type_name]
-            pred_entities = d2[type_name]
+            true_entities = true_entities_by_type_name[type_name]
+            pred_entities = pred_entities_by_type_name[type_name]
             nb_correct = len(true_entities & pred_entities)
             nb_pred = len(pred_entities)
             nb_true = len(true_entities)

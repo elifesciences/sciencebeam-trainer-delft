@@ -6,13 +6,17 @@ import pytest
 
 import numpy as np
 
-from delft.sequenceLabelling.preprocess import to_casing_single
+from delft.sequenceLabelling.preprocess import to_casing_single, PAD
 
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     left_pad_batch_values,
+    get_tokens_from_text_features,
+    get_batch_tokens_from_text_features,
+    get_embeddings_tokens_for_concatenation,
     get_stateless_window_indices_and_offset,
     get_batch_window_indices_and_offset,
-    DataGenerator
+    DataGenerator,
+    NBSP
 )
 
 
@@ -46,6 +50,7 @@ LABEL_3 = 'label3'
 
 EMBEDDING_MAP = {
     None: [0, 0, 0],
+    PAD: [0, 0, 0],
     WORD_1: [1, 1, 1],
     WORD_2: [2, 2, 2],
     WORD_3: [3, 3, 3],
@@ -55,6 +60,7 @@ EMBEDDING_MAP = {
 
 WORD_INDEX_MAP = {
     None: 0,
+    PAD: 0,
     WORD_1: 1,
     WORD_2: 2,
     WORD_3: 3,
@@ -206,6 +212,84 @@ class TestLeftPadBatchValues:
                 [[1, 1], [0, 0]]
             ])
         )
+
+
+class TestGetTokensFromTextFeatures:
+    def test_should_extract_tokens_from_multiple_token_features(self):
+        assert get_tokens_from_text_features([
+            'zero', WORD_1, WORD_2, WORD_3, WORD_4
+        ], [2, 3]) == [WORD_2, WORD_3]
+
+    def test_should_extract_multiple_tokens_from_single_token_feature_separated_by_space(self):
+        assert get_tokens_from_text_features([
+            'zero', ' '.join([WORD_1, WORD_2, WORD_3]), WORD_4
+        ], [1]) == [WORD_1, WORD_2, WORD_3]
+
+    def test_should_extract_multiple_tokens_from_single_token_feature_separated_by_npsp(self):
+        assert get_tokens_from_text_features([
+            'zero', NBSP.join([WORD_1, WORD_2, WORD_3]), WORD_4
+        ], [1]) == [WORD_1, WORD_2, WORD_3]
+
+
+class TestGetBatchTokensFromTextFeatures:
+    def test_should_extract_text_features_and_pad(self):
+        batch_features = [[
+            ['zero', NBSP.join([WORD_1, WORD_2, WORD_3]), WORD_4],
+            ['zero', NBSP.join([WORD_3, WORD_4]), WORD_1]
+        ]]
+        text_feature_indices = [1]
+        expected_batch_tokens = [
+            [[WORD_1, WORD_3]],
+            [[WORD_2, WORD_4]],
+            [[WORD_3, PAD]]
+        ]
+        assert (
+            get_batch_tokens_from_text_features(batch_features, text_feature_indices)
+            == expected_batch_tokens
+        )
+
+
+class TestGetEmbeddingsTokensForConcatenation:
+    def test_should_return_passed_in_tokens(self):
+        all_batch_tokens = [
+            [
+                [WORD_1, WORD_2, WORD_3]
+            ]
+        ]
+        assert get_embeddings_tokens_for_concatenation(
+            all_batch_tokens,
+            concatenated_embeddings_token_count=1
+        ) == all_batch_tokens
+
+    def test_should_truncate_passed_in_tokens(self):
+        all_batch_tokens = [
+            [
+                [WORD_1, WORD_2, WORD_3]
+            ],
+            [
+                [WORD_3, WORD_4, WORD_1]
+            ]
+        ]
+        assert get_embeddings_tokens_for_concatenation(
+            all_batch_tokens,
+            concatenated_embeddings_token_count=1
+        ) == [all_batch_tokens[0]]
+
+    def test_should_append_empty_tokens(self):
+        all_batch_tokens = [
+            [
+                [WORD_1, WORD_2, WORD_3]
+            ]
+        ]
+        expected_batch_tokens = all_batch_tokens + [
+            [
+                [PAD, PAD, PAD]
+            ]
+        ]
+        assert get_embeddings_tokens_for_concatenation(
+            all_batch_tokens,
+            concatenated_embeddings_token_count=2
+        ) == expected_batch_tokens
 
 
 class TestGetStatelessWindowIndicesAndOffset:
@@ -377,6 +461,71 @@ class TestDataGenerator:
             ),
             axis=-1
         ))
+        assert all_close(x[-1], [len(sentence_tokens_1)])
+
+    def test_should_use_text_feature_if_specified(
+            self, preprocessor, embeddings):
+        preprocessor.return_casing = False
+        sentence_tokens_1 = [WORD_1, WORD_2]
+        text_1 = ' '.join([WORD_3, WORD_4])
+        text_2 = ' '.join([WORD_4, PAD])
+        features_1 = [[[text_1], [text_2]]]
+        expected_char_indices_1 = get_words_char_indices([text_1, text_2])
+        # by default only using the first word token for embeddings
+        expected_word_vectors_1 = get_word_vectors([WORD_3, WORD_4])
+        item = DataGenerator(
+            np.asarray([sentence_tokens_1]),
+            np.asarray([[LABEL_1]]),
+            features=np.asarray(features_1),
+            preprocessor=preprocessor,
+            embeddings=embeddings,
+            text_feature_indices=[0],
+            **DEFAULT_ARGS
+        )[0]
+        LOGGER.debug('item: %s', item)
+        assert len(item) == 2
+        x, labels = item
+        assert all_close(labels, get_label_indices([LABEL_1]))
+        assert all_close(x[0], expected_word_vectors_1)
+        LOGGER.debug('expected char_indices_1: %s', expected_char_indices_1)
+        LOGGER.debug('x[1]: %s', x[1])
+        assert all_close(x[1], expected_char_indices_1)
+        assert all_close(x[-1], [len(sentence_tokens_1)])
+
+    def test_should_concatenate_word_embeddings_when_using_text_feature(
+            self, preprocessor, embeddings):
+        preprocessor.return_casing = False
+        sentence_tokens_1 = [WORD_1, WORD_2]
+        text_1 = ' '.join([WORD_3, WORD_4])
+        text_2 = ' '.join([WORD_4, PAD])
+        features_1 = [[[text_1], [text_2]]]
+        expected_char_indices_1 = get_words_char_indices([text_1, text_2])
+        # by default only using the first word token for embeddings
+        expected_word_vectors_1 = np.concatenate(
+            [
+                get_word_vectors([WORD_3, WORD_4]),
+                get_word_vectors([WORD_4, PAD])
+            ],
+            axis=-1
+        )
+        item = DataGenerator(
+            np.asarray([sentence_tokens_1]),
+            np.asarray([[LABEL_1]]),
+            features=np.asarray(features_1),
+            preprocessor=preprocessor,
+            embeddings=embeddings,
+            text_feature_indices=[0],
+            concatenated_embeddings_token_count=2,
+            **DEFAULT_ARGS
+        )[0]
+        LOGGER.debug('item: %s', item)
+        assert len(item) == 2
+        x, labels = item
+        assert all_close(labels, get_label_indices([LABEL_1]))
+        assert all_close(x[0], expected_word_vectors_1)
+        LOGGER.debug('expected char_indices_1: %s', expected_char_indices_1)
+        LOGGER.debug('x[1]: %s', x[1])
+        assert all_close(x[1], expected_char_indices_1)
         assert all_close(x[-1], [len(sentence_tokens_1)])
 
     def test_should_return_casing(self, preprocessor, embeddings):

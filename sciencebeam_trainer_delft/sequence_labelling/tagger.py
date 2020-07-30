@@ -44,6 +44,10 @@ class Tagger:
             batch_size=self.model_config.batch_size,
             preprocessor=self.preprocessor,
             additional_token_feature_indices=self.model_config.additional_token_feature_indices,
+            text_feature_indices=self.model_config.text_feature_indices,
+            concatenated_embeddings_token_count=(
+                self.model_config.concatenated_embeddings_token_count
+            ),
             char_embed_size=self.model_config.char_embedding_size,
             max_sequence_length=self.max_sequence_length,
             embeddings=self.embeddings,

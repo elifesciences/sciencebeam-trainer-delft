@@ -139,7 +139,8 @@ Train with additional token features:
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    header train_eval \
+    segmentation \
+    train_eval \
     --batch-size="10" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --additional-token-feature-indices="0" \
@@ -150,6 +151,28 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --early-stopping-patience="3" \
     --max-epoch="50"
 ```
+
+Train with text features (using three tokens for word embeddings):
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    segmentation \
+    train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --text-feature-indices="32" \
+    --concatenated-embeddings-token-count="3" \
+    --max-char-length="60" \
+    --max-sequence-length="100" \
+    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz" \
+    --eval-input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-961-delft-segmentation-with-text-feature-32.validation.gz" \
+    --limit="100" \
+    --eval-limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+In the [referenced training data](https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz), the last feature (`32`) represents the whole line (using non-breaking spaces instead of spaces). To use the model with GROBID, that [feature would need to be enabled](https://github.com/elifesciences/grobid/pull/25).
 
 ### Resume training
 

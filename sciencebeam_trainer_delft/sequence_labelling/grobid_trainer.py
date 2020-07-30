@@ -1118,6 +1118,33 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         ])
     )
 
+    parser.add_argument(
+        "--text-feature-indices",
+        type=parse_number_ranges,
+        help="".join([
+            "Feature values that should be treated as text input.",
+            " e.g. 0 or 0-3.",
+            " If blank, no additext features will be used.",
+            " Cannot be used together with --additional-token-feature-indices.",
+            " Text features will get tokenized."
+            " If word embeddings are used, then the number of tokens will depend on",
+            " --concatenated-embeddings-token-count.",
+            " Tokens from text features replace regular tokens from the training data."
+        ])
+    )
+
+    parser.add_argument(
+        "--concatenated-embeddings-token-count",
+        type=int,
+        help="".join([
+            "The number of tokens to concatenate as word embeddings.",
+            " If not specified, it concatenate the main token with any",
+            " --additional-token-feature-indices (if any).",
+            " This option is mainly useful in combination with --text-feature-indices.",
+            " It has no effect, if no word embeddings are used."
+        ])
+    )
+
     features_group = parser.add_argument_group('features')
     features_group.add_argument("--use-features", action="store_true", help="Use features")
     features_group.add_argument(
@@ -1336,6 +1363,8 @@ class GrobidTrainerSubCommand(SubCommand):
             config_props=dict(
                 max_char_length=args.max_char_length,
                 additional_token_feature_indices=args.additional_token_feature_indices,
+                text_feature_indices=args.text_feature_indices,
+                concatenated_embeddings_token_count=args.concatenated_embeddings_token_count,
                 use_word_embeddings=args.use_word_embeddings,
                 use_features_indices_input=args.use_features_indices_input,
                 features_lstm_units=args.features_lstm_units,

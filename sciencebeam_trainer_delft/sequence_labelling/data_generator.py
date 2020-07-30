@@ -1,4 +1,5 @@
 import logging
+from itertools import zip_longest
 from typing import Iterable, List, Tuple
 
 import numpy as np
@@ -7,7 +8,8 @@ import keras
 from delft.utilities.Embeddings import Embeddings
 from delft.sequenceLabelling.preprocess import (
     to_vector_single, to_casing_single,
-    to_vector_simple_with_elmo, to_vector_simple_with_bert
+    to_vector_simple_with_elmo, to_vector_simple_with_bert,
+    PAD
 )
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
 
@@ -16,6 +18,8 @@ from sciencebeam_trainer_delft.sequence_labelling.preprocess import Preprocessor
 
 
 LOGGER = logging.getLogger(__name__)
+
+NBSP = '\u00A0'
 
 
 def left_pad_batch_values(batch_values: np.array, max_sequence_length: int, dtype=None):
@@ -105,11 +109,18 @@ def get_batch_window_indices_and_offset(
     ))
 
 
+def get_chunk_at_offset(sequence: list, offset: int, max_sequence_length: int = None):
+    if not max_sequence_length:
+        return sequence[offset:]
+    return sequence[offset:min(len(sequence), offset + max_sequence_length)]
+
+
 def take_with_offset(
         sequences: list,
-        indices_and_offset: List[Tuple[int, int]]) -> list:
+        indices_and_offset: List[Tuple[int, int]],
+        max_sequence_length: int = None) -> list:
     return [
-        sequences[index][offset:]
+        get_chunk_at_offset(sequences[index], offset, max_sequence_length)
         for index, offset in indices_and_offset
     ]
 
@@ -131,12 +142,10 @@ def to_dummy_batch_embedding_vector(
     return np.zeros((len(batch_tokens), max_length, 0), dtype='float32')
 
 
-def get_all_batch_tokens(
+def get_batch_tokens_with_additional_token_features(
         batch_tokens: List[List[str]],
         batch_features: List[List[List[str]]],
         additional_token_feature_indices: List[int]) -> List[List[List[str]]]:
-    if not additional_token_feature_indices:
-        return [batch_tokens]
     return [batch_tokens] + [
         [
             [
@@ -147,6 +156,78 @@ def get_all_batch_tokens(
         ]
         for additional_token_feature_index in additional_token_feature_indices
     ]
+
+
+def get_tokens_from_text_features(
+        token_features: List[str],
+        text_feature_indices: List[int]) -> List[str]:
+    return tokenizeAndFilterSimple(' '.join([
+        token_features[text_feature_index]
+        for text_feature_index in text_feature_indices
+    ]).replace(NBSP, ' '))
+
+
+def get_batch_tokens_from_text_features(
+        batch_features: List[List[List[str]]],
+        text_feature_indices: List[int]) -> List[List[List[str]]]:
+    LOGGER.debug('text_feature_indices: %s', text_feature_indices)
+    LOGGER.debug('batch_features: %s', batch_features)
+    word_tokens_by_doc_sequence_token = [
+        [
+            get_tokens_from_text_features(
+                token_features,
+                text_feature_indices
+            )
+            for token_features in doc_features
+        ]
+        for doc_features in batch_features
+    ]
+    # for better or worse, the expected output is first indexed by the word token index
+    # that is why we are converting it to that form, first finding the maximum number
+    # of word tokens
+    LOGGER.debug('word_tokens_by_doc_sequence_token: %s', word_tokens_by_doc_sequence_token)
+    max_word_token_count = max(
+        len(word_tokens)
+        for doc_sequence in word_tokens_by_doc_sequence_token
+        for word_tokens in doc_sequence
+    )
+    LOGGER.debug('max_word_token_count: %s', max_word_token_count)
+    word_token_by_word_token_index = [
+        [
+            [
+                (
+                    word_tokens[word_token_index]
+                    if word_token_index < len(word_tokens)
+                    else PAD
+                )
+                for word_tokens in word_tokens_by_token
+            ]
+            for word_tokens_by_token in word_tokens_by_doc_sequence_token
+        ]
+        for word_token_index in range(max_word_token_count)
+    ]
+    return word_token_by_word_token_index
+
+
+def get_all_batch_tokens(
+        batch_tokens: List[List[str]],
+        batch_features: List[List[List[str]]],
+        additional_token_feature_indices: List[int],
+        text_feature_indices: List[int]) -> List[List[List[str]]]:
+    if additional_token_feature_indices and text_feature_indices:
+        raise ValueError('both, additional token and text features, not supported')
+    if additional_token_feature_indices:
+        return get_batch_tokens_with_additional_token_features(
+            batch_tokens=batch_tokens,
+            batch_features=batch_features,
+            additional_token_feature_indices=additional_token_feature_indices
+        )
+    if text_feature_indices:
+        return get_batch_tokens_from_text_features(
+            batch_features=batch_features,
+            text_feature_indices=text_feature_indices
+        )
+    return [batch_tokens]
 
 
 def concatenate_all_batch_tokens(
@@ -162,18 +243,45 @@ def concatenate_all_batch_tokens(
     ]
 
 
+def get_embeddings_tokens_for_concatenation(
+        all_batch_tokens: List[List[List[str]]],  # token column x doc x sequence x token
+        concatenated_embeddings_token_count: int,
+        pad_token: str = PAD) -> List[List[List[str]]]:
+    default_batch_tokens = [[pad_token] * len(all_batch_tokens[0][0])] * len(all_batch_tokens[0])
+    batch_tokens_list = [
+        (batch_tokens or default_batch_tokens)
+        for batch_tokens, _ in zip_longest(
+            all_batch_tokens[:concatenated_embeddings_token_count],
+            range(concatenated_embeddings_token_count)
+        )
+    ]
+    LOGGER.debug('batch_tokens_list: %s', batch_tokens_list)
+    return batch_tokens_list
+
+
 def to_concatenated_batch_vector(
         to_batch_vector_fn: callable,
-        all_batch_tokens: List[List[List[str]]],
+        all_batch_tokens: List[List[List[str]]],  # token column x doc x sequence x token
         *args,
+        concatenated_embeddings_token_count: int,
         **kwargs):
-    return np.concatenate(
-        [
-            to_batch_vector_fn(batch_tokens, *args, **kwargs)
-            for batch_tokens in all_batch_tokens
-        ],
+    batch_tokens_list = get_embeddings_tokens_for_concatenation(
+        all_batch_tokens,
+        concatenated_embeddings_token_count=concatenated_embeddings_token_count
+    )
+    batch_vector_list = [
+        to_batch_vector_fn(
+            batch_tokens,
+            *args,
+            **kwargs
+        )
+        for batch_tokens in batch_tokens_list
+    ]
+    concatenated_batch_vector = np.concatenate(
+        batch_vector_list,
         axis=-1
     )
+    return concatenated_batch_vector
 
 
 def to_batch_casing(
@@ -183,6 +291,15 @@ def to_batch_casing(
     for i, tokens in enumerate(batch_tokens):
         batch_a[i] = to_casing_single(tokens, max_length)
     return batch_a
+
+
+def get_concatenated_embeddings_token_count(
+        concatenated_embeddings_token_count: int = None,
+        additional_token_feature_indices: List[int] = None) -> int:
+    return (
+        concatenated_embeddings_token_count
+        or (1 + len(additional_token_feature_indices or []))
+    )
 
 
 # generate batch of data to feed sequence labelling model, both for training and prediction
@@ -204,6 +321,8 @@ class DataGenerator(keras.utils.Sequence):
             shuffle: bool = True,
             features: List[List[List[str]]] = None,
             additional_token_feature_indices: List[int] = None,
+            text_feature_indices: List[int] = None,
+            concatenated_embeddings_token_count: int = None,
             name: str = None):
         'Initialization'
         if use_word_embeddings is None:
@@ -215,6 +334,14 @@ class DataGenerator(keras.utils.Sequence):
         self.input_window_stride = input_window_stride
         self.features = features
         self.additional_token_feature_indices = additional_token_feature_indices
+        self.text_feature_indices = text_feature_indices
+        self.concatenated_embeddings_token_count = get_concatenated_embeddings_token_count(
+            concatenated_embeddings_token_count=concatenated_embeddings_token_count,
+            additional_token_feature_indices=additional_token_feature_indices
+        )
+        LOGGER.debug(
+            'concatenated_embeddings_token_count: %s', self.concatenated_embeddings_token_count
+        )
         self.preprocessor = preprocessor
         if preprocessor:
             self.labels = preprocessor.vocab_tag
@@ -370,7 +497,8 @@ class DataGenerator(keras.utils.Sequence):
         return to_concatenated_batch_vector(
             self.to_batch_embedding_vector,
             all_batch_tokens,
-            max_length
+            max_length,
+            concatenated_embeddings_token_count=self.concatenated_embeddings_token_count
         )
 
     def get_window_batch_data(  # pylint: disable=too-many-statements
@@ -379,7 +507,7 @@ class DataGenerator(keras.utils.Sequence):
         'Generates data containing batch_size samples'
 
         # restrict data to index window
-        # sub_x = self.x[(index * self.batch_size):(index * self.batch_size) + max_iter]
+        # Note: can't apply max_sequence_length here because we may tokenize
         sub_x = take_with_offset(self.x, window_indices_and_offsets)
 
         # tokenize texts in self.x if not already done
@@ -407,13 +535,22 @@ class DataGenerator(keras.utils.Sequence):
         batch_y = None
 
         sub_f = None
-        if self.preprocessor.return_features or self.additional_token_feature_indices:
-            sub_f = take_with_offset(self.features, window_indices_and_offsets)
+        if (
+                self.preprocessor.return_features
+                or self.additional_token_feature_indices
+                or self.text_feature_indices
+        ):
+            sub_f = take_with_offset(
+                self.features,
+                window_indices_and_offsets,
+                max_sequence_length=max_length_x
+            )
 
         all_batch_tokens = get_all_batch_tokens(
             x_tokenized,
             batch_features=sub_f,
-            additional_token_feature_indices=self.additional_token_feature_indices
+            additional_token_feature_indices=self.additional_token_feature_indices,
+            text_feature_indices=self.text_feature_indices
         )
         LOGGER.debug('all_batch_tokens: %s', all_batch_tokens)
 
@@ -467,5 +604,10 @@ class DataGenerator(keras.utils.Sequence):
             LOGGER.debug('batch_features.shape: %s', batch_features.shape)
             inputs.append(batch_features)
         inputs.append(batch_l)
+
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug('inputs shapes: %s', [
+                np.asarray(x).shape for x in inputs
+            ])
 
         return inputs, batch_y

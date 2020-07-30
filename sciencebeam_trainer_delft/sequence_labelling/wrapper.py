@@ -16,7 +16,8 @@ from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig, Tra
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     DataGenerator,
     get_all_batch_tokens,
-    concatenate_all_batch_tokens
+    concatenate_all_batch_tokens,
+    get_concatenated_embeddings_token_count
 )
 from sciencebeam_trainer_delft.sequence_labelling.trainer import (
     get_model_results,
@@ -74,7 +75,8 @@ def prepare_preprocessor(X, y, model_config, features: np.array = None):
     concatenated_batch_tokens = concatenate_all_batch_tokens(
         get_all_batch_tokens(
             X, features,
-            additional_token_feature_indices=model_config.additional_token_feature_indices
+            additional_token_feature_indices=model_config.additional_token_feature_indices,
+            text_feature_indices=model_config.text_feature_indices
         )
     )
     preprocessor.fit(concatenated_batch_tokens, y)
@@ -143,11 +145,16 @@ class Sequence(_Sequence):
 
     def update_model_config_word_embedding_size(self):
         if self.embeddings:
-            additional_token_feature_count = len(
-                self.model_config.additional_token_feature_indices or []
+            token_count = get_concatenated_embeddings_token_count(
+                concatenated_embeddings_token_count=(
+                    self.model_config.concatenated_embeddings_token_count
+                ),
+                additional_token_feature_indices=(
+                    self.model_config.additional_token_feature_indices
+                )
             )
             self.model_config.word_embedding_size = (
-                self.embeddings.embed_size * (1 + additional_token_feature_count)
+                self.embeddings.embed_size * token_count
             )
 
     def clear_embedding_cache(self):
@@ -287,6 +294,10 @@ class Sequence(_Sequence):
             ),
             preprocessor=self.p,
             additional_token_feature_indices=self.model_config.additional_token_feature_indices,
+            text_feature_indices=self.model_config.text_feature_indices,
+            concatenated_embeddings_token_count=(
+                self.model_config.concatenated_embeddings_token_count
+            ),
             char_embed_size=self.model_config.char_embedding_size,
             max_sequence_length=self.eval_max_sequence_length,
             embeddings=self.embeddings,

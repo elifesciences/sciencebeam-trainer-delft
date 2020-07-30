@@ -18,6 +18,8 @@ class ModelConfig(_ModelConfig):
             use_features: bool = False,
             max_feature_size: int = 50,
             additional_token_feature_indices: List[int] = None,
+            text_feature_indices: List[int] = None,
+            concatenated_embeddings_token_count: int = None,
             feature_indices: List[int] = None,
             feature_embedding_size: int = DEFAULT_FEATURES_EMBEDDING_SIZE,
             features_vocabulary_size: int = DEFAULT_FEATURES_VOCABULARY_SIZE,
@@ -28,6 +30,8 @@ class ModelConfig(_ModelConfig):
         super().__init__(*args)
         self.use_word_embeddings = use_word_embeddings
         self.additional_token_feature_indices = additional_token_feature_indices
+        self.text_feature_indices = text_feature_indices
+        self.concatenated_embeddings_token_count = concatenated_embeddings_token_count
         self.use_features = use_features
         self.max_feature_size = max_feature_size
         self.feature_indices = feature_indices

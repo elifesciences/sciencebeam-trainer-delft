@@ -43,31 +43,6 @@ def left_pad_batch_values(batch_values: np.array, max_sequence_length: int, dtyp
     return result
 
 
-# def left_pad_text_values(
-#         text_values: List[str],
-#         max_sequence_length: int,
-#         pad: str = '') -> List[str]:
-#     if len(text_values) >= max_sequence_length:
-#         return text_values[:max_sequence_length]
-#     return text_values + [pad] * (max_sequence_length - len(text_values))
-
-
-# def left_pad_batch_doc_sequence_text_values(
-#         batch_values: List[List[List[str]]],
-#         max_sequence_length: int,
-#         pad: str = '') -> List[List[List[str]]]:
-#     LOGGER.debug('left_pad_batch_doc_sequence_text_values, batch_values: %s', batch_values)
-#     result = [
-#         [
-#             left_pad_text_values(text_values, max_sequence_length, pad=pad)
-#             for text_values in doc_sequence
-#         ]
-#         for doc_sequence in batch_values
-#     ]
-#     LOGGER.debug('left_pad_batch_doc_sequence_text_values, result: %s', result)
-#     return result
-
-
 def truncate_batch_values(batch_values: list, max_sequence_length: int) -> list:
     return [
         row[:max_sequence_length]

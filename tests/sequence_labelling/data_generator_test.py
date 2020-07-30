@@ -11,6 +11,7 @@ from delft.sequenceLabelling.preprocess import to_casing_single, PAD
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     left_pad_batch_values,
     get_tokens_from_text_features,
+    get_batch_tokens_from_text_features,
     get_embeddings_tokens_for_concatenation,
     get_stateless_window_indices_and_offset,
     get_batch_window_indices_and_offset,
@@ -228,6 +229,24 @@ class TestGetTokensFromTextFeatures:
         assert get_tokens_from_text_features([
             'zero', NBSP.join([WORD_1, WORD_2, WORD_3]), WORD_4
         ], [1]) == [WORD_1, WORD_2, WORD_3]
+
+
+class TestGetBatchTokensFromTextFeatures:
+    def test_should_extract_text_features_and_pad(self):
+        batch_features = [[
+            ['zero', NBSP.join([WORD_1, WORD_2, WORD_3]), WORD_4],
+            ['zero', NBSP.join([WORD_3, WORD_4]), WORD_1]
+        ]]
+        text_feature_indices = [1]
+        expected_batch_tokens = [
+            [[WORD_1, WORD_3]],
+            [[WORD_2, WORD_4]],
+            [[WORD_3, PAD]]
+        ]
+        assert (
+            get_batch_tokens_from_text_features(batch_features, text_feature_indices)
+            == expected_batch_tokens
+        )
 
 
 class TestGetEmbeddingsTokensForConcatenation:

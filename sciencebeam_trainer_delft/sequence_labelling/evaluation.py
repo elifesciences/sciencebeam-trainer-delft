@@ -1,7 +1,8 @@
 import logging
 import json
+from itertools import groupby
 from collections import defaultdict, OrderedDict
-from typing import List, Union, T
+from typing import List, Union, Tuple, T
 
 import numpy as np
 
@@ -45,10 +46,31 @@ class NpJsonEncoder(json.JSONEncoder):
 
 
 def _get_first(some_list: List[T], default_value: T = None) -> T:
-    try:
-        return some_list[0]
-    except IndexError:
-        return default_value
+    return next(some_list, default_value)
+    # try:
+    #     return some_list[0]
+    # except IndexError:
+    #     return default_value
+
+
+def get_first_entities(
+        y: List[Union[str, List[str]]],
+        prefix: str = 'first_') -> List[Tuple[str, int, int]]:
+    if not any(isinstance(s, list) for s in y):
+        y = [y]
+    offset = 0
+    first_entities = []
+    for seq in y:
+        entities = sorted(set(get_entities(seq)))
+        for type_name, grouped_entities in groupby(entities, key=lambda entity: entity[0]):
+            first_entity = _get_first(grouped_entities)
+            first_entities.append((
+                prefix + type_name,
+                first_entity[1] + offset,
+                first_entity[2] + offset
+            ))
+        offset += len(seq)
+    return first_entities
 
 
 class ClassificationResult:
@@ -57,8 +79,15 @@ class ClassificationResult:
             y_true: List[Union[str, List[str]]],
             y_pred: List[Union[str, List[str]]],
             evaluate_first_entities: bool = False):
+        self._y_true = y_true
+        self._y_pred = y_pred
         all_true_entities = set(get_entities(y_true))
         all_pred_entities = set(get_entities(y_pred))
+
+        if evaluate_first_entities:
+            all_true_entities |= set(get_first_entities(y_true))
+            all_pred_entities |= set(get_first_entities(y_pred))
+
         LOGGER.debug('all_true_entities: %s', all_true_entities)
         LOGGER.debug('all_pred_entities: %s', all_pred_entities)
 
@@ -76,16 +105,16 @@ class ClassificationResult:
         sorted_type_names = sorted(
             set(true_entities_by_type_name.keys()) | set(pred_entities_by_type_name.keys())
         )
-        if evaluate_first_entities:
-            for type_name in sorted_type_names.copy():
-                first_type_name = 'first_%s' % type_name
-                sorted_type_names.append(first_type_name)
-                true_entities_by_type_name[first_type_name] = set(
-                    sorted(true_entities_by_type_name[type_name])[:1]
-                )
-                pred_entities_by_type_name[first_type_name] = set(
-                    sorted(pred_entities_by_type_name[type_name])[:1]
-                )
+        # if evaluate_first_entities:
+        #     for type_name in sorted_type_names.copy():
+        #         first_type_name = 'first_%s' % type_name
+        #         sorted_type_names.append(first_type_name)
+        #         true_entities_by_type_name[first_type_name] = set(
+        #             sorted(true_entities_by_type_name[type_name])[:1]
+        #         )
+        #         pred_entities_by_type_name[first_type_name] = set(
+        #             sorted(pred_entities_by_type_name[type_name])[:1]
+        #         )
         self.scores = OrderedDict()
         for type_name in sorted_type_names:
             true_entities = true_entities_by_type_name[type_name]
@@ -128,6 +157,13 @@ class ClassificationResult:
             'f1': micro_f1,
             'support': np.sum(s)
         }
+
+    def with_first_entities(self):
+        return ClassificationResult(
+            y_true=self._y_true,
+            y_pred=self._y_pred,
+            evaluate_first_entities=True
+        )
 
     @property
     def f1(self):

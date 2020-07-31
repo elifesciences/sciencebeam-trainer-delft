@@ -1,11 +1,26 @@
 import logging
 
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import (
+    get_first_entities,
     ClassificationResult
 )
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+class TestGetFirstEntities:
+    def test_should_extract_first_entities_from_multiple_sequences(self):
+        y = [
+            ['O', 'O', 'O', 'B-MISC', 'I-MISC', 'B-MISC', 'O'],
+            ['B-PER', 'I-PER', 'O', 'B-PER', 'I-PER', 'B-MISC', 'I-MISC']
+        ]
+        seq2_offset = len(y[0])
+        assert set(get_first_entities(y)) == {
+            ('first_MISC', 3, 4),
+            ('first_PER', 0 + seq2_offset, 1 + seq2_offset),
+            ('first_MISC', 5 + seq2_offset, 6 + seq2_offset)
+        }
 
 
 class TestClassificationResult:
@@ -57,7 +72,9 @@ class TestClassificationResult:
             ['O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'B-MISC', 'O'],
             ['B-PER', 'I-PER', 'B-PER', 'I-PER', 'O']
         ]
-        result = ClassificationResult(y_true=y_true, y_pred=y_pred, evaluate_first_entities=True)
+        result = ClassificationResult(
+            y_true=y_true, y_pred=y_pred
+        ).with_first_entities()
         scores = result.scores
         assert scores.keys() == {'MISC', 'PER', 'first_MISC', 'first_PER'}
         assert scores['first_MISC'] == {
@@ -103,3 +120,30 @@ class TestClassificationResult:
             '',
             'all (micro avg.)       0.50      0.50      0.50         6'
         ]
+
+    def test_should_first_entities_entities_from_multiple_sequences(self):
+        y_true = [
+            ['O', 'O', 'O', 'B-MISC', 'I-MISC', 'B-MISC', 'O'],
+            ['B-PER', 'I-PER', 'O', 'B-PER', 'I-PER', 'B-MISC', 'I-MISC']
+        ]
+        y_pred = [
+            ['O', 'O', 'B-MISC', 'I-MISC', 'I-MISC', 'B-MISC', 'O'],
+            ['B-PER', 'I-PER', 'B-PER', 'I-PER', 'O', 'B-MISC', 'I-MISC']
+        ]
+        result = ClassificationResult(
+            y_true=y_true, y_pred=y_pred
+        ).with_first_entities()
+        scores = result.scores
+        assert scores.keys() == {'MISC', 'PER', 'first_MISC', 'first_PER'}
+        assert scores['first_MISC'] == {
+            'precision': 0.5,
+            'recall': 0.5,
+            'f1': 0.5,
+            'support': 2
+        }
+        assert scores['first_PER'] == {
+            'precision': 1.0,
+            'recall': 1.0,
+            'f1': 1.0,
+            'support': 1
+        }

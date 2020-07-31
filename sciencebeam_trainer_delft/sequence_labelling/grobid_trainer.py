@@ -372,13 +372,18 @@ def wapiti_train(
 
 def output_classification_result(
         classification_result: ClassificationResult,
-        output_format: str,
-        output_path: str = None,
+        eval_output_args: dict,
         eval_input_paths: List[str] = None,
         model_path: str = None,
         model_summary_props: dict = None):
+    eval_output_args = eval_output_args or dict()
+    output_format = eval_output_args.get('eval_output_args')
+    output_path = eval_output_args.get('eval_output_path')
+    eval_first_entity = eval_output_args.get('eval_first_entity')
     if not output_format:
         output_format = EvaluationOutputFormats.TEXT
+    if eval_first_entity:
+        classification_result = classification_result.with_first_entities()
     meta = {}
     meta['eval_timestamp'] = datetime.now(timezone.utc).isoformat()
     if eval_input_paths:
@@ -411,8 +416,7 @@ def do_train_eval(
         random_seed: int = DEFAULT_RANDOM_SEED,
         eval_input_paths: List[str] = None,
         eval_limit: int = None,
-        eval_output_format: str = None,
-        eval_output_path: str = None,
+        eval_output_args: dict = None,
         fold_count: int = 1,
         train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None):
@@ -466,8 +470,7 @@ def do_train_eval(
     )
     output_classification_result(
         classification_result,
-        output_format=eval_output_format,
-        output_path=eval_output_path,
+        eval_output_args=eval_output_args,
         eval_input_paths=eval_input_paths,
         model_path=model.get_model_output_path(output_path),
         model_summary_props=model.model_summary_props
@@ -519,8 +522,7 @@ def train_eval(
         random_seed: int = DEFAULT_RANDOM_SEED,
         eval_input_paths: List[str] = None,
         eval_limit: int = None,
-        eval_output_format: str = None,
-        eval_output_path: str = None,
+        eval_output_args: dict = None,
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         resume_train_model_path: str = None,
@@ -563,8 +565,7 @@ def train_eval(
         random_seed=random_seed,
         eval_input_paths=eval_input_paths,
         eval_limit=eval_limit,
-        eval_output_format=eval_output_format,
-        eval_output_path=eval_output_path,
+        eval_output_args=eval_output_args,
         train_notification_manager=train_notification_manager,
         download_manager=download_manager
     )
@@ -580,8 +581,7 @@ def wapiti_train_eval(
         random_seed: int = DEFAULT_RANDOM_SEED,
         eval_input_paths: List[str] = None,
         eval_limit: int = None,
-        eval_output_format: str = None,
-        eval_output_path: str = None,
+        eval_output_args: dict = None,
         fold_count: int = 1,
         max_epoch: int = 100,
         train_notification_manager: TrainNotificationManager = None,
@@ -611,8 +611,7 @@ def wapiti_train_eval(
             random_seed=random_seed,
             eval_input_paths=eval_input_paths,
             eval_limit=eval_limit,
-            eval_output_format=eval_output_format,
-            eval_output_path=eval_output_path,
+            eval_output_args=eval_output_args,
             train_notification_manager=train_notification_manager,
             download_manager=download_manager
         )
@@ -625,8 +624,7 @@ def do_eval_model(
         shuffle_input: bool = False,
         split_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
-        eval_output_format: str = None,
-        eval_output_path: str = None,
+        eval_output_args: dict = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
         model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
@@ -651,8 +649,7 @@ def do_eval_model(
     )
     output_classification_result(
         classification_result,
-        output_format=eval_output_format,
-        output_path=eval_output_path,
+        eval_output_args=eval_output_args,
         eval_input_paths=input_paths,
         model_path=model.model_path,
         model_summary_props=model.model_summary_props
@@ -717,8 +714,7 @@ def eval_model(
         max_sequence_length: int = 100,
         fold_count: int = 1,
         batch_size: int = 20,
-        eval_output_format: str = None,
-        eval_output_path: str = None,
+        eval_output_args: dict = None,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
@@ -742,8 +738,7 @@ def eval_model(
         shuffle_input=shuffle_input,
         random_seed=random_seed,
         split_input=split_input,
-        eval_output_format=eval_output_format,
-        eval_output_path=eval_output_path,
+        eval_output_args=eval_output_args,
         download_manager=download_manager
     )
 
@@ -757,8 +752,7 @@ def wapiti_eval_model(
         split_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         fold_count: int = 1,
-        eval_output_format: str = None,
-        eval_output_path: str = None,
+        eval_output_args: dict = None,
         download_manager: DownloadManager = None,
         wapiti_binary_path: str = None):
     assert fold_count == 1, 'only fold_count == 1 supported'
@@ -775,8 +769,7 @@ def wapiti_eval_model(
         shuffle_input=shuffle_input,
         random_seed=random_seed,
         split_input=split_input,
-        eval_output_format=eval_output_format,
-        eval_output_path=eval_output_path,
+        eval_output_args=eval_output_args,
         download_manager=download_manager
     )
 
@@ -1018,6 +1011,16 @@ def add_eval_output_format_argument(parser: argparse.ArgumentParser):
     )
 
 
+def add_eval_first_entity_argument(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--eval-first-entity",
+        action="store_true",
+        help=''.join([
+            'If set, additional evaluates the first entity (e.g. first_<author>).'
+        ])
+    )
+
+
 def add_eval_output_path_argument(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--eval-output-path",
@@ -1027,6 +1030,7 @@ def add_eval_output_path_argument(parser: argparse.ArgumentParser):
 
 def add_eval_output_arguments(parser: argparse.ArgumentParser):
     add_eval_output_format_argument(parser)
+    add_eval_first_entity_argument(parser)
     add_eval_output_path_argument(parser)
 
 
@@ -1302,6 +1306,7 @@ def get_eval_input_args(args: argparse.Namespace) -> dict:
 def get_eval_output_args(args: argparse.Namespace) -> dict:
     return dict(
         eval_output_format=args.eval_output_format,
+        eval_first_entity=args.eval_first_entity,
         eval_output_path=args.eval_output_path
     )
 
@@ -1479,8 +1484,8 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         train_eval(
             fold_count=args.fold_count,
             embeddings_name=embedding_name,
+            eval_output_args=get_eval_output_args(args),
             **get_eval_input_args(args),
-            **get_eval_output_args(args),
             **get_eval_model_args(args),
             **self.get_train_args(args)
         )
@@ -1515,7 +1520,7 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
             ),
             wapiti_train_args=get_wapiti_train_args(args),
             train_notification_manager=get_train_notification_manager(args),
-            **get_eval_output_args(args),
+            eval_output_args=get_eval_output_args(args)
         )
 
 
@@ -1538,7 +1543,7 @@ class EvalSubCommand(GrobidTrainerSubCommand):
         eval_model(
             model_path=args.model_path,
             split_input=args.use_eval_train_test_split,
-            **get_eval_output_args(args),
+            eval_output_args=get_eval_output_args(args),
             **self.get_common_args(args)
         )
 
@@ -1557,7 +1562,7 @@ class WapitiEvalSubCommand(GrobidTrainerSubCommand):
             model=args.model,
             input_paths=args.input,
             limit=args.limit,
-            **get_eval_output_args(args),
+            eval_output_args=get_eval_output_args(args),
             download_manager=self.download_manager,
             wapiti_binary_path=install_wapiti_and_get_path_or_none(
                 args.wapiti_install_source,

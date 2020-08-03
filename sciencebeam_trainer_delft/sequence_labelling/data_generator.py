@@ -162,7 +162,11 @@ def get_tokens_from_text_features(
         token_features: List[str],
         text_feature_indices: List[int]) -> List[str]:
     return tokenizeAndFilterSimple(' '.join([
-        token_features[text_feature_index]
+        (
+            token_features[text_feature_index]
+            if text_feature_index < len(token_features)
+            else ''
+        )
         for text_feature_index in text_feature_indices
     ]).replace(NBSP, ' '))
 

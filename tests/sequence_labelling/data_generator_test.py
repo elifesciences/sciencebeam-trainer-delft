@@ -226,10 +226,15 @@ class TestGetTokensFromTextFeatures:
             'zero', ' '.join([WORD_1, WORD_2, WORD_3]), WORD_4
         ], [1]) == [WORD_1, WORD_2, WORD_3]
 
-    def test_should_extract_multiple_tokens_from_single_token_feature_separated_by_npsp(self):
+    def test_should_extract_multiple_tokens_from_single_token_feature_separated_by_nbsp(self):
         assert get_tokens_from_text_features([
             'zero', NBSP.join([WORD_1, WORD_2, WORD_3]), WORD_4
         ], [1]) == [WORD_1, WORD_2, WORD_3]
+
+    def test_should_return_empty_array_if_text_index_does_not_exist(self):
+        assert get_tokens_from_text_features([
+            'zero', WORD_2, WORD_3
+        ], [10]) == []
 
 
 class TestGetBatchTokensFromTextFeatures:

@@ -104,6 +104,8 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --char-lstm-units="12" \
     --max-char-length="13" \
     --word-lstm-units="14" \
+    --dropout="0.1" \
+    --recurrent-dropout="0.2" \
     --max-epoch="50"
 ```
 

@@ -1203,6 +1203,10 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         help="Disable the use of word embedding"
     )
     parser.add_argument(
+        "--char-embedding-size", type=int, default=25,
+        help="size of char embedding"
+    )
+    parser.add_argument(
         "--char-lstm-units", type=int, default=25,
         help="number of list units for chars"
     )
@@ -1363,6 +1367,7 @@ class GrobidTrainerSubCommand(SubCommand):
             use_ELMo=args.use_ELMo,
             output_path=args.output,
             log_dir=args.checkpoint,
+            char_emb_size=args.char_embedding_size,
             char_lstm_units=args.char_lstm_units,
             word_lstm_units=args.word_lstm_units,
             max_epoch=args.max_epoch,

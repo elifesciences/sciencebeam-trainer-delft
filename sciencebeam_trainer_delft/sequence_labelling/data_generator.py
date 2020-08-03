@@ -162,7 +162,11 @@ def get_tokens_from_text_features(
         token_features: List[str],
         text_feature_indices: List[int]) -> List[str]:
     return tokenizeAndFilterSimple(' '.join([
-        token_features[text_feature_index]
+        (
+            token_features[text_feature_index]
+            if text_feature_index < len(token_features)
+            else ''
+        )
         for text_feature_index in text_feature_indices
     ]).replace(NBSP, ' '))
 
@@ -228,6 +232,62 @@ def get_all_batch_tokens(
             text_feature_indices=text_feature_indices
         )
     return [batch_tokens]
+
+
+def iter_batch_text_from_tokens_with_additional_token_features(
+        batch_tokens: Iterable[List[str]],
+        batch_features: Iterable[List[List[str]]],
+        additional_token_feature_indices: List[int]) -> List[List[List[str]]]:
+    if not additional_token_feature_indices:
+        return batch_tokens
+    return ([
+        [
+            ' '.join([token] + [
+                token_features[additional_token_feature_index]
+                for additional_token_feature_index in additional_token_feature_indices
+            ])
+            for token, token_features in zip(doc_tokens, doc_features)
+        ]
+        for doc_tokens, doc_features in zip(batch_tokens, batch_features)
+    ])
+
+
+def iter_batch_text_from_text_features(
+        batch_features: Iterable[List[List[str]]],
+        text_feature_indices: List[int]) -> Iterable[List[str]]:
+    LOGGER.debug('text_feature_indices: %s', text_feature_indices)
+    LOGGER.debug('batch_features: %s', batch_features)
+    return (
+        [
+            ' '.join(get_tokens_from_text_features(
+                token_features,
+                text_feature_indices
+            ))
+            for token_features in doc_features
+        ]
+        for doc_features in batch_features
+    )
+
+
+def iter_batch_text_list(
+        batch_tokens: List[List[str]],
+        batch_features: List[List[List[str]]],
+        additional_token_feature_indices: List[int],
+        text_feature_indices: List[int]) -> Iterable[List[str]]:
+    if additional_token_feature_indices and text_feature_indices:
+        raise ValueError('both, additional token and text features, not supported')
+    if additional_token_feature_indices:
+        return iter_batch_text_from_tokens_with_additional_token_features(
+            batch_tokens=batch_tokens,
+            batch_features=batch_features,
+            additional_token_feature_indices=additional_token_feature_indices
+        )
+    if text_feature_indices:
+        return iter_batch_text_from_text_features(
+            batch_features=batch_features,
+            text_feature_indices=text_feature_indices
+        )
+    return batch_tokens
 
 
 def concatenate_all_batch_tokens(

@@ -15,8 +15,7 @@ from sciencebeam_trainer_delft.embedding import Embeddings, EmbeddingManager
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig, TrainingConfig
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     DataGenerator,
-    get_all_batch_tokens,
-    concatenate_all_batch_tokens,
+    iter_batch_text_list,
     get_concatenated_embeddings_token_count
 )
 from sciencebeam_trainer_delft.sequence_labelling.trainer import (
@@ -72,20 +71,21 @@ def prepare_preprocessor(X, y, model_config, features: np.array = None):
         max_char_length=model_config.max_char_length,
         feature_preprocessor=feature_preprocessor
     )
-    concatenated_batch_tokens = concatenate_all_batch_tokens(
-        get_all_batch_tokens(
-            X, features,
-            additional_token_feature_indices=model_config.additional_token_feature_indices,
-            text_feature_indices=model_config.text_feature_indices
-        )
+    batch_text_list_iterable = iter_batch_text_list(
+        X, features,
+        additional_token_feature_indices=model_config.additional_token_feature_indices,
+        text_feature_indices=model_config.text_feature_indices
     )
-    preprocessor.fit(concatenated_batch_tokens, y)
+    LOGGER.info('fitting preprocessor')
+    preprocessor.fit(batch_text_list_iterable, y)
     if features is not None:
+        LOGGER.info('fitting features preprocessor')
         preprocessor.fit_features(features)
         if model_config.features_indices != preprocessor.feature_preprocessor.features_indices:
             LOGGER.info('revised features_indices: %s', model_config.features_indices)
             model_config.features_indices = preprocessor.feature_preprocessor.features_indices
         model_config.features_map_to_index = preprocessor.feature_preprocessor.features_map_to_index
+    LOGGER.info('done fitting preprocessor')
     return preprocessor
 
 

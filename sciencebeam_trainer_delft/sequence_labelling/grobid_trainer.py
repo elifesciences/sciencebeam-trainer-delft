@@ -309,7 +309,6 @@ def train(
     model = Sequence(
         model_name,
         max_epoch=max_epoch,
-        recurrent_dropout=0.50,
         embeddings_name=embeddings_name,
         embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
@@ -544,7 +543,6 @@ def train_eval(
     model = Sequence(
         model_name,
         max_epoch=max_epoch,
-        recurrent_dropout=0.50,
         embeddings_name=embeddings_name,
         embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
@@ -1203,8 +1201,24 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         help="Disable the use of word embedding"
     )
     parser.add_argument(
+        "--char-embedding-size", type=int, default=25,
+        help="size of char embedding"
+    )
+    parser.add_argument(
+        "--char-lstm-units", type=int, default=25,
+        help="number of list units for chars"
+    )
+    parser.add_argument(
         "--word-lstm-units", type=int, default=100,
-        help="number of words in lstm units"
+        help="number of lstm units for words"
+    )
+    parser.add_argument(
+        "--dropout", type=float, default=0.5,
+        help="main dropout"
+    )
+    parser.add_argument(
+        "--recurrent-dropout", type=float, default=0.5,
+        help="recurrent dropout"
     )
     add_max_epoch_argument(parser)
     parser.add_argument(
@@ -1359,7 +1373,11 @@ class GrobidTrainerSubCommand(SubCommand):
             use_ELMo=args.use_ELMo,
             output_path=args.output,
             log_dir=args.checkpoint,
+            char_emb_size=args.char_embedding_size,
+            char_lstm_units=args.char_lstm_units,
             word_lstm_units=args.word_lstm_units,
+            dropout=args.dropout,
+            recurrent_dropout=args.recurrent_dropout,
             max_epoch=args.max_epoch,
             use_features=args.use_features,
             feature_indices=args.feature_indices,

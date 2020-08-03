@@ -89,6 +89,26 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
+An example command using more configurable parameters:
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --char-embedding-size="11" \
+    --char-lstm-units="12" \
+    --max-char-length="13" \
+    --word-lstm-units="14" \
+    --dropout="0.1" \
+    --recurrent-dropout="0.2" \
+    --max-epoch="50"
+```
+
 ### Train Eval Sub Command
 
 The `train_eval` sub command is combining the `train` and `eval` command. It is reserving a slice of the input for the evaluation.

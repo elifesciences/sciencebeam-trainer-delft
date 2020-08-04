@@ -271,6 +271,31 @@ def to_concatenated_batch_vector_from_batch_text_list(
     return concatenated_batch_vector
 
 
+def get_token_padded_batch_text_list(batch_text_list: List[List[str]]) -> List[List[str]]:
+    batch_tokens_list = [
+        [
+            text.split(' ')
+            for text in batch_text
+        ]
+        for batch_text in batch_text_list
+    ]
+    max_token_count = max(
+        len(tokens)
+        for batch_tokens in batch_tokens_list
+        for tokens in batch_tokens
+    )
+    return [
+        [
+            ' '.join([
+                safe_list_get_at(tokens, token_index, PAD)
+                for token_index in range(max_token_count)
+            ])
+            for tokens in batch_tokens
+        ]
+        for batch_tokens in batch_tokens_list
+    ]
+
+
 def to_batch_casing(
         batch_tokens: List[List[str]],
         max_length: int = 300):
@@ -547,6 +572,11 @@ class DataGenerator(keras.utils.Sequence):
         ))
         LOGGER.debug('batch_text_list: %s', batch_text_list)
 
+        padded_batch_text_list = get_token_padded_batch_text_list(
+            batch_text_list
+        )
+        LOGGER.debug('padded_batch_text_list: %s', padded_batch_text_list)
+
         batch_x = self.to_concatenated_batch_vector_from_batch_text_list(
             batch_text_list,
             max_length_x,
@@ -570,11 +600,11 @@ class DataGenerator(keras.utils.Sequence):
                 batch_y = truncate_batch_values(batch_y, self.max_sequence_length)
 
             batches, batch_y = self.preprocessor.transform(
-                batch_text_list, batch_y, extend=extend
+                padded_batch_text_list, batch_y, extend=extend
             )
         else:
             batches = self.preprocessor.transform(
-                batch_text_list, extend=extend
+                padded_batch_text_list, extend=extend
             )
 
         batch_c = np.asarray(batches[0])

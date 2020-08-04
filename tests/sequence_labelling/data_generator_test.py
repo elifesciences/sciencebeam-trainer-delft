@@ -13,6 +13,7 @@ from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     get_tokens_from_text_features,
     iter_batch_text_list,
     iter_batch_tokens_by_token_index,
+    get_token_padded_batch_text_list,
     get_stateless_window_indices_and_offset,
     get_batch_window_indices_and_offset,
     DataGenerator,
@@ -367,6 +368,25 @@ class TestIterBatchTokensByTokenIndex:
             batch_text_list=batch_text_list,
             concatenated_embeddings_token_count=3
         )) == expected_batch_tokens_list
+
+
+class TestGetTokenPaddedBatchTextList:
+    def test_should_pad_with_longest_token_count(self):
+        batch_text_list = [
+            [
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4])
+            ]
+        ]
+        expected_token_padded_batch_text_list = [
+            [
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4, PAD])
+            ]
+        ]
+        assert get_token_padded_batch_text_list(
+            batch_text_list
+        ) == expected_token_padded_batch_text_list
 
 
 class TestGetStatelessWindowIndicesAndOffset:

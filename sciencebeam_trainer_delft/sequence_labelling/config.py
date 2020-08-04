@@ -7,6 +7,10 @@ from delft.sequenceLabelling.config import (
 )
 
 
+FIRST_MODEL_VERSION = 1
+MODEL_VERSION = 2
+
+
 class ModelConfig(_ModelConfig):
     DEFAULT_FEATURES_VOCABULARY_SIZE = 12
     DEFAULT_FEATURES_EMBEDDING_SIZE = 4
@@ -26,7 +30,7 @@ class ModelConfig(_ModelConfig):
             features_lstm_units: int = None,
             use_features_indices_input: bool = False,
             stateful: bool = False,
-            is_deprecated_padded_batch_text_list_enabled: bool = True,
+            model_version: int = MODEL_VERSION,
             **kwargs):
         super().__init__(*args)
         self.use_word_embeddings = use_word_embeddings
@@ -41,11 +45,16 @@ class ModelConfig(_ModelConfig):
         self.features_lstm_units = features_lstm_units
         self.use_features_indices_input = use_features_indices_input
         self.stateful = stateful
-        self.is_deprecated_padded_batch_text_list_enabled = (
-            is_deprecated_padded_batch_text_list_enabled
-        )
+        self.model_version = model_version
         for key, val in kwargs.items():
             setattr(self, key, val)
+
+    @property
+    def is_deprecated_padded_batch_text_list_enabled(self):
+        return (
+            self.model_version < 2
+            and self.text_feature_indices
+        )
 
     def save(self, file):
         try:
@@ -57,6 +66,8 @@ class ModelConfig(_ModelConfig):
     def load(cls, file):
         variables = json.load(file)
         self = cls()
+        # model version is assumed to the first version if not saved
+        self.model_version = FIRST_MODEL_VERSION
         for key, val in variables.items():
             setattr(self, key, val)
         return self

@@ -391,6 +391,8 @@ class DataGenerator(keras.utils.Sequence):
         self.is_deprecated_padded_batch_text_list_enabled = (
             is_deprecated_padded_batch_text_list_enabled
         )
+        if is_deprecated_padded_batch_text_list_enabled:
+            LOGGER.warning('using deprecated padded batch_text_list')
 
     def get_sample_count(self) -> int:
         if self.window_indices_and_offset:

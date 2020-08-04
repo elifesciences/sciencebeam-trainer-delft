@@ -338,6 +338,7 @@ class DataGenerator(keras.utils.Sequence):
             additional_token_feature_indices: List[int] = None,
             text_feature_indices: List[int] = None,
             concatenated_embeddings_token_count: int = None,
+            is_deprecated_padded_batch_text_list_enabled: bool = True,
             name: str = None):
         'Initialization'
         if use_word_embeddings is None:
@@ -387,6 +388,9 @@ class DataGenerator(keras.utils.Sequence):
         if self.shuffle and self.input_window_stride and stateful:
             LOGGER.info('not shuffling between epochs as number of batch windows could change')
             self.shuffle = False
+        self.is_deprecated_padded_batch_text_list_enabled = (
+            is_deprecated_padded_batch_text_list_enabled
+        )
 
     def get_sample_count(self) -> int:
         if self.window_indices_and_offset:
@@ -519,6 +523,13 @@ class DataGenerator(keras.utils.Sequence):
             text_is_token=text_is_token
         )
 
+    def to_padded_batch_text_list(
+            self,
+            batch_text_list: List[List[str]]) -> List[List[str]]:
+        if not self.is_deprecated_padded_batch_text_list_enabled:
+            return batch_text_list
+        return get_token_padded_batch_text_list(batch_text_list)
+
     def get_window_batch_data(  # pylint: disable=too-many-statements
             self,
             window_indices_and_offsets: List[Tuple[int, int]]):
@@ -572,7 +583,7 @@ class DataGenerator(keras.utils.Sequence):
         ))
         LOGGER.debug('batch_text_list: %s', batch_text_list)
 
-        padded_batch_text_list = get_token_padded_batch_text_list(
+        padded_batch_text_list = self.to_padded_batch_text_list(
             batch_text_list
         )
         LOGGER.debug('padded_batch_text_list: %s', padded_batch_text_list)

@@ -141,22 +141,6 @@ def to_dummy_batch_embedding_vector(
     return np.zeros((len(batch_tokens), max_length, 0), dtype='float32')
 
 
-def get_batch_tokens_with_additional_token_features(
-        batch_tokens: List[List[str]],
-        batch_features: List[List[List[str]]],
-        additional_token_feature_indices: List[int]) -> List[List[List[str]]]:
-    return [batch_tokens] + [
-        [
-            [
-                token_features[additional_token_feature_index]
-                for token_features in doc_features
-            ]
-            for doc_features in batch_features
-        ]
-        for additional_token_feature_index in additional_token_feature_indices
-    ]
-
-
 def get_tokens_from_text_features(
         token_features: List[str],
         text_feature_indices: List[int]) -> List[str]:
@@ -168,69 +152,6 @@ def get_tokens_from_text_features(
         )
         for text_feature_index in text_feature_indices
     ]).replace(NBSP, ' '))
-
-
-def get_batch_tokens_from_text_features(
-        batch_features: List[List[List[str]]],
-        text_feature_indices: List[int]) -> List[List[List[str]]]:
-    LOGGER.debug('text_feature_indices: %s', text_feature_indices)
-    LOGGER.debug('batch_features: %s', batch_features)
-    word_tokens_by_doc_sequence_token = [
-        [
-            get_tokens_from_text_features(
-                token_features,
-                text_feature_indices
-            )
-            for token_features in doc_features
-        ]
-        for doc_features in batch_features
-    ]
-    # for better or worse, the expected output is first indexed by the word token index
-    # that is why we are converting it to that form, first finding the maximum number
-    # of word tokens
-    LOGGER.debug('word_tokens_by_doc_sequence_token: %s', word_tokens_by_doc_sequence_token)
-    max_word_token_count = max(
-        len(word_tokens)
-        for doc_sequence in word_tokens_by_doc_sequence_token
-        for word_tokens in doc_sequence
-    )
-    LOGGER.debug('max_word_token_count: %s', max_word_token_count)
-    word_token_by_word_token_index = [
-        [
-            [
-                (
-                    word_tokens[word_token_index]
-                    if word_token_index < len(word_tokens)
-                    else PAD
-                )
-                for word_tokens in word_tokens_by_token
-            ]
-            for word_tokens_by_token in word_tokens_by_doc_sequence_token
-        ]
-        for word_token_index in range(max_word_token_count)
-    ]
-    return word_token_by_word_token_index
-
-
-def get_all_batch_tokens(
-        batch_tokens: List[List[str]],
-        batch_features: List[List[List[str]]],
-        additional_token_feature_indices: List[int],
-        text_feature_indices: List[int]) -> List[List[List[str]]]:
-    if additional_token_feature_indices and text_feature_indices:
-        raise ValueError('both, additional token and text features, not supported')
-    if additional_token_feature_indices:
-        return get_batch_tokens_with_additional_token_features(
-            batch_tokens=batch_tokens,
-            batch_features=batch_features,
-            additional_token_feature_indices=additional_token_feature_indices
-        )
-    if text_feature_indices:
-        return get_batch_tokens_from_text_features(
-            batch_features=batch_features,
-            text_feature_indices=text_feature_indices
-        )
-    return [batch_tokens]
 
 
 def iter_batch_text_from_tokens_with_additional_token_features(
@@ -287,19 +208,6 @@ def iter_batch_text_list(
             text_feature_indices=text_feature_indices
         )
     return batch_tokens
-
-
-def concatenate_all_batch_tokens(
-        all_batch_tokens: List[List[List[str]]]) -> List[List[str]]:
-    if len(all_batch_tokens) == 1:
-        return all_batch_tokens[0]
-    return [
-        [
-            ' '.join(all_tokens)
-            for all_tokens in zip(*all_doc_tokens)
-        ]
-        for all_doc_tokens in zip(*all_batch_tokens)
-    ]
 
 
 def safe_list_get_at(some_list: List[T], index: int, default_value: T) -> T:

@@ -26,6 +26,7 @@ class ModelConfig(_ModelConfig):
             features_lstm_units: int = None,
             use_features_indices_input: bool = False,
             stateful: bool = False,
+            is_deprecated_padded_batch_text_list_enabled: bool = True,
             **kwargs):
         super().__init__(*args)
         self.use_word_embeddings = use_word_embeddings
@@ -40,6 +41,9 @@ class ModelConfig(_ModelConfig):
         self.features_lstm_units = features_lstm_units
         self.use_features_indices_input = use_features_indices_input
         self.stateful = stateful
+        self.is_deprecated_padded_batch_text_list_enabled = (
+            is_deprecated_padded_batch_text_list_enabled
+        )
         for key, val in kwargs.items():
             setattr(self, key, val)
 

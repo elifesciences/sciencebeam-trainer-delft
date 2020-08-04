@@ -49,6 +49,9 @@ class Tagger:
                 self.model_config.concatenated_embeddings_token_count
             ),
             char_embed_size=self.model_config.char_embedding_size,
+            is_deprecated_padded_batch_text_list_enabled=(
+                self.model_config.is_deprecated_padded_batch_text_list_enabled
+            ),
             max_sequence_length=self.max_sequence_length,
             embeddings=self.embeddings,
             tokenize=tokeniz,

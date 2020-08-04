@@ -338,7 +338,7 @@ class DataGenerator(keras.utils.Sequence):
             additional_token_feature_indices: List[int] = None,
             text_feature_indices: List[int] = None,
             concatenated_embeddings_token_count: int = None,
-            is_deprecated_padded_batch_text_list_enabled: bool = True,
+            is_deprecated_padded_batch_text_list_enabled: bool = False,
             name: str = None):
         'Initialization'
         if use_word_embeddings is None:

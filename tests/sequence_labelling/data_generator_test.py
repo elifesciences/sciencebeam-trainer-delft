@@ -12,6 +12,7 @@ from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     left_pad_batch_values,
     get_tokens_from_text_features,
     iter_batch_text_list,
+    iter_batch_tokens_by_token_index,
     get_stateless_window_indices_and_offset,
     get_batch_window_indices_and_offset,
     DataGenerator,
@@ -305,6 +306,67 @@ class TestIterBatchTextList:
                 text_feature_indices=text_feature_indices
             )) == expected_batch_text_list
         )
+
+
+class TestIterBatchTokensByTokenIndex:
+    def test_should_return_passed_in_text_if_zero_token_count(self):
+        batch_text_list = [
+            [
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4])
+            ]
+        ]
+        expected_batch_tokens_list = [batch_text_list]
+        assert list(iter_batch_tokens_by_token_index(
+            batch_text_list=batch_text_list,
+            concatenated_embeddings_token_count=0
+        )) == expected_batch_tokens_list
+
+    def test_should_not_split_text_if_already_tokenized_and_only_one_token(self):
+        batch_text_list = [
+            [
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4])
+            ]
+        ]
+        expected_batch_tokens_list = [batch_text_list]
+        assert list(iter_batch_tokens_by_token_index(
+            batch_text_list=batch_text_list,
+            concatenated_embeddings_token_count=1,
+            text_is_token=True
+        )) == expected_batch_tokens_list
+
+    def test_should_split_text_and_extract_first_token(self):
+        batch_text_list = [
+            [
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4])
+            ]
+        ]
+        expected_batch_tokens_list = [
+            [[WORD_1, WORD_3]]
+        ]
+        assert list(iter_batch_tokens_by_token_index(
+            batch_text_list=batch_text_list,
+            concatenated_embeddings_token_count=1
+        )) == expected_batch_tokens_list
+
+    def test_should_split_text_and_pad_multiple_tokens(self):
+        batch_text_list = [
+            [
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4])
+            ]
+        ]
+        expected_batch_tokens_list = [
+            [[WORD_1, WORD_3]],
+            [[WORD_2, WORD_4]],
+            [[WORD_3, PAD]]
+        ]
+        assert list(iter_batch_tokens_by_token_index(
+            batch_text_list=batch_text_list,
+            concatenated_embeddings_token_count=3
+        )) == expected_batch_tokens_list
 
 
 class TestGetStatelessWindowIndicesAndOffset:

@@ -13,7 +13,6 @@ from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     get_tokens_from_text_features,
     get_batch_tokens_from_text_features,
     iter_batch_text_list,
-    get_embeddings_tokens_for_concatenation,
     get_stateless_window_indices_and_offset,
     get_batch_window_indices_and_offset,
     DataGenerator,
@@ -325,49 +324,6 @@ class TestIterBatchTextList:
                 text_feature_indices=text_feature_indices
             )) == expected_batch_text_list
         )
-
-
-class TestGetEmbeddingsTokensForConcatenation:
-    def test_should_return_passed_in_tokens(self):
-        all_batch_tokens = [
-            [
-                [WORD_1, WORD_2, WORD_3]
-            ]
-        ]
-        assert get_embeddings_tokens_for_concatenation(
-            all_batch_tokens,
-            concatenated_embeddings_token_count=1
-        ) == all_batch_tokens
-
-    def test_should_truncate_passed_in_tokens(self):
-        all_batch_tokens = [
-            [
-                [WORD_1, WORD_2, WORD_3]
-            ],
-            [
-                [WORD_3, WORD_4, WORD_1]
-            ]
-        ]
-        assert get_embeddings_tokens_for_concatenation(
-            all_batch_tokens,
-            concatenated_embeddings_token_count=1
-        ) == [all_batch_tokens[0]]
-
-    def test_should_append_empty_tokens(self):
-        all_batch_tokens = [
-            [
-                [WORD_1, WORD_2, WORD_3]
-            ]
-        ]
-        expected_batch_tokens = all_batch_tokens + [
-            [
-                [PAD, PAD, PAD]
-            ]
-        ]
-        assert get_embeddings_tokens_for_concatenation(
-            all_batch_tokens,
-            concatenated_embeddings_token_count=2
-        ) == expected_batch_tokens
 
 
 class TestGetStatelessWindowIndicesAndOffset:

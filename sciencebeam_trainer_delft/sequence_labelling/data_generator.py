@@ -1,6 +1,5 @@
 import logging
-from itertools import zip_longest
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, T
 
 import numpy as np
 import keras
@@ -303,39 +302,41 @@ def concatenate_all_batch_tokens(
     ]
 
 
-def get_embeddings_tokens_for_concatenation(
-        all_batch_tokens: List[List[List[str]]],  # token column x doc x sequence x token
-        concatenated_embeddings_token_count: int,
-        pad_token: str = PAD) -> List[List[List[str]]]:
-    default_batch_tokens = [[pad_token] * len(all_batch_tokens[0][0])] * len(all_batch_tokens[0])
-    batch_tokens_list = [
-        (batch_tokens or default_batch_tokens)
-        for batch_tokens, _ in zip_longest(
-            all_batch_tokens[:concatenated_embeddings_token_count],
-            range(concatenated_embeddings_token_count)
-        )
-    ]
-    LOGGER.debug('batch_tokens_list: %s', batch_tokens_list)
-    return batch_tokens_list
+def safe_list_get_at(some_list: List[T], index: int, default_value: T) -> T:
+    try:
+        return some_list[index]
+    except IndexError:
+        return default_value
 
 
-def to_concatenated_batch_vector(
+def to_concatenated_batch_vector_from_batch_text_list(
         to_batch_vector_fn: callable,
-        all_batch_tokens: List[List[List[str]]],  # token column x doc x sequence x token
+        batch_text_list: List[List[str]],
         *args,
         concatenated_embeddings_token_count: int,
         **kwargs):
-    batch_tokens_list = get_embeddings_tokens_for_concatenation(
-        all_batch_tokens,
-        concatenated_embeddings_token_count=concatenated_embeddings_token_count
-    )
+    if not concatenated_embeddings_token_count:
+        return to_dummy_batch_embedding_vector(batch_text_list, *args, **kwargs)
+    batch_tokens_list = [
+        [
+            text.split(' ')
+            for text in batch_text
+        ]
+        for batch_text in batch_text_list
+    ]
     batch_vector_list = [
         to_batch_vector_fn(
-            batch_tokens,
+            [
+                [
+                    safe_list_get_at(tokens, token_index, PAD)
+                    for tokens in batch_tokens
+                ]
+                for batch_tokens in batch_tokens_list
+            ],
             *args,
             **kwargs
         )
-        for batch_tokens in batch_tokens_list
+        for token_index in range(concatenated_embeddings_token_count)
     ]
     concatenated_batch_vector = np.concatenate(
         batch_vector_list,
@@ -355,7 +356,10 @@ def to_batch_casing(
 
 def get_concatenated_embeddings_token_count(
         concatenated_embeddings_token_count: int = None,
-        additional_token_feature_indices: List[int] = None) -> int:
+        additional_token_feature_indices: List[int] = None,
+        use_word_embeddings: bool = True) -> int:
+    if not use_word_embeddings:
+        return 0
     return (
         concatenated_embeddings_token_count
         or (1 + len(additional_token_feature_indices or []))
@@ -397,7 +401,8 @@ class DataGenerator(keras.utils.Sequence):
         self.text_feature_indices = text_feature_indices
         self.concatenated_embeddings_token_count = get_concatenated_embeddings_token_count(
             concatenated_embeddings_token_count=concatenated_embeddings_token_count,
-            additional_token_feature_indices=additional_token_feature_indices
+            additional_token_feature_indices=additional_token_feature_indices,
+            use_word_embeddings=use_word_embeddings
         )
         LOGGER.debug(
             'concatenated_embeddings_token_count: %s', self.concatenated_embeddings_token_count
@@ -550,13 +555,13 @@ class DataGenerator(keras.utils.Sequence):
         else:
             return to_batch_embedding_vector(batch_tokens, self.embeddings, max_length)
 
-    def to_concatenated_batch_vector(
+    def to_concatenated_batch_vector_from_batch_text_list(
             self,
-            all_batch_tokens: List[List[str]],
+            batch_text_list: List[List[str]],
             max_length: int) -> np.array:
-        return to_concatenated_batch_vector(
+        return to_concatenated_batch_vector_from_batch_text_list(
             self.to_batch_embedding_vector,
-            all_batch_tokens,
+            batch_text_list,
             max_length,
             concatenated_embeddings_token_count=self.concatenated_embeddings_token_count
         )
@@ -606,20 +611,18 @@ class DataGenerator(keras.utils.Sequence):
                 max_sequence_length=max_length_x
             )
 
-        all_batch_tokens = get_all_batch_tokens(
+        batch_text_list = list(iter_batch_text_list(
             x_tokenized,
             batch_features=sub_f,
             additional_token_feature_indices=self.additional_token_feature_indices,
             text_feature_indices=self.text_feature_indices
-        )
-        LOGGER.debug('all_batch_tokens: %s', all_batch_tokens)
+        ))
+        LOGGER.debug('batch_text_list: %s', batch_text_list)
 
-        batch_x = self.to_concatenated_batch_vector(
-            all_batch_tokens,
+        batch_x = self.to_concatenated_batch_vector_from_batch_text_list(
+            batch_text_list,
             max_length_x
         )
-
-        concatenated_batch_tokens = concatenate_all_batch_tokens(all_batch_tokens)
 
         if self.preprocessor.return_casing:
             batch_a = to_batch_casing(x_tokenized, max_length_x)
@@ -635,11 +638,11 @@ class DataGenerator(keras.utils.Sequence):
                 batch_y = truncate_batch_values(batch_y, self.max_sequence_length)
 
             batches, batch_y = self.preprocessor.transform(
-                concatenated_batch_tokens, batch_y, extend=extend
+                batch_text_list, batch_y, extend=extend
             )
         else:
             batches = self.preprocessor.transform(
-                concatenated_batch_tokens, extend=extend
+                batch_text_list, extend=extend
             )
 
         batch_c = np.asarray(batches[0])

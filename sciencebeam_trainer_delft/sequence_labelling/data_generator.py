@@ -160,7 +160,7 @@ def iter_batch_text_from_tokens_with_additional_token_features(
         additional_token_feature_indices: List[int]) -> List[List[List[str]]]:
     if not additional_token_feature_indices:
         return batch_tokens
-    return ([
+    return (
         [
             ' '.join([token] + [
                 token_features[additional_token_feature_index]
@@ -169,7 +169,7 @@ def iter_batch_text_from_tokens_with_additional_token_features(
             for token, token_features in zip(doc_tokens, doc_features)
         ]
         for doc_tokens, doc_features in zip(batch_tokens, batch_features)
-    ])
+    )
 
 
 def iter_batch_text_from_text_features(

@@ -11,9 +11,9 @@ from delft.sequenceLabelling.preprocess import to_casing_single, PAD
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     left_pad_batch_values,
     get_tokens_from_text_features,
-    get_batch_tokens_from_text_features,
     iter_batch_text_list,
-    get_embeddings_tokens_for_concatenation,
+    iter_batch_tokens_by_token_index,
+    get_token_padded_batch_text_list,
     get_stateless_window_indices_and_offset,
     get_batch_window_indices_and_offset,
     DataGenerator,
@@ -237,24 +237,6 @@ class TestGetTokensFromTextFeatures:
         ], [10]) == []
 
 
-class TestGetBatchTokensFromTextFeatures:
-    def test_should_extract_text_features_and_pad(self):
-        batch_features = [[
-            ['zero', NBSP.join([WORD_1, WORD_2, WORD_3]), WORD_4],
-            ['zero', NBSP.join([WORD_3, WORD_4]), WORD_1]
-        ]]
-        text_feature_indices = [1]
-        expected_batch_tokens = [
-            [[WORD_1, WORD_3]],
-            [[WORD_2, WORD_4]],
-            [[WORD_3, PAD]]
-        ]
-        assert (
-            get_batch_tokens_from_text_features(batch_features, text_feature_indices)
-            == expected_batch_tokens
-        )
-
-
 class TestIterBatchTextList:
     def test_should_return_regular_tokens_by_default(self):
         batch_tokens = [[
@@ -327,47 +309,84 @@ class TestIterBatchTextList:
         )
 
 
-class TestGetEmbeddingsTokensForConcatenation:
-    def test_should_return_passed_in_tokens(self):
-        all_batch_tokens = [
+class TestIterBatchTokensByTokenIndex:
+    def test_should_return_passed_in_text_if_zero_token_count(self):
+        batch_text_list = [
             [
-                [WORD_1, WORD_2, WORD_3]
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4])
             ]
         ]
-        assert get_embeddings_tokens_for_concatenation(
-            all_batch_tokens,
-            concatenated_embeddings_token_count=1
-        ) == all_batch_tokens
+        expected_batch_tokens_list = [batch_text_list]
+        assert list(iter_batch_tokens_by_token_index(
+            batch_text_list=batch_text_list,
+            concatenated_embeddings_token_count=0
+        )) == expected_batch_tokens_list
 
-    def test_should_truncate_passed_in_tokens(self):
-        all_batch_tokens = [
+    def test_should_not_split_text_if_already_tokenized_and_only_one_token(self):
+        batch_text_list = [
             [
-                [WORD_1, WORD_2, WORD_3]
-            ],
-            [
-                [WORD_3, WORD_4, WORD_1]
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4])
             ]
         ]
-        assert get_embeddings_tokens_for_concatenation(
-            all_batch_tokens,
-            concatenated_embeddings_token_count=1
-        ) == [all_batch_tokens[0]]
+        expected_batch_tokens_list = [batch_text_list]
+        assert list(iter_batch_tokens_by_token_index(
+            batch_text_list=batch_text_list,
+            concatenated_embeddings_token_count=1,
+            text_is_token=True
+        )) == expected_batch_tokens_list
 
-    def test_should_append_empty_tokens(self):
-        all_batch_tokens = [
+    def test_should_split_text_and_extract_first_token(self):
+        batch_text_list = [
             [
-                [WORD_1, WORD_2, WORD_3]
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4])
             ]
         ]
-        expected_batch_tokens = all_batch_tokens + [
+        expected_batch_tokens_list = [
+            [[WORD_1, WORD_3]]
+        ]
+        assert list(iter_batch_tokens_by_token_index(
+            batch_text_list=batch_text_list,
+            concatenated_embeddings_token_count=1
+        )) == expected_batch_tokens_list
+
+    def test_should_split_text_and_pad_multiple_tokens(self):
+        batch_text_list = [
             [
-                [PAD, PAD, PAD]
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4])
             ]
         ]
-        assert get_embeddings_tokens_for_concatenation(
-            all_batch_tokens,
-            concatenated_embeddings_token_count=2
-        ) == expected_batch_tokens
+        expected_batch_tokens_list = [
+            [[WORD_1, WORD_3]],
+            [[WORD_2, WORD_4]],
+            [[WORD_3, PAD]]
+        ]
+        assert list(iter_batch_tokens_by_token_index(
+            batch_text_list=batch_text_list,
+            concatenated_embeddings_token_count=3
+        )) == expected_batch_tokens_list
+
+
+class TestGetTokenPaddedBatchTextList:
+    def test_should_pad_with_longest_token_count(self):
+        batch_text_list = [
+            [
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4])
+            ]
+        ]
+        expected_token_padded_batch_text_list = [
+            [
+                ' '.join([WORD_1, WORD_2, WORD_3]),
+                ' '.join([WORD_3, WORD_4, PAD])
+            ]
+        ]
+        assert get_token_padded_batch_text_list(
+            batch_text_list
+        ) == expected_token_padded_batch_text_list
 
 
 class TestGetStatelessWindowIndicesAndOffset:

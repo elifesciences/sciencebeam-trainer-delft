@@ -56,7 +56,7 @@ elifePipeline {
             }
         }
 
-        elifeTagOnly { tag ->
+        elifeTagOnly { repoTag ->
             stage 'Push stable sciencebeam-trainer-delft image', {
                 def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft', commit)
                 image.tag('latest').push()

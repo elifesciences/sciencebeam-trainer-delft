@@ -63,9 +63,9 @@ def get_features_preprocessor(model_config) -> T_FeaturesPreprocessor:
     )
 
 
-def prepare_preprocessor(X, y, model_config, features: np.array = None):
+def prepare_preprocessor(X, y, model_config: ModelConfig, features: np.array = None):
     feature_preprocessor = None
-    if features is not None:
+    if model_config.use_features and features is not None:
         feature_preprocessor = get_features_preprocessor(model_config)
     preprocessor = Preprocessor(
         max_char_length=model_config.max_char_length,
@@ -78,7 +78,7 @@ def prepare_preprocessor(X, y, model_config, features: np.array = None):
     )
     LOGGER.info('fitting preprocessor')
     preprocessor.fit(batch_text_list_iterable, y)
-    if features is not None:
+    if model_config.use_features and features is not None:
         LOGGER.info('fitting features preprocessor')
         preprocessor.fit_features(features)
         if model_config.features_indices != preprocessor.feature_preprocessor.features_indices:
@@ -182,7 +182,7 @@ class Sequence(_Sequence):
             self.model_config.char_vocab_size = len(self.p.vocab_char)
             self.model_config.case_vocab_size = len(self.p.vocab_case)
 
-            if features_train is not None:
+            if self.model_config.use_features and features_train is not None:
                 LOGGER.info('x_train.shape: %s', x_train.shape)
                 LOGGER.info('features_train.shape: %s', features_train.shape)
                 sample_transformed_features = self.p.transform_features(features_train[:1])

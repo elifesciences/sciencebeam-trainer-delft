@@ -201,6 +201,13 @@ def pad_sequences(sequences, pad_tok=0, nlevels=1, max_char_length=30):
     return sequence_padded, sequence_length
 
 
+def _convert_keys(d: dict, convert_fn: callable) -> dict:
+    return {
+        convert_fn(key): value
+        for key, value in d.items()
+    }
+
+
 class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
     def __init__(self, features_indices: Iterable[int] = None,
                  features_vocabulary_size=ModelConfig.DEFAULT_FEATURES_VOCABULARY_SIZE,
@@ -214,6 +221,19 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
         # List of mappings to integers (corresponding to each feature column) of features values
         # This value could be provided (model has been loaded) or not (first-time-training)
         self.features_map_to_index = features_map_to_index
+
+    def __getstate__(self):
+        return {
+            'features_vocabulary_size': self.features_vocabulary_size,
+            'features_indices': self.features_indices,
+            'features_map_to_index': _convert_keys(self.features_map_to_index, str)
+        }
+
+    def __setstate__(self, state):
+        self.features_vocabulary_size = state['features_vocabulary_size']
+        self.features_indices = state['features_indices']
+        self.features_map_to_index = _convert_keys(state['features_map_to_index'], int)
+        return self
 
     def fit(self, X):
         if not self.features_indices:

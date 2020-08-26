@@ -241,6 +241,11 @@ def write_text(filepath: str, text: str, **kwargs):
         fp.write(text)
 
 
+def read_text(filepath: str, **kwargs) -> str:
+    with open_file(filepath, mode='r', **kwargs) as fp:
+        return fp.read()
+
+
 class FileRef(ABC):
     def __init__(self, file_url: str):
         self.file_url = file_url

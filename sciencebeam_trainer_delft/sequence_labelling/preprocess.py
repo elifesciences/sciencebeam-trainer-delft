@@ -86,14 +86,40 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
     def __init__(self, feature_indices: Iterable[int] = None):
         self.features_indices = feature_indices
         self.features_map_to_index = None
+        self.pipeline = FeaturesPreprocessor._create_pipeline(
+            feature_indices=feature_indices
+        )
+
+    @staticmethod
+    def _create_pipeline(feature_indices: Iterable[int] = None):
         feature_indices_set = None
         if feature_indices:
             feature_indices_set = set(feature_indices)
         to_dict_fn = partial(to_dict, feature_indices=feature_indices_set)
-        self.pipeline = Pipeline(steps=[
+        return Pipeline(steps=[
             ('to_dict', FunctionTransformer(to_dict_fn, validate=False)),
             ('vectorize', DictVectorizer(sparse=False))
         ])
+
+    @property
+    def vectorizer(self) -> DictVectorizer:
+        return self.pipeline.steps[-1][1]
+
+    def __getstate__(self):
+        return {
+            'features_indices': self.features_indices,
+            'vectorizer.feature_names': self.vectorizer.feature_names_,
+            'vectorizer.vocabulary': self.vectorizer.vocabulary_
+        }
+
+    def __setstate__(self, state):
+        self.features_indices = state['features_indices']
+        self.pipeline = FeaturesPreprocessor._create_pipeline(
+            feature_indices=self.features_indices
+        )
+        self.vectorizer.feature_names_ = state['vectorizer.feature_names']
+        self.vectorizer.vocabulary_ = state['vectorizer.vocabulary']
+        return self
 
     def fit(self, X):
         flattened_features = [

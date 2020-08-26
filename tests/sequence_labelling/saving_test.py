@@ -204,7 +204,7 @@ class TestModelSaverLoader:
             temp_dir / 'preprocessor_hidden.json'
         )
 
-        loaded_preprocessor = loader.load_preprocessor_from_directory(temp_dir)
+        loaded_preprocessor = loader.load_preprocessor_from_directory(str(temp_dir))
         assert (
             get_normalized_vars_with_type(loaded_preprocessor)
             == get_normalized_vars_with_type(preprocessor)
@@ -218,7 +218,7 @@ class TestModelSaverLoader:
             temp_dir / 'preprocessor_hidden.pickle'
         )
 
-        loaded_preprocessor = loader.load_preprocessor_from_directory(temp_dir)
+        loaded_preprocessor = loader.load_preprocessor_from_directory(str(temp_dir))
         assert (
             get_normalized_vars_with_type(loaded_preprocessor)
             == get_normalized_vars_with_type(preprocessor)
@@ -247,7 +247,7 @@ class TestModelSaverLoader:
             temp_dir / 'preprocessor_hidden.json'
         )
 
-        loaded_preprocessor = loader.load_preprocessor_from_directory(temp_dir)
+        loaded_preprocessor = loader.load_preprocessor_from_directory(str(temp_dir))
         assert (
             get_normalized_vars_with_type(loaded_preprocessor)
             == get_normalized_vars_with_type(preprocessor)
@@ -261,7 +261,7 @@ class TestModelSaverLoader:
             temp_dir / 'preprocessor_hidden.pickle'
         )
 
-        loaded_preprocessor = loader.load_preprocessor_from_directory(temp_dir)
+        loaded_preprocessor = loader.load_preprocessor_from_directory(str(temp_dir))
         assert (
             get_normalized_vars_with_type(loaded_preprocessor)
             == get_normalized_vars_with_type(preprocessor)

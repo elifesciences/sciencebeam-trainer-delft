@@ -113,12 +113,18 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
         }
 
     def __setstate__(self, state):
-        self.features_indices = state['features_indices']
-        self.pipeline = FeaturesPreprocessor._create_pipeline(
-            feature_indices=self.features_indices
-        )
-        self.vectorizer.feature_names_ = state['vectorizer.feature_names']
-        self.vectorizer.vocabulary_ = state['vectorizer.vocabulary']
+        try:
+            if 'pipeline' in state:
+                # original pickle
+                return super().__setstate__(state)
+            self.features_indices = state['features_indices']
+            self.pipeline = FeaturesPreprocessor._create_pipeline(
+                feature_indices=self.features_indices
+            )
+            self.vectorizer.feature_names_ = state['vectorizer.feature_names']
+            self.vectorizer.vocabulary_ = state['vectorizer.vocabulary']
+        except KeyError as exc:
+            raise KeyError('%r: found %s' % (exc, state.keys()))
         return self
 
     def fit(self, X):

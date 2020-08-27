@@ -2,6 +2,7 @@ elifePipeline {
     node('containers-jenkins-plugin') {
         def commit
         def baseGrobidTag
+        def version
 
         stage 'Checkout', {
             checkout scm

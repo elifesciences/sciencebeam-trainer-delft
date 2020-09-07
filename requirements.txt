@@ -11,6 +11,6 @@ textblob>=0.15.1
 h5py>=2.7.1
 unidecode>=1.0.22
 pydot>=1.2.4
-lmdb>=0.94
+lmdb>=0.94,<1.0.0
 keras-bert>=0.39.0,<0.85.0
 jsonpickle>=1.4.1

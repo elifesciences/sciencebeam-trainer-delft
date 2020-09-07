@@ -103,19 +103,43 @@ def get_xml_tag_for_annotation_label(annotation_label: str) -> str:
     return annotation_label.replace('<', '').replace('>', '').split('-', maxsplit=1)[-1]
 
 
+def iter_add_untagged_token_spans(
+        entity_chunks: List[Tuple[str, int, int]],
+        token_count: int,
+        untagged_chunk_type: str = None) -> List[Tuple[str, int, int]]:
+    prev_chunk_end_excl = 0
+    for chunk_type, chunk_start, chunk_end in entity_chunks:
+        if chunk_start > prev_chunk_end_excl:
+            yield untagged_chunk_type, prev_chunk_end_excl, (chunk_start - 1)
+        yield chunk_type, chunk_start, chunk_end
+        prev_chunk_end_excl = chunk_end + 1
+    if token_count > prev_chunk_end_excl:
+        yield untagged_chunk_type, prev_chunk_end_excl, (token_count - 1)
+
+
 def iter_doc_annotations_xml_text(
         doc_annotations: List[Tuple[str, str]]) -> Iterable[str]:
     LOGGER.debug('doc_annotations: %s', doc_annotations)
     text_tokens = [token_text for token_text, _ in doc_annotations]
     token_labels = [token_label for _, token_label in doc_annotations]
-    entity_chunks = get_entities(token_labels)
+    entity_chunks = list(iter_add_untagged_token_spans(
+        get_entities(token_labels),
+        len(token_labels)
+    ))
     LOGGER.debug('text_tokens: %s', text_tokens)
     LOGGER.debug('token_labels: %s', token_labels)
     LOGGER.debug('entity_chunks: %s', entity_chunks)
     return '\n'.join((
-        '    <{tag}>{text}</{tag}>'.format(
-            tag=get_xml_tag_for_annotation_label(chunk_type),
-            text=xml_escape(' '.join(text_tokens[chunk_start:chunk_end + 1]))
+        (
+            '    <{tag}>{text}</{tag}>'.format(
+                tag=get_xml_tag_for_annotation_label(chunk_type),
+                text=xml_escape(' '.join(text_tokens[chunk_start:chunk_end + 1]))
+            )
+            if chunk_type
+            else
+            '    {text}'.format(
+                text=xml_escape(' '.join(text_tokens[chunk_start:chunk_end + 1]))
+            )
         )
         for chunk_type, chunk_start, chunk_end in entity_chunks
     )) + '\n'

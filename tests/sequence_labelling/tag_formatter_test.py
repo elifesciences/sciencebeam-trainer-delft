@@ -7,7 +7,7 @@ from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     TagOutputFormats,
     get_tag_result,
     get_xml_tag_for_annotation_label,
-    format_tag_result
+    format_tag_result as _format_tag_result
 )
 
 
@@ -43,6 +43,12 @@ XML_1 = '\n'.join([
 ])
 
 MODEL_1 = 'model1'
+
+
+def format_tag_result(*args, **kwargs):
+    result = _format_tag_result(*args, **kwargs)
+    LOGGER.debug('result: %s', result)
+    return result
 
 
 class TestGetTagResult:
@@ -125,6 +131,20 @@ class TestFormatTagResult:
             '<xml>',
             '  <p>',
             '    <tag1>token1 token2</tag1>',
+            '    <tag2>token3</tag2>',
+            '  </p>',
+            '</xml>'
+        ]
+
+    def test_should_format_tag_list_result_as_xml_and_include_text_without_tags(self):
+        result = format_tag_result(
+            tag_result=[[['token1', 'O'], ['token2', 'O'], ['token3', 'tag2']]],
+            output_format=TagOutputFormats.XML
+        )
+        assert result.splitlines() == [
+            '<xml>',
+            '  <p>',
+            '    token1 token2',
             '    <tag2>token3</tag2>',
             '  </p>',
             '</xml>'

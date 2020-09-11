@@ -124,7 +124,7 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
             self.vectorizer.feature_names_ = state['vectorizer.feature_names']
             self.vectorizer.vocabulary_ = state['vectorizer.vocabulary']
         except KeyError as exc:
-            raise KeyError('%r: found %s' % (exc, state.keys()))
+            raise KeyError('%r: found %s' % (exc, state.keys())) from exc
         return self
 
     def fit(self, X):

@@ -50,10 +50,10 @@ def calculate_cardinality(feature_vector, indices=None):
             for row in rows:
                 try:
                     value = row[index_column]
-                except IndexError:
+                except IndexError as exc:
                     raise IndexError('out of index, index=%d, len=%d, row=%s' % (
                         index_column, len(row), row
-                    ))
+                    )) from exc
                 if value != " ":
                     values.add(value)
 

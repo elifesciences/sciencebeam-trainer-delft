@@ -26,7 +26,7 @@ class Attention(Layer):
         self.features_dim = 0
         self.W = None
         self.b = None
-        super(Attention, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def build(self, input_shape):
         assert len(input_shape) == 3

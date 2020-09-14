@@ -519,6 +519,18 @@ For a long running training process (`train` and `train_eval` or `wapiti_train` 
 (e.g. [Slack](https://api.slack.com/messaging/webhooks) or [Mattermost](https://docs.mattermost.com/developer/webhooks-incoming.html)).
 In that case, a message will be sent when the training completes or in case of an error (although not all error may be caught).
 
+### Environment Variables
+
+Environment variables can be useful when not directly interacting with the CLI, e.g. via GROBID.
+
+The following environment variables can be specified:
+
+| Name | Default | Description
+| ---- | ------- | -----------
+| `SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH` | *None* | The maximum sequence length to use, e.g. when tagging.
+| `SCIENCEBEAM_DELFT_BATCH_SIZE` | `10` | The batch size to use
+| `SCIENCEBEAM_DELFT_STATEFUL` | *None* (*False*) | Whether to enable stateful mode. This is useful in combination with a maximum sequence length to predict over the whole sequence, rather than truncating it. This may only work with a batch size of `1`.
+
 ## Training in Google's AI Platform
 
 You can train a model using Google's [AI Platform](https://cloud.google.com/ai-platform/). e.g.

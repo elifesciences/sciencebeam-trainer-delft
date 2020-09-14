@@ -46,7 +46,10 @@ from sciencebeam_trainer_delft.sequence_labelling.utils.train_notify import (
     notify_train_error
 )
 
-from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence
+from sciencebeam_trainer_delft.sequence_labelling.wrapper import (
+    Sequence,
+    get_default_batch_size
+)
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_labels_crf_file
 
@@ -956,7 +959,7 @@ def add_common_arguments(
         help="Set the random seed for reproducibility"
     )
     parser.add_argument(
-        "--batch-size", type=int, default=10,
+        "--batch-size", type=int, default=get_default_batch_size(),
         help="batch size"
     )
     parser.add_argument(

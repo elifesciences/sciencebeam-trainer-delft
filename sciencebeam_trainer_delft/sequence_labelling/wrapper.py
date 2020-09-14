@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import List
+from typing import Callable, List, T
 
 import numpy as np
 
@@ -53,6 +53,30 @@ DEFAUT_MODEL_PATH = 'data/models/sequenceLabelling/'
 DEFAULT_EMBEDDINGS_PATH = './embedding-registry.json'
 
 
+DEFAUT_BATCH_SIZE = 10
+
+
+class EnvironmentVariables:
+    # environment variables are mainly intended for GROBID, as we can't pass in arguments
+    MAX_SEQUENCE_LENGTH = 'SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH'
+    BATCH_SIZE = 'SCIENCEBEAM_DELFT_BATCH_SIZE'
+
+
+def get_typed_env(key: str, type_fn: Callable[[str], T], default_value: T = None) -> T:
+    max_sequence_length_str = os.getenv(key)
+    if not max_sequence_length_str:
+        return default_value
+    return type_fn(max_sequence_length_str)
+
+
+def get_default_max_sequence_length():
+    return get_typed_env(EnvironmentVariables.MAX_SEQUENCE_LENGTH, int, None)
+
+
+def get_default_batch_size():
+    return get_typed_env(EnvironmentVariables.BATCH_SIZE, int, default_value=DEFAUT_BATCH_SIZE)
+
+
 def get_features_preprocessor(model_config) -> T_FeaturesPreprocessor:
     if model_config.use_features_indices_input:
         return FeaturesIndicesInputPreprocessor(
@@ -94,18 +118,6 @@ def get_model_directory(model_name: str, dir_path: str = None):
     return os.path.join(dir_path or DEFAUT_MODEL_PATH, model_name)
 
 
-class EnvironmentVariables:
-    # environment variables are mainly intended for GROBID, as we can't pass in arguments
-    MAX_SEQUENCE_LENGTH = 'SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH'
-
-
-def get_default_max_sequence_length():
-    max_sequence_length_str = os.getenv(EnvironmentVariables.MAX_SEQUENCE_LENGTH)
-    if not max_sequence_length_str:
-        return None
-    return int(max_sequence_length_str)
-
-
 class Sequence(_Sequence):
     def __init__(
             self, *args,
@@ -119,6 +131,7 @@ class Sequence(_Sequence):
             training_props: dict = None,
             max_sequence_length: int = None,
             eval_max_sequence_length: int = None,
+            batch_size: int = None,
             eval_batch_size: int = None,
             stateful: bool = None,
             **kwargs):
@@ -133,6 +146,8 @@ class Sequence(_Sequence):
             )
         self.embedding_manager = embedding_manager
         self.embeddings = None
+        if not batch_size:
+            batch_size = get_default_batch_size()
         if not max_sequence_length:
             max_sequence_length = get_default_max_sequence_length()
         self.max_sequence_length = max_sequence_length
@@ -146,6 +161,7 @@ class Sequence(_Sequence):
         super().__init__(
             *args,
             max_sequence_length=max_sequence_length,
+            batch_size=batch_size,
             **kwargs
         )
         LOGGER.debug('use_features=%s', use_features)

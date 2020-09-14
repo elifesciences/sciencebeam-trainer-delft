@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import List
+from typing import Callable, List, T
 
 import numpy as np
 
@@ -9,6 +9,7 @@ from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
+from sciencebeam_trainer_delft.utils.misc import str_to_bool
 
 from sciencebeam_trainer_delft.embedding import Embeddings, EmbeddingManager
 
@@ -24,6 +25,7 @@ from sciencebeam_trainer_delft.sequence_labelling.trainer import (
     Trainer
 )
 from sciencebeam_trainer_delft.sequence_labelling.models import (
+    is_model_stateful,
     get_model,
     updated_implicit_model_config_props
 )
@@ -50,6 +52,39 @@ LOGGER = logging.getLogger(__name__)
 
 DEFAUT_MODEL_PATH = 'data/models/sequenceLabelling/'
 DEFAULT_EMBEDDINGS_PATH = './embedding-registry.json'
+
+
+DEFAUT_BATCH_SIZE = 10
+
+
+class EnvironmentVariables:
+    # environment variables are mainly intended for GROBID, as we can't pass in arguments
+    MAX_SEQUENCE_LENGTH = 'SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH'
+    BATCH_SIZE = 'SCIENCEBEAM_DELFT_BATCH_SIZE'
+    STATEFUL = 'SCIENCEBEAM_DELFT_STATEFUL'
+
+
+def get_typed_env(key: str, type_fn: Callable[[str], T], default_value: T = None) -> T:
+    max_sequence_length_str = os.getenv(key)
+    if not max_sequence_length_str:
+        return default_value
+    return type_fn(max_sequence_length_str)
+
+
+def get_default_max_sequence_length() -> int:
+    return get_typed_env(EnvironmentVariables.MAX_SEQUENCE_LENGTH, int, default_value=None)
+
+
+def get_default_batch_size() -> int:
+    return get_typed_env(EnvironmentVariables.BATCH_SIZE, int, default_value=DEFAUT_BATCH_SIZE)
+
+
+def get_default_stateful() -> bool:
+    return get_typed_env(
+        EnvironmentVariables.STATEFUL,
+        str_to_bool,
+        default_value=None
+    )
 
 
 def get_features_preprocessor(model_config) -> T_FeaturesPreprocessor:
@@ -104,8 +139,11 @@ class Sequence(_Sequence):
             embedding_manager: EmbeddingManager = None,
             config_props: dict = None,
             training_props: dict = None,
+            max_sequence_length: int = None,
             eval_max_sequence_length: int = None,
+            batch_size: int = None,
             eval_batch_size: int = None,
+            stateful: bool = None,
             **kwargs):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
@@ -118,11 +156,24 @@ class Sequence(_Sequence):
             )
         self.embedding_manager = embedding_manager
         self.embeddings = None
-        self.max_sequence_length = kwargs.get('max_sequence_length')
+        if not batch_size:
+            batch_size = get_default_batch_size()
+        if not max_sequence_length:
+            max_sequence_length = get_default_max_sequence_length()
+        self.max_sequence_length = max_sequence_length
         self.eval_max_sequence_length = eval_max_sequence_length
         self.eval_batch_size = eval_batch_size
         self.model_path = None
-        super().__init__(*args, **kwargs)
+        if stateful is None:
+            # use a stateful model, if supported
+            stateful = get_default_stateful()
+        self.stateful = stateful
+        super().__init__(
+            *args,
+            max_sequence_length=max_sequence_length,
+            batch_size=batch_size,
+            **kwargs
+        )
         LOGGER.debug('use_features=%s', use_features)
         self.model_config = ModelConfig(
             **{
@@ -496,6 +547,9 @@ class Sequence(_Sequence):
         self.model_path = directory
         self.p = model_loader.load_preprocessor_from_directory(directory)
         self.model_config = model_loader.load_model_config_from_directory(directory)
+        self.model_config.batch_size = self.training_config.batch_size
+        if self.stateful is not None:
+            self.model_config.stateful = self.stateful
 
         # load embeddings
         LOGGER.info('loading embeddings: %s', self.model_config.embeddings_name)
@@ -503,4 +557,8 @@ class Sequence(_Sequence):
         self.update_model_config_word_embedding_size()
 
         self.model = get_model(self.model_config, self.p, ntags=len(self.p.vocab_tag))
+        # update stateful flag depending on whether the model is actually stateful
+        # (and supports that)
+        self.model_config.stateful = is_model_stateful(self.model)
+        # load weights
         model_loader.load_model_from_directory(directory, model=self.model)

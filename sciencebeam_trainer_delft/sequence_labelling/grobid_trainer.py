@@ -46,7 +46,11 @@ from sciencebeam_trainer_delft.sequence_labelling.utils.train_notify import (
     notify_train_error
 )
 
-from sciencebeam_trainer_delft.sequence_labelling.wrapper import Sequence
+from sciencebeam_trainer_delft.sequence_labelling.wrapper import (
+    Sequence,
+    get_default_batch_size,
+    get_default_stateful
+)
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model_names, patch_get_model
 from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_labels_crf_file
 
@@ -820,6 +824,7 @@ def tag_input(
         shuffle_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = None,
+        stateful: bool = None,
         fold_count: int = 1,
         batch_size: int = 20,
         download_manager: DownloadManager = None,
@@ -832,6 +837,7 @@ def tag_input(
         output_path=output_path,
         model_path=model_path,
         max_sequence_length=max_sequence_length,
+        stateful=stateful,
         fold_count=fold_count,
         batch_size=batch_size,
         embedding_manager=embedding_manager,
@@ -956,7 +962,7 @@ def add_common_arguments(
         help="Set the random seed for reproducibility"
     )
     parser.add_argument(
-        "--batch-size", type=int, default=10,
+        "--batch-size", type=int, default=get_default_batch_size(),
         help="batch size"
     )
     parser.add_argument(
@@ -1095,6 +1101,26 @@ def add_max_epoch_argument(parser: argparse.ArgumentParser, **kwargs):
     )
 
 
+def add_stateful_argument(parser: argparse.ArgumentParser, **kwargs):
+    default_value = get_default_stateful()
+    parser.add_argument(
+        "--stateful",
+        dest="stateful",
+        default=default_value,
+        action="store_true",
+        help="Make RNNs stateful (required for truncated BPTT)",
+        **kwargs
+    )
+    parser.add_argument(
+        "--no-stateful",
+        dest="stateful",
+        default=default_value,
+        action="store_false",
+        help="Disable statefulness (default)",
+        **kwargs
+    )
+
+
 def add_train_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--architecture", default='BidLSTM_CRF',
@@ -1167,10 +1193,7 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         help="Number of LSTM units used by the features"
     )
 
-    parser.add_argument(
-        "--stateful", action="store_true",
-        help="Make RNNs stateful (required for truncated BPTT)"
-    )
+    add_stateful_argument(parser)
 
     parser.add_argument(
         "--input-window-stride",
@@ -1592,6 +1615,7 @@ class WapitiEvalSubCommand(GrobidTrainerSubCommand):
 class TagSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser, max_sequence_length_default=None)
+        add_stateful_argument(parser)
         add_model_path_argument(parser, required=True, help='directory to load the model from')
         add_tag_output_format_argument(parser)
 
@@ -1599,6 +1623,7 @@ class TagSubCommand(GrobidTrainerSubCommand):
         tag_input(
             model_path=args.model_path,
             tag_output_format=args.tag_output_format,
+            stateful=args.stateful,
             **self.get_common_args(args)
         )
 

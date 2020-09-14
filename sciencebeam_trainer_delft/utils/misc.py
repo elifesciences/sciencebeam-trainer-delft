@@ -39,3 +39,13 @@ def merge_dicts(dict_list: List[dict]) -> dict:
     for d in dict_list:
         result.update(d)
     return result
+
+
+def str_to_bool(value: str, default_value: bool = None) -> bool:
+    if not value:
+        return default_value
+    if value.lower() in {'true', 't', 'yes', '1'}:
+        return True
+    if value.lower() in {'false', 'f', 'no', '0'}:
+        return False
+    raise ValueError('invalid boolean value: %r' % value)

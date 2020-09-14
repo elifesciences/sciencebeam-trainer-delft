@@ -13,7 +13,10 @@ import numpy as np
 
 from delft.utilities.Embeddings import Embeddings
 
-from sciencebeam_trainer_delft.sequence_labelling.wrapper import get_model_directory
+from sciencebeam_trainer_delft.sequence_labelling.wrapper import (
+    EnvironmentVariables,
+    get_model_directory
+)
 import sciencebeam_trainer_delft.sequence_labelling.grobid_trainer as grobid_trainer_module
 from sciencebeam_trainer_delft.sequence_labelling.grobid_trainer import (
     set_random_seeds,
@@ -173,6 +176,53 @@ class TestGrobidTrainer:
                 '--input', INPUT_PATH_2
             ])
             assert opt.input == [INPUT_PATH_1, INPUT_PATH_2]
+
+        def test_should_use_stateful_env_variable_true_by_default(self, env_mock):
+            env_mock[EnvironmentVariables.STATEFUL] = 'true'
+            opt = parse_args([
+                'tag',
+                '--input', INPUT_PATH_1,
+                '--model-path', INPUT_PATH_2
+            ])
+            assert opt.stateful is True
+
+        def test_should_use_stateful_env_variable_false_by_default(self, env_mock):
+            env_mock[EnvironmentVariables.STATEFUL] = 'false'
+            opt = parse_args([
+                'tag',
+                '--input', INPUT_PATH_1,
+                '--model-path', INPUT_PATH_2
+            ])
+            assert opt.stateful is False
+
+        def test_should_fallback_to_none_statefulness(self, env_mock):
+            env_mock[EnvironmentVariables.STATEFUL] = ''
+            opt = parse_args([
+                'tag',
+                '--input', INPUT_PATH_1,
+                '--model-path', INPUT_PATH_2
+            ])
+            assert opt.stateful is None
+
+        def test_should_allow_to_set_stateful(self, env_mock):
+            env_mock[EnvironmentVariables.STATEFUL] = 'false'
+            opt = parse_args([
+                'tag',
+                '--input', INPUT_PATH_1,
+                '--model-path', INPUT_PATH_2,
+                '--stateful'
+            ])
+            assert opt.stateful is True
+
+        def test_should_allow_to_unset_stateful(self, env_mock):
+            env_mock[EnvironmentVariables.STATEFUL] = 'true'
+            opt = parse_args([
+                'tag',
+                '--input', INPUT_PATH_1,
+                '--model-path', INPUT_PATH_2,
+                '--no-stateful'
+            ])
+            assert opt.stateful is False
 
     @pytest.mark.usefixtures(
         'get_default_training_data_mock', 'load_data_and_labels_crf_file_mock'

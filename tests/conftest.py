@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import patch, MagicMock
 
 import pytest
 from py._path.local import LocalPath
@@ -43,3 +43,9 @@ def tf_eager_mode():
         tf.compat.v1.enable_eager_execution()
     except (ValueError, AttributeError) as e:
         LOGGER.debug('failed to switch to eager mode due to %s', e)
+
+
+@pytest.fixture
+def env_mock() -> dict:
+    with patch('os.environ', {}) as mock:
+        yield mock

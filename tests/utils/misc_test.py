@@ -1,6 +1,9 @@
+import pytest
+
 from sciencebeam_trainer_delft.utils.misc import (
     parse_number_ranges,
-    parse_dict
+    parse_dict,
+    str_to_bool
 )
 
 
@@ -43,3 +46,16 @@ class TestParseDict:
         assert parse_dict(
             ' key1 = value1 | key2 = value2 ', delimiter='|'
         ) == {'key1': 'value1', 'key2': 'value2'}
+
+
+class TestStrToBool:
+    def test_should_return_none_if_value_is_empty(self):
+        assert str_to_bool('') is None
+
+    @pytest.mark.parametrize("value", ["true", "True", "T", "Yes", "1"])
+    def test_should_return_true_for_true_values(self, value: str):
+        assert str_to_bool(value) is True
+
+    @pytest.mark.parametrize("value", ["false", "False", "F", "No", "0"])
+    def test_should_return_false_for_false_values(self, value: str):
+        assert str_to_bool(value) is False

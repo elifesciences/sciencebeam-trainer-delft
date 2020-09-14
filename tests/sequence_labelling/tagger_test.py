@@ -170,6 +170,33 @@ class TestTagger:
             [(TOKEN_1, TAG_1), (TOKEN_2, TAG_2), (TOKEN_3, TAG_3)]
         ]
 
+    def test_should_not_truncate_without_max_sequence_length(
+            self,
+            model_mock: MagicMock,
+            model_config: ModelConfig,
+            preprocessor: WordPreprocessor):
+        model_config.stateful = False
+        tagger = Tagger(
+            model=model_mock,
+            model_config=model_config,
+            preprocessor=preprocessor,
+            max_sequence_length=None
+        )
+        model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
+            DEFAULT_TAG_BY_TOKEN_MAP,
+            preprocessor=preprocessor
+        )
+        tag_result = tagger.tag(
+            [
+                [TOKEN_1, TOKEN_2, TOKEN_3]
+            ],
+            output_format=None
+        )
+        LOGGER.debug('tag_result: %s', tag_result)
+        assert tag_result == [
+            [(TOKEN_1, TAG_1), (TOKEN_2, TAG_2), (TOKEN_3, TAG_3)]
+        ]
+
     def test_should_tag_tokenized_texts_with_varying_lengths_and_stateful_sliding_windows(
             self,
             model_mock: MagicMock,

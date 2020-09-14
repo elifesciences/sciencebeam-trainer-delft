@@ -36,7 +36,7 @@ def predict_texts_with_sliding_window_if_enabled(
         and isinstance(texts[0], str)
     )
 
-    if not should_tokenize:
+    if not should_tokenize and max_sequence_length:
         max_actual_sequence_length = max(len(text) for text in texts)
         if max_actual_sequence_length <= max_sequence_length:
             LOGGER.info(

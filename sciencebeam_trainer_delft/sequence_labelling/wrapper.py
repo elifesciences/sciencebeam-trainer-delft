@@ -94,6 +94,18 @@ def get_model_directory(model_name: str, dir_path: str = None):
     return os.path.join(dir_path or DEFAUT_MODEL_PATH, model_name)
 
 
+class EnvironmentVariables:
+    # environment variables are mainly intended for GROBID, as we can't pass in arguments
+    MAX_SEQUENCE_LENGTH = 'SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH'
+
+
+def get_default_max_sequence_length():
+    max_sequence_length_str = os.getenv(EnvironmentVariables.MAX_SEQUENCE_LENGTH)
+    if not max_sequence_length_str:
+        return None
+    return int(max_sequence_length_str)
+
+
 class Sequence(_Sequence):
     def __init__(
             self, *args,
@@ -105,6 +117,7 @@ class Sequence(_Sequence):
             embedding_manager: EmbeddingManager = None,
             config_props: dict = None,
             training_props: dict = None,
+            max_sequence_length: int = None,
             eval_max_sequence_length: int = None,
             eval_batch_size: int = None,
             stateful: bool = None,
@@ -120,12 +133,21 @@ class Sequence(_Sequence):
             )
         self.embedding_manager = embedding_manager
         self.embeddings = None
-        self.max_sequence_length = kwargs.get('max_sequence_length')
+        if not max_sequence_length:
+            max_sequence_length = get_default_max_sequence_length()
+        self.max_sequence_length = max_sequence_length
         self.eval_max_sequence_length = eval_max_sequence_length
         self.eval_batch_size = eval_batch_size
         self.model_path = None
+        if max_sequence_length and stateful is None:
+            # use a stateful model, if supported
+            stateful = True
         self.stateful = stateful
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            *args,
+            max_sequence_length=max_sequence_length,
+            **kwargs
+        )
         LOGGER.debug('use_features=%s', use_features)
         self.model_config = ModelConfig(
             **{

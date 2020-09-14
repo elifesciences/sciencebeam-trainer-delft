@@ -9,6 +9,7 @@ from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
+from sciencebeam_trainer_delft.utils.misc import str_to_bool
 
 from sciencebeam_trainer_delft.embedding import Embeddings, EmbeddingManager
 
@@ -60,6 +61,7 @@ class EnvironmentVariables:
     # environment variables are mainly intended for GROBID, as we can't pass in arguments
     MAX_SEQUENCE_LENGTH = 'SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH'
     BATCH_SIZE = 'SCIENCEBEAM_DELFT_BATCH_SIZE'
+    STATEFUL = 'SCIENCEBEAM_DELFT_STATEFUL'
 
 
 def get_typed_env(key: str, type_fn: Callable[[str], T], default_value: T = None) -> T:
@@ -69,12 +71,20 @@ def get_typed_env(key: str, type_fn: Callable[[str], T], default_value: T = None
     return type_fn(max_sequence_length_str)
 
 
-def get_default_max_sequence_length():
-    return get_typed_env(EnvironmentVariables.MAX_SEQUENCE_LENGTH, int, None)
+def get_default_max_sequence_length() -> int:
+    return get_typed_env(EnvironmentVariables.MAX_SEQUENCE_LENGTH, int, default_value=None)
 
 
-def get_default_batch_size():
+def get_default_batch_size() -> int:
     return get_typed_env(EnvironmentVariables.BATCH_SIZE, int, default_value=DEFAUT_BATCH_SIZE)
+
+
+def get_default_stateful() -> bool:
+    return get_typed_env(
+        EnvironmentVariables.STATEFUL,
+        str_to_bool,
+        default_value=None
+    )
 
 
 def get_features_preprocessor(model_config) -> T_FeaturesPreprocessor:
@@ -154,9 +164,9 @@ class Sequence(_Sequence):
         self.eval_max_sequence_length = eval_max_sequence_length
         self.eval_batch_size = eval_batch_size
         self.model_path = None
-        if max_sequence_length and stateful is None:
+        if stateful is None:
             # use a stateful model, if supported
-            stateful = True
+            stateful = get_default_stateful()
         self.stateful = stateful
         super().__init__(
             *args,

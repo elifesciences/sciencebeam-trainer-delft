@@ -826,6 +826,10 @@ def tag_input(
         embedding_manager: EmbeddingManager = None,
         **kwargs):
 
+    stateful = None
+    if max_sequence_length:
+        stateful = True
+
     model = load_delft_model(
         model=model,
         use_ELMo=use_ELMo,
@@ -835,6 +839,7 @@ def tag_input(
         fold_count=fold_count,
         batch_size=batch_size,
         embedding_manager=embedding_manager,
+        stateful=stateful,
         **kwargs
     )
 

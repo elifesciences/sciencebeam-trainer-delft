@@ -1,6 +1,6 @@
 import logging
 import json
-from typing import List, Type
+from typing import List, Type, Union
 
 from keras.models import Model
 from keras.layers.merge import Concatenate
@@ -26,12 +26,14 @@ class CustomModel(BaseModel):
             require_casing: bool = False,
             use_crf: bool = False,
             supports_features: bool = False,
-            require_features_indices_input: bool = False):
+            require_features_indices_input: bool = False,
+            stateful: bool = False):
         super().__init__(config, ntags)
         self.require_casing = require_casing
         self.use_crf = use_crf
         self.supports_features = supports_features
         self.require_features_indices_input = require_features_indices_input
+        self.stateful = stateful
 
 
 def _concatenate_inputs(inputs: list):
@@ -55,10 +57,11 @@ class CustomBidLSTM_CRF(CustomModel):
     def __init__(self, config: ModelConfig, ntags=None):
         super().__init__(
             config, ntags,
-            require_casing=False, use_crf=True, supports_features=True
+            require_casing=False, use_crf=True, supports_features=True,
+            stateful=config.stateful
         )
 
-        stateful = config.stateful
+        stateful = self.stateful
         # stateful RNNs require the batch size to be passed in
         input_batch_size = config.batch_size if stateful else None
 
@@ -272,6 +275,13 @@ def _create_model(
         config: ModelConfig,
         ntags=None) -> CustomModel:
     return model_class(config, ntags=ntags)
+
+
+def is_model_stateful(model: Union[BaseModel, CustomModel]) -> bool:
+    try:
+        return model.stateful
+    except AttributeError:
+        return False
 
 
 def get_model(config, preprocessor, ntags=None):

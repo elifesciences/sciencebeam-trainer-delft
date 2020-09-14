@@ -24,6 +24,7 @@ from sciencebeam_trainer_delft.sequence_labelling.trainer import (
     Trainer
 )
 from sciencebeam_trainer_delft.sequence_labelling.models import (
+    is_model_stateful,
     get_model,
     updated_implicit_model_config_props
 )
@@ -106,6 +107,7 @@ class Sequence(_Sequence):
             training_props: dict = None,
             eval_max_sequence_length: int = None,
             eval_batch_size: int = None,
+            stateful: bool = None,
             **kwargs):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
@@ -122,6 +124,7 @@ class Sequence(_Sequence):
         self.eval_max_sequence_length = eval_max_sequence_length
         self.eval_batch_size = eval_batch_size
         self.model_path = None
+        self.stateful = stateful
         super().__init__(*args, **kwargs)
         LOGGER.debug('use_features=%s', use_features)
         self.model_config = ModelConfig(
@@ -496,6 +499,9 @@ class Sequence(_Sequence):
         self.model_path = directory
         self.p = model_loader.load_preprocessor_from_directory(directory)
         self.model_config = model_loader.load_model_config_from_directory(directory)
+        self.model_config.batch_size = self.training_config.batch_size
+        if self.stateful is not None:
+            self.model_config.stateful = self.stateful
 
         # load embeddings
         LOGGER.info('loading embeddings: %s', self.model_config.embeddings_name)
@@ -503,4 +509,8 @@ class Sequence(_Sequence):
         self.update_model_config_word_embedding_size()
 
         self.model = get_model(self.model_config, self.p, ntags=len(self.p.vocab_tag))
+        # update stateful flag depending on whether the model is actually stateful
+        # (and supports that)
+        self.model_config.stateful = is_model_stateful(self.model)
+        # load weights
         model_loader.load_model_from_directory(directory, model=self.model)

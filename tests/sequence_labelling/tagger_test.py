@@ -40,7 +40,7 @@ def _model_mock():
 
 @pytest.fixture(name='model_config')
 def _model_config():
-    return ModelConfig()
+    return ModelConfig(batch_size=1)
 
 
 def get_preprocessor(
@@ -94,7 +94,8 @@ def get_prediction_by_tag(vocab_tag: Dict[str, int]):
 
 def get_predict_on_batch_by_token_fn(
         tag_by_token_map: Dict[str, List[float]],
-        preprocessor: WordPreprocessor):
+        preprocessor: WordPreprocessor,
+        batch_size: int = None):
     vocab_tag = preprocessor.vocab_tag
     LOGGER.debug('vocab_tag=%s', vocab_tag)
     char_by_index_map = {i: c for c, i in preprocessor.vocab_char.items()}
@@ -104,6 +105,10 @@ def get_predict_on_batch_by_token_fn(
     def predict_on_batch(inputs):
         char_inputs = inputs[1]
         inverse_char_inputs = inverse_char_transform(char_inputs, char_by_index_map)
+        if batch_size:
+            assert len(char_inputs) == batch_size, (
+                "expected batch size: %d, but was %d" % (batch_size, len(char_inputs))
+            )
         LOGGER.debug('inverse_char_inputs: %s', inverse_char_inputs)
         return np.asarray([
             [
@@ -130,7 +135,8 @@ class TestTagger:
         )
         model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
             DEFAULT_TAG_BY_TOKEN_MAP,
-            preprocessor=preprocessor
+            preprocessor=preprocessor,
+            batch_size=model_config.batch_size
         )
         tag_result = tagger.tag(
             [
@@ -157,7 +163,8 @@ class TestTagger:
         )
         model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
             DEFAULT_TAG_BY_TOKEN_MAP,
-            preprocessor=preprocessor
+            preprocessor=preprocessor,
+            batch_size=model_config.batch_size
         )
         tag_result = tagger.tag(
             [
@@ -184,7 +191,8 @@ class TestTagger:
         )
         model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
             DEFAULT_TAG_BY_TOKEN_MAP,
-            preprocessor=preprocessor
+            preprocessor=preprocessor,
+            batch_size=model_config.batch_size
         )
         tag_result = tagger.tag(
             [
@@ -211,7 +219,39 @@ class TestTagger:
         )
         model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
             DEFAULT_TAG_BY_TOKEN_MAP,
-            preprocessor=preprocessor
+            preprocessor=preprocessor,
+            batch_size=model_config.batch_size
+        )
+        tag_result = tagger.tag(
+            [
+                [TOKEN_1, TOKEN_2, TOKEN_3],
+                [TOKEN_2, TOKEN_3]
+            ],
+            output_format=None
+        )
+        LOGGER.debug('tag_result: %s', tag_result)
+        assert tag_result == [
+            [(TOKEN_1, TAG_1), (TOKEN_2, TAG_2), (TOKEN_3, TAG_3)],
+            [(TOKEN_2, TAG_2), (TOKEN_3, TAG_3)]
+        ]
+
+    def test_should_tag_tokenized_texts_with_exact_batch_size(
+            self,
+            model_mock: MagicMock,
+            model_config: ModelConfig,
+            preprocessor: WordPreprocessor):
+        model_config.stateful = True
+        model_config.batch_size = 2
+        tagger = Tagger(
+            model=model_mock,
+            model_config=model_config,
+            preprocessor=preprocessor,
+            max_sequence_length=2
+        )
+        model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
+            DEFAULT_TAG_BY_TOKEN_MAP,
+            preprocessor=preprocessor,
+            batch_size=model_config.batch_size
         )
         tag_result = tagger.tag(
             [

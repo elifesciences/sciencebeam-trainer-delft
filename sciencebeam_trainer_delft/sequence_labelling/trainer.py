@@ -186,7 +186,7 @@ class Trainer(_Trainer):
             ),
             max_sequence_length=self.model_config.max_sequence_length,
             embeddings=self.embeddings,
-            name='%s.%s' % (self.model_config.model_name, name_suffix)
+            name='%s.%s' % (self.model_config.model_name, name_suffix),
             **kwargs
         )
 

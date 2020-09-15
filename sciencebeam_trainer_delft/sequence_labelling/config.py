@@ -51,7 +51,7 @@ class ModelConfig(_ModelConfig):
 
     @property
     def is_deprecated_padded_batch_text_list_enabled(self):
-        return (
+        return bool(
             self.model_version < 2
             and self.text_feature_indices
         )

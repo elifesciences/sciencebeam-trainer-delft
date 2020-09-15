@@ -369,7 +369,7 @@ class Sequence(_Sequence):
             x_test, y_test,
             features=features,
             shuffle=False,
-            name='test_generator'
+            name='%s.test_generator' % self.model_config.model_name
         )
 
         prediction_result = get_model_results(

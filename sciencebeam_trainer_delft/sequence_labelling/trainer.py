@@ -168,7 +168,7 @@ class Trainer(_Trainer):
             'training_config': vars(self.training_config)
         }
 
-    def create_data_generator(self, *args, **kwargs) -> DataGenerator:
+    def create_data_generator(self, *args, name_suffix: str, **kwargs) -> DataGenerator:
         return DataGenerator(
             *args,
             batch_size=self.training_config.batch_size,
@@ -186,6 +186,7 @@ class Trainer(_Trainer):
             ),
             max_sequence_length=self.model_config.max_sequence_length,
             embeddings=self.embeddings,
+            name='%s.%s' % (self.model_config.model_name, name_suffix)
             **kwargs
         )
 
@@ -208,14 +209,14 @@ class Trainer(_Trainer):
                 x_train, y_train,
                 shuffle=True,
                 features=features_train,
-                name='training_generator'
+                name_suffix='training_generator'
             )
 
             validation_generator = self.create_data_generator(
                 x_valid, y_valid,
                 shuffle=False,
                 features=features_valid,
-                name='validation_generator'
+                name_suffix='validation_generator'
             )
 
             callbacks = get_callbacks(
@@ -236,7 +237,7 @@ class Trainer(_Trainer):
                 x_train, y_train,
                 shuffle=True,
                 features=features_all,
-                name='training_generator'
+                name_suffix='training_generator'
             )
 
             callbacks = get_callbacks(

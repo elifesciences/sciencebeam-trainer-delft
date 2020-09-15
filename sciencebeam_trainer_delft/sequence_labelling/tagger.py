@@ -40,21 +40,27 @@ def predict_texts_with_sliding_window_if_enabled(
         max_actual_sequence_length = max(len(text) for text in texts)
         if max_actual_sequence_length <= max_sequence_length:
             LOGGER.info(
-                'all text sequences below max sequence length: %d <= %d',
-                max_actual_sequence_length, max_sequence_length
+                'all text sequences below max sequence length: %d <= %d (model: %s)',
+                max_actual_sequence_length, max_sequence_length,
+                model_config.model_name
             )
         elif model_config.stateful:
             LOGGER.info(
-                'some text sequences exceed max sequence length (using sliding windows): %d > %d',
-                max_actual_sequence_length, max_sequence_length
+                (
+                    'some text sequences exceed max sequence length (using sliding windows):'
+                    ' %d > %d (model: %s)'
+                ),
+                max_actual_sequence_length, max_sequence_length,
+                model_config.model_name
             )
         else:
             LOGGER.info(
                 (
                     'some text sequences exceed max sequence length'
-                    ' (truncate, model is not stateful): %d > %d'
+                    ' (truncate, model is not stateful): %d > %d (model: %s)'
                 ),
-                max_actual_sequence_length, max_sequence_length
+                max_actual_sequence_length, max_sequence_length,
+                model_config.model_name
             )
 
     predict_generator = DataGenerator(
@@ -81,7 +87,7 @@ def predict_texts_with_sliding_window_if_enabled(
         tokenize=should_tokenize,
         shuffle=False,
         features=features,
-        name='predict_generator'
+        name='%s.predict_generator' % model_config.model_name
     )
 
     prediction_list_list = [[] for _ in texts]

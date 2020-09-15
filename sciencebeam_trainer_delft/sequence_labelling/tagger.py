@@ -7,6 +7,8 @@ import numpy as np
 from delft.utilities.Embeddings import Embeddings
 from delft.utilities.Tokenizer import tokenizeAndFilter
 
+from sciencebeam_trainer_delft.utils.progress_logger import logging_tqdm
+
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import Preprocessor
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
@@ -91,8 +93,14 @@ def predict_texts_with_sliding_window_if_enabled(
     )
 
     prediction_list_list = [[] for _ in texts]
-    batch_window_indices_and_offsets_iterable = iter_batch_window_indices_and_offsets(
-        predict_generator
+    batch_window_indices_and_offsets_iterable = logging_tqdm(
+        iter_batch_window_indices_and_offsets(
+            predict_generator
+        ),
+        logger=LOGGER,
+        total=len(predict_generator),
+        desc='%s: ' % predict_generator.name,
+        unit='batch'
     )
     for batch_window_indices_and_offsets in batch_window_indices_and_offsets_iterable:
         LOGGER.debug(

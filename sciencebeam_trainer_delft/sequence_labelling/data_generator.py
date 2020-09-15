@@ -386,13 +386,16 @@ class DataGenerator(keras.utils.Sequence):
         else:
             self.log_window_config()
         if self.shuffle and self.input_window_stride and stateful:
-            LOGGER.info('not shuffling between epochs as number of batch windows could change')
+            LOGGER.info(
+                'not shuffling between epochs as number of batch windows could change (name=%s)',
+                 self.name
+            )
             self.shuffle = False
         self.is_deprecated_padded_batch_text_list_enabled = (
             is_deprecated_padded_batch_text_list_enabled
         )
         if is_deprecated_padded_batch_text_list_enabled:
-            LOGGER.warning('using deprecated padded batch_text_list')
+            LOGGER.warning('using deprecated padded batch_text_list (name=%s)', self.name)
 
     def get_sample_count(self) -> int:
         if self.window_indices_and_offset:

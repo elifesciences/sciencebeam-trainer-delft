@@ -84,7 +84,13 @@ def load_data_and_labels_crf_lines(
         sents.append(tokens)
         labels.append(tags)
         featureSets.append(features)
-    return np.asarray(sents), np.asarray(labels), np.asarray(featureSets)
+    # specifying dtype object can significantly reduce the memory consumption
+    # e.g. for features it could be 20 MB instead of 1 GB
+    return (
+        np.asarray(sents, dtype='object'),
+        np.asarray(labels, dtype='object'),
+        np.asarray(featureSets, dtype='object')
+    )
 
 
 def load_data_crf_lines(

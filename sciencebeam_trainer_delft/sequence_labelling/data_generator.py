@@ -388,7 +388,7 @@ class DataGenerator(keras.utils.Sequence):
         if self.shuffle and self.input_window_stride and stateful:
             LOGGER.info(
                 'not shuffling between epochs as number of batch windows could change (name=%s)',
-                 self.name
+                self.name
             )
             self.shuffle = False
         self.is_deprecated_padded_batch_text_list_enabled = (

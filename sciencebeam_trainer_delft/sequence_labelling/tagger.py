@@ -31,6 +31,7 @@ def predict_texts_with_sliding_window_if_enabled(
         preprocessor: Preprocessor,
         max_sequence_length: int,
         model,
+        input_window_stride: int = None,
         embeddings: Embeddings = None,
         features: List[List[List[str]]] = None):
     should_tokenize = (
@@ -80,10 +81,7 @@ def predict_texts_with_sliding_window_if_enabled(
             model_config.is_deprecated_padded_batch_text_list_enabled
         ),
         max_sequence_length=max_sequence_length,
-        input_window_stride=(
-            max_sequence_length if model_config.stateful
-            else None
-        ),
+        input_window_stride=input_window_stride,
         stateful=model_config.stateful,
         embeddings=embeddings,
         tokenize=should_tokenize,
@@ -123,6 +121,10 @@ def predict_texts_with_sliding_window_if_enabled(
                 prediction_list_list[text_index]
             )
             current_offset = sum((len(a) for a in prediction_list_list[text_index]))
+            if current_offset > text_offset:
+                # skip over the overlapping window
+                seq_predictions = seq_predictions[(current_offset - text_offset):, :]
+                text_offset = current_offset
             assert (
                 current_offset == text_offset
             ), "expected %d to be %d" % (
@@ -148,12 +150,14 @@ class Tagger:
             model_config,
             embeddings=None,
             preprocessor=None,
-            max_sequence_length: int = None):
+            max_sequence_length: int = None,
+            input_window_stride: int = None):
         self.model = model
         self.preprocessor = preprocessor
         self.model_config = model_config
         self.embeddings = embeddings
         self.max_sequence_length = max_sequence_length
+        self.input_window_stride = input_window_stride
 
     def tag(self, texts, output_format, features=None):
         assert isinstance(texts, list)
@@ -175,6 +179,7 @@ class Tagger:
             model_config=self.model_config,
             preprocessor=self.preprocessor,
             max_sequence_length=self.max_sequence_length,
+            input_window_stride=self.input_window_stride,
             embeddings=self.embeddings
         )
         for i, pred_item in enumerate(preds_concatenated_list):

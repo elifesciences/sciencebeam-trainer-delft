@@ -121,17 +121,17 @@ def get_predict_on_batch_by_token_fn(
 
 
 class TestTagger:
-    def test_should_truncate_if_not_stateful(
+    def test_should_truncate_without_input_window_stride(
             self,
             model_mock: MagicMock,
             model_config: ModelConfig,
             preprocessor: WordPreprocessor):
-        model_config.stateful = False
         tagger = Tagger(
             model=model_mock,
             model_config=model_config,
             preprocessor=preprocessor,
-            max_sequence_length=2
+            max_sequence_length=2,
+            input_window_stride=None
         )
         model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
             DEFAULT_TAG_BY_TOKEN_MAP,
@@ -149,17 +149,45 @@ class TestTagger:
             [(TOKEN_1, TAG_1), (TOKEN_2, TAG_2)]
         ]
 
-    def test_should_not_truncate_if_stateful(
+    def test_should_not_truncate_with_input_window_stride(
             self,
             model_mock: MagicMock,
             model_config: ModelConfig,
             preprocessor: WordPreprocessor):
-        model_config.stateful = True
         tagger = Tagger(
             model=model_mock,
             model_config=model_config,
             preprocessor=preprocessor,
-            max_sequence_length=2
+            max_sequence_length=2,
+            input_window_stride=2
+        )
+        model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
+            DEFAULT_TAG_BY_TOKEN_MAP,
+            preprocessor=preprocessor,
+            batch_size=model_config.batch_size
+        )
+        tag_result = tagger.tag(
+            [
+                [TOKEN_1, TOKEN_2, TOKEN_3]
+            ],
+            output_format=None
+        )
+        LOGGER.debug('tag_result: %s', tag_result)
+        assert tag_result == [
+            [(TOKEN_1, TAG_1), (TOKEN_2, TAG_2), (TOKEN_3, TAG_3)]
+        ]
+
+    def test_should_allow_shorter_input_window_stride(
+            self,
+            model_mock: MagicMock,
+            model_config: ModelConfig,
+            preprocessor: WordPreprocessor):
+        tagger = Tagger(
+            model=model_mock,
+            model_config=model_config,
+            preprocessor=preprocessor,
+            max_sequence_length=2,
+            input_window_stride=1
         )
         model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
             DEFAULT_TAG_BY_TOKEN_MAP,
@@ -182,12 +210,12 @@ class TestTagger:
             model_mock: MagicMock,
             model_config: ModelConfig,
             preprocessor: WordPreprocessor):
-        model_config.stateful = False
         tagger = Tagger(
             model=model_mock,
             model_config=model_config,
             preprocessor=preprocessor,
-            max_sequence_length=None
+            max_sequence_length=None,
+            input_window_stride=None
         )
         model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
             DEFAULT_TAG_BY_TOKEN_MAP,
@@ -205,17 +233,17 @@ class TestTagger:
             [(TOKEN_1, TAG_1), (TOKEN_2, TAG_2), (TOKEN_3, TAG_3)]
         ]
 
-    def test_should_tag_tokenized_texts_with_varying_lengths_and_stateful_sliding_windows(
+    def test_should_tag_tokenized_texts_with_varying_lengths_and_sliding_windows(
             self,
             model_mock: MagicMock,
             model_config: ModelConfig,
             preprocessor: WordPreprocessor):
-        model_config.stateful = True
         tagger = Tagger(
             model=model_mock,
             model_config=model_config,
             preprocessor=preprocessor,
-            max_sequence_length=2
+            max_sequence_length=2,
+            input_window_stride=2
         )
         model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
             DEFAULT_TAG_BY_TOKEN_MAP,
@@ -235,7 +263,7 @@ class TestTagger:
             [(TOKEN_2, TAG_2), (TOKEN_3, TAG_3)]
         ]
 
-    def test_should_tag_tokenized_texts_with_exact_batch_size(
+    def test_should_tag_tokenized_texts_with_exact_batch_size_if_stateful(
             self,
             model_mock: MagicMock,
             model_config: ModelConfig,
@@ -246,7 +274,8 @@ class TestTagger:
             model=model_mock,
             model_config=model_config,
             preprocessor=preprocessor,
-            max_sequence_length=2
+            max_sequence_length=2,
+            input_window_stride=2
         )
         model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
             DEFAULT_TAG_BY_TOKEN_MAP,

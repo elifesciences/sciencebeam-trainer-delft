@@ -824,6 +824,7 @@ def tag_input(
         shuffle_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_sequence_length: int = None,
+        input_window_stride: int = None,
         stateful: bool = None,
         fold_count: int = 1,
         batch_size: int = 20,
@@ -837,6 +838,7 @@ def tag_input(
         output_path=output_path,
         model_path=model_path,
         max_sequence_length=max_sequence_length,
+        input_window_stride=input_window_stride,
         stateful=stateful,
         fold_count=fold_count,
         batch_size=batch_size,
@@ -1121,6 +1123,15 @@ def add_stateful_argument(parser: argparse.ArgumentParser, **kwargs):
     )
 
 
+def add_input_window_stride_argument(parser: argparse.ArgumentParser, **kwargs):
+    parser.add_argument(
+        "--input-window-stride",
+        type=int,
+        help="Should be equal or less than max sequence length",
+        **kwargs
+    )
+
+
 def add_train_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--architecture", default='BidLSTM_CRF',
@@ -1194,12 +1205,7 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     )
 
     add_stateful_argument(parser)
-
-    parser.add_argument(
-        "--input-window-stride",
-        type=int,
-        help="Should be equal or less than max sequence length"
-    )
+    add_input_window_stride_argument(parser)
 
     output_group = parser.add_argument_group('output')
     add_output_argument(output_group)
@@ -1616,6 +1622,7 @@ class TagSubCommand(GrobidTrainerSubCommand):
     def add_arguments(self, parser: argparse.ArgumentParser):
         add_common_arguments(parser, max_sequence_length_default=None)
         add_stateful_argument(parser)
+        add_input_window_stride_argument(parser)
         add_model_path_argument(parser, required=True, help='directory to load the model from')
         add_tag_output_format_argument(parser)
 
@@ -1624,6 +1631,7 @@ class TagSubCommand(GrobidTrainerSubCommand):
             model_path=args.model_path,
             tag_output_format=args.tag_output_format,
             stateful=args.stateful,
+            input_window_stride=args.input_window_stride,
             **self.get_common_args(args)
         )
 

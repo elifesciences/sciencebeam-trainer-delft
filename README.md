@@ -528,8 +528,9 @@ The following environment variables can be specified:
 | Name | Default | Description
 | ---- | ------- | -----------
 | `SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH` | *None* | The maximum sequence length to use, e.g. when tagging.
+| `SCIENCEBEAM_DELFT_INPUT_WINDOW_STRIDE` | *None* | The window stride to use (if any). If the model is stateless, this could be set to the maximum sequence length. Otherwise this could be a set to a value below the maximum sequence length. The difference will be the overlapping window. If no window stride was specified, the sequence will be truncated at the maximum sequence length.
 | `SCIENCEBEAM_DELFT_BATCH_SIZE` | `10` | The batch size to use
-| `SCIENCEBEAM_DELFT_STATEFUL` | *None* (*False*) | Whether to enable stateful mode. This is useful in combination with a maximum sequence length to predict over the whole sequence, rather than truncating it. This may only work with a batch size of `1`.
+| `SCIENCEBEAM_DELFT_STATEFUL` | *None* (*False*) | Whether to enable stateful mode. This may only work with a batch size of `1`. Note: the stateful mode is currently very slow.
 
 ## Training in Google's AI Platform
 

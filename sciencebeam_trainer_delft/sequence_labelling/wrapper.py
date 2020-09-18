@@ -60,6 +60,7 @@ DEFAUT_BATCH_SIZE = 10
 class EnvironmentVariables:
     # environment variables are mainly intended for GROBID, as we can't pass in arguments
     MAX_SEQUENCE_LENGTH = 'SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH'
+    INPUT_WINDOW_STRIDE = 'SCIENCEBEAM_DELFT_INPUT_WINDOW_STRIDE'
     BATCH_SIZE = 'SCIENCEBEAM_DELFT_BATCH_SIZE'
     STATEFUL = 'SCIENCEBEAM_DELFT_STATEFUL'
 
@@ -73,6 +74,10 @@ def get_typed_env(key: str, type_fn: Callable[[str], T], default_value: T = None
 
 def get_default_max_sequence_length() -> int:
     return get_typed_env(EnvironmentVariables.MAX_SEQUENCE_LENGTH, int, default_value=None)
+
+
+def get_default_input_window_stride() -> int:
+    return get_typed_env(EnvironmentVariables.INPUT_WINDOW_STRIDE, int, default_value=None)
 
 
 def get_default_batch_size() -> int:
@@ -140,6 +145,7 @@ class Sequence(_Sequence):
             config_props: dict = None,
             training_props: dict = None,
             max_sequence_length: int = None,
+            input_window_stride: int = None,
             eval_max_sequence_length: int = None,
             batch_size: int = None,
             eval_batch_size: int = None,
@@ -161,6 +167,9 @@ class Sequence(_Sequence):
         if not max_sequence_length:
             max_sequence_length = get_default_max_sequence_length()
         self.max_sequence_length = max_sequence_length
+        if not input_window_stride:
+            input_window_stride = get_default_input_window_stride()
+        self.input_window_stride = input_window_stride
         self.eval_max_sequence_length = eval_max_sequence_length
         self.eval_batch_size = eval_batch_size
         self.model_path = None
@@ -463,6 +472,7 @@ class Sequence(_Sequence):
         tagger = Tagger(
             self.model, self.model_config, self.embeddings,
             max_sequence_length=self.max_sequence_length,
+            input_window_stride=self.input_window_stride,
             preprocessor=self.p
         )
         start_time = time.time()

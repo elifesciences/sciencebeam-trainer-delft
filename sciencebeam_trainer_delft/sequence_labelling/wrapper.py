@@ -20,7 +20,6 @@ from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
     get_concatenated_embeddings_token_count
 )
 from sciencebeam_trainer_delft.sequence_labelling.trainer import (
-    get_model_results,
     Scorer,
     Trainer
 )
@@ -147,6 +146,7 @@ class Sequence(_Sequence):
             max_sequence_length: int = None,
             input_window_stride: int = None,
             eval_max_sequence_length: int = None,
+            eval_input_window_stride: int = None,
             batch_size: int = None,
             eval_batch_size: int = None,
             stateful: bool = None,
@@ -171,6 +171,7 @@ class Sequence(_Sequence):
             input_window_stride = get_default_input_window_stride()
         self.input_window_stride = input_window_stride
         self.eval_max_sequence_length = eval_max_sequence_length
+        self.eval_input_window_stride = eval_input_window_stride
         self.eval_batch_size = eval_batch_size
         self.model_path = None
         if stateful is None:
@@ -373,23 +374,26 @@ class Sequence(_Sequence):
             y_test: List[List[str]],
             features: List[List[List[str]]] = None) -> ClassificationResult:
         self._require_model()
-        # Prepare test data(steps, generator)
-        test_generator = self.create_eval_data_generator(
-            x_test, y_test,
-            features=features,
-            shuffle=False,
-            name='%s.test_generator' % self.model_config.model_name
-        )
-
-        prediction_result = get_model_results(
-            model=self.model,
-            valid_batches=test_generator,
+        if self.model_config.use_features and features is None:
+            raise ValueError('features required')
+        tagger = Tagger(
+            self.model, self.model_config, self.embeddings,
+            max_sequence_length=self.eval_max_sequence_length,
+            input_window_stride=self.eval_input_window_stride,
             preprocessor=self.p
         )
-        return ClassificationResult(
-            y_pred=prediction_result.y_pred,
-            y_true=prediction_result.y_true
+        tag_result = tagger.tag(
+            list(x_test),
+            output_format=None,
+            features=features
         )
+        y_pred = [
+            [token_tag for _, token_tag in doc_pred]
+            for doc_pred in tag_result
+        ]
+        # convert to list, get_entities is type checking for list but not ndarray
+        y_true = [list(true_doc) for true_doc in y_test]
+        return ClassificationResult(y_pred=y_pred, y_true=y_true)
 
     def eval_single(  # pylint: disable=arguments-differ
             self,

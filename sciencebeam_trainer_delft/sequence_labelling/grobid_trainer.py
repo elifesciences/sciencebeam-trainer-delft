@@ -1060,7 +1060,7 @@ def add_eval_input_arguments(parser: argparse.ArgumentParser):
     )
 
 
-def add_eval_model_arguments(parser: argparse.ArgumentParser):
+def add_dl_eval_model_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--eval-max-sequence-length",
         type=int,
@@ -1068,6 +1068,11 @@ def add_eval_model_arguments(parser: argparse.ArgumentParser):
             "Maximum sequence length to use for evaluation.",
             "If not specified, no limit will be applied."
         ])
+    )
+    parser.add_argument(
+        "--eval-input-window-stride",
+        type=int,
+        help="Should be equal or less than eval max sequence length"
     )
     parser.add_argument(
         "--eval-batch-size",
@@ -1354,9 +1359,10 @@ def get_eval_output_args(args: argparse.Namespace) -> dict:
     )
 
 
-def get_eval_model_args(args: argparse.Namespace) -> dict:
+def get_dl_eval_model_args(args: argparse.Namespace) -> dict:
     return dict(
         eval_max_sequence_length=args.eval_max_sequence_length,
+        eval_input_window_stride=args.eval_input_window_stride,
         eval_batch_size=args.eval_batch_size
     )
 
@@ -1511,7 +1517,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
         add_fold_count_argument(parser)
         add_eval_input_arguments(parser)
         add_eval_output_arguments(parser)
-        add_eval_model_arguments(parser)
+        add_dl_eval_model_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         if not args.model:
@@ -1533,7 +1539,7 @@ class TrainEvalSubCommand(GrobidTrainerSubCommand):
             embeddings_name=embedding_name,
             eval_output_args=get_eval_output_args(args),
             **get_eval_input_args(args),
-            **get_eval_model_args(args),
+            **get_dl_eval_model_args(args),
             **self.get_train_args(args)
         )
 
@@ -1544,7 +1550,6 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
         add_wapiti_train_arguments(parser)
         add_eval_input_arguments(parser)
         add_eval_output_arguments(parser)
-        add_eval_model_arguments(parser)
         add_wapiti_install_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
@@ -1584,13 +1589,16 @@ class EvalSubCommand(GrobidTrainerSubCommand):
             ])
         )
         add_eval_output_arguments(parser)
-        add_eval_model_arguments(parser)
+        add_stateful_argument(parser)
+        add_dl_eval_model_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):
         eval_model(
             model_path=args.model_path,
             split_input=args.use_eval_train_test_split,
             eval_output_args=get_eval_output_args(args),
+            stateful=args.stateful,
+            **get_dl_eval_model_args(args),
             **self.get_common_args(args)
         )
 
@@ -1600,7 +1608,6 @@ class WapitiEvalSubCommand(GrobidTrainerSubCommand):
         add_common_arguments(parser)
         add_model_path_argument(parser, required=True, help='directory to load the model from')
         add_eval_output_arguments(parser)
-        add_eval_model_arguments(parser)
         add_wapiti_install_arguments(parser)
 
     def do_run(self, args: argparse.Namespace):

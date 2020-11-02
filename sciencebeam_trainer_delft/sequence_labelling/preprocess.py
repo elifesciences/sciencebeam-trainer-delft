@@ -156,5 +156,5 @@ class Preprocessor(WordPreprocessor):
     def fit_features(self, features_batch):
         return self.feature_preprocessor.fit(features_batch)
 
-    def transform_features(self, features_batch, **kwargs):
+    def transform_features(self, features_batch, **kwargs):  # pylint: disable=arguments-differ
         return self.feature_preprocessor.transform(features_batch, **kwargs)

@@ -4,6 +4,8 @@ import os
 from datetime import datetime
 from abc import ABC
 
+import joblib
+
 from delft.sequenceLabelling.models import Model
 from delft.sequenceLabelling.preprocess import WordPreprocessor as DefaultWordPreprocessor
 
@@ -52,7 +54,7 @@ class ModelSaver(_BaseModelSaverLoader):
 
     def _save_preprocessor_pickle(self, preprocessor: Preprocessor, filepath: str):
         with open_file(filepath, 'wb') as fp:
-            preprocessor.save(fp)
+            joblib.dump(preprocessor, fp)
         LOGGER.info('preprocessor pickle saved to %s', filepath)
 
     def _save_model_config(self, model_config: ModelConfig, filepath: str):
@@ -132,7 +134,7 @@ class ModelLoader(_BaseModelSaverLoader):
     def load_preprocessor_from_pickle_file(self, filepath: str):
         LOGGER.info('loading preprocessor pickle from %s', filepath)
         with open_file(filepath, 'rb') as fp:
-            return Preprocessor.load(fp)
+            return joblib.load(fp)
 
     def load_preprocessor_from_json_file(self, filepath: str):
         LOGGER.info('loading preprocessor json from %s', filepath)

@@ -88,7 +88,7 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
         self.pipeline.fit(flattened_features)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **_):
         LOGGER.debug('transform, X: %s', X)
         return np.asarray([
             self.pipeline.transform(sentence_features)
@@ -100,12 +100,4 @@ T_FeaturesPreprocessor = Union[FeaturesPreprocessor, DelftFeaturesPreprocessor]
 
 
 class Preprocessor(WordPreprocessor):
-    def __init__(self, *args, feature_preprocessor: T_FeaturesPreprocessor = None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.feature_preprocessor = feature_preprocessor
-
-    def fit_features(self, features_batch):
-        return self.feature_preprocessor.fit(features_batch)
-
-    def transform_features(self, features_batch, **kwargs):  # pylint: disable=arguments-differ
-        return self.feature_preprocessor.transform(features_batch, **kwargs)
+    pass

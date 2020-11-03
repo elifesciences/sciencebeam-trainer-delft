@@ -635,7 +635,7 @@ class DataGenerator(keras.utils.Sequence):
         if self.preprocessor.return_features:
             LOGGER.debug('extend: %s', extend)
             try:
-                batch_features, _ = self.preprocessor.transform_features(sub_f, extend=extend)
+                batch_features = self.preprocessor.transform_features(sub_f, extend=extend)
                 batch_features = left_pad_batch_values(batch_features, max_length_x)
             except TypeError:
                 batch_features = left_pad_batch_values(

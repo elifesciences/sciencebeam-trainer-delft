@@ -1,11 +1,12 @@
 
 from delft.sequenceLabelling.preprocess import (
-    WordPreprocessor as DelftWordPreprocessor
+    WordPreprocessor as DelftWordPreprocessor,
+    FeaturesPreprocessor as DelftFeaturesPreprocessor
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
-    Preprocessor,
-    FeaturesPreprocessor
+    Preprocessor as ScienceBeamPreprocessor,
+    FeaturesPreprocessor as ScienceBeamFeaturesPreprocessor
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
@@ -23,17 +24,24 @@ class TestGetPreprocessor:
     def test_should_use_default_preprocessor_if_not_using_features(self):
         model_config = ModelConfig(use_features=False)
         preprocessor = get_preprocessor(model_config, has_features=False)
-        # Note: `Preprocessor` extends `WordProcessor`,
-        #   here we want to check that the base class is used
-        assert type(preprocessor) == DelftWordPreprocessor  # pylint: disable=unidiomatic-typecheck
+        assert isinstance(preprocessor, DelftWordPreprocessor)
+        assert not isinstance(preprocessor, ScienceBeamPreprocessor)
         assert preprocessor.feature_preprocessor is None
 
-    def test_should_create_preprocessor_with_feature_preprocessor(self):
-        model_config = ModelConfig(use_features=True)
+    def test_should_use_default_preprocessor_if_using_features_indices_input(self):
+        model_config = ModelConfig(use_features=True, use_features_indices_input=True)
         preprocessor = get_preprocessor(model_config, has_features=True)
-        assert isinstance(preprocessor, Preprocessor)
+        assert isinstance(preprocessor, DelftWordPreprocessor)
+        assert not isinstance(preprocessor, ScienceBeamPreprocessor)
         assert preprocessor.feature_preprocessor is not None
-        assert isinstance(preprocessor.feature_preprocessor, FeaturesPreprocessor)
+        assert isinstance(preprocessor.feature_preprocessor, DelftFeaturesPreprocessor)
+
+    def test_should_create_preprocessor_with_feature_preprocessor(self):
+        model_config = ModelConfig(use_features=True, use_features_indices_input=False)
+        preprocessor = get_preprocessor(model_config, has_features=True)
+        assert isinstance(preprocessor, ScienceBeamPreprocessor)
+        assert preprocessor.feature_preprocessor is not None
+        assert isinstance(preprocessor.feature_preprocessor, ScienceBeamFeaturesPreprocessor)
 
 
 class TestSequence:

@@ -5,7 +5,7 @@ from typing import Callable, List, T
 
 import numpy as np
 
-from delft.sequenceLabelling.preprocess import WordPreprocessor
+from delft.sequenceLabelling.preprocess import WordPreprocessor, FeaturesPreprocessor
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
@@ -32,8 +32,8 @@ from sciencebeam_trainer_delft.sequence_labelling.models import (
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
     Preprocessor,
     T_FeaturesPreprocessor,
-    FeaturesPreprocessor,
-    FeaturesIndicesInputPreprocessor
+    FeaturesPreprocessor as ScienceBeamFeaturesPreprocessor,
+    # FeaturesIndicesInputPreprocessor
 )
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver, ModelLoader
 from sciencebeam_trainer_delft.sequence_labelling.tagger import Tagger
@@ -94,11 +94,11 @@ def get_default_stateful() -> bool:
 
 def get_features_preprocessor(model_config: ModelConfig) -> T_FeaturesPreprocessor:
     if model_config.use_features_indices_input:
-        return FeaturesIndicesInputPreprocessor(
+        return FeaturesPreprocessor(
             features_indices=model_config.feature_indices,
             features_vocabulary_size=model_config.features_vocabulary_size
         )
-    return FeaturesPreprocessor(
+    return ScienceBeamFeaturesPreprocessor(
         feature_indices=model_config.feature_indices
     )
 
@@ -109,6 +109,11 @@ def get_preprocessor(model_config: ModelConfig, has_features: bool) -> T_Feature
             max_char_length=model_config.max_char_length
         )
     feature_preprocessor = get_features_preprocessor(model_config)
+    if model_config.use_features_indices_input:
+        return WordPreprocessor(
+            max_char_length=model_config.max_char_length,
+            feature_preprocessor=feature_preprocessor
+        )
     return Preprocessor(
         max_char_length=model_config.max_char_length,
         feature_preprocessor=feature_preprocessor

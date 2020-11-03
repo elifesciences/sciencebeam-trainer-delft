@@ -82,7 +82,7 @@ class TestJsonSerializePreprocessors:
     def test_should_serialize_features_preprocessor(self):
         features_preprocessor = ScienceBeamFeaturesPreprocessor(feature_indices=[0])
         features_preprocessor.fit(SAMPLE_FEATURES)
-        preprocessor = ScienceBeamPreprocessor(feature_preprocessor=features_preprocessor)
+        preprocessor = DelftWordPreprocessor(feature_preprocessor=features_preprocessor)
         LOGGER.debug('original params: %s', features_preprocessor.vectorizer.get_params())
         LOGGER.debug('original feature_names_: %s', features_preprocessor.vectorizer.feature_names_)
         LOGGER.debug('original vocabulary_: %s', features_preprocessor.vectorizer.vocabulary_)

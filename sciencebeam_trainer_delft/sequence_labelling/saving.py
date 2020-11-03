@@ -9,7 +9,7 @@ import joblib
 from delft.sequenceLabelling.models import Model
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
-    WordPreprocessor as DefaultWordPreprocessor
+    WordPreprocessor as DelftWordPreprocessor
 )
 
 from sciencebeam_trainer_delft.utils.cloud_support import auto_upload_from_local_file
@@ -18,7 +18,6 @@ from sciencebeam_trainer_delft.utils.json import to_json, from_json
 
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
-    Preprocessor,
     T_FeaturesPreprocessor
 )
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
@@ -42,7 +41,8 @@ def _convert_keys(d: dict, convert_fn: callable) -> dict:
     }
 
 
-def get_feature_preprocessor_json(feature_preprocessor: Preprocessor) -> dict:
+def get_feature_preprocessor_json(
+        feature_preprocessor: T_FeaturesPreprocessor) -> dict:
     if not isinstance(feature_preprocessor, DelftFeaturesPreprocessor):
         return feature_preprocessor.__getstate__()
     feature_preprocessor_dict = vars(feature_preprocessor).copy()
@@ -53,32 +53,37 @@ def get_feature_preprocessor_json(feature_preprocessor: Preprocessor) -> dict:
     return feature_preprocessor_dict
 
 
-def get_preprocessor_json(preprocessor: Preprocessor) -> dict:
-    if type(preprocessor) == DefaultWordPreprocessor:  # pylint: disable=unidiomatic-typecheck
-        preprocessor_dict = vars(preprocessor).copy()
-        feature_preprocessor = preprocessor_dict.get('feature_preprocessor')
-        if feature_preprocessor:
-            preprocessor_dict['feature_preprocessor'] = get_feature_preprocessor_json(
-                feature_preprocessor
-            )
-        return to_json(preprocessor_dict, plain_json=True)
-    return to_json(preprocessor)
+def get_preprocessor_json(preprocessor: DelftWordPreprocessor) -> dict:
+    if type(preprocessor) != DelftWordPreprocessor:  # pylint: disable=unidiomatic-typecheck
+        return to_json(preprocessor)
+    preprocessor_dict = vars(preprocessor).copy()
+    feature_preprocessor = preprocessor_dict.get('feature_preprocessor')
+    if feature_preprocessor:
+        if type(feature_preprocessor) != DelftFeaturesPreprocessor:  # noqa pylint: disable=unidiomatic-typecheck
+            return to_json(preprocessor)
+        preprocessor_dict['feature_preprocessor'] = get_feature_preprocessor_json(
+            feature_preprocessor
+        )
+    return to_json(preprocessor_dict, plain_json=True)
 
 
 def get_feature_preprocessor_for_json(feature_preprocessor_json: dict) -> T_FeaturesPreprocessor:
     if not feature_preprocessor_json:
         return None
+    LOGGER.debug('feature_preprocessor_json: %s', feature_preprocessor_json)
     feature_preprocessor = from_json(feature_preprocessor_json, DelftFeaturesPreprocessor)
     if isinstance(feature_preprocessor, DelftFeaturesPreprocessor):
-        feature_preprocessor.features_map_to_index = _convert_keys(
-            feature_preprocessor.features_map_to_index,
-            int
-        )
+        if isinstance(feature_preprocessor.features_map_to_index, dict):
+            # features_map_to_index is initialized as a list (but then used as a dict)
+            feature_preprocessor.features_map_to_index = _convert_keys(
+                feature_preprocessor.features_map_to_index,
+                int
+            )
     return feature_preprocessor
 
 
-def get_preprocessor_for_json(preprocessor_json: dict) -> Preprocessor:
-    preprocessor = from_json(preprocessor_json, DefaultWordPreprocessor)
+def get_preprocessor_for_json(preprocessor_json: dict) -> DelftWordPreprocessor:
+    preprocessor = from_json(preprocessor_json, DelftWordPreprocessor)
     LOGGER.debug('preprocessor type: %s', type(preprocessor))
     if isinstance(preprocessor, str):
         LOGGER.debug('preprocessor: %r', preprocessor)
@@ -92,19 +97,19 @@ def get_preprocessor_for_json(preprocessor_json: dict) -> Preprocessor:
 class ModelSaver(_BaseModelSaverLoader):
     def __init__(
             self,
-            preprocessor: Preprocessor,
+            preprocessor: DelftWordPreprocessor,
             model_config: ModelConfig):
         self.preprocessor = preprocessor
         self.model_config = model_config
 
-    def _save_preprocessor_json(self, preprocessor: Preprocessor, filepath: str):
+    def _save_preprocessor_json(self, preprocessor: DelftWordPreprocessor, filepath: str):
         write_text(
             filepath,
             json.dumps(get_preprocessor_json(preprocessor), sort_keys=False, indent=4)
         )
         LOGGER.info('preprocessor json saved to %s', filepath)
 
-    def _save_preprocessor_pickle(self, preprocessor: Preprocessor, filepath: str):
+    def _save_preprocessor_pickle(self, preprocessor: DelftWordPreprocessor, filepath: str):
         with open_file(filepath, 'wb') as fp:
             joblib.dump(preprocessor, fp)
         LOGGER.info('preprocessor pickle saved to %s', filepath)

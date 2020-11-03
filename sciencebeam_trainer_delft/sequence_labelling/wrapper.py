@@ -30,10 +30,8 @@ from sciencebeam_trainer_delft.sequence_labelling.models import (
     updated_implicit_model_config_props
 )
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
-    Preprocessor,
     T_FeaturesPreprocessor,
-    FeaturesPreprocessor as ScienceBeamFeaturesPreprocessor,
-    # FeaturesIndicesInputPreprocessor
+    FeaturesPreprocessor as ScienceBeamFeaturesPreprocessor
 )
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver, ModelLoader
 from sciencebeam_trainer_delft.sequence_labelling.tagger import Tagger
@@ -92,10 +90,14 @@ def get_default_stateful() -> bool:
     )
 
 
-def get_features_preprocessor(model_config: ModelConfig) -> T_FeaturesPreprocessor:
+def get_features_preprocessor(
+        model_config: ModelConfig,
+        features: np.array = None) -> T_FeaturesPreprocessor:
+    if not model_config.use_features or features is None:
+        return None
     if model_config.use_features_indices_input:
         return FeaturesPreprocessor(
-            features_indices=model_config.feature_indices,
+            features_indices=model_config.features_indices,
             features_vocabulary_size=model_config.features_vocabulary_size
         )
     return ScienceBeamFeaturesPreprocessor(
@@ -103,25 +105,18 @@ def get_features_preprocessor(model_config: ModelConfig) -> T_FeaturesPreprocess
     )
 
 
-def get_preprocessor(model_config: ModelConfig, has_features: bool) -> T_FeaturesPreprocessor:
-    if not model_config.use_features or not has_features:
-        return WordPreprocessor(
-            max_char_length=model_config.max_char_length
-        )
-    feature_preprocessor = get_features_preprocessor(model_config)
-    if model_config.use_features_indices_input:
-        return WordPreprocessor(
-            max_char_length=model_config.max_char_length,
-            feature_preprocessor=feature_preprocessor
-        )
-    return Preprocessor(
+def get_preprocessor(
+        model_config: ModelConfig,
+        features: np.array = None) -> T_FeaturesPreprocessor:
+    feature_preprocessor = get_features_preprocessor(model_config, features=features)
+    return WordPreprocessor(
         max_char_length=model_config.max_char_length,
         feature_preprocessor=feature_preprocessor
     )
 
 
 def prepare_preprocessor(X, y, model_config: ModelConfig, features: np.array = None):
-    preprocessor = get_preprocessor(model_config, has_features=features is not None)
+    preprocessor = get_preprocessor(model_config, features=features)
     batch_text_list_iterable = iter_batch_text_list(
         X, features,
         additional_token_feature_indices=model_config.additional_token_feature_indices,

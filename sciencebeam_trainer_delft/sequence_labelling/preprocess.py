@@ -11,7 +11,7 @@ from sklearn.preprocessing import FunctionTransformer
 
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
-    WordPreprocessor as _WordPreprocessor
+    WordPreprocessor as DelftWordPreprocessor
 )
 
 
@@ -29,7 +29,8 @@ def to_dict(value_list_batch: List[list], feature_indices: Set[int] = None):
     ]
 
 
-class WordPreprocessor(_WordPreprocessor):
+class WordPreprocessor(DelftWordPreprocessor):
+    # keeping class for pickle compatibility
     pass
 
 
@@ -100,4 +101,5 @@ T_FeaturesPreprocessor = Union[FeaturesPreprocessor, DelftFeaturesPreprocessor]
 
 
 class Preprocessor(WordPreprocessor):
+    # keeping class for pickle compatibility
     pass

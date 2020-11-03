@@ -196,6 +196,75 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 
 In the [referenced training data](https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz), the last feature (`32`) represents the whole line (using non-breaking spaces instead of spaces). To use the model with GROBID, that [feature would need to be enabled](https://github.com/elifesciences/grobid/pull/25).
 
+### Train with layout features
+
+Layout features are additional features provided with each token, e.g. whether it's the start of the line.
+
+The model needs to support using such features. The following models do:
+
+- `BidLSTM_CRF_FEATURES`
+- `CustomBidLSTM_CRF`
+- `CustomBidLSTM_CRF_FEATURES`
+
+The features are generally provided. Some of the features are not suitable as input features because there are too many of them (e.g. a variation of the token itself). The features should be specified via `--feature-indices`. The `input_info` sub command can help identify useful feature ranges (based on the count of unique values).
+
+Example commands:
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --no-embedding \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --architecture="BidLSTM_CRF_FEATURES" \
+    --use-features \
+    --feature-indices="9-30" \
+    --feature-embedding-size="5" \
+    --features-lstm-units="7" \
+    --early-stopping-patience="10" \
+    --max-epoch="50"
+```
+
+or
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --no-embedding \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --architecture="CustomBidLSTM_CRF_FEATURES" \
+    --use-features \
+    --feature-indices="9-30" \
+    --feature-embedding-size="5" \
+    --features-lstm-units="7" \
+    --early-stopping-patience="10" \
+    --max-epoch="50"
+```
+
+or
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --batch-size="10" \
+    --no-embedding \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --limit="100" \
+    --architecture="CustomBidLSTM_CRF" \
+    --use-features \
+    --feature-indices="9-30" \
+    --feature-embedding-size="0" \
+    --features-lstm-units="0" \
+    --early-stopping-patience="10" \
+    --max-epoch="50"
+```
+
 ### Resume training
 
 Sometimes it can be useful to continue training a model.

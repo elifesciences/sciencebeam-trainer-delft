@@ -5,6 +5,7 @@ from typing import Callable, List, T
 
 import numpy as np
 
+from delft.sequenceLabelling.preprocess import WordPreprocessor
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
@@ -91,7 +92,7 @@ def get_default_stateful() -> bool:
     )
 
 
-def get_features_preprocessor(model_config) -> T_FeaturesPreprocessor:
+def get_features_preprocessor(model_config: ModelConfig) -> T_FeaturesPreprocessor:
     if model_config.use_features_indices_input:
         return FeaturesIndicesInputPreprocessor(
             features_indices=model_config.feature_indices,
@@ -102,14 +103,20 @@ def get_features_preprocessor(model_config) -> T_FeaturesPreprocessor:
     )
 
 
-def prepare_preprocessor(X, y, model_config: ModelConfig, features: np.array = None):
-    feature_preprocessor = None
-    if model_config.use_features and features is not None:
-        feature_preprocessor = get_features_preprocessor(model_config)
-    preprocessor = Preprocessor(
+def get_preprocessor(model_config: ModelConfig, has_features: bool) -> T_FeaturesPreprocessor:
+    if not model_config.use_features or not has_features:
+        return WordPreprocessor(
+            max_char_length=model_config.max_char_length
+        )
+    feature_preprocessor = get_features_preprocessor(model_config)
+    return Preprocessor(
         max_char_length=model_config.max_char_length,
         feature_preprocessor=feature_preprocessor
     )
+
+
+def prepare_preprocessor(X, y, model_config: ModelConfig, features: np.array = None):
+    preprocessor = get_preprocessor(model_config, has_features=features is not None)
     batch_text_list_iterable = iter_batch_text_list(
         X, features,
         additional_token_feature_indices=model_config.additional_token_feature_indices,

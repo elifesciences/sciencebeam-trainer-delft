@@ -3,21 +3,21 @@ import logging
 from pathlib import Path
 
 from delft.sequenceLabelling.preprocess import (
+    FeaturesPreprocessor as DelftFeaturesPreprocessor,
     WordPreprocessor as DelftWordPreprocessor
 )
 from delft.sequenceLabelling.models import BaseModel
 
-from sciencebeam_trainer_delft.utils.json import to_json, from_json
-
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
     Preprocessor as ScienceBeamPreprocessor,
-    FeaturesPreprocessor,
-    FeaturesIndicesInputPreprocessor
+    FeaturesPreprocessor as ScienceBeamFeaturesPreprocessor
 )
 from sciencebeam_trainer_delft.sequence_labelling.saving import (
     ModelSaver,
-    ModelLoader
+    ModelLoader,
+    get_preprocessor_json,
+    get_preprocessor_for_json
 )
 
 from ..test_utils import log_on_exception
@@ -66,7 +66,7 @@ def get_normalized_vars_with_type(obj) -> dict:
     normalized_vars = {
         key: (
             get_normalized_vars_with_type(value)
-            if isinstance(value, FeaturesPreprocessor)
+            if isinstance(value, ScienceBeamFeaturesPreprocessor)
             else value
         )
         for key, value in variables.items()
@@ -80,19 +80,18 @@ def get_normalized_vars_with_type(obj) -> dict:
 
 class TestJsonSerializePreprocessors:
     def test_should_serialize_features_preprocessor(self):
-        features_preprocessor = FeaturesPreprocessor(feature_indices=[0])
+        features_preprocessor = ScienceBeamFeaturesPreprocessor(feature_indices=[0])
         features_preprocessor.fit(SAMPLE_FEATURES)
-        output_json = json.dumps(to_json(features_preprocessor))
+        preprocessor = ScienceBeamPreprocessor(feature_preprocessor=features_preprocessor)
         LOGGER.debug('original params: %s', features_preprocessor.vectorizer.get_params())
         LOGGER.debug('original feature_names_: %s', features_preprocessor.vectorizer.feature_names_)
         LOGGER.debug('original vocabulary_: %s', features_preprocessor.vectorizer.vocabulary_)
+        output_json = json.dumps(get_preprocessor_json(preprocessor))
         LOGGER.debug('output_json: %s', output_json)
-        loaded_features_preprocessor = from_json(
-            json.loads(output_json),
-            FeaturesPreprocessor
-        )
+        loaded_preprocessor = get_preprocessor_for_json(json.loads(output_json))
+        loaded_features_preprocessor = loaded_preprocessor.feature_preprocessor
         LOGGER.debug('type: %s', type(loaded_features_preprocessor))
-        assert isinstance(loaded_features_preprocessor, FeaturesPreprocessor)
+        assert isinstance(loaded_features_preprocessor, ScienceBeamFeaturesPreprocessor)
         LOGGER.debug('params: %s', loaded_features_preprocessor.vectorizer.get_params())
         assert (
             loaded_features_preprocessor.vectorizer.get_params()
@@ -108,9 +107,9 @@ class TestJsonSerializePreprocessors:
         )
 
     def test_should_serialize_features_indices_input_preprocessor(self):
-        features_preprocessor = FeaturesIndicesInputPreprocessor(features_indices=[0])
+        features_preprocessor = DelftFeaturesPreprocessor(features_indices=[0])
         features_preprocessor.fit(SAMPLE_FEATURES)
-        output_json = json.dumps(to_json(features_preprocessor))
+        preprocessor = DelftWordPreprocessor(feature_preprocessor=features_preprocessor)
         LOGGER.debug(
             'original features_vocabulary_size: %s', features_preprocessor.features_vocabulary_size
         )
@@ -120,13 +119,14 @@ class TestJsonSerializePreprocessors:
         LOGGER.debug(
             'original features_map_to_index: %s', features_preprocessor.features_map_to_index
         )
+        output_json = json.dumps(get_preprocessor_json(preprocessor))
         LOGGER.debug('output_json: %s', output_json)
-        loaded_features_preprocessor = from_json(
-            json.loads(output_json),
-            FeaturesPreprocessor
-        )
+        loaded_preprocessor = get_preprocessor_for_json(json.loads(output_json))
+        LOGGER.debug('type: %s', type(loaded_preprocessor))
+        assert isinstance(loaded_preprocessor, DelftWordPreprocessor)
+        loaded_features_preprocessor = loaded_preprocessor.feature_preprocessor
         LOGGER.debug('type: %s', type(loaded_features_preprocessor))
-        assert isinstance(loaded_features_preprocessor, FeaturesIndicesInputPreprocessor)
+        assert isinstance(loaded_features_preprocessor, DelftFeaturesPreprocessor)
         assert (
             loaded_features_preprocessor.features_vocabulary_size
             == features_preprocessor.features_vocabulary_size
@@ -143,12 +143,11 @@ class TestJsonSerializePreprocessors:
     def test_should_serialize_delft_word_preprocessor(self):
         preprocessor = DelftWordPreprocessor()
         preprocessor.fit(SAMPLE_X, SAMPLE_Y)
-        output_json = json.dumps(to_json(preprocessor))
+        output_json = json.dumps(get_preprocessor_json(preprocessor))
         LOGGER.debug('original vocab_char: %s', preprocessor.vocab_char)
         LOGGER.debug('output_json: %s', output_json)
-        loaded_preprocessor = from_json(
-            json.loads(output_json),
-            DelftWordPreprocessor
+        loaded_preprocessor = get_preprocessor_for_json(
+            json.loads(output_json)
         )
         LOGGER.debug('type: %s', type(loaded_preprocessor))
         assert isinstance(loaded_preprocessor, DelftWordPreprocessor)
@@ -161,16 +160,15 @@ class TestJsonSerializePreprocessors:
     def test_should_serialize_delft_word_preprocessor_to_plain_json(self):
         preprocessor = DelftWordPreprocessor()
         preprocessor.fit(SAMPLE_X, SAMPLE_Y)
-        output_json_dict = to_json(preprocessor, plain_json=True)
+        output_json_dict = get_preprocessor_json(preprocessor)
         assert output_json_dict.keys() == preprocessor.__dict__.keys()
         output_json = json.dumps(output_json_dict)
         LOGGER.debug(
             'original features_vocabulary_size: %s', preprocessor.vocab_char
         )
         LOGGER.debug('output_json: %s', output_json)
-        loaded_preprocessor = from_json(
-            json.loads(output_json),
-            DelftWordPreprocessor
+        loaded_preprocessor = get_preprocessor_for_json(
+            json.loads(output_json)
         )
         LOGGER.debug('type: %s', type(loaded_preprocessor))
         assert isinstance(loaded_preprocessor, DelftWordPreprocessor)
@@ -180,7 +178,7 @@ class TestJsonSerializePreprocessors:
             == preprocessor.vocab_char
         )
         assert (
-            json.dumps(to_json(loaded_preprocessor, plain_json=True))
+            json.dumps(get_preprocessor_json(loaded_preprocessor))
             == output_json
         )
 
@@ -228,7 +226,7 @@ class TestModelSaverLoader:
     def test_should_save_and_load_sciencebeam_preprocessor_from_json_or_pickle(
             self, temp_dir: Path):
         model_config = ModelConfig()
-        feature_preprocessor = FeaturesPreprocessor([0])
+        feature_preprocessor = ScienceBeamFeaturesPreprocessor([0])
         preprocessor = ScienceBeamPreprocessor(
             feature_preprocessor=feature_preprocessor
         )
@@ -242,6 +240,11 @@ class TestModelSaverLoader:
 
         assert (temp_dir / saver.preprocessor_json_file).exists()
         assert (temp_dir / saver.preprocessor_pickle_file).exists()
+
+        LOGGER.debug(
+            'preprocessor_json: %s',
+            (temp_dir / saver.preprocessor_json_file).read_text()
+        )
 
         (temp_dir / saver.preprocessor_json_file).rename(
             temp_dir / 'preprocessor_hidden.json'

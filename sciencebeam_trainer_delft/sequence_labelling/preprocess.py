@@ -10,10 +10,9 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import FunctionTransformer
 
 from delft.sequenceLabelling.preprocess import PAD
-from delft.sequenceLabelling.preprocess import WordPreprocessor as _WordPreprocessor
-
-from sciencebeam_trainer_delft.sequence_labelling.features_preprocess import (
-    FeaturesPreprocessor as FeaturesIndicesInputPreprocessor
+from delft.sequenceLabelling.preprocess import (
+    FeaturesPreprocessor as DelftFeaturesPreprocessor,
+    WordPreprocessor as _WordPreprocessor
 )
 
 
@@ -145,7 +144,7 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
         ])
 
 
-T_FeaturesPreprocessor = Union[FeaturesPreprocessor, FeaturesIndicesInputPreprocessor]
+T_FeaturesPreprocessor = Union[FeaturesPreprocessor, DelftFeaturesPreprocessor]
 
 
 class Preprocessor(WordPreprocessor):

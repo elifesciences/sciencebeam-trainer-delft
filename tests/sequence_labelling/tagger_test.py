@@ -6,9 +6,10 @@ import pytest
 
 import numpy as np
 
+from delft.sequenceLabelling.preprocess import PAD
+
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
-    PAD,
     WordPreprocessor
 )
 

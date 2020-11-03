@@ -23,12 +23,12 @@ FEATURES_1 = np.array([
 ])
 
 ANNOTATIONS_1 = [
-    [['token1', 'tag1'], ['token2', 'tag2']]
+    [['token1', 'B-tag1'], ['token2', 'B-tag2']]
 ]
 
 DATA_LINES_1 = [
-    'token1 feat1.1 feat1.2 tag1',
-    'token2 feat2.1 feat2.2 tag2'
+    'token1 feat1.1 feat1.2 B-tag1',
+    'token2 feat2.1 feat2.2 B-tag2'
 ]
 
 FLAT_TEXT_1 = 'token1 token2'
@@ -124,7 +124,7 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_xml_and_combined_tags(self):
         result = format_tag_result(
-            tag_result=[[['token1', 'tag1'], ['token2', 'tag1'], ['token3', 'tag2']]],
+            tag_result=[[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]],
             output_format=TagOutputFormats.XML
         )
         assert result.splitlines() == [
@@ -138,7 +138,7 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_xml_and_include_text_without_tags(self):
         result = format_tag_result(
-            tag_result=[[['token1', 'O'], ['token2', 'O'], ['token3', 'tag2']]],
+            tag_result=[[['token1', 'O'], ['token2', 'O'], ['token3', 'B-tag2']]],
             output_format=TagOutputFormats.XML
         )
         assert result.splitlines() == [
@@ -152,8 +152,10 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_xml_diff_and_combined_tags(self):
         result = format_tag_result(
-            tag_result=[[['token1', 'tag1'], ['token2', 'tag1'], ['token3', 'tag2']]],
-            expected_tag_result=[[['token1', 'tag1'], ['token2', 'tag1'], ['token3', 'tag3']]],
+            tag_result=[[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]],
+            expected_tag_result=[
+                [['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag3']]
+            ],
             output_format=TagOutputFormats.XML_DIFF
         )
         LOGGER.debug('result:\n%s', result)

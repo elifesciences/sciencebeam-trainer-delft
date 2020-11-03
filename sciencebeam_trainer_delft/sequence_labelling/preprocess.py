@@ -9,11 +9,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import FunctionTransformer
 
-from delft.sequenceLabelling.preprocess import PAD
-from delft.sequenceLabelling.preprocess import WordPreprocessor as _WordPreprocessor
-
-from sciencebeam_trainer_delft.sequence_labelling.features_preprocess import (
-    FeaturesPreprocessor as FeaturesIndicesInputPreprocessor
+from delft.sequenceLabelling.preprocess import (
+    FeaturesPreprocessor as DelftFeaturesPreprocessor,
+    WordPreprocessor as DelftWordPreprocessor
 )
 
 
@@ -31,55 +29,9 @@ def to_dict(value_list_batch: List[list], feature_indices: Set[int] = None):
     ]
 
 
-class WordPreprocessor(_WordPreprocessor):
-    def transform(self, X, y=None, extend=False):
-        """
-        transforms input into sequence
-        the optional boolean `extend` indicates that we need to avoid sequence
-        of length 1 alone in a batch
-        (which would cause an error with tf)
-
-        Args:
-            X: list of list of word tokens
-            y: list of list of tags
-
-        Returns:
-            numpy array: sentences with char sequences, and optionally length,
-            casing and custom features
-            numpy array: sequence of tags
-        """
-        chars = []
-        lengths = []
-        for sent in X:
-            char_ids = []
-            lengths.append(len(sent))
-            for w in sent:
-                if self.use_char_feature:
-                    char_ids.append(self.get_char_ids(w))
-                    if extend:
-                        char_ids.append([])
-
-            if self.use_char_feature:
-                chars.append(char_ids)
-
-        if y is not None:
-            pad_index = self.vocab_tag[PAD]
-            LOGGER.debug('vocab_tag: %s', self.vocab_tag)
-            y = [[self.vocab_tag.get(t, pad_index) for t in sent] for sent in y]
-
-        if self.padding:
-            sents, y = self.pad_sequence(chars, y)
-        else:
-            sents = [chars]
-
-        # optional additional information
-        # lengths
-        if self.return_lengths:
-            lengths = np.asarray(lengths, dtype=np.int32)
-            lengths = lengths.reshape((lengths.shape[0], 1))
-            sents.append(lengths)
-
-        return (sents, y) if y is not None else sents
+class WordPreprocessor(DelftWordPreprocessor):
+    # keeping class for pickle compatibility
+    pass
 
 
 class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
@@ -137,7 +89,7 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
         self.pipeline.fit(flattened_features)
         return self
 
-    def transform(self, X):
+    def transform(self, X, **_):
         LOGGER.debug('transform, X: %s', X)
         return np.asarray([
             self.pipeline.transform(sentence_features)
@@ -145,16 +97,9 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
         ])
 
 
-T_FeaturesPreprocessor = Union[FeaturesPreprocessor, FeaturesIndicesInputPreprocessor]
+T_FeaturesPreprocessor = Union[FeaturesPreprocessor, DelftFeaturesPreprocessor]
 
 
 class Preprocessor(WordPreprocessor):
-    def __init__(self, *args, feature_preprocessor: T_FeaturesPreprocessor = None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.feature_preprocessor = feature_preprocessor
-
-    def fit_features(self, features_batch):
-        return self.feature_preprocessor.fit(features_batch)
-
-    def transform_features(self, features_batch, **kwargs):
-        return self.feature_preprocessor.transform(features_batch, **kwargs)
+    # keeping class for pickle compatibility
+    pass

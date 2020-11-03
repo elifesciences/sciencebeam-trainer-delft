@@ -447,6 +447,28 @@ class TestGrobidTrainer:
             )
 
         @log_on_exception
+        def test_should_be_able_to_train_CustomBidLSTM_CRF_FEATURES(
+                self, default_args: dict, default_model_directory: str):
+            train_args = {
+                **default_args,
+                'architecture': 'CustomBidLSTM_CRF_FEATURES',
+                'feature_embedding_size': 4,
+                'config_props': {
+                    'features_lstm_units': 4
+                }
+            }
+            train(
+                **train_args
+            )
+            tag_input(
+                model=default_args['model'],
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager'],
+                embedding_registry_path=default_args['embedding_registry_path']
+            )
+
+        @log_on_exception
         def test_should_be_able_to_train_wapiti(
                 self, default_args: dict, default_model_directory: str,
                 temp_dir: Path):

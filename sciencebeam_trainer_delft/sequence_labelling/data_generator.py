@@ -8,12 +8,12 @@ from delft.utilities.Embeddings import Embeddings
 from delft.sequenceLabelling.preprocess import (
     to_vector_single, to_casing_single,
     to_vector_simple_with_elmo, to_vector_simple_with_bert,
+    WordPreprocessor,
     PAD
 )
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
 
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
-from sciencebeam_trainer_delft.sequence_labelling.preprocess import Preprocessor
 
 
 LOGGER = logging.getLogger(__name__)
@@ -325,7 +325,7 @@ class DataGenerator(keras.utils.Sequence):
             x: List[List[str]],
             y: List[List[str]],
             batch_size: int = 24,
-            preprocessor: Preprocessor = None,
+            preprocessor: WordPreprocessor = None,
             input_window_stride: int = None,
             stateful: bool = True,
             char_embed_size: int = 25,
@@ -635,7 +635,7 @@ class DataGenerator(keras.utils.Sequence):
         if self.preprocessor.return_features:
             LOGGER.debug('extend: %s', extend)
             try:
-                batch_features, _ = self.preprocessor.transform_features(sub_f, extend=extend)
+                batch_features = self.preprocessor.transform_features(sub_f, extend=extend)
                 batch_features = left_pad_batch_values(batch_features, max_length_x)
             except TypeError:
                 batch_features = left_pad_batch_values(

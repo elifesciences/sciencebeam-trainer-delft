@@ -95,7 +95,7 @@ def load_data_and_labels_crf_lines(
 
 def load_data_crf_lines(
         lines: Iterable[str],
-        limit: int = None) -> Tuple[np.array, np.array, np.array]:
+        limit: int = None) -> Tuple[np.array, np.array]:
     """
     Load data, features (no label!) from a CRF matrix file
     the format is as follow:
@@ -108,7 +108,7 @@ def load_data_crf_lines(
     field separator can be either space or tab
 
     Returns:
-        tuple(numpy array, numpy array, numpy array): tokens, features
+        tuple(numpy array, numpy array): tokens, features
 
     """
     sents = []
@@ -120,7 +120,12 @@ def load_data_crf_lines(
     for tokens, features in documents:
         sents.append(tokens)
         featureSets.append(features)
-    return np.asarray(sents), np.asarray(featureSets)
+    # specifying dtype object can significantly reduce the memory consumption
+    # e.g. for features it could be 20 MB instead of 1 GB
+    return (
+        np.asarray(sents, dtype='object'),
+        np.asarray(featureSets, dtype='object')
+    )
 
 
 def load_data_and_labels_crf_file(

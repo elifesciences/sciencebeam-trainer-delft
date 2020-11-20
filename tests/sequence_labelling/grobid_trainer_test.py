@@ -2,6 +2,7 @@ import gzip
 import json
 import logging
 import os
+import xml.etree.ElementTree as ET
 from functools import partial
 from pathlib import Path
 from unittest.mock import call, patch, MagicMock
@@ -53,6 +54,20 @@ MODEL_NAME_1 = 'model1'
 
 INPUT_PATH_1 = '/path/to/dataset1'
 INPUT_PATH_2 = '/path/to/dataset2'
+
+GROBID_HEADER_MODEL_URL = (
+    'https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/'
+    'delft-grobid-header-biorxiv-no-word-embedding-2020-05-05.tar.gz'
+)
+
+GROBID_HEADER_TEST_DATA_URL = (
+    'https://github.com/elifesciences/sciencebeam-datasets/releases/download/'
+    'grobid-0.6.1/delft-grobid-0.6.1-header.test.gz'
+)
+
+GROBID_HEADER_TEST_DATA_TITLE_1 = (
+    'Projections : A Preliminary Performance Tool for Charm'
+)
 
 
 @pytest.fixture(name='embedding_registry_path')
@@ -584,3 +599,36 @@ class TestGrobidTrainer:
 
             with gzip.open(str(output_path), mode='rb') as fp:
                 assert fp.read() == 'some training data'
+
+        @log_on_exception
+        def test_should_be_able_tag_using_existing_grobid_model(
+                self, capsys):
+            main([
+                'tag',
+                '--input=%s' % GROBID_HEADER_TEST_DATA_URL,
+                '--model-path=%s' % GROBID_HEADER_MODEL_URL,
+                '--limit=1',
+                '--tag-output-format=xml'
+            ])
+            captured = capsys.readouterr()
+            output_text = captured.out
+            LOGGER.debug('output_text: %r', output_text)
+            assert output_text
+            root = ET.fromstring(output_text)
+            title = ' '.join(node.text for node in root.findall('.//title'))
+            assert title == GROBID_HEADER_TEST_DATA_TITLE_1
+
+        @log_on_exception
+        def test_should_be_able_eval_using_existing_grobid_model(
+                self, temp_dir: Path):
+            eval_output_path = temp_dir / 'eval.json'
+            main([
+                'eval',
+                '--input=%s' % GROBID_HEADER_TEST_DATA_URL,
+                '--model-path=%s' % GROBID_HEADER_MODEL_URL,
+                '--limit=100',
+                '--eval-output-format=json',
+                '--eval-output-path=%s' % eval_output_path
+            ])
+            eval_data = json.loads(eval_output_path.read_text())
+            assert eval_data['scores']['<title>']['f1'] >= 0.5

@@ -1,4 +1,4 @@
-FROM python:3.5.7-stretch
+FROM python:3.6.12-buster
 
 # install gcloud to make it easier to access cloud storage
 RUN mkdir -p /usr/local/gcloud \

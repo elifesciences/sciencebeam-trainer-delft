@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from gzip import GzipFile
 from lzma import LZMAFile
 from urllib.error import HTTPError
-from urllib.request import urlopen
+from urllib.request import urlretrieve
 from typing import List, IO, ContextManager
 
 from six import string_types, text_type
@@ -141,8 +141,11 @@ def strip_compression_filename_ext(filepath: str) -> str:
 def _open_raw(filepath: str, mode: str):
     if filepath.startswith('https://'):
         try:
-            with urlopen(filepath) as fp:
-                yield fp
+            with tempfile.TemporaryDirectory(suffix='download') as temp_dir:
+                temp_file = os.path.join(temp_dir, os.path.basename(filepath))
+                urlretrieve(filepath, temp_file)
+                with open(temp_file, mode=mode) as fp:
+                    yield fp
         except HTTPError as error:
             if error.code == 404:
                 raise FileNotFoundError('file not found: %s' % filepath) from error

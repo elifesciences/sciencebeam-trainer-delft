@@ -2,6 +2,7 @@ import gzip
 import json
 import logging
 import os
+import xml.etree.ElementTree as ET
 from functools import partial
 from pathlib import Path
 from unittest.mock import call, patch, MagicMock
@@ -53,6 +54,19 @@ MODEL_NAME_1 = 'model1'
 
 INPUT_PATH_1 = '/path/to/dataset1'
 INPUT_PATH_2 = '/path/to/dataset2'
+
+GROBID_HEADER_MODEL_URL = (
+    'https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/'
+)
+
+GROBID_HEADER_TEST_DATA_URL = (
+    'https://github.com/elifesciences/sciencebeam-datasets/releases/download/'
+    'grobid-0.6.1/delft-grobid-0.6.1-header.test.gz'
+)
+
+GROBID_HEADER_TEST_DATA_TITLE_1 = (
+    'Projections : A Preliminary Performance Tool for Charm Tolerating Latency with Dagger'
+)
 
 
 @pytest.fixture(name='embedding_registry_path')
@@ -584,3 +598,20 @@ class TestGrobidTrainer:
 
             with gzip.open(str(output_path), mode='rb') as fp:
                 assert fp.read() == 'some training data'
+
+        @log_on_exception
+        def test_should_be_able_tag_using_existing_grobid_model(
+                self, capsys):
+            main([
+                'tag',
+                '--input=%s' % GROBID_HEADER_TEST_DATA_URL,
+                '--model-path=%s' % GROBID_HEADER_MODEL_URL,
+                '--tag-output-format=xml'
+            ])
+            captured = capsys.readouterr()
+            output_text = captured.out
+            LOGGER.debug('output_text: %r', output_text)
+            assert output_text
+            root = ET.fromstring(output_text)
+            title = ' '.join(node.text for node in root.findall('.//title'))
+            assert title == GROBID_HEADER_TEST_DATA_TITLE_1

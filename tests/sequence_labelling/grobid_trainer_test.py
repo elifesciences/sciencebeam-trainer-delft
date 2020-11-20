@@ -56,7 +56,8 @@ INPUT_PATH_1 = '/path/to/dataset1'
 INPUT_PATH_2 = '/path/to/dataset2'
 
 GROBID_HEADER_MODEL_URL = (
-    'https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/'
+    'https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/'
+    'delft-grobid-header-biorxiv-no-word-embedding-2020-05-05.tar.gz'
 )
 
 GROBID_HEADER_TEST_DATA_URL = (
@@ -630,4 +631,4 @@ class TestGrobidTrainer:
                 '--eval-output-path=%s' % eval_output_path
             ])
             eval_data = json.loads(eval_output_path.read_text())
-            assert eval_data['scores']['<title>']['f1'] >= 0.9
+            assert eval_data['scores']['<title>']['f1'] >= 0.5

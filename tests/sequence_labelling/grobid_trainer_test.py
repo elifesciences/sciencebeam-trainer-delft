@@ -65,7 +65,7 @@ GROBID_HEADER_TEST_DATA_URL = (
 )
 
 GROBID_HEADER_TEST_DATA_TITLE_1 = (
-    'Projections : A Preliminary Performance Tool for Charm Tolerating Latency with Dagger'
+    'Projections : A Preliminary Performance Tool for Charm'
 )
 
 
@@ -606,6 +606,7 @@ class TestGrobidTrainer:
                 'tag',
                 '--input=%s' % GROBID_HEADER_TEST_DATA_URL,
                 '--model-path=%s' % GROBID_HEADER_MODEL_URL,
+                '--limit=1',
                 '--tag-output-format=xml'
             ])
             captured = capsys.readouterr()
@@ -615,3 +616,18 @@ class TestGrobidTrainer:
             root = ET.fromstring(output_text)
             title = ' '.join(node.text for node in root.findall('.//title'))
             assert title == GROBID_HEADER_TEST_DATA_TITLE_1
+
+        @log_on_exception
+        def test_should_be_able_eval_using_existing_grobid_model(
+                self, temp_dir: Path):
+            eval_output_path = temp_dir / 'eval.json'
+            main([
+                'eval',
+                '--input=%s' % GROBID_HEADER_TEST_DATA_URL,
+                '--model-path=%s' % GROBID_HEADER_MODEL_URL,
+                '--limit=100',
+                '--eval-output-format=json',
+                '--eval-output-path=%s' % eval_output_path
+            ])
+            eval_data = json.loads(eval_output_path.read_text())
+            assert eval_data['scores']['<title>']['f1'] >= 0.9

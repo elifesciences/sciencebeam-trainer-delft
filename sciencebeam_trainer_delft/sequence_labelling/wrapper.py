@@ -12,6 +12,10 @@ from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
 from sciencebeam_trainer_delft.utils.misc import str_to_bool
 
+from sciencebeam_trainer_delft.sequence_labelling.tools.install_models import (
+    copy_directory_with_source_meta
+)
+
 from sciencebeam_trainer_delft.embedding import Embeddings, EmbeddingManager
 
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig, TrainingConfig
@@ -167,6 +171,7 @@ class Sequence(_Sequence):
                 path=self.embedding_registry_path,
                 download_manager=DownloadManager()
             )
+        self.download_manager = embedding_manager.download_manager
         self.embedding_manager = embedding_manager
         self.embeddings = None
         if not batch_size:
@@ -563,8 +568,18 @@ class Sequence(_Sequence):
         directory = self._get_model_directory(dir_path)
         self.load_from(directory)
 
+    def download_model(self, dir_path: str) -> str:
+        if not dir_path.endswith('.tar.gz'):
+            return dir_path
+        local_dir_path = str(self.download_manager.get_local_file(
+            dir_path, auto_uncompress=False
+        )).replace('.tar.gz', '')
+        copy_directory_with_source_meta(dir_path, local_dir_path)
+        return local_dir_path
+
     def load_from(self, directory: str):
         model_loader = ModelLoader()
+        directory = self.download_model(directory)
         self.model_path = directory
         self.p = model_loader.load_preprocessor_from_directory(directory)
         self.model_config = model_loader.load_model_config_from_directory(directory)

@@ -34,6 +34,9 @@ def predict_texts_with_sliding_window_if_enabled(
         input_window_stride: int = None,
         embeddings: Embeddings = None,
         features: List[List[List[str]]] = None):
+    if not texts:
+        LOGGER.info('passed in empty texts, model: %s', model_config.model_name)
+        return []
     should_tokenize = (
         len(texts) > 0  # pylint: disable=len-as-condition
         and isinstance(texts[0], str)

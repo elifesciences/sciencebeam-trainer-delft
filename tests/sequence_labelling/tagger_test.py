@@ -41,7 +41,7 @@ def _model_mock():
 
 @pytest.fixture(name='model_config')
 def _model_config():
-    return ModelConfig(batch_size=1)
+    return ModelConfig(model_name='test_model', batch_size=1)
 
 
 def get_preprocessor(
@@ -122,6 +122,27 @@ def get_predict_on_batch_by_token_fn(
 
 
 class TestTagger:
+    def test_should_return_empty_result_for_empty_input(
+            self,
+            model_mock: MagicMock,
+            model_config: ModelConfig,
+            preprocessor: WordPreprocessor):
+        tagger = Tagger(
+            model=model_mock,
+            model_config=model_config,
+            preprocessor=preprocessor,
+            max_sequence_length=2,
+            input_window_stride=None
+        )
+        model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
+            DEFAULT_TAG_BY_TOKEN_MAP,
+            preprocessor=preprocessor,
+            batch_size=model_config.batch_size
+        )
+        tag_result = tagger.tag([], output_format=None)
+        LOGGER.debug('tag_result: %s', tag_result)
+        assert tag_result == []
+
     def test_should_truncate_without_input_window_stride(
             self,
             model_mock: MagicMock,

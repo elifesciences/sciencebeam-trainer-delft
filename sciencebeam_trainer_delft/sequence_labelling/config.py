@@ -15,8 +15,6 @@ NOT_SET = -1
 
 
 class ModelConfig(_ModelConfig):
-    DEFAULT_FEATURES_VOCABULARY_SIZE = 12
-
     def __init__(
             self,
             *args,
@@ -26,7 +24,6 @@ class ModelConfig(_ModelConfig):
             additional_token_feature_indices: List[int] = None,
             text_feature_indices: List[int] = None,
             concatenated_embeddings_token_count: int = None,
-            features_vocabulary_size: int = DEFAULT_FEATURES_VOCABULARY_SIZE,
             features_lstm_units: int = None,
             use_features_indices_input: bool = False,
             stateful: bool = False,
@@ -46,7 +43,6 @@ class ModelConfig(_ModelConfig):
         self.concatenated_embeddings_token_count = concatenated_embeddings_token_count
         self.use_features = use_features
         self.max_feature_size = max_feature_size
-        self.features_vocabulary_size = features_vocabulary_size
         self.features_lstm_units = features_lstm_units
         self.use_features_indices_input = use_features_indices_input
         self.stateful = stateful

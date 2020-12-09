@@ -206,7 +206,7 @@ The model needs to support using such features. The following models do:
 - `CustomBidLSTM_CRF`
 - `CustomBidLSTM_CRF_FEATURES`
 
-The features are generally provided. Some of the features are not suitable as input features because there are too many of them (e.g. a variation of the token itself). The features should be specified via `--feature-indices`. The `input_info` sub command can help identify useful feature ranges (based on the count of unique values).
+The features are generally provided. Some of the features are not suitable as input features because there are too many of them (e.g. a variation of the token itself). The features should be specified via `--features-indices`. The `input_info` sub command can help identify useful feature ranges (based on the count of unique values).
 
 Example commands:
 
@@ -220,8 +220,8 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --limit="100" \
     --architecture="BidLSTM_CRF_FEATURES" \
     --use-features \
-    --feature-indices="9-30" \
-    --feature-embedding-size="5" \
+    --features-indices="9-30" \
+    --features-embedding-size="5" \
     --features-lstm-units="7" \
     --early-stopping-patience="10" \
     --max-epoch="50"
@@ -239,8 +239,8 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --limit="100" \
     --architecture="CustomBidLSTM_CRF_FEATURES" \
     --use-features \
-    --feature-indices="9-30" \
-    --feature-embedding-size="5" \
+    --features-indices="9-30" \
+    --features-embedding-size="5" \
     --features-lstm-units="7" \
     --early-stopping-patience="10" \
     --max-epoch="50"
@@ -258,8 +258,8 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --limit="100" \
     --architecture="CustomBidLSTM_CRF" \
     --use-features \
-    --feature-indices="9-30" \
-    --feature-embedding-size="0" \
+    --features-indices="9-30" \
+    --features-embedding-size="0" \
     --features-lstm-units="0" \
     --early-stopping-patience="10" \
     --max-epoch="50"

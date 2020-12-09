@@ -16,7 +16,6 @@ NOT_SET = -1
 
 class ModelConfig(_ModelConfig):
     DEFAULT_FEATURES_VOCABULARY_SIZE = 12
-    DEFAULT_FEATURES_EMBEDDING_SIZE = 4
 
     def __init__(
             self,

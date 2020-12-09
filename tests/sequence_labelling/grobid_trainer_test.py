@@ -364,6 +364,8 @@ class TestGrobidTrainer:
                 use_features=False,
                 **default_args
             )
+            model_config = load_model_config(default_model_directory)
+            assert not model_config.use_features
             tag_input(
                 model=default_args['model'],
                 model_path=default_model_directory,
@@ -431,6 +433,8 @@ class TestGrobidTrainer:
                     }
                 }
             )
+            model_config = load_model_config(default_model_directory)
+            assert model_config.embeddings_name is None
             tag_input(
                 model=default_args['model'],
                 model_path=default_model_directory,
@@ -452,6 +456,9 @@ class TestGrobidTrainer:
                     }
                 }
             )
+            model_config = load_model_config(default_model_directory)
+            assert model_config.max_char_length == 60
+            assert model_config.additional_token_feature_indices == [0]
             tag_input(
                 model=default_args['model'],
                 model_path=default_model_directory,
@@ -474,6 +481,10 @@ class TestGrobidTrainer:
                     }
                 }
             )
+            model_config = load_model_config(default_model_directory)
+            assert model_config.max_char_length == 60
+            assert model_config.text_feature_indices == [0]
+            assert model_config.concatenated_embeddings_token_count == 2
             tag_input(
                 model=default_args['model'],
                 model_path=default_model_directory,
@@ -496,6 +507,10 @@ class TestGrobidTrainer:
             train(
                 **train_args
             )
+            model_config = load_model_config(default_model_directory)
+            assert model_config.model_type == 'BidLSTM_CRF_FEATURES'
+            assert model_config.features_embedding_size == 4
+            assert model_config.features_lstm_units == 4
             tag_input(
                 model=default_args['model'],
                 model_path=default_model_directory,
@@ -518,6 +533,10 @@ class TestGrobidTrainer:
             train(
                 **train_args
             )
+            model_config = load_model_config(default_model_directory)
+            assert model_config.model_type == 'CustomBidLSTM_CRF_FEATURES'
+            assert model_config.features_embedding_size == 4
+            assert model_config.features_lstm_units == 4
             tag_input(
                 model=default_args['model'],
                 model_path=default_model_directory,

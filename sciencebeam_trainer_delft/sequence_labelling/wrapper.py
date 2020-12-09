@@ -116,7 +116,7 @@ def get_features_preprocessor(
         'using feature indices=%s', model_config.features_indices
     )
     return ScienceBeamFeaturesPreprocessor(
-        feature_indices=model_config.feature_indices
+        features_indices=model_config.features_indices
     )
 
 
@@ -158,8 +158,8 @@ class Sequence(_Sequence):
     def __init__(
             self, *args,
             use_features: bool = False,
-            feature_indices: List[int] = None,
-            feature_embedding_size: int = None,
+            features_indices: List[int] = None,
+            features_embedding_size: int = None,
             multiprocessing: bool = False,
             embedding_registry_path: str = None,
             embedding_manager: EmbeddingManager = None,
@@ -211,11 +211,11 @@ class Sequence(_Sequence):
         self.model_config = ModelConfig(
             **{
                 **vars(self.model_config),
-                **(config_props or {})
+                **(config_props or {}),
+                'features_indices': features_indices,
+                'features_embedding_size': features_embedding_size
             },
-            use_features=use_features,
-            feature_indices=feature_indices,
-            feature_embedding_size=feature_embedding_size
+            use_features=use_features
         )
         self.update_model_config_word_embedding_size()
         updated_implicit_model_config_props(self.model_config)

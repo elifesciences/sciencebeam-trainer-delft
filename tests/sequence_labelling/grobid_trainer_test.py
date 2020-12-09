@@ -159,7 +159,7 @@ def _default_args(
         output_path=str(model_base_path),
         architecture='CustomBidLSTM_CRF',
         word_lstm_units=11,
-        feature_indices=list(range(7, 1 + 10)),
+        features_indices=list(range(7, 1 + 10)),
         embedding_registry_path=str(embedding_registry_path)
     )
 
@@ -381,8 +381,8 @@ class TestGrobidTrainer:
                 use_features=True,
                 **{
                     **default_args,
-                    'feature_indices': FEATURE_INDICES_1,
-                    'feature_embedding_size': None
+                    'features_indices': FEATURE_INDICES_1,
+                    'features_embedding_size': None
                 }
             )
             model_config = load_model_config(default_model_directory)
@@ -404,8 +404,8 @@ class TestGrobidTrainer:
                 use_features=True,
                 **{
                     **default_args,
-                    'feature_indices': FEATURE_INDICES_1,
-                    'feature_embedding_size': FEATURES_EMBEDDING_SIZE_1
+                    'features_indices': FEATURE_INDICES_1,
+                    'features_embedding_size': FEATURES_EMBEDDING_SIZE_1
                 }
             )
             model_config = load_model_config(default_model_directory)
@@ -499,7 +499,7 @@ class TestGrobidTrainer:
             train_args = {
                 **default_args,
                 'architecture': 'BidLSTM_CRF_FEATURES',
-                'feature_embedding_size': 4,
+                'features_embedding_size': 4,
                 'config_props': {
                     'features_lstm_units': 4
                 }
@@ -525,7 +525,7 @@ class TestGrobidTrainer:
             train_args = {
                 **default_args,
                 'architecture': 'CustomBidLSTM_CRF_FEATURES',
-                'feature_embedding_size': 4,
+                'features_embedding_size': 4,
                 'config_props': {
                     'features_lstm_units': 4
                 }

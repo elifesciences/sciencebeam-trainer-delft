@@ -14,6 +14,9 @@ import numpy as np
 
 from delft.utilities.Embeddings import Embeddings
 
+from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
+from sciencebeam_trainer_delft.sequence_labelling.saving import ModelLoader
+
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import (
     EnvironmentVariables,
     get_model_directory
@@ -68,6 +71,10 @@ GROBID_HEADER_TEST_DATA_URL = (
 GROBID_HEADER_TEST_DATA_TITLE_1 = (
     'Projections : A Preliminary Performance Tool for Charm'
 )
+
+FEATURE_INDICES_1 = [9, 10, 11]
+
+FEATURES_EMBEDDING_SIZE_1 = 13
 
 
 @pytest.fixture(name='embedding_registry_path')
@@ -163,6 +170,11 @@ def _default_model_directory(default_args: dict):
         model_name=default_args['model'],
         dir_path=default_args['output_path']
     )
+
+
+def load_model_config(model_path: str) -> ModelConfig:
+    LOGGER.debug('model_path: %s', model_path)
+    return ModelLoader().load_model_config_from_directory(model_path)
 
 
 class TestGrobidTrainer:
@@ -361,12 +373,43 @@ class TestGrobidTrainer:
             )
 
         @log_on_exception
-        def test_should_be_able_to_train_with_features(
+        def test_should_be_able_to_train_with_features_without_feature_embeddings(
                 self, default_args: dict, default_model_directory: str):
             train(
                 use_features=True,
-                **default_args
+                **{
+                    **default_args,
+                    'feature_indices': FEATURE_INDICES_1,
+                    'feature_embedding_size': None
+                }
             )
+            model_config = load_model_config(default_model_directory)
+            assert model_config.use_features
+            assert model_config.features_indices == FEATURE_INDICES_1
+            assert model_config.features_embedding_size is None
+            tag_input(
+                model=default_args['model'],
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager'],
+                embedding_registry_path=default_args['embedding_registry_path']
+            )
+
+        @log_on_exception
+        def test_should_be_able_to_train_with_features_and_features_embeddings(
+                self, default_args: dict, default_model_directory: str):
+            train(
+                use_features=True,
+                **{
+                    **default_args,
+                    'feature_indices': FEATURE_INDICES_1,
+                    'feature_embedding_size': FEATURES_EMBEDDING_SIZE_1
+                }
+            )
+            model_config = load_model_config(default_model_directory)
+            assert model_config.use_features
+            assert model_config.features_indices == FEATURE_INDICES_1
+            assert model_config.features_embedding_size == FEATURES_EMBEDDING_SIZE_1
             tag_input(
                 model=default_args['model'],
                 model_path=default_model_directory,

@@ -11,6 +11,9 @@ FIRST_MODEL_VERSION = 1
 MODEL_VERSION = 2
 
 
+NOT_SET = -1
+
+
 class ModelConfig(_ModelConfig):
     DEFAULT_FEATURES_VOCABULARY_SIZE = 12
     DEFAULT_FEATURES_EMBEDDING_SIZE = 4
@@ -24,14 +27,19 @@ class ModelConfig(_ModelConfig):
             additional_token_feature_indices: List[int] = None,
             text_feature_indices: List[int] = None,
             concatenated_embeddings_token_count: int = None,
-            feature_indices: List[int] = None,
-            feature_embedding_size: int = DEFAULT_FEATURES_EMBEDDING_SIZE,
             features_vocabulary_size: int = DEFAULT_FEATURES_VOCABULARY_SIZE,
             features_lstm_units: int = None,
             use_features_indices_input: bool = False,
             stateful: bool = False,
             model_version: int = MODEL_VERSION,
+            # deprecated
+            feature_indices: List[int] = None,
+            feature_embedding_size: int = NOT_SET,
             **kwargs):
+        if feature_indices:
+            kwargs['features_indices'] = feature_indices
+        if feature_embedding_size != NOT_SET:
+            kwargs['features_embedding_size'] = feature_embedding_size
         super().__init__(*args)
         self.use_word_embeddings = use_word_embeddings
         self.additional_token_feature_indices = additional_token_feature_indices
@@ -39,8 +47,6 @@ class ModelConfig(_ModelConfig):
         self.concatenated_embeddings_token_count = concatenated_embeddings_token_count
         self.use_features = use_features
         self.max_feature_size = max_feature_size
-        self.feature_indices = feature_indices
-        self.feature_embedding_size = feature_embedding_size
         self.features_vocabulary_size = features_vocabulary_size
         self.features_lstm_units = features_lstm_units
         self.use_features_indices_input = use_features_indices_input
@@ -74,20 +80,26 @@ class ModelConfig(_ModelConfig):
 
     # alias due to properties having been renamed in upstream implementation
     @property
-    def features_indices(self):
-        return self.feature_indices
+    def feature_indices(self) -> List[int]:
+        return (
+            self.features_indices
+            or self.__dict__.get('feature_indices')
+        )
 
-    @features_indices.setter
-    def features_indices(self, feature_indices: List[int]):
-        self.feature_indices = feature_indices
+    @feature_indices.setter
+    def feature_indices(self, feature_indices: List[int]):
+        self.features_indices = feature_indices
 
     @property
-    def features_embedding_size(self):
-        return self.feature_embedding_size
+    def feature_embedding_size(self):
+        return (
+            self.features_embedding_size
+            or self.__dict__.get('feature_embedding_size')
+        )
 
-    @features_embedding_size.setter
-    def features_embedding_size(self, feature_embedding_size: List[int]):
-        self.feature_embedding_size = feature_embedding_size
+    @feature_embedding_size.setter
+    def feature_embedding_size(self, feature_embedding_size: List[int]):
+        self.features_embedding_size = feature_embedding_size
 
 
 class TrainingConfig(_TrainingConfig):

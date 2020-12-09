@@ -97,13 +97,24 @@ def get_default_stateful() -> bool:
 def get_features_preprocessor(
         model_config: ModelConfig,
         features: np.array = None) -> T_FeaturesPreprocessor:
-    if not model_config.use_features or features is None:
+    if not model_config.use_features:
+        LOGGER.info('features not enabled')
+        return None
+    if features is None:
+        LOGGER.info('no features available')
         return None
     if model_config.use_features_indices_input:
+        LOGGER.info(
+            'using feature indices as input, features_indices=%s, features_vocab_size=%s',
+            model_config.features_indices, model_config.features_vocabulary_size
+        )
         return FeaturesPreprocessor(
             features_indices=model_config.features_indices,
             features_vocabulary_size=model_config.features_vocabulary_size
         )
+    LOGGER.info(
+        'using feature indices=%s', model_config.features_indices
+    )
     return ScienceBeamFeaturesPreprocessor(
         feature_indices=model_config.feature_indices
     )

@@ -117,11 +117,11 @@ class CustomBidLSTM_CRF(CustomModel):
             )
             model_inputs.append(features_input)
             features = features_input
-            if config.feature_embedding_size:
+            if config.features_embedding_size:
                 features = TimeDistributed(Dense(
-                    config.feature_embedding_size,
-                    name='feature_embeddings_dense'
-                ), name='feature_embeddings')(features)
+                    config.features_embedding_size,
+                    name='features_embeddings_dense'
+                ), name='features_embeddings')(features)
             LOGGER.info(
                 'word_input=%s, charts=%s, features=%s',
                 word_input, chars, features

@@ -19,6 +19,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 def to_dict(value_list_batch: List[list], feature_indices: Set[int] = None):
+    # Note: keeping `feature_indices` name for pickle compatibility
+    #   (also matches upstream for `to_dict`)
     return [
         {
             index: value
@@ -35,19 +37,19 @@ class WordPreprocessor(DelftWordPreprocessor):
 
 
 class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
-    def __init__(self, feature_indices: Iterable[int] = None):
-        self.features_indices = feature_indices
+    def __init__(self, features_indices: Iterable[int] = None):
+        self.features_indices = features_indices
         self.features_map_to_index = None
         self.pipeline = FeaturesPreprocessor._create_pipeline(
-            feature_indices=feature_indices
+            features_indices=features_indices
         )
 
     @staticmethod
-    def _create_pipeline(feature_indices: Iterable[int] = None):
-        feature_indices_set = None
-        if feature_indices:
-            feature_indices_set = set(feature_indices)
-        to_dict_fn = partial(to_dict, feature_indices=feature_indices_set)
+    def _create_pipeline(features_indices: Iterable[int] = None):
+        features_indices_set = None
+        if features_indices:
+            features_indices_set = set(features_indices)
+        to_dict_fn = partial(to_dict, feature_indices=features_indices_set)
         return Pipeline(steps=[
             ('to_dict', FunctionTransformer(to_dict_fn, validate=False)),
             ('vectorize', DictVectorizer(sparse=False))
@@ -71,7 +73,7 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
                 return super().__setstate__(state)
             self.features_indices = state['features_indices']
             self.pipeline = FeaturesPreprocessor._create_pipeline(
-                feature_indices=self.features_indices
+                features_indices=self.features_indices
             )
             self.vectorizer.feature_names_ = state['vectorizer.feature_names']
             self.vectorizer.vocabulary_ = state['vectorizer.vocabulary']

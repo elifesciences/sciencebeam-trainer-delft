@@ -80,7 +80,7 @@ def get_normalized_vars_with_type(obj) -> dict:
 
 class TestJsonSerializePreprocessors:
     def test_should_serialize_features_preprocessor(self):
-        features_preprocessor = ScienceBeamFeaturesPreprocessor(feature_indices=[0])
+        features_preprocessor = ScienceBeamFeaturesPreprocessor(features_indices=[0])
         features_preprocessor.fit(SAMPLE_FEATURES)
         preprocessor = DelftWordPreprocessor(feature_preprocessor=features_preprocessor)
         LOGGER.debug('original params: %s', features_preprocessor.vectorizer.get_params())

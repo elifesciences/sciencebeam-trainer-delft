@@ -178,8 +178,8 @@ test: \
 		--word-lstm-units="$(WORD_LSTM_UNITS)" \
 		--embedding="$(EMBEDDING)" \
 		--architecture="$(ARCHITECTURE)" \
-		--feature-indices="$(FEATURE_INDICES)" \
-		--feature-embedding-size="$(FEATURE_EMBEDDING_SIZE)" \
+		--features-indices="$(FEATURE_INDICES)" \
+		--features-embedding-size="$(FEATURE_EMBEDDING_SIZE)" \
 		--max-epoch="$(MAX_EPOCH)" \
 		--model-path="$(MODEL_PATH)" \
 		--output="$(MODEL_OUTPUT)" \

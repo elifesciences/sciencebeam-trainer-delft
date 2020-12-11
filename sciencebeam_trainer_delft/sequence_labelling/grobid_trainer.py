@@ -1192,12 +1192,13 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     features_group = parser.add_argument_group('features')
     features_group.add_argument("--use-features", action="store_true", help="Use features")
     features_group.add_argument(
-        "--feature-indices",
+        "--features-indices", "--feature-indices",
         type=parse_number_ranges,
         help="The feature indices to use. e.g. 7-10. If blank, all of the features will be used."
     )
     features_group.add_argument(
-        "--feature-embedding-size", type=int,
+        "--features-embedding-size", "--feature-embedding-size",
+        type=int,
         help="size of feature embedding, use 0 to disable embedding"
     )
     features_group.add_argument(
@@ -1415,8 +1416,8 @@ class GrobidTrainerSubCommand(SubCommand):
             recurrent_dropout=args.recurrent_dropout,
             max_epoch=args.max_epoch,
             use_features=args.use_features,
-            feature_indices=args.feature_indices,
-            feature_embedding_size=args.feature_embedding_size,
+            features_indices=args.features_indices,
+            features_embedding_size=args.features_embedding_size,
             patience=args.early_stopping_patience,
             config_props=dict(
                 max_char_length=args.max_char_length,

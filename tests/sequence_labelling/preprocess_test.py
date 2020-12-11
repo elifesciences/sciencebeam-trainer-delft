@@ -116,7 +116,7 @@ class TestFeaturesPreprocessor:
         assert all_close(features_transformed, [[[0]]])
 
     def test_should_select_features(self):
-        preprocessor = FeaturesPreprocessor(feature_indices=[1])
+        preprocessor = FeaturesPreprocessor(features_indices=[1])
         features_batch = [[
             [FEATURE_VALUE_1, FEATURE_VALUE_2],
             [FEATURE_VALUE_1, FEATURE_VALUE_3],

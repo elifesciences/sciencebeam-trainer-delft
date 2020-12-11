@@ -97,15 +97,26 @@ def get_default_stateful() -> bool:
 def get_features_preprocessor(
         model_config: ModelConfig,
         features: np.array = None) -> T_FeaturesPreprocessor:
-    if not model_config.use_features or features is None:
+    if not model_config.use_features:
+        LOGGER.info('features not enabled')
+        return None
+    if features is None:
+        LOGGER.info('no features available')
         return None
     if model_config.use_features_indices_input:
+        LOGGER.info(
+            'using feature indices as input, features_indices=%s, features_vocab_size=%s',
+            model_config.features_indices, model_config.features_vocabulary_size
+        )
         return FeaturesPreprocessor(
             features_indices=model_config.features_indices,
             features_vocabulary_size=model_config.features_vocabulary_size
         )
+    LOGGER.info(
+        'using feature indices=%s', model_config.features_indices
+    )
     return ScienceBeamFeaturesPreprocessor(
-        feature_indices=model_config.feature_indices
+        features_indices=model_config.features_indices
     )
 
 
@@ -147,8 +158,8 @@ class Sequence(_Sequence):
     def __init__(
             self, *args,
             use_features: bool = False,
-            feature_indices: List[int] = None,
-            feature_embedding_size: int = None,
+            features_indices: List[int] = None,
+            features_embedding_size: int = None,
             multiprocessing: bool = False,
             embedding_registry_path: str = None,
             embedding_manager: EmbeddingManager = None,
@@ -200,11 +211,11 @@ class Sequence(_Sequence):
         self.model_config = ModelConfig(
             **{
                 **vars(self.model_config),
-                **(config_props or {})
+                **(config_props or {}),
+                'features_indices': features_indices,
+                'features_embedding_size': features_embedding_size
             },
-            use_features=use_features,
-            feature_indices=feature_indices,
-            feature_embedding_size=feature_embedding_size
+            use_features=use_features
         )
         self.update_model_config_word_embedding_size()
         updated_implicit_model_config_props(self.model_config)

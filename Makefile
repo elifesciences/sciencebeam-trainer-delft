@@ -53,6 +53,8 @@ GCLOUD_ARGS =
 PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 
+SYSTEM_PYTHON = python3
+
 ARGS =
 
 
@@ -66,7 +68,7 @@ venv-clean:
 
 
 venv-create:
-	python3 -m venv $(VENV)
+	$(SYSTEM_PYTHON) -m venv $(VENV)
 
 
 dev-install:
@@ -343,6 +345,22 @@ jupyter-stop:
 ci-build-and-test:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
 		build test grobid-build trainer-grobid-build jupyter-build update-test-notebook-temp
+
+
+ci-build-and-test-core:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build test
+
+
+ci-build-grobid:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" grobid-build
+
+
+ci-build-grobid-trainer:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" trainer-grobid-build
+
+
+ci-build-and-test-jupyter:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" jupyter-build update-test-notebook-temp
 
 
 ci-clean:

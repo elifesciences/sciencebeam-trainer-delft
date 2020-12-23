@@ -21,8 +21,30 @@ elifePipeline {
         }
 
         stage 'Build and run tests', {
+            def actions = [
+                'ci-build-and-test-core': {
+                    withCommitStatus({
+                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-and-test-core"
+                    }, 'build and test core', commit)
+                },
+                'ci-build-grobid': {
+                    withCommitStatus({
+                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-grobid"
+                    }, 'build grobid', commit)
+                },
+                'ci-build-grobid-trainer': {
+                    withCommitStatus({
+                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-grobid-trainer"
+                    }, 'build and test core', commit)
+                },
+                'ci-build-and-test-jupyter': {
+                    withCommitStatus({
+                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-and-test-jupyter"
+                    }, 'ci-build-and-test-jupyter', commit)
+                }
+            ]
             try {
-                sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-and-test"
+                parallel actions
             } finally {
                 sh "make ci-clean"
             }

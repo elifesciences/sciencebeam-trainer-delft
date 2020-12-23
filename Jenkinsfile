@@ -24,8 +24,31 @@ elifePipeline {
             def actions = [
                 'ci-build-and-test-core': {
                     withCommitStatus({
-                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-and-test-core"
-                    }, 'ci-build-and-test-core', commit)
+                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-core"
+                    }, 'ci-build-core', commit)
+                    def subActions = [
+                        'ci-lint': {
+                            withCommitStatus({
+                                sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-lint"
+                            }, 'ci-lint', commit)
+                        },
+                        'ci-pytest-not-slow': {
+                            withCommitStatus({
+                                sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-pytest-not-slow"
+                            }, 'ci-pytest-not-slow', commit)
+                        },
+                        'ci-pytest-slow': {
+                            withCommitStatus({
+                                sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-pytest-slow"
+                            }, 'ci-pytest-slow', commit)
+                        },
+                        'ci-test-setup-install': {
+                            withCommitStatus({
+                                sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-test-setup-install"
+                            }, 'ci-test-setup-install', commit)
+                        }
+                    ]
+                    parallel subActions
                 },
                 'ci-build-grobid': {
                     withCommitStatus({

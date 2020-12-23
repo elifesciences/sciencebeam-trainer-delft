@@ -52,6 +52,9 @@ GCLOUD_ARGS =
 
 PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
+SLOW_PYTEST_ARGS = -m 'slow'
+
+SYSTEM_PYTHON = python3
 
 ARGS =
 
@@ -66,7 +69,7 @@ venv-clean:
 
 
 venv-create:
-	python3 -m venv $(VENV)
+	$(SYSTEM_PYTHON) -m venv $(VENV)
 
 
 dev-install:
@@ -134,6 +137,10 @@ pytest:
 
 pytest-not-slow:
 	@$(MAKE) PYTEST_ARGS="$(PYTEST_ARGS) $(NOT_SLOW_PYTEST_ARGS)" pytest
+
+
+pytest-slow:
+	@$(MAKE) PYTEST_ARGS="$(PYTEST_ARGS) $(SLOW_PYTEST_ARGS)" pytest
 
 
 .watch:
@@ -343,6 +350,42 @@ jupyter-stop:
 ci-build-and-test:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" \
 		build test grobid-build trainer-grobid-build jupyter-build update-test-notebook-temp
+
+
+ci-build-and-test-core:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build test
+
+
+ci-build-core:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" build
+
+
+ci-lint:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" lint
+
+
+ci-pytest-not-slow:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" pytest-not-slow
+
+
+ci-pytest-slow:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" pytest-slow
+
+
+ci-test-setup-install:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" test-setup-install
+
+
+ci-build-grobid:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" grobid-build
+
+
+ci-build-grobid-trainer:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" trainer-grobid-build
+
+
+ci-build-and-test-jupyter:
+	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" jupyter-build update-test-notebook-temp
 
 
 ci-clean:

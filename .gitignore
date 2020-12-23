@@ -1,6 +1,7 @@
 venv
 build
 data
+logs
 *.egg-info
 
 MANIFEST

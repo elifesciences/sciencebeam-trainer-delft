@@ -8,6 +8,8 @@ x-grobid-env:
       - OVERRIDE_MODEL_3=${OVERRIDE_MODEL_3}
       - OVERRIDE_MODEL_4=${OVERRIDE_MODEL_4}
       - OVERRIDE_MODEL_5=${OVERRIDE_MODEL_5}
+      - OVERRIDE_MODEL_6=${OVERRIDE_MODEL_6}
+      - OVERRIDE_MODEL_7=${OVERRIDE_MODEL_7}
       - OVERRIDE_EMBEDDING_URL=${OVERRIDE_EMBEDDING_URL}
       - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
       - EMBEDDING_LMDB_PATH=${EMBEDDING_LMDB_PATH}
@@ -32,6 +34,8 @@ x-grobid-env:
       - GROBID__CRF__ENGINE__FULLTEXT=${GROBID__CRF__ENGINE__FULLTEXT}
       - GROBID__CRF__ENGINE__REFERENCE_SEGMENTER=${GROBID__CRF__ENGINE__REFERENCE_SEGMENTER}
       - GROBID__CRF__ENGINE__CITATION=${GROBID__CRF__ENGINE__CITATION}
+      - GROBID__CRF__ENGINE__FIGURE=${GROBID__CRF__ENGINE__FIGURE}
+      - GROBID__CRF__ENGINE__TABLE=${GROBID__CRF__ENGINE__TABLE}
 
 services:
   # the main delft image that we are going to push
@@ -40,7 +44,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        install_dev: y
+        install_dev: "y"
         wapiti_source_download_url: ${WAPITI_SOURCE_DOWNLOAD_URL}
     image: elifesciences/sciencebeam-trainer-delft:${IMAGE_TAG}
     volumes:

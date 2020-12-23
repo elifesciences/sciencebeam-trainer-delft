@@ -1,6 +1,7 @@
 venv
 build
 data
+logs
 
 .ipynb_checkpoints
 .pytest_cache

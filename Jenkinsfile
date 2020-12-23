@@ -25,17 +25,17 @@ elifePipeline {
                 'ci-build-and-test-core': {
                     withCommitStatus({
                         sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-and-test-core"
-                    }, 'build and test core', commit)
+                    }, 'ci-build-and-test-core', commit)
                 },
                 'ci-build-grobid': {
                     withCommitStatus({
                         sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-grobid"
-                    }, 'build grobid', commit)
+                    }, 'ci-build-grobid', commit)
                 },
                 'ci-build-grobid-trainer': {
                     withCommitStatus({
                         sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-grobid-trainer"
-                    }, 'build and test core', commit)
+                    }, 'ci-build-grobid-trainer', commit)
                 },
                 'ci-build-and-test-jupyter': {
                     withCommitStatus({

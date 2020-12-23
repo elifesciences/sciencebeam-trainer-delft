@@ -226,6 +226,7 @@ class Sequence(_Sequence):
         LOGGER.info('training_config: %s', vars(self.training_config))
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
+        self._load_exception = None
 
     def update_model_config_word_embedding_size(self):
         if self.embeddings:
@@ -521,7 +522,13 @@ class Sequence(_Sequence):
 
     def _require_model(self):
         if not self.model:
-            raise OSError('Model not loaded: %s' % self._get_model_name())
+            try:
+                raise OSError('Model not loaded: %s (previous load exception: %r)' % (
+                    self._get_model_name(), self._load_exception
+                )) from self._load_exception
+            except Exception as exc:
+                LOGGER.exception('Model required but not loaded: %r', exc, exc_info=exc)
+                raise
 
     def _get_model_name(self):
         return self.model_config.model_name
@@ -576,8 +583,14 @@ class Sequence(_Sequence):
         self.get_model_saver().save_to(directory, model=self.model, meta=self.get_meta())
 
     def load(self, dir_path=None):
-        directory = self._get_model_directory(dir_path)
-        self.load_from(directory)
+        directory = None
+        try:
+            directory = self._get_model_directory(dir_path)
+            self.load_from(directory)
+        except Exception as exc:
+            self._load_exception = exc
+            LOGGER.exception('failed to load model from %r', directory, exc_info=exc)
+            raise
 
     def download_model(self, dir_path: str) -> str:
         if not dir_path.endswith('.tar.gz'):

@@ -15,6 +15,23 @@ Some of the main features:
 - Docker container(s)
 - Support for Wapiti models
 
+## Prerequisites
+
+- Python 3
+
+When using [pyenv](https://github.com/pyenv/pyenv),
+you may need `libsqlite3-dev` and have Python installed with the `--enable-shared` flag.
+
+For example:
+
+```bash
+apt-get install libsqlite3-dev
+```
+
+```bash
+PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install --force 3.7.9
+```
+
 ## Example Notebooks
 
 - [train-header.ipynb](notebooks/train-header.ipynb) ([open in colab](https://colab.research.google.com/github/elifesciences/sciencebeam-trainer-delft/blob/develop/notebooks/train-header.ipynb))

@@ -35,5 +35,5 @@ class logging_tqdm(tqdm):
             # skip progress bar before having processed anything
             return
         if not msg:
-            msg = self.__repr__()
+            msg = str(self)
         self.logger.info('%s', msg)

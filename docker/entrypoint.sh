@@ -4,6 +4,9 @@ set -e
 
 GROBID_MODELS_DIRECTORY=${GROBID_MODELS_DIRECTORY:-/opt/grobid/grobid-home/models}
 EMBEDDING_REGISTRY_PATH="${PROJECT_FOLDER}/embedding-registry.json"
+GROBID_HOME_DIRECTORY="$(dirname ${GROBID_MODELS_DIRECTORY})"
+GROBID_ARCHITECTURE_STR=lin-64
+PDF2XML_HOME_DIRECTORY="${GROBID_HOME_DIRECTORY}/pdf2xml/${GROBID_ARCHITECTURE_STR}"
 
 # override models via OVERRIDE_MODELS or OVERRIDE_MODEL_*
 # the latter makes it easier to override multiple models as separate env variables
@@ -26,6 +29,13 @@ env -0 | while IFS='=' read -r -d '' env_var_name env_var_value; do
         --install "${env_var_value}" \
         --validate-pickles
 done
+
+if [ ! -z "${OVERRIDE_PDFALTO}" ]; then
+    echo "overriding pdfalto: ${OVERRIDE_PDFALTO} (to ${PDF2XML_HOME_DIRECTORY}/pdfalto)"
+    python -m sciencebeam_trainer_delft.sequence_labelling.tools.install_file \
+        --source="${OVERRIDE_PDFALTO}" \
+        --target="${PDF2XML_HOME_DIRECTORY}/pdfalto"
+fi
 
 if [ "${DISABLE_LMDB_CACHE}" == "1" ]; then
     echo "disabling lmdb cache: ${EMBEDDING_REGISTRY_PATH}"

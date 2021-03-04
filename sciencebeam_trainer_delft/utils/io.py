@@ -249,6 +249,11 @@ def read_text(filepath: str, **kwargs) -> str:
         return fp.read()
 
 
+def read_binary(filepath: str, **kwargs) -> bytes:
+    with open_file(filepath, mode='rb', **kwargs) as fp:
+        return fp.read()
+
+
 class FileRef(ABC):
     def __init__(self, file_url: str):
         self.file_url = file_url

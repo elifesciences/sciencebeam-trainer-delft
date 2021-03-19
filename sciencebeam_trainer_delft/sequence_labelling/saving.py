@@ -22,6 +22,10 @@ from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
 )
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 
+from sciencebeam_trainer_delft.sequence_labelling.tools.install_models import (
+    copy_directory_with_source_meta
+)
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -176,6 +180,15 @@ class ModelLoader(_BaseModelSaverLoader):
         if download_manager is None:
             download_manager = DownloadManager()
         self.download_manager = download_manager
+
+    def download_model(self, dir_path: str) -> str:
+        if not dir_path.endswith('.tar.gz'):
+            return dir_path
+        local_dir_path = str(self.download_manager.get_local_file(
+            dir_path, auto_uncompress=False
+        )).replace('.tar.gz', '')
+        copy_directory_with_source_meta(dir_path, local_dir_path)
+        return local_dir_path
 
     def load_preprocessor_from_directory(self, directory: str):
         try:

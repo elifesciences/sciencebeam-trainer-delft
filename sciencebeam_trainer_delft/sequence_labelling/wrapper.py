@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import Callable, List, T
+from typing import Callable, List, Optional, T
 
 import numpy as np
 
@@ -46,6 +46,11 @@ from sciencebeam_trainer_delft.sequence_labelling.debug import get_tag_debug_rep
 from sciencebeam_trainer_delft.sequence_labelling.tools.checkpoints import (
     get_checkpoints_json,
     get_last_checkpoint_url
+)
+from sciencebeam_trainer_delft.sequence_labelling.transfer_learning import (
+    TransferLearningConfig,
+    TransferLearningSource
+    # apply_transfer_learning
 )
 
 
@@ -172,6 +177,7 @@ class Sequence(_Sequence):
             batch_size: int = None,
             eval_batch_size: int = None,
             stateful: bool = None,
+            transfer_learning_config: TransferLearningConfig = None,
             **kwargs):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
@@ -201,6 +207,7 @@ class Sequence(_Sequence):
             # use a stateful model, if supported
             stateful = get_default_stateful()
         self.stateful = stateful
+        self.transfer_learning_config = transfer_learning_config
         super().__init__(
             *args,
             max_sequence_length=max_sequence_length,
@@ -258,12 +265,20 @@ class Sequence(_Sequence):
         x_all = np.concatenate((x_train, x_valid), axis=0)
         y_all = np.concatenate((y_train, y_valid), axis=0)
         features_all = concatenate_or_none((features_train, features_valid), axis=0)
+        transfer_learning_source: Optional[TransferLearningSource] = None
+        if self.p is None or self.model is None:
+            transfer_learning_source = TransferLearningSource.from_config(
+                self.transfer_learning_config,
+                download_manager=self.download_manager
+            )
         if self.p is None:
             self.p = prepare_preprocessor(
                 x_all, y_all,
                 features=features_all,
                 model_config=self.model_config
             )
+            if transfer_learning_source:
+                transfer_learning_source.apply_preprocessor(target_preprocessor=self.p)
             self.model_config.char_vocab_size = len(self.p.vocab_char)
             self.model_config.case_vocab_size = len(self.p.vocab_case)
 
@@ -285,6 +300,13 @@ class Sequence(_Sequence):
 
         if self.model is None:
             self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
+            if transfer_learning_source:
+                transfer_learning_source.apply_weights(target_model=self.model)
+            # apply_transfer_learning(
+            #     transfer_learning_config=self.transfer_learning_config,
+            #     model=self.model,
+            #     preprocessor=self.p
+            # )
         trainer = Trainer(
             self.model,
             self.models,
@@ -602,7 +624,7 @@ class Sequence(_Sequence):
         return local_dir_path
 
     def load_from(self, directory: str):
-        model_loader = ModelLoader()
+        model_loader = ModelLoader(download_manager=self.download_manager)
         directory = self.download_model(directory)
         self.model_path = directory
         self.p = model_loader.load_preprocessor_from_directory(directory)

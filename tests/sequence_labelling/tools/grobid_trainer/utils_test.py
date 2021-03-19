@@ -18,6 +18,10 @@ from sciencebeam_trainer_delft.sequence_labelling.saving import ModelLoader
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import (
     get_model_directory
 )
+from sciencebeam_trainer_delft.sequence_labelling.transfer_learning import (
+    TransferLearningConfig
+)
+
 import sciencebeam_trainer_delft.sequence_labelling.tools.grobid_trainer.utils as utils_module
 from sciencebeam_trainer_delft.sequence_labelling.tools.grobid_trainer.utils import (
     set_random_seeds,
@@ -79,6 +83,17 @@ def _embedding_class(embedding_registry_path: Path):
     target = 'delft.sequenceLabelling.wrapper.Embeddings'
     with patch(target, new=embedding_class_with_defaults) as mock:
         yield mock
+
+
+@pytest.fixture(name='trainer_class_mock')
+def _trainer_class_mock():
+    with patch('sciencebeam_trainer_delft.sequence_labelling.wrapper.Trainer') as mock:
+        yield mock
+
+
+@pytest.fixture(name='trainer_mock')
+def _trainer_mock(trainer_class_mock: MagicMock):
+    return trainer_class_mock.return_value
 
 
 @pytest.fixture(name='get_default_training_data_mock')
@@ -401,6 +416,44 @@ class TestGrobidTrainerUtils:
                 input_paths=default_args['input_paths'],
                 download_manager=default_args['download_manager'],
                 embedding_registry_path=default_args['embedding_registry_path']
+            )
+
+        @pytest.mark.usefixtures('trainer_mock')
+        @log_on_exception
+        def test_should_be_able_to_copy_weights_from_previous_model(
+            self,
+            tmp_path: Path,
+            default_args: dict
+        ):
+            source_model_output_path = tmp_path / 'source_model'
+            train(
+                **{
+                    **default_args,
+                    'output_path': str(source_model_output_path),
+                    'embeddings_name': None,
+                    'config_props': {
+                        **default_args.get('config_props', {}),
+                        'use_word_embeddings': False
+                    }
+                }
+            )
+            train(
+                **{
+                    **default_args,
+                    'transfer_learning_config': TransferLearningConfig(
+                        source_model_path=str(source_model_output_path / default_args['model']),
+                        layers=[
+                            'char_embeddings',
+                            'char_lstm'
+                        ],
+                        preprocessor_fields=['vocab_char']
+                    ),
+                    'embeddings_name': None,
+                    'config_props': {
+                        **default_args.get('config_props', {}),
+                        'use_word_embeddings': False
+                    }
+                }
             )
 
         @log_on_exception

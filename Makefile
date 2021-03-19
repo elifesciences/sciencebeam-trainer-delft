@@ -97,7 +97,7 @@ dev-lint: dev-flake8 dev-pylint
 
 
 dev-pytest:
-	$(PYTHON) -m pytest -p no:cacheprovider $(ARGS)
+	$(PYTHON) -m pytest -v -p no:cacheprovider $(ARGS)
 
 
 dev-watch:
@@ -132,7 +132,7 @@ flake8:
 
 
 pytest:
-	$(DELFT_DEV_RUN) pytest -p no:cacheprovider $(PYTEST_ARGS)
+	$(DELFT_DEV_RUN) pytest -v -p no:cacheprovider $(PYTEST_ARGS)
 
 
 pytest-not-slow:

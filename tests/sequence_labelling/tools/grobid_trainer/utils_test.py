@@ -1,8 +1,6 @@
-import gzip
 import json
 import logging
 import os
-import xml.etree.ElementTree as ET
 from functools import partial
 from pathlib import Path
 from unittest.mock import call, patch, MagicMock
@@ -18,13 +16,11 @@ from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelLoader
 
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import (
-    EnvironmentVariables,
     get_model_directory
 )
-import sciencebeam_trainer_delft.sequence_labelling.grobid_trainer as grobid_trainer_module
-from sciencebeam_trainer_delft.sequence_labelling.grobid_trainer import (
+import sciencebeam_trainer_delft.sequence_labelling.tools.grobid_trainer.utils as utils_module
+from sciencebeam_trainer_delft.sequence_labelling.tools.grobid_trainer.utils import (
     set_random_seeds,
-    parse_args,
     load_data_and_labels,
     train,
     train_eval,
@@ -33,14 +29,14 @@ from sciencebeam_trainer_delft.sequence_labelling.grobid_trainer import (
     wapiti_train_eval,
     wapiti_eval_model,
     wapiti_tag_input,
-    main
 )
 
-from ..embedding.test_data import TEST_DATA_PATH
-from ..test_utils import log_on_exception
+from ....embedding.test_data import TEST_DATA_PATH
+from ....test_utils import log_on_exception
 
 
 LOGGER = logging.getLogger(__name__)
+
 
 EMBEDDING_NAME_1 = 'embedding1'
 
@@ -57,20 +53,6 @@ MODEL_NAME_1 = 'model1'
 
 INPUT_PATH_1 = '/path/to/dataset1'
 INPUT_PATH_2 = '/path/to/dataset2'
-
-GROBID_HEADER_MODEL_URL = (
-    'https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/'
-    'delft-grobid-header-biorxiv-no-word-embedding-2020-05-05.tar.gz'
-)
-
-GROBID_HEADER_TEST_DATA_URL = (
-    'https://github.com/elifesciences/sciencebeam-datasets/releases/download/'
-    'grobid-0.6.1/delft-grobid-0.6.1-header.test.gz'
-)
-
-GROBID_HEADER_TEST_DATA_TITLE_1 = (
-    'Projections : A Preliminary Performance Tool for Charm'
-)
 
 FEATURE_INDICES_1 = [9, 10, 11]
 
@@ -101,13 +83,13 @@ def _embedding_class(embedding_registry_path: Path):
 
 @pytest.fixture(name='get_default_training_data_mock')
 def _get_default_training_data_mock():
-    with patch.object(grobid_trainer_module, 'get_default_training_data') as mock:
+    with patch.object(utils_module, 'get_default_training_data') as mock:
         yield mock
 
 
 @pytest.fixture(name='load_data_and_labels_crf_file_mock')
 def _load_data_and_labels_crf_file_mock():
-    with patch.object(grobid_trainer_module, 'load_data_and_labels_crf_file') as mock:
+    with patch.object(utils_module, 'load_data_and_labels_crf_file') as mock:
         mock.return_value = (MagicMock(), MagicMock(), MagicMock())
         yield mock
 
@@ -123,7 +105,7 @@ def _mock_shuffle_arrays(arrays: List[np.array], **_) -> np.array:
 
 @pytest.fixture(name='shuffle_arrays_mock')
 def _shuffle_arrays_mock():
-    with patch.object(grobid_trainer_module, 'shuffle_arrays') as mock:
+    with patch.object(utils_module, 'shuffle_arrays') as mock:
         mock.side_effect = _mock_shuffle_arrays
         yield mock
 
@@ -148,9 +130,6 @@ def _default_args(
         model_base_path: Path,
         embedding_registry_path: Path,
         download_manager_mock: MagicMock):
-    # download_manager = MagicMock(name='download_manager')
-    # download_manager.download_if_url.return_value = str(sample_train_file)
-    # download_manager.download_if_url.side_effect = lambda file_url: str(file_url)
     return dict(
         model='header',
         embeddings_name=EMBEDDING_NAME_1,
@@ -177,79 +156,10 @@ def load_model_config(model_path: str) -> ModelConfig:
     return ModelLoader().load_model_config_from_directory(model_path)
 
 
-class TestGrobidTrainer:
+class TestGrobidTrainerUtils:
     class TestSetRandomSeeds:
         def test_should_not_fail(self):
             set_random_seeds(123)
-
-    class TestParseArgs:
-        def test_should_require_arguments(self):
-            with pytest.raises(SystemExit):
-                parse_args([])
-
-        def test_should_allow_multiple_input_files_via_single_input_param(self):
-            opt = parse_args([
-                'header',
-                'train',
-                '--input', '/path/to/dataset1', '/path/to/dataset2'
-            ])
-            assert opt.input == ['/path/to/dataset1', '/path/to/dataset2']
-
-        def test_should_allow_multiple_input_files_via_multiple_input_params(self):
-            opt = parse_args([
-                'header',
-                'train',
-                '--input', INPUT_PATH_1,
-                '--input', INPUT_PATH_2
-            ])
-            assert opt.input == [INPUT_PATH_1, INPUT_PATH_2]
-
-        def test_should_use_stateful_env_variable_true_by_default(self, env_mock):
-            env_mock[EnvironmentVariables.STATEFUL] = 'true'
-            opt = parse_args([
-                'tag',
-                '--input', INPUT_PATH_1,
-                '--model-path', INPUT_PATH_2
-            ])
-            assert opt.stateful is True
-
-        def test_should_use_stateful_env_variable_false_by_default(self, env_mock):
-            env_mock[EnvironmentVariables.STATEFUL] = 'false'
-            opt = parse_args([
-                'tag',
-                '--input', INPUT_PATH_1,
-                '--model-path', INPUT_PATH_2
-            ])
-            assert opt.stateful is False
-
-        def test_should_fallback_to_none_statefulness(self, env_mock):
-            env_mock[EnvironmentVariables.STATEFUL] = ''
-            opt = parse_args([
-                'tag',
-                '--input', INPUT_PATH_1,
-                '--model-path', INPUT_PATH_2
-            ])
-            assert opt.stateful is None
-
-        def test_should_allow_to_set_stateful(self, env_mock):
-            env_mock[EnvironmentVariables.STATEFUL] = 'false'
-            opt = parse_args([
-                'tag',
-                '--input', INPUT_PATH_1,
-                '--model-path', INPUT_PATH_2,
-                '--stateful'
-            ])
-            assert opt.stateful is True
-
-        def test_should_allow_to_unset_stateful(self, env_mock):
-            env_mock[EnvironmentVariables.STATEFUL] = 'true'
-            opt = parse_args([
-                'tag',
-                '--input', INPUT_PATH_1,
-                '--model-path', INPUT_PATH_2,
-                '--no-stateful'
-            ])
-            assert opt.stateful is False
 
     @pytest.mark.usefixtures(
         'get_default_training_data_mock', 'load_data_and_labels_crf_file_mock'
@@ -624,73 +534,3 @@ class TestGrobidTrainer:
                 fold_count=2,
                 **default_args
             )
-
-    @pytest.mark.slow
-    class TestEndToEndMain:
-        @log_on_exception
-        def test_should_be_able_capture_train_input_data(
-                self, temp_dir: Path):
-            input_path = temp_dir.joinpath('input.train')
-            input_path.write_text('some training data')
-
-            output_path = temp_dir.joinpath('captured-input.train')
-
-            main([
-                'header',
-                'train',
-                '--input=%s' % input_path,
-                '--save-input-to-and-exit=%s' % output_path
-            ])
-
-            assert output_path.read_text() == 'some training data'
-
-        @log_on_exception
-        def _test_should_be_able_capture_train_input_data_gzipped(
-                self, temp_dir: Path):
-            input_path = temp_dir.joinpath('input.train')
-            input_path.write_text('some training data')
-
-            output_path = temp_dir.joinpath('captured-input.train.gz')
-
-            main([
-                'header',
-                'train',
-                '--input=%s' % input_path,
-                '--save-input-to-and-exit=%s' % output_path
-            ])
-
-            with gzip.open(str(output_path), mode='rb') as fp:
-                assert fp.read() == 'some training data'
-
-        @log_on_exception
-        def test_should_be_able_tag_using_existing_grobid_model(
-                self, capsys):
-            main([
-                'tag',
-                '--input=%s' % GROBID_HEADER_TEST_DATA_URL,
-                '--model-path=%s' % GROBID_HEADER_MODEL_URL,
-                '--limit=1',
-                '--tag-output-format=xml'
-            ])
-            captured = capsys.readouterr()
-            output_text = captured.out
-            LOGGER.debug('output_text: %r', output_text)
-            assert output_text
-            root = ET.fromstring(output_text)
-            title = ' '.join(node.text for node in root.findall('.//title'))
-            assert title == GROBID_HEADER_TEST_DATA_TITLE_1
-
-        @log_on_exception
-        def test_should_be_able_eval_using_existing_grobid_model(
-                self, temp_dir: Path):
-            eval_output_path = temp_dir / 'eval.json'
-            main([
-                'eval',
-                '--input=%s' % GROBID_HEADER_TEST_DATA_URL,
-                '--model-path=%s' % GROBID_HEADER_MODEL_URL,
-                '--limit=100',
-                '--eval-output-format=json',
-                '--eval-output-path=%s' % eval_output_path
-            ])
-            eval_data = json.loads(eval_output_path.read_text())
-            assert eval_data['scores']['<title>']['f1'] >= 0.5

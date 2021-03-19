@@ -85,23 +85,25 @@ class CustomBidLSTM_CRF(CustomModel):
         )
         model_inputs.append(char_input)
 
-        char_embeddings = TimeDistributed(Embedding(
-            input_dim=config.char_vocab_size,
-            output_dim=config.char_embedding_size,
-            # mask_zero=True,
-            # embeddings_initializer=RandomUniform(minval=-0.5, maxval=0.5),
-            name='char_embeddings_embedding'
-        ), name='char_embeddings')(char_input)
+        if config.char_embedding_size:
+            assert config.char_vocab_size, 'config.char_vocab_size required'
+            char_embeddings = TimeDistributed(Embedding(
+                input_dim=config.char_vocab_size,
+                output_dim=config.char_embedding_size,
+                # mask_zero=True,
+                # embeddings_initializer=RandomUniform(minval=-0.5, maxval=0.5),
+                name='char_embeddings_embedding'
+            ), name='char_embeddings')(char_input)
 
-        chars = TimeDistributed(
-            Bidirectional(LSTM(
-                config.num_char_lstm_units,
-                return_sequences=False,
-                stateful=stateful
-            )),
-            name='char_lstm'
-        )(char_embeddings)
-        lstm_inputs.append(chars)
+            chars = TimeDistributed(
+                Bidirectional(LSTM(
+                    config.num_char_lstm_units,
+                    return_sequences=False,
+                    stateful=stateful
+                )),
+                name='char_lstm'
+            )(char_embeddings)
+            lstm_inputs.append(chars)
 
         # length of sequence not used for the moment (but used for f1 communication)
         length_input = Input(batch_shape=(None, 1), dtype='int32', name='length_input')

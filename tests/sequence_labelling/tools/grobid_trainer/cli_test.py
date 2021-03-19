@@ -9,12 +9,12 @@ import pytest
 from sciencebeam_trainer_delft.sequence_labelling.wrapper import (
     EnvironmentVariables
 )
-from sciencebeam_trainer_delft.sequence_labelling.grobid_trainer import (
+from sciencebeam_trainer_delft.sequence_labelling.tools.grobid_trainer.cli import (
     parse_args,
     main
 )
 
-from ..test_utils import log_on_exception
+from ....test_utils import log_on_exception
 
 
 LOGGER = logging.getLogger(__name__)

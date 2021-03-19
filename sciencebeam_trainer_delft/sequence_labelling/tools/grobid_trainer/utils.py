@@ -1,4 +1,6 @@
-# mostly copied from https://github.com/kermitt2/delft/blob/master/grobidTagger.py
+# initially based on:
+# https://github.com/kermitt2/delft/blob/master/grobidTagger.py
+
 import logging
 import time
 import tempfile

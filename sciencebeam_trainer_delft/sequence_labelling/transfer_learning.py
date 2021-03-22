@@ -21,8 +21,8 @@ LOGGER = logging.getLogger(__name__)
 
 class TransferLearningConfig(NamedTuple):
     source_model_path: Optional[str] = None
-    layers: Optional[List[str]] = None
-    preprocessor_fields: Optional[List[str]] = None
+    copy_layers: Optional[List[str]] = None
+    copy_preprocessor_fields: Optional[List[str]] = None
     freeze_layers: Optional[List[str]] = None
 
 
@@ -134,12 +134,12 @@ def add_transfer_learning_arguments(parser: argparse.ArgumentParser):
         help='path to model, that learned layers or parameters should be transfered from'
     )
     parser.add_argument(
-        '--transfer-layers',
+        '--transfer-copy-layers',
         type=parse_comma_separated_str,
         help='the layers to transfer'
     )
     parser.add_argument(
-        '--transfer-preprocessor-fields',
+        '--transfer-copy-preprocessor-fields',
         type=parse_comma_separated_str,
         help='the preprocessor fields to transfer (e.g. "vocab_char")'
     )
@@ -155,7 +155,7 @@ def get_transfer_learning_config_for_parsed_args(
 ) -> TransferLearningConfig:
     return TransferLearningConfig(
         source_model_path=args.transfer_source_model_path,
-        layers=args.transfer_layers,
-        preprocessor_fields=args.transfer_preprocessor_fields,
+        copy_layers=args.transfer_copy_layers,
+        copy_preprocessor_fields=args.transfer_copy_preprocessor_fields,
         freeze_layers=args.transfer_freeze_layers
     )

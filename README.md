@@ -316,6 +316,29 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
+### Transfer learning (experimental)
+
+A limited form of transfer learning is also possible by copying selected layers from a previously trained model. e.g.:
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train_eval \
+    --transfer-source-model-path="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/2020-10-04-delft-grobid-header-biorxiv-no-word-embedding.tar.gz" \
+    --transfer-copy-layers="char_embeddings,char_lstm" \
+    --transfer-copy-preprocessor-fields="vocab_char" \
+    --transfer-freeze-layers="char_embeddings" \
+    --batch-size="10" \
+    --architecture="CustomBidLSTM_CRF" \
+    --no-embedding \
+    --input="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/delft-grobid-header-biorxiv-no-word-embedding-2020-05-05.tar.gz" \
+    --limit="100" \
+    --eval-input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.6.1/delft-grobid-0.6.1-header.test.gz" \
+    --eval-limit="100" \
+    --eval-batch-size="5" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
 ### Training very long sequences
 
 Some training sequences can be very long and may exceed the available memory. This is in particular an issue when training the sequences.

@@ -302,11 +302,6 @@ class Sequence(_Sequence):
             self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
             if transfer_learning_source:
                 transfer_learning_source.apply_weights(target_model=self.model)
-            # apply_transfer_learning(
-            #     transfer_learning_config=self.transfer_learning_config,
-            #     model=self.model,
-            #     preprocessor=self.p
-            # )
         trainer = Trainer(
             self.model,
             self.models,

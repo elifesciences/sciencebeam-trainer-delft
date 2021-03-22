@@ -87,21 +87,21 @@ class TransferLearningSource:
         )
 
     def apply_preprocessor(self, target_preprocessor: WordPreprocessor):
-        if not self.transfer_learning_config.preprocessor_fields:
+        if not self.transfer_learning_config.copy_preprocessor_fields:
             LOGGER.info('no transfer learning preprocessor fields specified')
             return
-        for field_name in self.transfer_learning_config.preprocessor_fields:
+        for field_name in self.transfer_learning_config.copy_preprocessor_fields:
             LOGGER.info('copying preprocessor field: %r', field_name)
             value = getattr(self.source_preprocessor, field_name)
             setattr(target_preprocessor, field_name, value)
 
     def apply_weights(self, target_model: BaseModel):
-        if not self.transfer_learning_config.layers:
+        if not self.transfer_learning_config.copy_layers:
             LOGGER.info('no transfer learning source layers specified')
             return
         wrapped_source_model = TransferModelWrapper(self.source_model)
         wrapped_target_model = TransferModelWrapper(target_model)
-        requested_layers = self.transfer_learning_config.layers
+        requested_layers = self.transfer_learning_config.copy_layers
         missing_source_layers = set(requested_layers) - set(wrapped_source_model.layer_names)
         if missing_source_layers:
             raise ValueError('missing source layers for transfer learning: %s (available: %s)' % (

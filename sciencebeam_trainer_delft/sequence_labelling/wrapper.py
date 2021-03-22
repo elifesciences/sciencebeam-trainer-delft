@@ -49,8 +49,8 @@ from sciencebeam_trainer_delft.sequence_labelling.tools.checkpoints import (
 )
 from sciencebeam_trainer_delft.sequence_labelling.transfer_learning import (
     TransferLearningConfig,
-    TransferLearningSource
-    # apply_transfer_learning
+    TransferLearningSource,
+    freeze_model_layers
 )
 
 
@@ -302,6 +302,8 @@ class Sequence(_Sequence):
             self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
             if transfer_learning_source:
                 transfer_learning_source.apply_weights(target_model=self.model)
+            if self.transfer_learning_config:
+                freeze_model_layers(self.model, self.transfer_learning_config.freeze_layers)
         trainer = Trainer(
             self.model,
             self.models,

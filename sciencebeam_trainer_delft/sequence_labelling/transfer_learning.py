@@ -23,6 +23,7 @@ class TransferLearningConfig(NamedTuple):
     source_model_path: Optional[str] = None
     layers: Optional[List[str]] = None
     preprocessor_fields: Optional[List[str]] = None
+    freeze_layers: Optional[List[str]] = None
 
 
 class TransferModelWrapper:
@@ -41,6 +42,10 @@ class TransferModelWrapper:
     def set_layer_weights(self, layer_name: str, weights: List[np.ndarray]):
         LOGGER.info('setting weights of layer: %r', layer_name)
         self.keras_layers_by_name[layer_name].set_weights(weights)
+
+    def freeze_layer(self, layer_name: str):
+        LOGGER.info('freezing layer: %r', layer_name)
+        self.keras_layers_by_name[layer_name].trainable = False
 
 
 class TransferLearningSource:
@@ -114,6 +119,14 @@ class TransferLearningSource:
             )
 
 
+def freeze_model_layers(target_model: BaseModel, layers: Optional[List[str]]):
+    if not layers:
+        return
+    wrapped_target_model = TransferModelWrapper(target_model)
+    for layer_name in layers:
+        wrapped_target_model.freeze_layer(layer_name)
+
+
 def add_transfer_learning_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         '--transfer-source-model-path',
@@ -130,6 +143,11 @@ def add_transfer_learning_arguments(parser: argparse.ArgumentParser):
         type=parse_comma_separated_str,
         help='the preprocessor fields to transfer (e.g. "vocab_char")'
     )
+    parser.add_argument(
+        '--transfer-freeze-layers',
+        type=parse_comma_separated_str,
+        help='the layers to freeze'
+    )
 
 
 def get_transfer_learning_config_for_parsed_args(
@@ -138,5 +156,6 @@ def get_transfer_learning_config_for_parsed_args(
     return TransferLearningConfig(
         source_model_path=args.transfer_source_model_path,
         layers=args.transfer_layers,
-        preprocessor_fields=args.transfer_preprocessor_fields
+        preprocessor_fields=args.transfer_preprocessor_fields,
+        freeze_layers=args.transfer_freeze_layers
     )

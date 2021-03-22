@@ -1,3 +1,4 @@
+import argparse
 import logging
 from typing import Dict, List, Optional, NamedTuple
 
@@ -7,6 +8,7 @@ import numpy as np
 from delft.sequenceLabelling.preprocess import WordPreprocessor
 from delft.sequenceLabelling.models import BaseModel
 
+from sciencebeam_trainer_delft.utils.misc import parse_comma_separated_str
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelLoader
 from sciencebeam_trainer_delft.sequence_labelling.models import (
@@ -110,3 +112,31 @@ class TransferLearningSource:
                 layer_name,
                 wrapped_source_model.get_layer_weights(layer_name)
             )
+
+
+def add_transfer_learning_arguments(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        '--transfer-source-model-path',
+        type=str,
+        help='path to model, that learned layers or parameters should be transfered from'
+    )
+    parser.add_argument(
+        '--transfer-layers',
+        type=parse_comma_separated_str,
+        help='the layers to transfer'
+    )
+    parser.add_argument(
+        '--transfer-preprocessor-fields',
+        type=parse_comma_separated_str,
+        help='the preprocessor fields to transfer (e.g. "vocab_char")'
+    )
+
+
+def get_transfer_learning_config_for_parsed_args(
+    args: argparse.Namespace
+) -> TransferLearningConfig:
+    return TransferLearningConfig(
+        source_model_path=args.transfer_source_model_path,
+        layers=args.transfer_layers,
+        preprocessor_fields=args.transfer_preprocessor_fields
+    )

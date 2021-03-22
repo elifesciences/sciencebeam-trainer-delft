@@ -32,6 +32,10 @@ from sciencebeam_trainer_delft.sequence_labelling.evaluation import (
     EVALUATION_OUTPUT_FORMATS
 )
 
+from sciencebeam_trainer_delft.sequence_labelling.transfer_learning import (
+    add_transfer_learning_arguments
+)
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -385,6 +389,7 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         default=0,
         help="Sets the initial epoch for model training."
     )
+    add_transfer_learning_arguments(parser)
     add_train_notification_arguments(parser)
 
 

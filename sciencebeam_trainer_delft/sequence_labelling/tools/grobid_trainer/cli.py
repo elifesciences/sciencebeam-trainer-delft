@@ -41,6 +41,9 @@ from sciencebeam_trainer_delft.utils.cli import (
     SubCommandProcessor
 )
 
+from sciencebeam_trainer_delft.sequence_labelling.transfer_learning import (
+    get_transfer_learning_config_for_parsed_args
+)
 from sciencebeam_trainer_delft.sequence_labelling.tools.grobid_trainer.cli_args import (
     add_common_arguments,
     add_train_arguments,
@@ -185,6 +188,7 @@ class GrobidTrainerSubCommand(SubCommand):
                 input_window_stride=args.input_window_stride
             ),
             resume_train_model_path=args.resume_train_model_path,
+            transfer_learning_config=get_transfer_learning_config_for_parsed_args(args),
             train_notification_manager=get_train_notification_manager(args),
             **self.get_common_args(args)
         )

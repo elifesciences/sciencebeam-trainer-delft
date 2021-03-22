@@ -1,10 +1,29 @@
 import pytest
 
 from sciencebeam_trainer_delft.utils.misc import (
+    parse_comma_separated_str,
     parse_number_ranges,
     parse_dict,
     str_to_bool
 )
+
+
+class TestParseCommaSeparatedStr:
+    def test_should_return_empty_array_for_empty_expr(self):
+        assert parse_comma_separated_str('') == []
+
+    def test_should_parse_single_value(self):
+        assert parse_comma_separated_str('value1') == ['value1']
+
+    def test_should_parse_comma_separated_values(self):
+        assert parse_comma_separated_str('value1,value2,value3') == [
+            'value1', 'value2', 'value3'
+        ]
+
+    def test_should_ignore_spaces(self):
+        assert parse_comma_separated_str(' value1 , value2 , value3 ') == [
+            'value1', 'value2', 'value3'
+        ]
 
 
 class TestParseNumberRanges:

@@ -36,10 +36,10 @@ class CustomModel(BaseModel):
         self.stateful = stateful
 
 
-def _concatenate_inputs(inputs: list):
+def _concatenate_inputs(inputs: list, **kwargs):
     if len(inputs) == 1:
         return inputs[0]
-    return Concatenate()(inputs)
+    return Concatenate(**kwargs)(inputs)
 
 
 # renamed copy of BidLSTM_CRF to demonstrate a custom model
@@ -130,19 +130,22 @@ class CustomBidLSTM_CRF(CustomModel):
             )
             lstm_inputs.append(features)
 
-        x = _concatenate_inputs(lstm_inputs)
-        x = Dropout(config.dropout)(x)
+        x = _concatenate_inputs(lstm_inputs, name='word_lstm_input')
+        x = Dropout(config.dropout, name='word_lstm_input_dropout')(x)
 
         x = Bidirectional(LSTM(
             units=config.num_word_lstm_units,
             return_sequences=True,
             recurrent_dropout=config.recurrent_dropout,
-            stateful=stateful
-        ))(x)
-        x = Dropout(config.dropout)(x)
-        x = Dense(config.num_word_lstm_units, activation='tanh')(x)
+            stateful=stateful,
+            name='word_lstm'
+        ), name='word_bidirectional_lstm')(x)
+        x = Dropout(config.dropout, name='word_bidirectional_lstm_dropout')(x)
+        x = Dense(
+            config.num_word_lstm_units, name='word_bidirectional_dense', activation='tanh'
+        )(x)
         x = Dense(ntags, name='dense_ntags')(x)
-        self.crf = ChainCRF()
+        self.crf = ChainCRF(name='crf')
         pred = self.crf(x)
 
         model_inputs.append(length_input)

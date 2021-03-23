@@ -8,7 +8,10 @@ import numpy as np
 from delft.sequenceLabelling.preprocess import WordPreprocessor
 from delft.sequenceLabelling.models import BaseModel
 
-from sciencebeam_trainer_delft.utils.misc import parse_comma_separated_str
+from sciencebeam_trainer_delft.utils.misc import (
+    parse_comma_separated_str,
+    parse_dict
+)
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelLoader
 from sciencebeam_trainer_delft.sequence_labelling.models import (
@@ -21,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 
 class TransferLearningConfig(NamedTuple):
     source_model_path: Optional[str] = None
-    copy_layers: Optional[List[str]] = None
+    copy_layers: Optional[Dict[str, str]] = None
     copy_preprocessor_fields: Optional[List[str]] = None
     freeze_layers: Optional[List[str]] = None
 
@@ -101,22 +104,36 @@ class TransferLearningSource:
             return
         wrapped_source_model = TransferModelWrapper(self.source_model)
         wrapped_target_model = TransferModelWrapper(target_model)
-        requested_layers = self.transfer_learning_config.copy_layers
-        missing_source_layers = set(requested_layers) - set(wrapped_source_model.layer_names)
+        copy_layers_map = self.transfer_learning_config.copy_layers
+        requested_target_layers = copy_layers_map.keys()
+        requested_source_layers = copy_layers_map.values()
+        missing_source_layers = (
+            set(requested_source_layers) - set(wrapped_source_model.layer_names)
+        )
         if missing_source_layers:
             raise ValueError('missing source layers for transfer learning: %s (available: %s)' % (
                 missing_source_layers, wrapped_source_model.layer_names
             ))
-        missing_target_layers = set(requested_layers) - set(wrapped_target_model.layer_names)
+        missing_target_layers = (
+            set(requested_target_layers) - set(wrapped_target_model.layer_names)
+        )
         if missing_target_layers:
             raise ValueError('missing target layers for transfer learning: %s (available: %s)' % (
                 missing_target_layers, wrapped_target_model.layer_names
             ))
-        for layer_name in requested_layers:
-            wrapped_target_model.set_layer_weights(
-                layer_name,
-                wrapped_source_model.get_layer_weights(layer_name)
-            )
+        for target_layer_name, source_layer_name in copy_layers_map.items():
+            LOGGER.info('copying layer weights: %r -> %r', source_layer_name, target_layer_name)
+            try:
+                wrapped_target_model.set_layer_weights(
+                    target_layer_name,
+                    wrapped_source_model.get_layer_weights(source_layer_name)
+                )
+            except Exception as exc:
+                raise RuntimeError(
+                    'failed to copy layer weights (%r -> %r) due to %r' % (
+                        source_layer_name, target_layer_name, exc
+                    )
+                ) from exc
 
 
 def freeze_model_layers(target_model: BaseModel, layers: Optional[List[str]]):
@@ -135,8 +152,8 @@ def add_transfer_learning_arguments(parser: argparse.ArgumentParser):
     )
     parser.add_argument(
         '--transfer-copy-layers',
-        type=parse_comma_separated_str,
-        help='the layers to transfer'
+        type=parse_dict,
+        help='the layers to transfer (mapping from target to source)'
     )
     parser.add_argument(
         '--transfer-copy-preprocessor-fields',

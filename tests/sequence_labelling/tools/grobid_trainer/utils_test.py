@@ -442,10 +442,10 @@ class TestGrobidTrainerUtils:
                     **default_args,
                     'transfer_learning_config': TransferLearningConfig(
                         source_model_path=str(source_model_output_path / default_args['model']),
-                        copy_layers=[
-                            'char_embeddings',
-                            'char_lstm'
-                        ],
+                        copy_layers={
+                            'char_embeddings': 'char_embeddings',
+                            'char_lstm': 'char_lstm'
+                        },
                         copy_preprocessor_fields=['vocab_char'],
                         freeze_layers=['char_embeddings']
                     ),

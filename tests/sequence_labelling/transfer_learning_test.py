@@ -31,11 +31,14 @@ class TestParseTransferLearningArgumentsAsConfig:
     def test_should_parse_model_path_with_layers(self):
         config = parse_args_as_config([
             f'--transfer-source-model-path={MODEL_PATH_1}',
-            f'--transfer-copy-layers={LAYER_1},{LAYER_2}',
+            f'--transfer-copy-layers={LAYER_1}_out={LAYER_1}_in|{LAYER_2}_out={LAYER_2}_in',
             f'--transfer-copy-preprocessor-fields={FIELD_1},{FIELD_2}',
             f'--transfer-freeze-layers={LAYER_1}'
         ])
         assert config.source_model_path == MODEL_PATH_1
-        assert config.copy_layers == [LAYER_1, LAYER_2]
+        assert config.copy_layers == {
+            f'{LAYER_1}_out': f'{LAYER_1}_in',
+            f'{LAYER_2}_out': f'{LAYER_2}_in'
+        }
         assert config.copy_preprocessor_fields == [FIELD_1, FIELD_2]
         assert config.freeze_layers == [LAYER_1]

@@ -324,18 +324,22 @@ A limited form of transfer learning is also possible by copying selected layers 
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     header train_eval \
     --transfer-source-model-path="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/2020-10-04-delft-grobid-header-biorxiv-no-word-embedding.tar.gz" \
-    --transfer-copy-layers="char_embeddings,char_lstm" \
-    --transfer-copy-preprocessor-fields="vocab_char" \
-    --transfer-freeze-layers="char_embeddings" \
+    --transfer-copy-layers="char_embeddings=char_embeddings|char_lstm=char_lstm|word_lstm=word_lstm|word_lstm_dense=word_lstm_dense" \
+    --transfer-copy-preprocessor-fields="vocab_char,feature_preprocessor" \
+    --transfer-freeze-layers="char_embeddings,char_lstm,word_lstm" \
     --batch-size="10" \
     --architecture="CustomBidLSTM_CRF" \
     --no-embedding \
-    --input="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/delft-grobid-header-biorxiv-no-word-embedding-2020-05-05.tar.gz" \
-    --limit="100" \
+    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.6.1/delft-grobid-0.6.1-header.train.gz" \
+    --limit="1000" \
     --eval-input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.6.1/delft-grobid-0.6.1-header.test.gz" \
     --eval-limit="100" \
+    --max-sequence-length="1000" \
     --eval-batch-size="5" \
     --early-stopping-patience="3" \
+    --word-lstm-units="200" \
+    --use-features \
+    --feature-indices="9-25" \
     --max-epoch="50"
 ```
 

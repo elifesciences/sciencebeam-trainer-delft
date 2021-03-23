@@ -45,6 +45,7 @@ class TransferModelWrapper:
 
     def set_layer_weights(self, layer_name: str, weights: List[np.ndarray]):
         LOGGER.info('setting weights of layer: %r', layer_name)
+        LOGGER.debug('setting weights of layer %r to:\n%s', layer_name, weights)
         self.keras_layers_by_name[layer_name].set_weights(weights)
 
     def freeze_layer(self, layer_name: str):
@@ -84,6 +85,7 @@ class TransferLearningSource:
             source_preprocessor,
             ntags=len(source_preprocessor.vocab_tag)
         )
+        model_loader.load_model_from_directory(directory, source_model)
         return TransferLearningSource(
             transfer_learning_config=transfer_learning_config,
             source_model=source_model,

@@ -25,6 +25,7 @@ LOGGER = logging.getLogger(__name__)
 class TransferLearningConfig(NamedTuple):
     source_model_path: Optional[str] = None
     copy_layers: Optional[Dict[str, str]] = None
+    copy_preprocessor: bool = False
     copy_preprocessor_fields: Optional[List[str]] = None
     freeze_layers: Optional[List[str]] = None
 
@@ -88,6 +89,12 @@ class TransferLearningSource:
             source_model=source_model,
             source_preprocessor=source_preprocessor
         )
+
+    def copy_preprocessor_if_enabled(self) -> Optional[WordPreprocessor]:
+        if self.transfer_learning_config.copy_preprocessor:
+            LOGGER.info('copying preprocessor')
+            return self.source_preprocessor
+        return None
 
     def apply_preprocessor(self, target_preprocessor: WordPreprocessor):
         if not self.transfer_learning_config.copy_preprocessor_fields:
@@ -156,6 +163,12 @@ def add_transfer_learning_arguments(parser: argparse.ArgumentParser):
         help='the layers to transfer (mapping from target to source)'
     )
     parser.add_argument(
+        '--transfer-copy-preprocessor',
+        action='store_true',
+        default=False,
+        help='copy the whole preprocessor'
+    )
+    parser.add_argument(
         '--transfer-copy-preprocessor-fields',
         type=parse_comma_separated_str,
         help='the preprocessor fields to transfer (e.g. "vocab_char")'
@@ -173,6 +186,7 @@ def get_transfer_learning_config_for_parsed_args(
     return TransferLearningConfig(
         source_model_path=args.transfer_source_model_path,
         copy_layers=args.transfer_copy_layers,
+        copy_preprocessor=args.transfer_copy_preprocessor,
         copy_preprocessor_fields=args.transfer_copy_preprocessor_fields,
         freeze_layers=args.transfer_freeze_layers
     )

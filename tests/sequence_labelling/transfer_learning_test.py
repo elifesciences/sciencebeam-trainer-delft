@@ -40,5 +40,14 @@ class TestParseTransferLearningArgumentsAsConfig:
             f'{LAYER_1}_out': f'{LAYER_1}_in',
             f'{LAYER_2}_out': f'{LAYER_2}_in'
         }
+        assert config.copy_preprocessor is False
         assert config.copy_preprocessor_fields == [FIELD_1, FIELD_2]
         assert config.freeze_layers == [LAYER_1]
+
+    def test_should_parse_copy_preprocessor(self):
+        config = parse_args_as_config([
+            f'--transfer-source-model-path={MODEL_PATH_1}',
+            '--transfer-copy-preprocessor'
+        ])
+        assert config.source_model_path == MODEL_PATH_1
+        assert config.copy_preprocessor is True

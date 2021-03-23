@@ -419,11 +419,13 @@ class TestGrobidTrainerUtils:
             )
 
         @pytest.mark.usefixtures('trainer_mock')
+        @pytest.mark.parametrize("copy_preprocessor", [False, True])
         @log_on_exception
         def test_should_be_able_to_copy_weights_from_previous_model(
             self,
             tmp_path: Path,
-            default_args: dict
+            default_args: dict,
+            copy_preprocessor: bool
         ):
             source_model_output_path = tmp_path / 'source_model'
             train(
@@ -446,6 +448,7 @@ class TestGrobidTrainerUtils:
                             'char_embeddings': 'char_embeddings',
                             'char_lstm': 'char_lstm'
                         },
+                        copy_preprocessor=copy_preprocessor,
                         copy_preprocessor_fields=['vocab_char'],
                         freeze_layers=['char_embeddings']
                     ),

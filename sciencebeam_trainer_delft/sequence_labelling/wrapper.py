@@ -272,11 +272,14 @@ class Sequence(_Sequence):
                 download_manager=self.download_manager
             )
         if self.p is None:
-            self.p = prepare_preprocessor(
-                x_all, y_all,
-                features=features_all,
-                model_config=self.model_config
-            )
+            if transfer_learning_source:
+                self.p = transfer_learning_source.copy_preprocessor_if_enabled()
+            if self.p is None:
+                self.p = prepare_preprocessor(
+                    x_all, y_all,
+                    features=features_all,
+                    model_config=self.model_config
+                )
             if transfer_learning_source:
                 transfer_learning_source.apply_preprocessor(target_preprocessor=self.p)
             self.model_config.char_vocab_size = len(self.p.vocab_char)

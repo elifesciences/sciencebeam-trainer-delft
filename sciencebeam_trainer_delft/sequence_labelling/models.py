@@ -138,11 +138,10 @@ class CustomBidLSTM_CRF(CustomModel):
             return_sequences=True,
             recurrent_dropout=config.recurrent_dropout,
             stateful=stateful,
-            name='word_lstm'
-        ), name='word_bidirectional_lstm')(x)
-        x = Dropout(config.dropout, name='word_bidirectional_lstm_dropout')(x)
+        ), name='word_lstm')(x)
+        x = Dropout(config.dropout, name='word_lstm_dropout')(x)
         x = Dense(
-            config.num_word_lstm_units, name='word_bidirectional_dense', activation='tanh'
+            config.num_word_lstm_units, name='word_lstm_dense', activation='tanh'
         )(x)
         x = Dense(ntags, name='dense_ntags')(x)
         self.crf = ChainCRF(name='crf')

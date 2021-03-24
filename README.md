@@ -327,7 +327,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --transfer-copy-layers="char_embeddings=char_embeddings|char_lstm=char_lstm|word_lstm=word_lstm|word_lstm_dense=word_lstm_dense" \
     --transfer-copy-preprocessor-fields="vocab_char,feature_preprocessor" \
     --transfer-freeze-layers="char_embeddings,char_lstm,word_lstm" \
-    --batch-size="10" \
+    --batch-size="16" \
     --architecture="CustomBidLSTM_CRF" \
     --no-embedding \
     --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.6.1/delft-grobid-0.6.1-header.train.gz" \
@@ -340,6 +340,30 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --word-lstm-units="200" \
     --use-features \
     --feature-indices="9-25" \
+    --max-epoch="50"
+```
+
+Or transfer character weights from a different GROBID model:
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    affiliation-address \
+    train_eval \
+    --transfer-source-model-path="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/2020-10-04-delft-grobid-header-biorxiv-no-word-embedding.tar.gz" \
+    --transfer-copy-layers="char_embeddings=char_embeddings|char_lstm=char_lstm" \
+    --transfer-copy-preprocessor-fields="vocab_char" \
+    --transfer-freeze-layers="char_embeddings,char_lstm" \
+    --batch-size="32" \
+    --architecture="CustomBidLSTM_CRF" \
+    --no-embedding \
+    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.6.1/delft-grobid-0.6.1-affiliation-address.train.gz" \
+    --limit="1000" \
+    --eval-input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.6.1/delft-grobid-0.6.1-affiliation-address.test.gz" \
+    --eval-limit="100" \
+    --max-sequence-length="100" \
+    --eval-batch-size="5" \
+    --early-stopping-patience="5" \
+    --word-lstm-units="20" \
     --max-epoch="50"
 ```
 

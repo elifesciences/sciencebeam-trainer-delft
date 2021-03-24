@@ -131,8 +131,11 @@ def load_data_crf_lines(
 def load_data_and_labels_crf_file(
         filepath: str,
         limit: int = None) -> Tuple[np.array, np.array, np.array]:
-    with open(filepath, 'r', encoding='utf-8') as fp:
-        return load_data_and_labels_crf_lines(fp, limit=limit)
+    try:
+        with open(filepath, 'r', encoding='utf-8') as fp:
+            return load_data_and_labels_crf_lines(fp, limit=limit)
+    except Exception as exc:
+        raise RuntimeError('failed to read file %r' % filepath) from exc
 
 
 def load_data_crf_string(

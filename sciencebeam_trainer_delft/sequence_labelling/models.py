@@ -36,10 +36,10 @@ class CustomModel(BaseModel):
         self.stateful = stateful
 
 
-def _concatenate_inputs(inputs: list):
+def _concatenate_inputs(inputs: list, **kwargs):
     if len(inputs) == 1:
         return inputs[0]
-    return Concatenate()(inputs)
+    return Concatenate(**kwargs)(inputs)
 
 
 # renamed copy of BidLSTM_CRF to demonstrate a custom model
@@ -85,23 +85,25 @@ class CustomBidLSTM_CRF(CustomModel):
         )
         model_inputs.append(char_input)
 
-        char_embeddings = TimeDistributed(Embedding(
-            input_dim=config.char_vocab_size,
-            output_dim=config.char_embedding_size,
-            # mask_zero=True,
-            # embeddings_initializer=RandomUniform(minval=-0.5, maxval=0.5),
-            name='char_embeddings_embedding'
-        ), name='char_embeddings')(char_input)
+        if config.char_embedding_size:
+            assert config.char_vocab_size, 'config.char_vocab_size required'
+            char_embeddings = TimeDistributed(Embedding(
+                input_dim=config.char_vocab_size,
+                output_dim=config.char_embedding_size,
+                # mask_zero=True,
+                # embeddings_initializer=RandomUniform(minval=-0.5, maxval=0.5),
+                name='char_embeddings_embedding'
+            ), name='char_embeddings')(char_input)
 
-        chars = TimeDistributed(
-            Bidirectional(LSTM(
-                config.num_char_lstm_units,
-                return_sequences=False,
-                stateful=stateful
-            )),
-            name='char_lstm'
-        )(char_embeddings)
-        lstm_inputs.append(chars)
+            chars = TimeDistributed(
+                Bidirectional(LSTM(
+                    config.num_char_lstm_units,
+                    return_sequences=False,
+                    stateful=stateful
+                )),
+                name='char_lstm'
+            )(char_embeddings)
+            lstm_inputs.append(chars)
 
         # length of sequence not used for the moment (but used for f1 communication)
         length_input = Input(batch_shape=(None, 1), dtype='int32', name='length_input')
@@ -128,19 +130,21 @@ class CustomBidLSTM_CRF(CustomModel):
             )
             lstm_inputs.append(features)
 
-        x = _concatenate_inputs(lstm_inputs)
-        x = Dropout(config.dropout)(x)
+        x = _concatenate_inputs(lstm_inputs, name='word_lstm_input')
+        x = Dropout(config.dropout, name='word_lstm_input_dropout')(x)
 
         x = Bidirectional(LSTM(
             units=config.num_word_lstm_units,
             return_sequences=True,
             recurrent_dropout=config.recurrent_dropout,
-            stateful=stateful
-        ))(x)
-        x = Dropout(config.dropout)(x)
-        x = Dense(config.num_word_lstm_units, activation='tanh')(x)
+            stateful=stateful,
+        ), name='word_lstm')(x)
+        x = Dropout(config.dropout, name='word_lstm_dropout')(x)
+        x = Dense(
+            config.num_word_lstm_units, name='word_lstm_dense', activation='tanh'
+        )(x)
         x = Dense(ntags, name='dense_ntags')(x)
-        self.crf = ChainCRF()
+        self.crf = ChainCRF(name='crf')
         pred = self.crf(x)
 
         model_inputs.append(length_input)

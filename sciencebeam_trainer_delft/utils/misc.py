@@ -1,6 +1,12 @@
 from typing import List, Dict, Tuple
 
 
+def parse_comma_separated_str(s: str) -> List[str]:
+    if not s:
+        return []
+    return [item.strip() for item in s.split(',')]
+
+
 def parse_number_range(expr: str) -> List[int]:
     fragments = expr.split('-')
     if len(fragments) == 1:

@@ -381,7 +381,7 @@ In that case the model will not be trained on any data beyond the max sequence l
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     header train_eval \
-    --batch-size="10" \
+    --batch-size="16" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="100" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
@@ -397,7 +397,7 @@ This requires the LSTMs to be *stateful* (the state from the previous batch is p
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     header train_eval \
-    --batch-size="10" \
+    --batch-size="16" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="100" \
     --input-window-stride="100" \
@@ -418,7 +418,7 @@ To do that, do not pass `--stateful`. But use `--input-window-stride` which is e
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     header train_eval \
-    --batch-size="10" \
+    --batch-size="16" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="100" \
     --input-window-stride="50" \
@@ -435,7 +435,7 @@ This will not allow the LSTM to capture long term dependencies beyond the max se
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     eval \
-    --batch-size="10" \
+    --batch-size="16" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="10" \
@@ -460,7 +460,7 @@ The `tag` sub command supports multiple output formats:
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     tag \
-    --batch-size="10" \
+    --batch-size="16" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
@@ -485,7 +485,7 @@ With the result:
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     tag \
-    --batch-size="10" \
+    --batch-size="16" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="2" \
@@ -521,7 +521,7 @@ With the result (the second document contains differences):
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     tag \
-    --batch-size="10" \
+    --batch-size="16" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
@@ -545,7 +545,7 @@ Planar planar P Pl Pla Plan r ar nar anar BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     tag \
-    --batch-size="10" \
+    --batch-size="16" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="1" \
@@ -687,7 +687,7 @@ gcloud beta ai-platform jobs submit training \
     --package-path sciencebeam_trainer_delft \
     -- \
     header train_eval \
-    --batch-size="10" \
+    --batch-size="16" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="500" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
@@ -708,7 +708,7 @@ Or using the project's wrapper script which provides some default values:
     --region=europe-west1 \
     -- \
     header train_eval \
-    --batch-size="10" \
+    --batch-size="16" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="500" \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \

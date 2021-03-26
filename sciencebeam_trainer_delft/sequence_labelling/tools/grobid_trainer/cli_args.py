@@ -335,6 +335,12 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     output_group = parser.add_argument_group('output')
     add_output_argument(output_group)
     output_group.add_argument("--checkpoint", help="directory where to save a checkpoint model")
+    output_group.add_argument(
+        "--checkpoint-epoch-interval",
+        type=int,
+        default=1,
+        help="save checkpoints every n epochs"
+    )
 
     parser.add_argument(
         "--embedding", default="glove-6B-50d",

@@ -29,6 +29,7 @@ LOGGER = logging.getLogger(__name__)
 def get_callbacks(
         model_saver: ModelSaver,
         log_dir: str = None,
+        log_period: int = 1,
         valid: tuple = (),
         early_stopping: bool = True,
         early_stopping_patience: int = 5,
@@ -54,6 +55,7 @@ def get_callbacks(
         assert model_saver
         save_callback = ModelWithMetadataCheckpoint(
             os.path.join(log_dir, epoch_dirname),
+            period=log_period,
             model_saver=model_saver,
             monitor='f1',
             meta=meta
@@ -222,6 +224,7 @@ class Trainer(_Trainer):
             callbacks = get_callbacks(
                 model_saver=self.model_saver,
                 log_dir=self.checkpoint_path,
+                log_period=self.training_config.checkpoint_epoch_interval,
                 early_stopping=True,
                 early_stopping_patience=self.training_config.patience,
                 valid=(validation_generator, self.preprocessor),

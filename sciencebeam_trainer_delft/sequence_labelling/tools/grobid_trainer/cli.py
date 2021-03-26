@@ -185,7 +185,8 @@ class GrobidTrainerSubCommand(SubCommand):
             ),
             training_props=dict(
                 initial_epoch=args.initial_epoch,
-                input_window_stride=args.input_window_stride
+                input_window_stride=args.input_window_stride,
+                checkpoint_epoch_interval=args.checkpoint_epoch_interval
             ),
             resume_train_model_path=args.resume_train_model_path,
             transfer_learning_config=get_transfer_learning_config_for_parsed_args(args),

@@ -181,7 +181,7 @@ def do_train(
         download_manager=download_manager
     )
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
-        x_all, y_all, features_all, test_size=0.1
+        x_all, y_all, features_all, test_size=0.1, shuffle=False
     )
 
     LOGGER.info('%d train sequences', len(x_train))
@@ -385,10 +385,10 @@ def do_train_eval(
         )
     else:
         x_train_all, x_eval, y_train_all, y_eval, features_train_all, features_eval = (
-            train_test_split(x_all, y_all, features_all, test_size=0.1)
+            train_test_split(x_all, y_all, features_all, test_size=0.1, shuffle=False)
         )
     x_train, x_valid, y_train, y_valid, features_train, features_valid = train_test_split(
-        x_train_all, y_train_all, features_train_all, test_size=0.1
+        x_train_all, y_train_all, features_train_all, test_size=0.1, shuffle=False
     )
 
     LOGGER.info('%d train sequences', len(x_train))
@@ -581,7 +581,7 @@ def do_eval_model(
 
     if split_input:
         _, x_eval, _, y_eval, _, features_eval = train_test_split(
-            x_all, y_all, features_all, test_size=0.1
+            x_all, y_all, features_all, test_size=0.1, shuffle=False
         )
     else:
         x_eval = x_all

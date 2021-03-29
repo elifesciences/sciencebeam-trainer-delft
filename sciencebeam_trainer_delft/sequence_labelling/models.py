@@ -98,6 +98,8 @@ class CustomBidLSTM_CRF(CustomModel):
             chars = TimeDistributed(
                 Bidirectional(LSTM(
                     config.num_char_lstm_units,
+                    dropout=config.char_input_dropout,
+                    recurrent_dropout=config.char_lstm_dropout,
                     return_sequences=False
                 )),
                 name='char_lstm'
@@ -138,7 +140,7 @@ class CustomBidLSTM_CRF(CustomModel):
             recurrent_dropout=config.recurrent_dropout,
             stateful=stateful,
         ), name='word_lstm')(x)
-        x = Dropout(config.dropout, name='word_lstm_dropout')(x)
+        x = Dropout(config.dropout, name='word_lstm_output_dropout')(x)
         x = Dense(
             config.num_word_lstm_units, name='word_lstm_dense', activation='tanh'
         )(x)

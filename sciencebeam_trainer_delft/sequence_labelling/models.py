@@ -126,7 +126,7 @@ class CustomBidLSTM_CRF(CustomModel):
                     name='features_embeddings_dense'
                 ), name='features_embeddings')(features)
             LOGGER.info(
-                'word_input=%s, charts=%s, features=%s',
+                'word_input=%s, chars=%s, features=%s',
                 word_input, chars, features
             )
             lstm_inputs.append(features)

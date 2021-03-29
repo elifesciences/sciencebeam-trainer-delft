@@ -98,8 +98,7 @@ class CustomBidLSTM_CRF(CustomModel):
             chars = TimeDistributed(
                 Bidirectional(LSTM(
                     config.num_char_lstm_units,
-                    return_sequences=False,
-                    stateful=stateful
+                    return_sequences=False
                 )),
                 name='char_lstm'
             )(char_embeddings)

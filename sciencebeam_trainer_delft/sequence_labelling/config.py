@@ -10,6 +10,8 @@ from delft.sequenceLabelling.config import (
 FIRST_MODEL_VERSION = 1
 MODEL_VERSION = 2
 
+DEFAULT_CHAR_INPUT_DROPOUT = 0.0
+DEFAULT_CHAR_LSTM_DROPOUT = 0.0
 
 NOT_SET = -1
 
@@ -25,6 +27,8 @@ class ModelConfig(_ModelConfig):
             text_feature_indices: List[int] = None,
             concatenated_embeddings_token_count: int = None,
             use_features_indices_input: bool = False,
+            char_input_dropout: float = DEFAULT_CHAR_INPUT_DROPOUT,
+            char_lstm_dropout: float = DEFAULT_CHAR_LSTM_DROPOUT,
             stateful: bool = False,
             model_version: int = MODEL_VERSION,
             # deprecated
@@ -43,6 +47,8 @@ class ModelConfig(_ModelConfig):
         self.use_features = use_features
         self.max_feature_size = max_feature_size
         self.use_features_indices_input = use_features_indices_input
+        self.char_input_dropout = char_input_dropout
+        self.char_lstm_dropout = char_lstm_dropout
         self.stateful = stateful
         self.model_version = model_version
         for key, val in kwargs.items():

@@ -119,6 +119,8 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --early-stopping-patience="3" \
     --char-embedding-size="11" \
     --char-lstm-units="12" \
+    --char-input-dropout="0.3" \
+    --char-lstm-dropout="0.3" \
     --max-char-length="13" \
     --word-lstm-units="14" \
     --dropout="0.1" \

@@ -15,6 +15,10 @@ from sciencebeam_trainer_delft.sequence_labelling.wrapper import (
     get_default_batch_size,
     get_default_stateful
 )
+from sciencebeam_trainer_delft.sequence_labelling.config import (
+    DEFAULT_CHAR_INPUT_DROPOUT,
+    DEFAULT_CHAR_LSTM_DROPOUT
+)
 from sciencebeam_trainer_delft.sequence_labelling.models import get_model_names
 
 from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti import (
@@ -367,6 +371,14 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--char-lstm-units", type=int, default=25,
         help="number of list units for chars"
+    )
+    parser.add_argument(
+        "--char-input-dropout", type=float, default=DEFAULT_CHAR_INPUT_DROPOUT,
+        help="dropout for char input"
+    )
+    parser.add_argument(
+        "--char-lstm-dropout", type=float, default=DEFAULT_CHAR_LSTM_DROPOUT,
+        help="dropout for char lstm"
     )
     parser.add_argument(
         "--word-lstm-units", type=int, default=100,

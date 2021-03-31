@@ -169,7 +169,7 @@ def iter_format_document_list_tag_result_as_data_unidiff(
             document_tag_result=document_tag_result,
             document_expected_tag_result=expected_tag_result[document_index],
             document_features=features[document_index],
-            document_name='document_' + str(1 + document_index)
+            document_name='document_%06d' % (1 + document_index)
         )
 
 

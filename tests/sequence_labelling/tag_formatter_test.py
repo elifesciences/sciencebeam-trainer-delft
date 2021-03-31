@@ -123,8 +123,8 @@ class TestFormatTagResult:
         )
         LOGGER.debug('result:\n%s', result)
         assert result.splitlines() == [
-            '--- document_1.expected',
-            '+++ document_1.actual',
+            '--- document_000001.expected',
+            '+++ document_000001.actual',
             '@@ -1,3 +1,3 @@',
             ' token1 feat1.1 feat1.2 B-tag1',
             ' token2 feat2.1 feat2.2 I-tag1',
@@ -150,15 +150,15 @@ class TestFormatTagResult:
         )
         LOGGER.debug('result:\n%s', result)
         assert result.splitlines() == [
-            '--- document_1.expected',
-            '+++ document_1.actual',
+            '--- document_000001.expected',
+            '+++ document_000001.actual',
             '@@ -1,3 +1,3 @@',
             ' token1.1 feat1.1.1 B-tag1',
             ' token1.2 feat1.2.1 I-tag1',
             '-token1.3 feat1.3.1 B-tag3',
             '+token1.3 feat1.3.1 B-tag2',
-            '--- document_2.expected',
-            '+++ document_2.actual',
+            '--- document_000002.expected',
+            '+++ document_000002.actual',
             '@@ -1,3 +1,3 @@',
             ' token2.1 feat2.1.1 B-tag1',
             ' token2.2 feat2.2.1 I-tag1',

@@ -50,7 +50,7 @@ def format_json_tag_result_as_json(tag_result: dict) -> str:
 
 
 def format_list_tag_result_as_json(
-        tag_result: List[List[Tuple[str, str]]],
+        tag_result: Iterable[List[Tuple[str, str]]],
         texts: np.array = None,
         features: np.array = None,
         model_name: str = None) -> str:
@@ -58,31 +58,44 @@ def format_list_tag_result_as_json(
         'model': model_name,
         'texts': np.array(texts).tolist(),
         'features': np.array(features).tolist() if features is not None else None,
-        'annotations': tag_result
+        'annotations': list(tag_result)
     }
     return json.dumps(output_props, indent=2, cls=CustomJsonEncoder)
 
 
-def to_data_lines(
-        features: np.array,
-        annotations: List[List[Tuple[str, str]]]) -> List[str]:
-    return [
+def iter_to_data_lines(
+    features: np.array,
+    annotations: List[List[Tuple[str, str]]]
+) -> Iterable[str]:
+    return (
         ' '.join([token_annoation[0]] + list(token_features) + [token_annoation[1]])
         for line_annotations, line_features in zip(annotations, features.tolist())
         for token_annoation, token_features in zip(line_annotations, line_features)
-    ]
+    )
 
 
-def format_list_tag_result_as_data(
-        tag_result: List[List[Tuple[str, str]]],
+def to_data_lines(*args, **kwargs) -> List[str]:
+    return list(iter_to_data_lines(*args, **kwargs))
+
+
+def iter_format_list_tag_result_as_data(
+        tag_result: Iterable[List[Tuple[str, str]]],
         texts: np.array = None,  # pylint: disable=unused-argument
         features: np.array = None,
         model_name: str = None) -> str:  # pylint: disable=unused-argument
     assert features is not None
-    return '\n'.join(to_data_lines(
+    data_text_iterable = iter_to_data_lines(
         features=features,
         annotations=tag_result
-    ))
+    )
+    for document_index, data_text in enumerate(data_text_iterable):
+        if document_index > 0:
+            yield '\n'
+        yield data_text
+
+
+def format_list_tag_result_as_data(*args, **kwargs) -> str:
+    return ''.join(iter_format_list_tag_result_as_data(*args, **kwargs))
 
 
 def iter_simple_unidiff(
@@ -147,47 +160,54 @@ def iter_format_document_tag_result_as_data_unidiff(
 
 
 def iter_format_document_list_tag_result_as_data_unidiff(
-    tag_result: List[List[Tuple[str, str]]],
+    tag_result: Iterable[List[Tuple[str, str]]],
     expected_tag_result: List[List[Tuple[str, str]]],
-    features: np.ndarray
+    features: np.ndarray,
+    document_name_prefix: str
 ) -> Iterable[str]:
     for document_index, document_tag_result in enumerate(tag_result):
         yield from iter_format_document_tag_result_as_data_unidiff(
             document_tag_result=document_tag_result,
             document_expected_tag_result=expected_tag_result[document_index],
             document_features=features[document_index],
-            document_name='document_' + str(1 + document_index)
+            document_name='%s%06d' % (document_name_prefix, 1 + document_index)
         )
 
 
-def format_list_tag_result_as_data_unidiff(
-        tag_result: List[List[Tuple[str, str]]],
-        expected_tag_result: List[Tuple[str, str]] = None,
-        texts: np.ndarray = None,  # pylint: disable=unused-argument
-        features: np.ndarray = None,
-        model_name: str = None) -> str:  # pylint: disable=unused-argument
+def iter_format_list_tag_result_as_data_unidiff(
+    tag_result: Iterable[List[Tuple[str, str]]],
+    expected_tag_result: List[Tuple[str, str]] = None,
+    texts: np.ndarray = None,  # pylint: disable=unused-argument
+    features: np.ndarray = None,
+    model_name: str = None  # pylint: disable=unused-argument
+) -> Iterable[str]:
     assert expected_tag_result
-    return ''.join(iter_format_document_list_tag_result_as_data_unidiff(
+    document_name_prefix = 'document_'
+    if model_name:
+        document_name_prefix = model_name + '_' + document_name_prefix
+    yield from iter_format_document_list_tag_result_as_data_unidiff(
         tag_result=tag_result,
         expected_tag_result=expected_tag_result,
-        features=features
-    ))
+        features=features,
+        document_name_prefix=document_name_prefix
+    )
 
 
-def to_flat_text(texts: np.array) -> str:
-    return '\n'.join([
-        ' '.join(line_tokens)
-        for line_tokens in texts
-    ])
+def iter_to_flat_text(texts: np.array) -> Iterable[str]:
+    for document_index, line_tokens in enumerate(texts):
+        if document_index > 0:
+            yield '\n'
+        yield ' '.join(line_tokens)
 
 
-def format_list_tag_result_as_text(
-        tag_result: List[List[Tuple[str, str]]],  # pylint: disable=unused-argument
-        texts: np.array = None,
-        features: np.array = None,  # pylint: disable=unused-argument
-        model_name: str = None) -> str:  # pylint: disable=unused-argument
+def iter_format_list_tag_result_as_text(
+    tag_result: Iterable[List[Tuple[str, str]]],  # pylint: disable=unused-argument
+    texts: np.array = None,
+    features: np.array = None,  # pylint: disable=unused-argument
+    model_name: str = None  # pylint: disable=unused-argument
+) -> Iterable[str]:
     assert texts is not None
-    return to_flat_text(texts=texts)
+    yield from iter_to_flat_text(texts=texts)
 
 
 def get_xml_tag_for_annotation_label(annotation_label: str) -> str:
@@ -246,18 +266,25 @@ def iter_annotations_xml_text(
         yield '  </p>\n'
 
 
-def format_list_tag_result_as_xml(
-        tag_result: List[List[Tuple[str, str]]],
-        texts: np.array = None,  # pylint: disable=unused-argument
-        features: np.array = None,  # pylint: disable=unused-argument
-        model_name: str = None) -> str:  # pylint: disable=unused-argument
-    return '<xml>\n%s</xml>' % ''.join(iter_annotations_xml_text(
+def iter_format_list_tag_result_as_xml(
+    tag_result: Iterable[List[Tuple[str, str]]],
+    texts: np.array = None,  # pylint: disable=unused-argument
+    features: np.array = None,  # pylint: disable=unused-argument
+    model_name: str = None  # pylint: disable=unused-argument
+) -> Iterable[str]:
+    yield '<xml>\n'
+    yield from iter_annotations_xml_text(
         annotations=tag_result
-    ))
+    )
+    yield '</xml>'
 
 
-def format_list_tag_result_as_xml_diff(
-        tag_result: List[List[Tuple[str, str]]],
+def format_list_tag_result_as_xml(*args, **kwargs) -> str:
+    return ''.join(iter_format_list_tag_result_as_xml(*args, **kwargs))
+
+
+def iter_format_list_tag_result_as_xml_diff(
+        tag_result: Iterable[List[Tuple[str, str]]],
         expected_tag_result: List[Tuple[str, str]] = None,
         texts: np.array = None,  # pylint: disable=unused-argument
         features: np.array = None,  # pylint: disable=unused-argument
@@ -265,51 +292,58 @@ def format_list_tag_result_as_xml_diff(
     assert expected_tag_result
     actual_xml = format_list_tag_result_as_xml(tag_result)
     expected_xml = format_list_tag_result_as_xml(expected_tag_result)
-    return ''.join(difflib.ndiff(
+    yield from difflib.ndiff(
         expected_xml.splitlines(keepends=True),
         actual_xml.splitlines(keepends=True)
-    ))
+    )
 
 
-def format_list_tag_result(
+def iter_format_list_tag_result(
         *args,
         output_format: str,
         expected_tag_result: List[Tuple[str, str]] = None,
-        **kwargs) -> str:
+        **kwargs) -> Iterable[str]:
     if output_format == TagOutputFormats.JSON:
-        return format_list_tag_result_as_json(*args, **kwargs)
+        yield format_list_tag_result_as_json(*args, **kwargs)
+        return
     if output_format == TagOutputFormats.DATA:
-        return format_list_tag_result_as_data(*args, **kwargs)
+        yield from iter_format_list_tag_result_as_data(*args, **kwargs)
+        return
     if output_format == TagOutputFormats.DATA_UNIDIFF:
-        return format_list_tag_result_as_data_unidiff(
+        yield from iter_format_list_tag_result_as_data_unidiff(
             *args,
             expected_tag_result=expected_tag_result,
             **kwargs
         )
+        return
     if output_format == TagOutputFormats.TEXT:
-        return format_list_tag_result_as_text(*args, **kwargs)
+        yield from iter_format_list_tag_result_as_text(*args, **kwargs)
+        return
     if output_format == TagOutputFormats.XML:
-        return format_list_tag_result_as_xml(*args, **kwargs)
+        yield from iter_format_list_tag_result_as_xml(*args, **kwargs)
+        return
     if output_format == TagOutputFormats.XML_DIFF:
-        return format_list_tag_result_as_xml_diff(
+        yield from iter_format_list_tag_result_as_xml_diff(
             *args,
             expected_tag_result=expected_tag_result,
             **kwargs
         )
+        return
     raise ValueError('unrecognised output format: %s' % output_format)
 
 
-def format_tag_result(
-        tag_result: Union[dict, list],
+def iter_format_tag_result(
+        tag_result: Union[dict, list, Iterable],
         output_format: str,
         expected_tag_result: List[Tuple[str, str]] = None,
         texts: np.array = None,
         features: np.array = None,
-        model_name: str = None) -> str:
+        model_name: str = None) -> Iterable[str]:
     if isinstance(tag_result, dict):
         assert output_format == TagOutputFormats.JSON
-        return format_json_tag_result_as_json(tag_result)
-    return format_list_tag_result(
+        yield format_json_tag_result_as_json(tag_result)
+        return
+    yield from iter_format_list_tag_result(
         tag_result,
         output_format=output_format,
         expected_tag_result=expected_tag_result,
@@ -317,3 +351,7 @@ def format_tag_result(
         features=features,
         model_name=model_name
     )
+
+
+def format_tag_result(*args, **kwargs) -> str:
+    return ''.join(iter_format_tag_result(*args, **kwargs))

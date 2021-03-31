@@ -25,7 +25,7 @@ def iter_batch_window_indices_and_offsets(
     )
 
 
-def predict_texts_with_sliding_window_if_enabled(
+def iter_predict_texts_with_sliding_window_if_enabled(
         texts: List[Union[str, List[str]]],
         model_config: ModelConfig,
         preprocessor: WordPreprocessor,
@@ -36,7 +36,7 @@ def predict_texts_with_sliding_window_if_enabled(
         features: List[List[List[str]]] = None):
     if not texts:
         LOGGER.info('passed in empty texts, model: %s', model_config.model_name)
-        return []
+        return
     should_tokenize = (
         len(texts) > 0  # pylint: disable=len-as-condition
         and isinstance(texts[0], str)
@@ -103,6 +103,7 @@ def predict_texts_with_sliding_window_if_enabled(
         desc='%s: ' % predict_generator.name,
         unit='batch'
     )
+    completed_curser = 0
     for batch_window_indices_and_offsets in batch_window_indices_and_offsets_iterable:
         LOGGER.debug(
             'predict batch_window_indices_and_offsets: %s',
@@ -118,12 +119,13 @@ def predict_texts_with_sliding_window_if_enabled(
             batch_window_indices_and_offsets, batch_predictions
         ):
             text_index, text_offset = window_indices_and_offsets
+            current_prediction_list = prediction_list_list[text_index]
             LOGGER.debug(
                 'prediction_list_list[%d]: %s',
                 text_index,
-                prediction_list_list[text_index]
+                current_prediction_list
             )
-            current_offset = sum((len(a) for a in prediction_list_list[text_index]))
+            current_offset = sum((len(a) for a in current_prediction_list))
             if current_offset > text_offset:
                 # skip over the overlapping window
                 seq_predictions = seq_predictions[(current_offset - text_offset):, :]
@@ -133,17 +135,19 @@ def predict_texts_with_sliding_window_if_enabled(
             ), "expected %d to be %d" % (
                 current_offset, text_offset
             )
-            prediction_list_list[text_index].append(seq_predictions)
+            current_prediction_list.append(seq_predictions)
+            next_offset = sum((len(a) for a in current_prediction_list))
+            is_complete = (next_offset >= len(texts[text_index]))
+            LOGGER.debug(
+                'is_complete: %s, text_index=%d, completed_curser=%d, next_offset=%d, textlen=%d',
+                is_complete, text_index, completed_curser, next_offset, len(texts[text_index])
+            )
+            if (is_complete and text_index == completed_curser):
+                yield np.concatenate(current_prediction_list, axis=0)
+                completed_curser += 1
 
-    preds_concatenated_list = [
-        np.concatenate(
-            prediction_list,
-            axis=0
-        )
-        for prediction_list in prediction_list_list
-    ]
-    LOGGER.debug('preds_concatenated_list: %s', preds_concatenated_list)
-    return preds_concatenated_list
+    for prediction_list in prediction_list_list[completed_curser:]:
+        yield np.concatenate(prediction_list, axis=0)
 
 
 class Tagger:
@@ -162,20 +166,12 @@ class Tagger:
         self.max_sequence_length = max_sequence_length
         self.input_window_stride = input_window_stride
 
-    def tag(self, texts, output_format, features=None):
+    def iter_tag(
+        self, texts, output_format, features=None
+    ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
         assert isinstance(texts, list)
 
-        if output_format == 'json':
-            res = {
-                "software": "DeLFT",
-                "date": datetime.datetime.now().isoformat(),
-                "model": self.model.config.model_name,
-                "texts": []
-            }
-        else:
-            list_of_tags = []
-
-        preds_concatenated_list = predict_texts_with_sliding_window_if_enabled(
+        preds_concatenated_iterable = iter_predict_texts_with_sliding_window_if_enabled(
             texts=texts,
             features=features,
             model=self.model,
@@ -185,8 +181,9 @@ class Tagger:
             input_window_stride=self.input_window_stride,
             embeddings=self.embeddings
         )
-        for i, pred_item in enumerate(preds_concatenated_list):
+        for i, pred_item in enumerate(preds_concatenated_iterable):
             LOGGER.debug('pred_item.shape: %s', pred_item.shape)
+            LOGGER.debug('pred_item=%r', pred_item)
 
             pred = [pred_item]
             text = texts[i]
@@ -201,23 +198,32 @@ class Tagger:
 
             tags = self._get_tags(pred)
             LOGGER.debug('tags: %s', tags)
-            prob = self._get_prob(pred)
 
             if output_format == 'json':
+                prob = self._get_prob(pred)
                 piece = {}
                 piece["text"] = text
                 piece["entities"] = self._build_json_response(
                     tokens, tags, prob, offsets
                 )["entities"]
-                res["texts"].append(piece)
+                yield piece
             else:
                 the_tags = list(zip(tokens, tags))
-                list_of_tags.append(the_tags)
+                yield the_tags
 
+    def tag(
+        self, texts, output_format, features=None
+    ) -> Union[dict, List[List[Tuple[str, str]]]]:
+        result = list(self.iter_tag(texts, output_format, features))
         if output_format == 'json':
-            return res
+            return {
+                "software": "ScienceBeam Trainer DeLFT",
+                "date": datetime.datetime.now().isoformat(),
+                "model": self.model.config.model_name,
+                "texts": result
+            }
         else:
-            return list_of_tags
+            return result
 
     def _get_tags(self, pred):
         pred = np.argmax(pred, -1)

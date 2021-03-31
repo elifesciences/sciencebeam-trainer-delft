@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import Callable, List, Optional, T
+from typing import Callable, Iterable, List, Optional, Tuple, Union, T
 
 import numpy as np
 
@@ -512,8 +512,9 @@ class Sequence(_Sequence):
             print("\n** Best ** model scores - \n")
             print(reports[best_index])
 
-    def tag(  # pylint: disable=arguments-differ
-            self, texts, output_format, features=None):
+    def iter_tag(
+        self, texts, output_format, features=None
+    ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
         # annotate a list of sentences, return the list of annotations in the
         # specified output_format
         self._require_model()
@@ -525,15 +526,24 @@ class Sequence(_Sequence):
             input_window_stride=self.input_window_stride,
             preprocessor=self.p
         )
-        start_time = time.time()
-        annotations = tagger.tag(
-            list(texts), output_format,
-            features=features
-        )
-        runtime = round(time.time() - start_time, 3)
         if output_format == 'json':
+            start_time = time.time()
+            annotations = tagger.tag(
+                list(texts), output_format,
+                features=features
+            )
+            runtime = round(time.time() - start_time, 3)
             annotations["runtime"] = runtime
+        else:
+            annotations = tagger.iter_tag(
+                list(texts), output_format,
+                features=features
+            )
         if self.tag_debug_reporter:
+            if not isinstance(annotations, dict):
+                # the tag debug reporter only supports lists
+                # additionally should not consume the iterable
+                annotations = list(annotations)
             self.tag_debug_reporter.report_tag_results(
                 texts=texts,
                 features=features,
@@ -541,6 +551,12 @@ class Sequence(_Sequence):
                 model_name=self._get_model_name()
             )
         return annotations
+
+    def tag(self, *args, **kwargs) -> Union[dict, List[List[Tuple[str, str]]]]:
+        iterable_or_dict = self.iter_tag(*args, **kwargs)
+        if isinstance(iterable_or_dict, dict):
+            return iterable_or_dict
+        return list(iterable_or_dict)
 
     def _require_model(self):
         if not self.model:

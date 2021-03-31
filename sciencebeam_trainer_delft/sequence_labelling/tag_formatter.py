@@ -109,6 +109,14 @@ def simple_diff(a, b, fromfile='', tofile='', lineterm='\n'):
             yield f' {value_1}'
 
 
+def split_lines_with_line_feed(text: str, line_feed: str = '\n') -> List[str]:
+    # Note: similar to .splitlines(keepends=True), but always adds the line feed
+    return [
+        line + line_feed
+        for line in text.splitlines()
+    ]
+
+
 def format_list_tag_result_as_data_diff(
         tag_result: List[List[Tuple[str, str]]],
         expected_tag_result: List[Tuple[str, str]] = None,
@@ -118,15 +126,15 @@ def format_list_tag_result_as_data_diff(
     assert expected_tag_result
     actual_data = format_list_tag_result_as_data(
         tag_result, texts=texts, features=features
-    ).rstrip() + '\n'
+    )
     expected_data = format_list_tag_result_as_data(
         expected_tag_result, texts=texts, features=features
-    ).rstrip() + '\n'
-    LOGGER.debug('actual_data: %s', actual_data)
-    LOGGER.debug('expected_data: %s', expected_data)
+    )
+    LOGGER.debug('actual_data: %r', actual_data)
+    LOGGER.debug('expected_data: %r', expected_data)
     return ''.join(simple_diff(
-        expected_data.splitlines(keepends=True),
-        actual_data.splitlines(keepends=True),
+        split_lines_with_line_feed(expected_data),
+        split_lines_with_line_feed(actual_data),
         fromfile='expected.data',
         tofile='actual.data'
     ))

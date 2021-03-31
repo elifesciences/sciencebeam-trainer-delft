@@ -170,14 +170,7 @@ class TestFormatTagResult:
             output_format=TagOutputFormats.DATA_UNIDIFF
         )
         LOGGER.debug('result:\n%s', result)
-        assert result.splitlines() == [
-            '--- document_1.expected',
-            '+++ document_1.actual',
-            '@@ -0,3 +0,3 @@',
-            ' token1 feat1.1 feat1.2 B-tag1',
-            ' token2 feat2.1 feat2.2 I-tag1',
-            ' token3 feat3.1 feat3.2 B-tag2'
-        ]
+        assert result.splitlines() == []
 
     def test_should_format_tag_list_result_as_text(self):
         result = format_tag_result(

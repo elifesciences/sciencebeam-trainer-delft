@@ -85,12 +85,11 @@ def format_list_tag_result_as_data(
     ))
 
 
-def iter_simple_unidiff(a, b, fromfile='', tofile='', lineterm='\n'):
+def iter_simple_unidiff(
+    a, b, fromfile='', tofile='', lineterm='\n',
+    force_output: bool = False
+) -> Iterable[str]:
     assert len(a) == len(b)
-    if fromfile:
-        yield f'--- {fromfile}{lineterm}'
-    if tofile:
-        yield f'+++ {tofile}{lineterm}'
     line_count = len(a)
     is_diff_list = [
         value_1 != value_2
@@ -98,6 +97,12 @@ def iter_simple_unidiff(a, b, fromfile='', tofile='', lineterm='\n'):
     ]
     LOGGER.debug('is_diff_list: %s', is_diff_list)
     diff_count = sum(is_diff_list)
+    if not diff_count and not force_output:
+        return
+    if fromfile:
+        yield f'--- {fromfile}{lineterm}'
+    if tofile:
+        yield f'+++ {tofile}{lineterm}'
     removed_with_prefix = f'-{diff_count}' if diff_count else '-0'
     added_with_prefix = f'+{diff_count}' if diff_count else '+0'
     yield f'@@ {removed_with_prefix},{line_count} {added_with_prefix},{line_count} @@{lineterm}'

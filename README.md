@@ -560,12 +560,18 @@ The output can be redirected to a diff file and viewed using a specialised tool 
 Example [unidiff](https://en.wikipedia.org/wiki/Diff#Unified_format) result:
 
 ```text
---- document_1.expected
-+++ document_1.actual
-@@ -0,156 +0,156 @@
- Markov markov M Ma Mar Mark v ov kov rkov BLOCKSTART LINESTART NEWFONT HIGHERFONT 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0 B-<title>
- Chain chain C Ch Cha Chai n in ain hain BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 INITCAP NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
+--- header_document_000002.expected
++++ header_document_000002.actual
+@@ -1,21 +1,21 @@
+ Translucent translucent T Tr Tra Tran t nt ent cent BLOCKSTART LINESTART NEWFONT HIGHERFONT 1 0 0 INITCAP NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 B-<title>
+ Sums sums S Su Sum Sums s ms ums Sums BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 1 0 0 INITCAP NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
+ : : : : : : : : : : BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 1 0 0 ALLCAP NODIGIT 1 0 0 0 0 0 0 0 0 0 PUNCT 0 0 I-<title>
+ A a A A A A A A A A BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 1 0 0 ALLCAP NODIGIT 1 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
+ Foundation foundation F Fo Fou Foun n on ion tion BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 1 0 0 INITCAP NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
+ for for f fo for for r or for for BLOCKIN LINEEND SAMEFONT SAMEFONTSIZE 1 0 0 NOCAPS NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
 ...
+ - - - - - - - - - - BLOCKIN LINEEND SAMEFONT SAMEFONTSIZE 0 0 0 ALLCAP NODIGIT 1 0 0 0 0 0 0 0 0 1 HYPHEN 0 0 I-<pubnum>
+ - - - - - - - - - - BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 ALLCAP NODIGIT 1 0 0 0 0 0 0 0 0 1 HYPHEN 0 0 I-<pubnum>
  95 95 9 95 95 95 5 95 95 95 BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 NOCAPS ALLDIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<pubnum>
  - - - - - - - - - - BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 ALLCAP NODIGIT 1 0 0 0 0 0 0 0 0 1 HYPHEN 0 0 I-<pubnum>
 -of of o of of of f of of of BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<affiliation>

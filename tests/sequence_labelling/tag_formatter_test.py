@@ -1,6 +1,8 @@
 
 import json
 import logging
+from typing import Iterable
+
 import numpy as np
 
 from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
@@ -51,6 +53,10 @@ def format_tag_result(*args, **kwargs):
     return result
 
 
+def to_iterable(some_list: list) -> Iterable:
+    return (value for value in some_list)
+
+
 class TestGetTagResult:
     def test_should_combine_text_with_labels(self):
         assert get_tag_result(
@@ -81,7 +87,7 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_json(self):
         result = json.loads(format_tag_result(
-            tag_result=ANNOTATIONS_1,
+            tag_result=to_iterable(ANNOTATIONS_1),
             output_format=TagOutputFormats.JSON,
             texts=TEXTS_1,
             features=FEATURES_1,
@@ -94,7 +100,7 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_data(self):
         result = format_tag_result(
-            tag_result=ANNOTATIONS_1,
+            tag_result=to_iterable(ANNOTATIONS_1),
             output_format=TagOutputFormats.DATA,
             texts=TEXTS_1,
             features=FEATURES_1,
@@ -104,7 +110,9 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_data_unidiff_and_combined_tags(self):
         result = format_tag_result(
-            tag_result=[[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]],
+            tag_result=to_iterable(
+                [[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]]
+            ),
             expected_tag_result=[
                 [['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag3']]
             ],
@@ -126,10 +134,10 @@ class TestFormatTagResult:
 
     def test_should_format_tag_data_unidiff_with_multiple_changes(self):
         result = format_tag_result(
-            tag_result=[
+            tag_result=to_iterable([
                 [['token1.1', 'B-tag1'], ['token1.2', 'I-tag1'], ['token1.3', 'B-tag2']],
                 [['token2.1', 'B-tag1'], ['token2.2', 'I-tag1'], ['token2.3', 'B-tag2']]
-            ],
+            ]),
             expected_tag_result=[
                 [['token1.1', 'B-tag1'], ['token1.2', 'I-tag1'], ['token1.3', 'B-tag3']],
                 [['token2.1', 'B-tag1'], ['token2.2', 'I-tag1'], ['token2.3', 'B-tag3']]
@@ -174,7 +182,7 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_text(self):
         result = format_tag_result(
-            tag_result=ANNOTATIONS_1,
+            tag_result=to_iterable(ANNOTATIONS_1),
             output_format=TagOutputFormats.TEXT,
             texts=TEXTS_1,
             features=FEATURES_1,
@@ -184,7 +192,7 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_xml(self):
         result = format_tag_result(
-            tag_result=ANNOTATIONS_1,
+            tag_result=to_iterable(ANNOTATIONS_1),
             output_format=TagOutputFormats.XML,
             texts=TEXTS_1,
             features=FEATURES_1,
@@ -194,7 +202,9 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_xml_and_combined_tags(self):
         result = format_tag_result(
-            tag_result=[[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]],
+            tag_result=to_iterable(
+                [[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]]
+            ),
             output_format=TagOutputFormats.XML
         )
         assert result.splitlines() == [
@@ -208,7 +218,9 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_xml_and_include_text_without_tags(self):
         result = format_tag_result(
-            tag_result=[[['token1', 'O'], ['token2', 'O'], ['token3', 'B-tag2']]],
+            tag_result=to_iterable(
+                [[['token1', 'O'], ['token2', 'O'], ['token3', 'B-tag2']]]
+            ),
             output_format=TagOutputFormats.XML
         )
         assert result.splitlines() == [
@@ -222,7 +234,9 @@ class TestFormatTagResult:
 
     def test_should_format_tag_list_result_as_xml_diff_and_combined_tags(self):
         result = format_tag_result(
-            tag_result=[[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]],
+            tag_result=to_iterable(
+                [[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]]
+            ),
             expected_tag_result=[
                 [['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag3']]
             ],

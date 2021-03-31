@@ -219,6 +219,13 @@ def add_tag_output_format_argument(parser: argparse.ArgumentParser, **kwargs):
     )
 
 
+def add_tag_output_path_argument(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--tag-output-path",
+        help='If specified, saves the tag result to the specified path'
+    )
+
+
 def add_output_argument(parser: argparse.ArgumentParser, **kwargs):
     parser.add_argument("--output", help="directory where to save a trained model", **kwargs)
 

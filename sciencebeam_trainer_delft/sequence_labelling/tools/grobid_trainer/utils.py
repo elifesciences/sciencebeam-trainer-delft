@@ -8,7 +8,7 @@ import os
 from collections import Counter
 from datetime import datetime, timezone
 from itertools import islice
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -18,7 +18,8 @@ import tensorflow as tf
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.io import (
-    write_text
+    write_text,
+    auto_uploading_output_file
 )
 
 from sciencebeam_trainer_delft.embedding import EmbeddingManager
@@ -724,6 +725,7 @@ def wapiti_eval_model(
 def do_tag_input(
         model: Union[Sequence, WapitiModelAdapter],
         tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+        tag_output_path: Optional[str] = None,
         input_paths: List[str] = None,
         limit: int = None,
         shuffle_input: bool = False,
@@ -756,29 +758,37 @@ def do_tag_input(
         features=features_all,
         model_name=model._get_model_name()  # pylint: disable=protected-access
     )
-    LOGGER.info('tag_result:')
-    for text in formatted_tag_result_iterable:
-        print(text, end='')
+    if tag_output_path:
+        LOGGER.info('writing tag results to: %r', tag_output_path)
+        with auto_uploading_output_file(tag_output_path) as fp:
+            for text in formatted_tag_result_iterable:
+                fp.write(text)
+    else:
+        LOGGER.info('writing tag_result to stdout')
+        for text in formatted_tag_result_iterable:
+            print(text, end='')
 
 
 def tag_input(
-        model: str,
-        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
-        use_ELMo: bool = False,
-        input_paths: List[str] = None,
-        output_path: str = None,
-        model_path: str = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        max_sequence_length: int = None,
-        input_window_stride: int = None,
-        stateful: bool = None,
-        fold_count: int = 1,
-        batch_size: int = 20,
-        download_manager: DownloadManager = None,
-        embedding_manager: EmbeddingManager = None,
-        **kwargs):
+    model: str,
+    tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+    tag_output_path: Optional[str] = None,
+    use_ELMo: bool = False,
+    input_paths: List[str] = None,
+    output_path: str = None,
+    model_path: str = None,
+    limit: int = None,
+    shuffle_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    max_sequence_length: int = None,
+    input_window_stride: int = None,
+    stateful: bool = None,
+    fold_count: int = 1,
+    batch_size: int = 20,
+    download_manager: DownloadManager = None,
+    embedding_manager: EmbeddingManager = None,
+    **kwargs
+):
 
     model = load_delft_model(
         model=model,
@@ -797,6 +807,7 @@ def tag_input(
     do_tag_input(
         model,
         tag_output_format=tag_output_format,
+        tag_output_path=tag_output_path,
         input_paths=input_paths,
         limit=limit,
         shuffle_input=shuffle_input,
@@ -806,15 +817,17 @@ def tag_input(
 
 
 def wapiti_tag_input(
-        model: str = None,
-        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
-        input_paths: List[str] = None,
-        model_path: str = None,
-        limit: int = None,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        shuffle_input: bool = False,
-        download_manager: DownloadManager = None,
-        wapiti_binary_path: str = None):
+    model: str = None,
+    tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+    tag_output_path: Optional[str] = None,
+    input_paths: List[str] = None,
+    model_path: str = None,
+    limit: int = None,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    shuffle_input: bool = False,
+    download_manager: DownloadManager = None,
+    wapiti_binary_path: str = None
+):
     model = WapitiModelAdapter.load_from(
         model_path,
         download_manager=download_manager,
@@ -823,6 +836,7 @@ def wapiti_tag_input(
     do_tag_input(
         model,
         tag_output_format=tag_output_format,
+        tag_output_path=tag_output_path,
         input_paths=input_paths,
         limit=limit,
         shuffle_input=shuffle_input,

@@ -449,13 +449,15 @@ It can also be saved using `--eval-output-path`.
 
 ### Tag Sub Command
 
-The `tag` sub command supports multiple output formats:
+The `tag` sub command supports multiple output formats (`--tag-output-path`):
 
 - `json`: more detailed tagging output
 - `data`: data output with features but label being replaced by predicted label
 - `text`: not really a tag output as it just outputs the input text
 - `xml`: uses predicted labels as XML elements
 - `xml_diff`: same as `xml` but it is showing a diff between expected and predicted results
+
+The output will be written to the path specified via `--tag-output-path` if present. Otherwise it will be written to *stdout*.
 
 #### XML Output Example
 
@@ -552,10 +554,10 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="2" \
     --tag-output-format="data_unidiff" \
-    --quiet
+    --tag-output-path="/tmp/test.diff"
 ```
 
-The output can be redirected to a diff file and viewed using a specialised tool (such as [Kompare](https://en.wikipedia.org/wiki/Kompare)).
+The output can be viewed using a specialised tool (such as [Kompare](https://en.wikipedia.org/wiki/Kompare)).
 
 Example [unidiff](https://en.wikipedia.org/wiki/Diff#Unified_format) result:
 

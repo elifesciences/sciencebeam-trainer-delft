@@ -102,6 +102,49 @@ class TestFormatTagResult:
         )
         assert result.splitlines() == DATA_LINES_1
 
+    def test_should_format_tag_list_result_as_data_diff_and_combined_tags(self):
+        result = format_tag_result(
+            tag_result=[[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]],
+            expected_tag_result=[
+                [['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag3']]
+            ],
+            features=np.array([
+                [['feat1.1', 'feat1.2'], ['feat2.1', 'feat2.2'], ['feat3.1', 'feat3.2']]
+            ]),
+            output_format=TagOutputFormats.DATA_DIFF
+        )
+        LOGGER.debug('result:\n%s', result)
+        assert result.splitlines() == [
+            '--- expected.data',
+            '+++ actual.data',
+            '@@ -1,3 +1,3 @@',
+            ' token1 feat1.1 feat1.2 B-tag1',
+            ' token2 feat2.1 feat2.2 I-tag1',
+            '-token3 feat3.1 feat3.2 B-tag3',
+            '+token3 feat3.1 feat3.2 B-tag2'
+        ]
+
+    def test_should_format_tag_list_result_as_data_diff_without_difference(self):
+        result = format_tag_result(
+            tag_result=[[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]],
+            expected_tag_result=[
+                [['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]
+            ],
+            features=np.array([
+                [['feat1.1', 'feat1.2'], ['feat2.1', 'feat2.2'], ['feat3.1', 'feat3.2']]
+            ]),
+            output_format=TagOutputFormats.DATA_DIFF
+        )
+        LOGGER.debug('result:\n%s', result)
+        assert result.splitlines() == [
+            '--- expected.data',
+            '+++ actual.data',
+            '@@ -0,3 +0,3 @@',
+            ' token1 feat1.1 feat1.2 B-tag1',
+            ' token2 feat2.1 feat2.2 I-tag1',
+            ' token3 feat3.1 feat3.2 B-tag2'
+        ]
+
     def test_should_format_tag_list_result_as_text(self):
         result = format_tag_result(
             tag_result=ANNOTATIONS_1,

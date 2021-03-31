@@ -542,6 +542,32 @@ for for f fo for for r or for for BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 NOC
 Planar planar P Pl Pla Plan r ar nar anar BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
 ```
 
+#### DATA Diff Output Example
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    tag \
+    --batch-size="16" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
+    --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
+    --limit="2" \
+    --tag-output-format="data_diff" \
+    --quiet \
+    | head -5
+```
+
+With the result:
+
+```text
+--- expected.data
++++ actual.data
+@@ -1,177 +1,177 @@
+ Markov markov M Ma Mar Mark v ov kov rkov BLOCKSTART LINESTART NEWFONT HIGHERFONT 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0 B-<title>
+ Chain chain C Ch Cha Chai n in ain hain BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 INITCAP NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
+```
+
+The output can be redirected to a patch file and viewed using a specialised tool.
+
 #### Text Output Example
 
 ```bash

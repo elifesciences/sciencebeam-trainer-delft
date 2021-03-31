@@ -15,6 +15,7 @@ LOGGER = logging.getLogger(__name__)
 class TagOutputFormats:
     JSON = 'json'
     DATA = 'data'
+    DATA_DIFF = 'data_diff'
     TEXT = 'text'
     XML = 'xml'
     XML_DIFF = 'xml_diff'
@@ -23,6 +24,7 @@ class TagOutputFormats:
 TAG_OUTPUT_FORMATS = [
     TagOutputFormats.JSON,
     TagOutputFormats.DATA,
+    TagOutputFormats.DATA_DIFF,
     TagOutputFormats.TEXT,
     TagOutputFormats.XML,
     TagOutputFormats.XML_DIFF,
@@ -80,6 +82,53 @@ def format_list_tag_result_as_data(
     return '\n'.join(to_data_lines(
         features=features,
         annotations=tag_result
+    ))
+
+
+def simple_diff(a, b, fromfile='', tofile='', lineterm='\n'):
+    assert len(a) == len(b)
+    if fromfile:
+        yield f'--- {fromfile}{lineterm}'
+    if tofile:
+        yield f'+++ {tofile}{lineterm}'
+    line_count = len(a)
+    is_diff_list = [
+        value_1 != value_2
+        for value_1, value_2 in zip(a, b)
+    ]
+    LOGGER.debug('is_diff_list: %s', is_diff_list)
+    diff_count = sum(is_diff_list)
+    removed_with_prefix = f'-{diff_count}' if diff_count else '-0'
+    added_with_prefix = f'+{diff_count}' if diff_count else '+0'
+    yield f'@@ {removed_with_prefix},{line_count} {added_with_prefix},{line_count} @@{lineterm}'
+    for is_diff, value_1, value_2 in zip(is_diff_list, a, b):
+        if is_diff:
+            yield f'-{value_1}'
+            yield f'+{value_2}'
+        else:
+            yield f' {value_1}'
+
+
+def format_list_tag_result_as_data_diff(
+        tag_result: List[List[Tuple[str, str]]],
+        expected_tag_result: List[Tuple[str, str]] = None,
+        texts: np.array = None,  # pylint: disable=unused-argument
+        features: np.array = None,
+        model_name: str = None) -> str:  # pylint: disable=unused-argument
+    assert expected_tag_result
+    actual_data = format_list_tag_result_as_data(
+        tag_result, texts=texts, features=features
+    ).rstrip() + '\n'
+    expected_data = format_list_tag_result_as_data(
+        expected_tag_result, texts=texts, features=features
+    ).rstrip() + '\n'
+    LOGGER.debug('actual_data: %s', actual_data)
+    LOGGER.debug('expected_data: %s', expected_data)
+    return ''.join(simple_diff(
+        expected_data.splitlines(keepends=True),
+        actual_data.splitlines(keepends=True),
+        fromfile='expected.data',
+        tofile='actual.data'
     ))
 
 
@@ -189,6 +238,12 @@ def format_list_tag_result(
         return format_list_tag_result_as_json(*args, **kwargs)
     if output_format == TagOutputFormats.DATA:
         return format_list_tag_result_as_data(*args, **kwargs)
+    if output_format == TagOutputFormats.DATA_DIFF:
+        return format_list_tag_result_as_data_diff(
+            *args,
+            expected_tag_result=expected_tag_result,
+            **kwargs
+        )
     if output_format == TagOutputFormats.TEXT:
         return format_list_tag_result_as_text(*args, **kwargs)
     if output_format == TagOutputFormats.XML:

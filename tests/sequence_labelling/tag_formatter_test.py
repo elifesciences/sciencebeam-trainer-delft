@@ -102,7 +102,7 @@ class TestFormatTagResult:
         )
         assert result.splitlines() == DATA_LINES_1
 
-    def test_should_format_tag_list_result_as_data_diff_and_combined_tags(self):
+    def test_should_format_tag_list_result_as_data_unidiff_and_combined_tags(self):
         result = format_tag_result(
             tag_result=[[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]],
             expected_tag_result=[
@@ -111,7 +111,7 @@ class TestFormatTagResult:
             features=np.array([
                 [['feat1.1', 'feat1.2'], ['feat2.1', 'feat2.2'], ['feat3.1', 'feat3.2']]
             ]),
-            output_format=TagOutputFormats.DATA_DIFF
+            output_format=TagOutputFormats.DATA_UNIDIFF
         )
         LOGGER.debug('result:\n%s', result)
         assert result.splitlines() == [
@@ -124,7 +124,7 @@ class TestFormatTagResult:
             '+token3 feat3.1 feat3.2 B-tag2'
         ]
 
-    def test_should_format_tag_data_diff_with_multiple_changes(self):
+    def test_should_format_tag_data_unidiff_with_multiple_changes(self):
         result = format_tag_result(
             tag_result=[
                 [['token1.1', 'B-tag1'], ['token1.2', 'I-tag1'], ['token1.3', 'B-tag2']],
@@ -138,7 +138,7 @@ class TestFormatTagResult:
                 [['feat1.1.1'], ['feat1.2.1'], ['feat1.3.1']],
                 [['feat2.1.1'], ['feat2.2.1'], ['feat2.3.1']]
             ]),
-            output_format=TagOutputFormats.DATA_DIFF
+            output_format=TagOutputFormats.DATA_UNIDIFF
         )
         LOGGER.debug('result:\n%s', result)
         assert result.splitlines() == [
@@ -158,7 +158,7 @@ class TestFormatTagResult:
             '+token2.3 feat2.3.1 B-tag2'
         ]
 
-    def test_should_format_tag_list_result_as_data_diff_without_difference(self):
+    def test_should_format_tag_list_result_as_data_unidiff_without_difference(self):
         result = format_tag_result(
             tag_result=[[['token1', 'B-tag1'], ['token2', 'I-tag1'], ['token3', 'B-tag2']]],
             expected_tag_result=[
@@ -167,7 +167,7 @@ class TestFormatTagResult:
             features=np.array([
                 [['feat1.1', 'feat1.2'], ['feat2.1', 'feat2.2'], ['feat3.1', 'feat3.2']]
             ]),
-            output_format=TagOutputFormats.DATA_DIFF
+            output_format=TagOutputFormats.DATA_UNIDIFF
         )
         LOGGER.debug('result:\n%s', result)
         assert result.splitlines() == [

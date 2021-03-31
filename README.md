@@ -542,7 +542,7 @@ for for f fo for for r or for for BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 NOC
 Planar planar P Pl Pla Plan r ar nar anar BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
 ```
 
-#### DATA Diff Output Example
+#### DATA Unidiff Output Example
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
@@ -551,7 +551,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --limit="2" \
-    --tag-output-format="data_diff" \
+    --tag-output-format="data_unidiff" \
     --quiet \
     | head -5
 ```
@@ -559,14 +559,14 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 With the result:
 
 ```text
---- expected.data
-+++ actual.data
-@@ -1,177 +1,177 @@
+--- document_1.expected
++++ document_1.actual
+@@ -0,156 +0,156 @@
  Markov markov M Ma Mar Mark v ov kov rkov BLOCKSTART LINESTART NEWFONT HIGHERFONT 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0 B-<title>
  Chain chain C Ch Cha Chai n in ain hain BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 INITCAP NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
 ```
 
-The output can be redirected to a patch file and viewed using a specialised tool.
+The output can be redirected to a diff file and viewed using a specialised tool (such as [Kompare](https://en.wikipedia.org/wiki/Kompare)).
 
 #### Text Output Example
 

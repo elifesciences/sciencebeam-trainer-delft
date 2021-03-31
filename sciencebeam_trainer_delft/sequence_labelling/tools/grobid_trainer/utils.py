@@ -742,10 +742,12 @@ def do_tag_input(
         output_format=None,
         features=features_all
     )
+    LOGGER.debug('actual raw tag_result: %s', tag_result)
     expected_tag_result = get_tag_result(
         texts=x_all,
         labels=y_all
     )
+    LOGGER.debug('actual raw expected_tag_result: %s', expected_tag_result)
     formatted_tag_result = format_tag_result(
         tag_result,
         output_format=tag_output_format,
@@ -754,8 +756,10 @@ def do_tag_input(
         features=features_all,
         model_name=model._get_model_name()  # pylint: disable=protected-access
     )
+    if not formatted_tag_result.endswith('\n'):
+        formatted_tag_result += '\n'
     LOGGER.info('tag_result:')
-    print(formatted_tag_result)
+    print(formatted_tag_result, end='')
 
 
 def tag_input(

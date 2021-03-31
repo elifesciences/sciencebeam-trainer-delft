@@ -542,6 +542,36 @@ for for f fo for for r or for for BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 NOC
 Planar planar P Pl Pla Plan r ar nar anar BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
 ```
 
+#### DATA Unidiff Output Example
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    tag \
+    --batch-size="16" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
+    --model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
+    --limit="2" \
+    --tag-output-format="data_unidiff" \
+    --quiet
+```
+
+The output can be redirected to a diff file and viewed using a specialised tool (such as [Kompare](https://en.wikipedia.org/wiki/Kompare)).
+
+Example [unidiff](https://en.wikipedia.org/wiki/Diff#Unified_format) result:
+
+```text
+--- document_1.expected
++++ document_1.actual
+@@ -0,156 +0,156 @@
+ Markov markov M Ma Mar Mark v ov kov rkov BLOCKSTART LINESTART NEWFONT HIGHERFONT 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0 B-<title>
+ Chain chain C Ch Cha Chai n in ain hain BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 INITCAP NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<title>
+...
+ 95 95 9 95 95 95 5 95 95 95 BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 NOCAPS ALLDIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<pubnum>
+ - - - - - - - - - - BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 ALLCAP NODIGIT 1 0 0 0 0 0 0 0 0 1 HYPHEN 0 0 I-<pubnum>
+-of of o of of of f of of of BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<affiliation>
++of of o of of of f of of of BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0 I-<pubnum>
+```
+
 #### Text Output Example
 
 ```bash

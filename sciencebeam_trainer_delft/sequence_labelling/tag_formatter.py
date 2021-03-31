@@ -15,6 +15,7 @@ LOGGER = logging.getLogger(__name__)
 class TagOutputFormats:
     JSON = 'json'
     DATA = 'data'
+    DATA_UNIDIFF = 'data_unidiff'
     TEXT = 'text'
     XML = 'xml'
     XML_DIFF = 'xml_diff'
@@ -23,6 +24,7 @@ class TagOutputFormats:
 TAG_OUTPUT_FORMATS = [
     TagOutputFormats.JSON,
     TagOutputFormats.DATA,
+    TagOutputFormats.DATA_UNIDIFF,
     TagOutputFormats.TEXT,
     TagOutputFormats.XML,
     TagOutputFormats.XML_DIFF,
@@ -80,6 +82,95 @@ def format_list_tag_result_as_data(
     return '\n'.join(to_data_lines(
         features=features,
         annotations=tag_result
+    ))
+
+
+def iter_simple_unidiff(
+    a, b, fromfile='', tofile='', lineterm='\n',
+    force_output: bool = False
+) -> Iterable[str]:
+    assert len(a) == len(b)
+    line_count = len(a)
+    is_diff_list = [
+        value_1 != value_2
+        for value_1, value_2 in zip(a, b)
+    ]
+    LOGGER.debug('is_diff_list: %s', is_diff_list)
+    diff_count = sum(is_diff_list)
+    if not diff_count and not force_output:
+        return
+    if fromfile:
+        yield f'--- {fromfile}{lineterm}'
+    if tofile:
+        yield f'+++ {tofile}{lineterm}'
+    removed_with_prefix = f'-{diff_count}' if diff_count else '-0'
+    added_with_prefix = f'+{diff_count}' if diff_count else '+0'
+    yield f'@@ {removed_with_prefix},{line_count} {added_with_prefix},{line_count} @@{lineterm}'
+    for is_diff, value_1, value_2 in zip(is_diff_list, a, b):
+        if is_diff:
+            yield f'-{value_1}'
+            yield f'+{value_2}'
+        else:
+            yield f' {value_1}'
+
+
+def split_lines_with_line_feed(text: str, line_feed: str = '\n') -> List[str]:
+    # Note: similar to .splitlines(keepends=True), but always adds the line feed
+    return [
+        line + line_feed
+        for line in text.splitlines()
+    ]
+
+
+def iter_format_document_tag_result_as_data_unidiff(
+    document_tag_result: List[Tuple[str, str]],
+    document_expected_tag_result: List[Tuple[str, str]],
+    document_features: List[List[str]],
+    document_name: str
+) -> Iterable[str]:
+    actual_data = format_list_tag_result_as_data(
+        [document_tag_result],
+        features=np.expand_dims(document_features, axis=0)
+    )
+    expected_data = format_list_tag_result_as_data(
+        [document_expected_tag_result],
+        features=np.expand_dims(document_features, axis=0)
+    )
+    LOGGER.debug('actual_data: %r', actual_data)
+    LOGGER.debug('expected_data: %r', expected_data)
+    yield from iter_simple_unidiff(
+        split_lines_with_line_feed(expected_data),
+        split_lines_with_line_feed(actual_data),
+        fromfile=f'{document_name}.expected',
+        tofile=f'{document_name}.actual'
+    )
+
+
+def iter_format_document_list_tag_result_as_data_unidiff(
+    tag_result: List[List[Tuple[str, str]]],
+    expected_tag_result: List[List[Tuple[str, str]]],
+    features: np.ndarray
+) -> Iterable[str]:
+    for document_index, document_tag_result in enumerate(tag_result):
+        yield from iter_format_document_tag_result_as_data_unidiff(
+            document_tag_result=document_tag_result,
+            document_expected_tag_result=expected_tag_result[document_index],
+            document_features=features[document_index],
+            document_name='document_' + str(1 + document_index)
+        )
+
+
+def format_list_tag_result_as_data_unidiff(
+        tag_result: List[List[Tuple[str, str]]],
+        expected_tag_result: List[Tuple[str, str]] = None,
+        texts: np.ndarray = None,  # pylint: disable=unused-argument
+        features: np.ndarray = None,
+        model_name: str = None) -> str:  # pylint: disable=unused-argument
+    assert expected_tag_result
+    return ''.join(iter_format_document_list_tag_result_as_data_unidiff(
+        tag_result=tag_result,
+        expected_tag_result=expected_tag_result,
+        features=features
     ))
 
 
@@ -189,6 +280,12 @@ def format_list_tag_result(
         return format_list_tag_result_as_json(*args, **kwargs)
     if output_format == TagOutputFormats.DATA:
         return format_list_tag_result_as_data(*args, **kwargs)
+    if output_format == TagOutputFormats.DATA_UNIDIFF:
+        return format_list_tag_result_as_data_unidiff(
+            *args,
+            expected_tag_result=expected_tag_result,
+            **kwargs
+        )
     if output_format == TagOutputFormats.TEXT:
         return format_list_tag_result_as_text(*args, **kwargs)
     if output_format == TagOutputFormats.XML:

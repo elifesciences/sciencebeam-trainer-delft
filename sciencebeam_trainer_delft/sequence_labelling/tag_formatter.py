@@ -117,27 +117,70 @@ def split_lines_with_line_feed(text: str, line_feed: str = '\n') -> List[str]:
     ]
 
 
-def format_list_tag_result_as_data_diff(
-        tag_result: List[List[Tuple[str, str]]],
-        expected_tag_result: List[Tuple[str, str]] = None,
-        texts: np.array = None,  # pylint: disable=unused-argument
-        features: np.array = None,
-        model_name: str = None) -> str:  # pylint: disable=unused-argument
-    assert expected_tag_result
+def iter_format_document_tag_result_as_data_diff(
+    document_tag_result: List[Tuple[str, str]],
+    document_expected_tag_result: List[Tuple[str, str]],
+    document_features: List[List[str]],
+    document_name: str
+) -> Iterable[str]:
     actual_data = format_list_tag_result_as_data(
-        tag_result, texts=texts, features=features
+        [document_tag_result],
+        features=np.expand_dims(document_features, axis=0)
     )
     expected_data = format_list_tag_result_as_data(
-        expected_tag_result, texts=texts, features=features
+        [document_expected_tag_result],
+        features=np.expand_dims(document_features, axis=0)
     )
     LOGGER.debug('actual_data: %r', actual_data)
     LOGGER.debug('expected_data: %r', expected_data)
-    return ''.join(simple_diff(
+    yield from simple_diff(
         split_lines_with_line_feed(expected_data),
         split_lines_with_line_feed(actual_data),
-        fromfile='expected.data',
-        tofile='actual.data'
+        fromfile=f'{document_name}.expected',
+        tofile=f'{document_name}.actual'
+    )
+
+
+def iter_format_document_list_tag_result_as_data_diff(
+    tag_result: List[List[Tuple[str, str]]],
+    expected_tag_result: List[List[Tuple[str, str]]],
+    features: np.ndarray
+) -> Iterable[str]:
+    for document_index, document_tag_result in enumerate(tag_result):
+        yield from iter_format_document_tag_result_as_data_diff(
+            document_tag_result=document_tag_result,
+            document_expected_tag_result=expected_tag_result[document_index],
+            document_features=features[document_index],
+            document_name='document_' + str(1 + document_index)
+        )
+
+
+def format_list_tag_result_as_data_diff(
+        tag_result: List[List[Tuple[str, str]]],
+        expected_tag_result: List[Tuple[str, str]] = None,
+        texts: np.ndarray = None,  # pylint: disable=unused-argument
+        features: np.ndarray = None,
+        model_name: str = None) -> str:  # pylint: disable=unused-argument
+    assert expected_tag_result
+    return ''.join(iter_format_document_list_tag_result_as_data_diff(
+        tag_result=tag_result,
+        expected_tag_result=expected_tag_result,
+        features=features
     ))
+    # actual_data = format_list_tag_result_as_data(
+    #     tag_result, texts=texts, features=features
+    # )
+    # expected_data = format_list_tag_result_as_data(
+    #     expected_tag_result, texts=texts, features=features
+    # )
+    # LOGGER.debug('actual_data: %r', actual_data)
+    # LOGGER.debug('expected_data: %r', expected_data)
+    # return ''.join(simple_diff(
+    #     split_lines_with_line_feed(expected_data),
+    #     split_lines_with_line_feed(actual_data),
+    #     fromfile='expected.data',
+    #     tofile='actual.data'
+    # ))
 
 
 def to_flat_text(texts: np.array) -> str:

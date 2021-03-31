@@ -115,13 +115,47 @@ class TestFormatTagResult:
         )
         LOGGER.debug('result:\n%s', result)
         assert result.splitlines() == [
-            '--- expected.data',
-            '+++ actual.data',
+            '--- document_1.expected',
+            '+++ document_1.actual',
             '@@ -1,3 +1,3 @@',
             ' token1 feat1.1 feat1.2 B-tag1',
             ' token2 feat2.1 feat2.2 I-tag1',
             '-token3 feat3.1 feat3.2 B-tag3',
             '+token3 feat3.1 feat3.2 B-tag2'
+        ]
+
+    def test_should_format_tag_data_diff_with_multiple_changes(self):
+        result = format_tag_result(
+            tag_result=[
+                [['token1.1', 'B-tag1'], ['token1.2', 'I-tag1'], ['token1.3', 'B-tag2']],
+                [['token2.1', 'B-tag1'], ['token2.2', 'I-tag1'], ['token2.3', 'B-tag2']]
+            ],
+            expected_tag_result=[
+                [['token1.1', 'B-tag1'], ['token1.2', 'I-tag1'], ['token1.3', 'B-tag3']],
+                [['token2.1', 'B-tag1'], ['token2.2', 'I-tag1'], ['token2.3', 'B-tag3']]
+            ],
+            features=np.array([
+                [['feat1.1.1'], ['feat1.2.1'], ['feat1.3.1']],
+                [['feat2.1.1'], ['feat2.2.1'], ['feat2.3.1']]
+            ]),
+            output_format=TagOutputFormats.DATA_DIFF
+        )
+        LOGGER.debug('result:\n%s', result)
+        assert result.splitlines() == [
+            '--- document_1.expected',
+            '+++ document_1.actual',
+            '@@ -1,3 +1,3 @@',
+            ' token1.1 feat1.1.1 B-tag1',
+            ' token1.2 feat1.2.1 I-tag1',
+            '-token1.3 feat1.3.1 B-tag3',
+            '+token1.3 feat1.3.1 B-tag2',
+            '--- document_2.expected',
+            '+++ document_2.actual',
+            '@@ -1,3 +1,3 @@',
+            ' token2.1 feat2.1.1 B-tag1',
+            ' token2.2 feat2.2.1 I-tag1',
+            '-token2.3 feat2.3.1 B-tag3',
+            '+token2.3 feat2.3.1 B-tag2'
         ]
 
     def test_should_format_tag_list_result_as_data_diff_without_difference(self):
@@ -137,8 +171,8 @@ class TestFormatTagResult:
         )
         LOGGER.debug('result:\n%s', result)
         assert result.splitlines() == [
-            '--- expected.data',
-            '+++ actual.data',
+            '--- document_1.expected',
+            '+++ document_1.actual',
             '@@ -0,3 +0,3 @@',
             ' token1 feat1.1 feat1.2 B-tag1',
             ' token2 feat2.1 feat2.2 I-tag1',

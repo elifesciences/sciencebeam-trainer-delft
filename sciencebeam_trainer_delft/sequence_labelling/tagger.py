@@ -25,7 +25,7 @@ def iter_batch_window_indices_and_offsets(
     )
 
 
-def predict_texts_with_sliding_window_if_enabled(
+def iter_predict_texts_with_sliding_window_if_enabled(
         texts: List[Union[str, List[str]]],
         model_config: ModelConfig,
         preprocessor: WordPreprocessor,
@@ -171,7 +171,7 @@ class Tagger:
     ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
         assert isinstance(texts, list)
 
-        preds_concatenated_list = predict_texts_with_sliding_window_if_enabled(
+        preds_concatenated_iterable = iter_predict_texts_with_sliding_window_if_enabled(
             texts=texts,
             features=features,
             model=self.model,
@@ -181,7 +181,7 @@ class Tagger:
             input_window_stride=self.input_window_stride,
             embeddings=self.embeddings
         )
-        for i, pred_item in enumerate(preds_concatenated_list):
+        for i, pred_item in enumerate(preds_concatenated_iterable):
             LOGGER.debug('pred_item.shape: %s', pred_item.shape)
             LOGGER.debug('pred_item=%r', pred_item)
 

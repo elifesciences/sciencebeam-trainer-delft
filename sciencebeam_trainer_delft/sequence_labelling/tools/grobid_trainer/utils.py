@@ -756,8 +756,6 @@ def do_tag_input(
         features=features_all,
         model_name=model._get_model_name()  # pylint: disable=protected-access
     )
-    # if not formatted_tag_result.endswith('\n'):
-    #     formatted_tag_result += '\n'
     LOGGER.info('tag_result:')
     for text in formatted_tag_result_iterable:
         print(text, end='')

@@ -737,7 +737,7 @@ def do_tag_input(
 
     LOGGER.info('%d input sequences', len(x_all))
 
-    tag_result = model.tag(
+    tag_result = model.iter_tag(
         x_all,
         output_format=None,
         features=features_all

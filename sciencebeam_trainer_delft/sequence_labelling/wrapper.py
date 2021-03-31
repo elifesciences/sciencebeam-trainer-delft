@@ -540,6 +540,10 @@ class Sequence(_Sequence):
                 features=features
             )
         if self.tag_debug_reporter:
+            if not isinstance(annotations, dict):
+                # the tag debug reporter only supports lists
+                # additionally should not consume the iterable
+                annotations = list(annotations)
             self.tag_debug_reporter.report_tag_results(
                 texts=texts,
                 features=features,

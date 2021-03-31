@@ -557,7 +557,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 
 The output can be redirected to a diff file and viewed using a specialised tool (such as [Kompare](https://en.wikipedia.org/wiki/Kompare)).
 
-Example result:
+Example [unidiff](https://en.wikipedia.org/wiki/Diff#Unified_format) result:
 
 ```text
 --- document_1.expected

@@ -42,7 +42,7 @@ from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti_adapters import
 from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     TagOutputFormats,
     get_tag_result,
-    format_tag_result
+    iter_format_tag_result
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import (
@@ -748,7 +748,7 @@ def do_tag_input(
         labels=y_all
     )
     LOGGER.debug('actual raw expected_tag_result: %s', expected_tag_result)
-    formatted_tag_result = format_tag_result(
+    formatted_tag_result_iterable = iter_format_tag_result(
         tag_result,
         output_format=tag_output_format,
         expected_tag_result=expected_tag_result,
@@ -756,10 +756,11 @@ def do_tag_input(
         features=features_all,
         model_name=model._get_model_name()  # pylint: disable=protected-access
     )
-    if not formatted_tag_result.endswith('\n'):
-        formatted_tag_result += '\n'
+    # if not formatted_tag_result.endswith('\n'):
+    #     formatted_tag_result += '\n'
     LOGGER.info('tag_result:')
-    print(formatted_tag_result, end='')
+    for text in formatted_tag_result_iterable:
+        print(text, end='')
 
 
 def tag_input(

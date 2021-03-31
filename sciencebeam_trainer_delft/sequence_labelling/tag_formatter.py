@@ -162,14 +162,15 @@ def iter_format_document_tag_result_as_data_unidiff(
 def iter_format_document_list_tag_result_as_data_unidiff(
     tag_result: Iterable[List[Tuple[str, str]]],
     expected_tag_result: List[List[Tuple[str, str]]],
-    features: np.ndarray
+    features: np.ndarray,
+    document_name_prefix: str
 ) -> Iterable[str]:
     for document_index, document_tag_result in enumerate(tag_result):
         yield from iter_format_document_tag_result_as_data_unidiff(
             document_tag_result=document_tag_result,
             document_expected_tag_result=expected_tag_result[document_index],
             document_features=features[document_index],
-            document_name='document_%06d' % (1 + document_index)
+            document_name='%s%06d' % (document_name_prefix, 1 + document_index)
         )
 
 
@@ -181,10 +182,14 @@ def iter_format_list_tag_result_as_data_unidiff(
     model_name: str = None  # pylint: disable=unused-argument
 ) -> Iterable[str]:
     assert expected_tag_result
+    document_name_prefix = 'document_'
+    if model_name:
+        document_name_prefix = model_name + '_' + document_name_prefix
     yield from iter_format_document_list_tag_result_as_data_unidiff(
         tag_result=tag_result,
         expected_tag_result=expected_tag_result,
-        features=features
+        features=features,
+        document_name_prefix=document_name_prefix
     )
 
 

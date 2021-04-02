@@ -176,6 +176,7 @@ class GrobidTrainerSubCommand(SubCommand):
             patience=args.early_stopping_patience,
             config_props=dict(
                 max_char_length=args.max_char_length,
+                char_input_mask_zero=args.char_input_mask_zero,
                 char_input_dropout=args.char_input_dropout,
                 char_lstm_dropout=args.char_lstm_dropout,
                 additional_token_feature_indices=args.additional_token_feature_indices,

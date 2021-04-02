@@ -27,6 +27,7 @@ class ModelConfig(_ModelConfig):
             text_feature_indices: List[int] = None,
             concatenated_embeddings_token_count: int = None,
             use_features_indices_input: bool = False,
+            char_input_mask_zero: bool = False,
             char_input_dropout: float = DEFAULT_CHAR_INPUT_DROPOUT,
             char_lstm_dropout: float = DEFAULT_CHAR_LSTM_DROPOUT,
             stateful: bool = False,
@@ -47,6 +48,7 @@ class ModelConfig(_ModelConfig):
         self.use_features = use_features
         self.max_feature_size = max_feature_size
         self.use_features_indices_input = use_features_indices_input
+        self.char_input_mask_zero = char_input_mask_zero
         self.char_input_dropout = char_input_dropout
         self.char_lstm_dropout = char_lstm_dropout
         self.stateful = stateful

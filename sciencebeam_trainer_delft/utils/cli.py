@@ -80,7 +80,8 @@ class SubCommandProcessor:
 
     def get_parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(
-            description=self.description
+            description=self.description,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
         self.add_sub_command_parsers(parser)
         return parser
@@ -101,7 +102,8 @@ class SubCommandProcessor:
     def add_sub_command_parsers_to_subparsers(self, subparsers: argparse.ArgumentParser):
         for sub_command in self.sub_commands:
             sub_parser = subparsers.add_parser(
-                sub_command.name, help=sub_command.description
+                sub_command.name, help=sub_command.description,
+                formatter_class=argparse.ArgumentDefaultsHelpFormatter
             )
             sub_command.add_arguments(sub_parser)
             add_default_arguments(sub_parser)

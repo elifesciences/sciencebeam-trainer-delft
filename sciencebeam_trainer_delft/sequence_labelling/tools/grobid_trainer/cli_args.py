@@ -380,6 +380,10 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         help="number of list units for chars"
     )
     parser.add_argument(
+        "--char-input-mask-zero", action='store_true',
+        help="enables masking of zero for the char input"
+    )
+    parser.add_argument(
         "--char-input-dropout", type=float, default=DEFAULT_CHAR_INPUT_DROPOUT,
         help="dropout for char input"
     )

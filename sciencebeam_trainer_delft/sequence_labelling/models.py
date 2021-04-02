@@ -90,8 +90,7 @@ class CustomBidLSTM_CRF(CustomModel):
             char_embeddings = TimeDistributed(Embedding(
                 input_dim=config.char_vocab_size,
                 output_dim=config.char_embedding_size,
-                # mask_zero=True,
-                # embeddings_initializer=RandomUniform(minval=-0.5, maxval=0.5),
+                mask_zero=config.char_input_mask_zero,
                 name='char_embeddings_embedding'
             ), name='char_embeddings')(char_input)
 

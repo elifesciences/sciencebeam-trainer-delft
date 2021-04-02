@@ -119,6 +119,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --early-stopping-patience="3" \
     --char-embedding-size="11" \
     --char-lstm-units="12" \
+    --char-input-mask-zero \
     --char-input-dropout="0.3" \
     --char-lstm-dropout="0.3" \
     --max-char-length="13" \
@@ -561,7 +562,7 @@ The output can be viewed using a specialised tool (such as [Kompare](https://en.
 
 Example [unidiff](https://en.wikipedia.org/wiki/Diff#Unified_format) result:
 
-```text
+```diff
 --- header_document_000002.expected
 +++ header_document_000002.actual
 @@ -1,21 +1,21 @@

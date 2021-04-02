@@ -483,5 +483,6 @@ def process_args(args: argparse.Namespace) -> argparse.Namespace:
 
 def create_argument_parser() -> argparse.ArgumentParser:
     return argparse.ArgumentParser(
-        description="Trainer for GROBID models"
+        description="Trainer for GROBID models",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )

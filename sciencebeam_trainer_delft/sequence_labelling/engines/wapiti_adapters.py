@@ -14,6 +14,7 @@ from sciencebeam_trainer_delft.sequence_labelling.evaluation import Classificati
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.io import copy_file
 
+from sciencebeam_trainer_delft.sequence_labelling.config import TrainingConfig
 from sciencebeam_trainer_delft.sequence_labelling.engines.wapiti import (
     WapitiModel,
     WapitiWrapper,
@@ -290,6 +291,10 @@ class WapitiModelTrainAdapter:
         self.wapiti_binary_path = wapiti_binary_path
         self.wapiti_train_args = wapiti_train_args
         self._model_adapter = None
+        # additional properties to keep "compatibility" with wrapper.Sequence
+        self.log_dir = None
+        self.model_path = None
+        self.training_config = TrainingConfig(initial_epoch=0)
 
     def train(
             self,

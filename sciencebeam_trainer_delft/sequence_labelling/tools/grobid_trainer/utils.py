@@ -173,7 +173,7 @@ def load_data_and_labels(
 
 
 def notify_model_train_start(
-    model: Sequence,
+    model: Union[Sequence, WapitiModelTrainAdapter],
     train_notification_manager: Optional[TrainNotificationManager],
     output_path: Optional[str]
 ):

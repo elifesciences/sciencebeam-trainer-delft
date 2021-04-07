@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import List, Optional, NamedTuple, Union, T
 
 from sciencebeam_trainer_delft.sequence_labelling.tools.checkpoints import (
-    get_checkpoints_json
+    get_checkpoints_json,
+    get_checkpoint_meta
 )
 
 
@@ -13,6 +14,7 @@ LOGGER = logging.getLogger(__name__)
 class CheckPoint(NamedTuple):
     path: str
     epoch: int
+    meta: dict
 
 
 def get_sorted_checkpoint_json_list(checkpoints_json: dict) -> List[dict]:
@@ -22,15 +24,22 @@ def get_sorted_checkpoint_json_list(checkpoints_json: dict) -> List[dict]:
     )
 
 
+def get_checkpoint_meta_or_none(path: str) -> Optional[dict]:
+    try:
+        return get_checkpoint_meta(path)
+    except FileNotFoundError:
+        LOGGER.info('meta not found for: %r', path)
+        return None
+
+
 def get_checkpoint_for_json(checkpoint_json: Optional[dict]) -> Optional[CheckPoint]:
     if not checkpoint_json:
         return None
+    path = checkpoint_json.get('path')
     epoch = checkpoint_json.get('epoch')
     assert epoch
-    return CheckPoint(
-        path=checkpoint_json.get('path'),
-        epoch=epoch
-    )
+    meta = get_checkpoint_meta_or_none(path) or {}
+    return CheckPoint(path=path, epoch=epoch, meta=meta)
 
 
 def get_last_or_none(a_list: List[T]) -> Optional[T]:
@@ -77,6 +86,7 @@ class CheckPoints:
 class ResumeTrainModelParams(NamedTuple):
     model_path: str
     initial_epoch: int
+    initial_meta: dict
 
 
 def get_resume_train_model_params(
@@ -91,12 +101,14 @@ def get_resume_train_model_params(
             LOGGER.info('auto resuming using latest checkpoint: %r', latest_checkpoint)
             return ResumeTrainModelParams(
                 model_path=latest_checkpoint.path,
-                initial_epoch=latest_checkpoint.epoch
+                initial_epoch=latest_checkpoint.epoch,
+                initial_meta=latest_checkpoint.meta
             )
     if resume_train_model_path:
         LOGGER.info('using passed in resume train model path: %r', resume_train_model_path)
         return ResumeTrainModelParams(
             model_path=resume_train_model_path,
-            initial_epoch=initial_epoch or 0
+            initial_epoch=initial_epoch or 0,
+            initial_meta={}
         )
     return None

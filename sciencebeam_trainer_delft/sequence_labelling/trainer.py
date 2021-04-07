@@ -1,10 +1,8 @@
 import logging
 import os
-from typing import List
+from typing import List, Optional
 
 import numpy as np
-
-from keras.callbacks import EarlyStopping
 
 from delft.sequenceLabelling.evaluation import (
     f1_score,
@@ -15,6 +13,8 @@ from delft.sequenceLabelling.evaluation import (
 
 from delft.sequenceLabelling.trainer import Trainer as _Trainer
 from delft.sequenceLabelling.trainer import Scorer as _Scorer
+
+from sciencebeam_trainer_delft.utils.keras.callbacks import ResumableEarlyStopping
 
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import classification_report
 from sciencebeam_trainer_delft.sequence_labelling.config import TrainingConfig
@@ -27,13 +27,15 @@ LOGGER = logging.getLogger(__name__)
 
 
 def get_callbacks(
-        model_saver: ModelSaver,
-        log_dir: str = None,
-        log_period: int = 1,
-        valid: tuple = (),
-        early_stopping: bool = True,
-        early_stopping_patience: int = 5,
-        meta: dict = None):
+    model_saver: ModelSaver,
+    log_dir: str = None,
+    log_period: int = 1,
+    valid: tuple = (),
+    early_stopping: bool = True,
+    early_stopping_patience: int = 5,
+    initial_meta: Optional[dict] = None,
+    meta: dict = None
+):
     """
     Get callbacks.
 
@@ -50,6 +52,19 @@ def get_callbacks(
     if valid:
         callbacks.append(Scorer(*valid))  # pylint: disable=no-value-for-parameter
 
+    if early_stopping:
+        # Note: ensure we are not restoring weights
+        #   as that would affect saving the model.
+        #   The saving checkpoint need to be last,
+        #   in order to save the state meta data of this checkpoint.
+        callbacks.append(ResumableEarlyStopping(
+            initial_meta=initial_meta,
+            monitor='f1',
+            patience=early_stopping_patience,
+            mode='max',
+            restore_best_weights=False
+        ))
+
     if log_dir:
         epoch_dirname = 'epoch-{epoch:05d}'
         assert model_saver
@@ -61,13 +76,6 @@ def get_callbacks(
             meta=meta
         )
         callbacks.append(save_callback)
-
-    if early_stopping:
-        callbacks.append(EarlyStopping(
-            monitor='f1',
-            patience=early_stopping_patience,
-            mode='max'
-        ))
 
     return callbacks
 
@@ -166,8 +174,13 @@ class Trainer(_Trainer):
         )
 
     def get_meta(self):
+        training_config_meta = vars(self.training_config).copy()
+        try:
+            training_config_meta.pop('initial_meta')
+        except KeyError:
+            pass
         return {
-            'training_config': vars(self.training_config)
+            'training_config': training_config_meta
         }
 
     def create_data_generator(self, *args, name_suffix: str, **kwargs) -> DataGenerator:
@@ -227,6 +240,7 @@ class Trainer(_Trainer):
                 log_period=self.training_config.checkpoint_epoch_interval,
                 early_stopping=True,
                 early_stopping_patience=self.training_config.patience,
+                initial_meta=self.training_config.initial_meta,
                 valid=(validation_generator, self.preprocessor),
                 meta=self.get_meta()
             )

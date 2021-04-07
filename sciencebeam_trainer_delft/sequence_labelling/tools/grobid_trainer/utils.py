@@ -271,6 +271,7 @@ def process_resume_train_model_params(
     if resume_train_model_params:
         model.load_from(resume_train_model_params.model_path)
         model.training_config.initial_epoch = resume_train_model_params.initial_epoch
+        model.training_config.initial_meta = resume_train_model_params.initial_meta
 
 
 # train a GROBID model with all available data

@@ -115,3 +115,28 @@ class TestGetResumeTrainModelParams:
         )
         assert result.model_path == resume_train_model_path
         assert result.initial_epoch == 123
+
+    def test_should_load_meta(
+        self,
+        tmp_path: Path
+    ):
+        latest_checkpoint_path = tmp_path / 'epoch-00001'
+        latest_checkpoint_path.mkdir()
+        meta = {
+            'prop1': 'value1'
+        }
+        (latest_checkpoint_path / 'meta.json').write_text(json.dumps(meta))
+        (tmp_path / 'checkpoints.json').write_text(json.dumps({
+            'checkpoints': [{
+                'path': str(latest_checkpoint_path),
+                'epoch': 1
+            }]
+        }))
+        result = get_resume_train_model_params(
+            log_dir=str(tmp_path),
+            auto_resume=True,
+            resume_train_model_path=None
+        )
+        assert result.model_path == str(latest_checkpoint_path)
+        assert result.initial_epoch == 1
+        assert result.initial_meta == meta

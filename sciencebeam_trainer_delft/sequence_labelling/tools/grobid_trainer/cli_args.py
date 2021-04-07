@@ -418,6 +418,10 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         default=0,
         help="Sets the initial epoch for model training."
     )
+    parser.add_argument(
+        "--auto-resume", action='store_true',
+        help="enables auto-resuming training using checkpoints"
+    )
     add_transfer_learning_arguments(parser)
     add_train_notification_arguments(parser)
 

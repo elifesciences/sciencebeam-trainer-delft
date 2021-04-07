@@ -193,6 +193,7 @@ class GrobidTrainerSubCommand(SubCommand):
                 checkpoint_epoch_interval=args.checkpoint_epoch_interval
             ),
             resume_train_model_path=args.resume_train_model_path,
+            auto_resume=args.auto_resume,
             transfer_learning_config=get_transfer_learning_config_for_parsed_args(args),
             train_notification_manager=get_train_notification_manager(args),
             **self.get_common_args(args)

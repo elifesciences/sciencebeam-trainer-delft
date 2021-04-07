@@ -319,6 +319,27 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
+### Auto-resume training
+
+As detailed in the previous section "Resume training",
+there are situations where resuming training can be useful.
+In particular, when the training process itself is automatically restarted,
+then it is usually preferable to resume training rather than start it from
+the beginning. By adding the `--auto-resume` flag, the training will be resume from the
+the last saved checkpoint. Not surprisingly, saving checkpoints need to be enabled as well.
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    header train \
+    --auto-resume \
+    --batch-size="10" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --checkpoint="./data/checkpoints/header-model" \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
 ### Transfer learning (experimental)
 
 A limited form of transfer learning is also possible by copying selected layers from a previously trained model. e.g.:

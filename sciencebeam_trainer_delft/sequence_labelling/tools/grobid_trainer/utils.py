@@ -26,6 +26,7 @@ from sciencebeam_trainer_delft.embedding import EmbeddingManager
 
 from sciencebeam_trainer_delft.sequence_labelling.utils.train_notify import (
     TrainNotificationManager,
+    notify_train_start,
     notify_train_success,
     notify_train_error
 )
@@ -171,6 +172,20 @@ def load_data_and_labels(
     return x_all, y_all, f_all
 
 
+def notify_model_train_start(
+    model: Sequence,
+    train_notification_manager: Optional[TrainNotificationManager],
+    output_path: Optional[str]
+):
+    notify_train_start(
+        train_notification_manager,
+        model_path=model.get_model_output_path(output_path),
+        checkpoints_path=model.log_dir,
+        resume_train_model_path=model.model_path,
+        initial_epoch=model.training_config.initial_epoch
+    )
+
+
 def do_train(
         model: Union[Sequence, WapitiModelTrainAdapter],
         input_paths: List[str] = None,
@@ -191,6 +206,12 @@ def do_train(
 
     LOGGER.info('%d train sequences', len(x_train))
     LOGGER.info('%d validation sequences', len(x_valid))
+
+    notify_model_train_start(
+        model,
+        train_notification_manager,
+        output_path=output_path
+    )
 
     start_time = time.time()
     model.train(
@@ -419,6 +440,12 @@ def do_train_eval(
     LOGGER.info('%d train sequences', len(x_train))
     LOGGER.info('%d validation sequences', len(x_valid))
     LOGGER.info('%d evaluation sequences', len(x_eval))
+
+    notify_model_train_start(
+        model,
+        train_notification_manager,
+        output_path=output_path
+    )
 
     start_time = time.time()
 

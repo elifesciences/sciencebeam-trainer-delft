@@ -1,12 +1,83 @@
 import logging
 import warnings
+from typing import Optional
 
 import numpy as np
 
-from keras.callbacks import Callback
+from keras.callbacks import Callback, EarlyStopping
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+class ResumableEarlyStopping(EarlyStopping):
+    class MetaKeys:
+        EARLY_STOPPING = 'early_stopping'
+        WAIT = 'wait'
+        STOPPED_EPOCH = 'stopped_epoch'
+        BEST = 'best'
+
+    def __init__(
+        self,
+        initial_meta: Optional[dict] = None,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.best: Optional[float] = None
+        self.initial_wait = 0
+        self.initial_stopped_epoch = 0
+        self.initial_best: Optional[float] = None
+        self.restore_state(initial_meta)
+
+    def restore_state(self, initial_meta: Optional[dict]):
+        if not initial_meta:
+            return
+        early_stopping_meta = initial_meta.get(ResumableEarlyStopping.MetaKeys.EARLY_STOPPING)
+        if not early_stopping_meta:
+            return
+        self.initial_wait = early_stopping_meta.get(
+            ResumableEarlyStopping.MetaKeys.WAIT,
+            0
+        )
+        self.initial_stopped_epoch = early_stopping_meta.get(
+            ResumableEarlyStopping.MetaKeys.STOPPED_EPOCH,
+            0
+        )
+        self.initial_best = early_stopping_meta.get(
+            ResumableEarlyStopping.MetaKeys.BEST,
+            None
+        )
+        LOGGER.info(
+            (
+                'restored early stopping state: initial_wait=%s, initial_stopped_epoch=%s'
+                ', initial_best=%s'
+            ),
+            self.initial_wait, self.initial_stopped_epoch, self.initial_best
+        )
+
+    def on_train_begin(self, logs=None):
+        super().on_train_begin(logs=logs)
+        self.wait = self.initial_wait
+        self.stopped_epoch = self.stopped_epoch
+        if self.initial_best is not None:
+            self.best = self.initial_best
+
+    def _get_early_stopping_meta(self):
+        return {
+            ResumableEarlyStopping.MetaKeys.WAIT: self.wait,
+            ResumableEarlyStopping.MetaKeys.STOPPED_EPOCH: self.stopped_epoch,
+            ResumableEarlyStopping.MetaKeys.BEST: self.best
+        }
+
+    def _add_early_stopping_meta_to_logs(self, logs: dict):
+        logs[ResumableEarlyStopping.MetaKeys.EARLY_STOPPING] = (
+            self._get_early_stopping_meta()
+        )
+
+    def on_epoch_end(self, epoch, logs=None):
+        super().on_epoch_end(epoch, logs=logs)
+        self._add_early_stopping_meta_to_logs(logs)
+        LOGGER.info('on_epoch_end: logs=%s', logs)
 
 
 class ModelSaverCallback(Callback):

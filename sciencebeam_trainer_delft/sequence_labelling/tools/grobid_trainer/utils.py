@@ -26,6 +26,7 @@ from sciencebeam_trainer_delft.embedding import EmbeddingManager
 
 from sciencebeam_trainer_delft.sequence_labelling.utils.train_notify import (
     TrainNotificationManager,
+    notify_train_start,
     notify_train_success,
     notify_train_error
 )
@@ -60,6 +61,10 @@ from sciencebeam_trainer_delft.sequence_labelling.input_info import (
     get_suggested_feature_indices,
     format_dict,
     format_indices
+)
+
+from sciencebeam_trainer_delft.sequence_labelling.utils.checkpoints import (
+    get_resume_train_model_params
 )
 
 
@@ -167,6 +172,20 @@ def load_data_and_labels(
     return x_all, y_all, f_all
 
 
+def notify_model_train_start(
+    model: Union[Sequence, WapitiModelTrainAdapter],
+    train_notification_manager: Optional[TrainNotificationManager],
+    output_path: Optional[str]
+):
+    notify_train_start(
+        train_notification_manager,
+        model_path=model.get_model_output_path(output_path),
+        checkpoints_path=model.log_dir,
+        resume_train_model_path=model.model_path,
+        initial_epoch=model.training_config.initial_epoch
+    )
+
+
 def do_train(
         model: Union[Sequence, WapitiModelTrainAdapter],
         input_paths: List[str] = None,
@@ -187,6 +206,12 @@ def do_train(
 
     LOGGER.info('%d train sequences', len(x_train))
     LOGGER.info('%d validation sequences', len(x_valid))
+
+    notify_model_train_start(
+        model,
+        train_notification_manager,
+        output_path=output_path
+    )
 
     start_time = time.time()
     model.train(
@@ -232,6 +257,23 @@ def do_train_with_error_notification(
         raise
 
 
+def process_resume_train_model_params(
+    model: Sequence,
+    auto_resume: bool,
+    resume_train_model_path: Optional[str]
+):
+    resume_train_model_params = get_resume_train_model_params(
+        log_dir=model.log_dir,
+        auto_resume=auto_resume,
+        resume_train_model_path=resume_train_model_path,
+        initial_epoch=model.training_config.initial_epoch
+    )
+    if resume_train_model_params:
+        model.load_from(resume_train_model_params.model_path)
+        model.training_config.initial_epoch = resume_train_model_params.initial_epoch
+        model.training_config.initial_meta = resume_train_model_params.initial_meta
+
+
 # train a GROBID model with all available data
 def train(
         model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
@@ -243,6 +285,7 @@ def train(
         max_sequence_length: int = 100,
         max_epoch=100,
         resume_train_model_path: str = None,
+        auto_resume: bool = False,
         train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
@@ -266,8 +309,11 @@ def train(
         use_ELMo=use_ELMo,
         **kwargs
     )
-    if resume_train_model_path:
-        model.load_from(resume_train_model_path)
+    process_resume_train_model_params(
+        model,
+        auto_resume=auto_resume,
+        resume_train_model_path=resume_train_model_path
+    )
 
     do_train_with_error_notification(
         model,
@@ -396,6 +442,12 @@ def do_train_eval(
     LOGGER.info('%d validation sequences', len(x_valid))
     LOGGER.info('%d evaluation sequences', len(x_eval))
 
+    notify_model_train_start(
+        model,
+        train_notification_manager,
+        output_path=output_path
+    )
+
     start_time = time.time()
 
     if fold_count == 1:
@@ -475,6 +527,7 @@ def train_eval(
         max_sequence_length: int = 100,
         fold_count=1, max_epoch=100, batch_size=20,
         resume_train_model_path: str = None,
+        auto_resume: bool = False,
         train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None,
         embedding_manager: EmbeddingManager = None,
@@ -502,8 +555,13 @@ def train_eval(
         fold_number=fold_count,
         **kwargs
     )
-    if resume_train_model_path:
-        model.load_from(resume_train_model_path)
+
+    process_resume_train_model_params(
+        model,
+        auto_resume=auto_resume,
+        resume_train_model_path=resume_train_model_path
+    )
+
     do_train_eval_with_error_notification(
         model,
         input_paths=input_paths,

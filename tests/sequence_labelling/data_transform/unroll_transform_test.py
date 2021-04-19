@@ -1,6 +1,24 @@
 from sciencebeam_trainer_delft.sequence_labelling.dataset_transform.unroll_transform import (
+    LineStatus,
+    get_line_status,
     UnrollingTextFeatureDatasetTransformer
 )
+
+
+class TestGetLineStatus:
+    def test_should_return_linestart_if_first_token(self):
+        assert get_line_status(0, 10) == LineStatus.LINESTART
+
+    def test_should_return_lineend_if_last_token(self):
+        assert get_line_status(9, 10) == LineStatus.LINEEND
+
+    def test_should_return_linein_if_not_first_or_last_token(self):
+        token_indices = list(range(10))
+        expected_line_status = (
+            [LineStatus.LINESTART] + [LineStatus.LINEIN] * 8 + [LineStatus.LINEEND]
+        )
+        actual_line_status = [get_line_status(i, 10) for i in token_indices]
+        assert actual_line_status == expected_line_status
 
 
 class TestUnrollingTextFeatureDatasetTransformer:
@@ -18,10 +36,10 @@ class TestUnrollingTextFeatureDatasetTransformer:
         assert transformed_x == [['word11', 'word12', 'word21', 'word22']]
         assert transformed_y == [['label1', 'label1', 'label2', 'label2']]
         assert transformed_features == [[
-            [0, 1, 'word11 word12'],
-            [0, 1, 'word11 word12'],
-            [0, 1, 'word21 word22'],
-            [0, 1, 'word21 word22']
+            [0, 1, 'word11 word12', LineStatus.LINESTART],
+            [0, 1, 'word11 word12', LineStatus.LINEEND],
+            [0, 1, 'word21 word22', LineStatus.LINESTART],
+            [0, 1, 'word21 word22', LineStatus.LINEEND]
         ]]
         inverse_transformed_x, inverse_transformed_y, inverse_transformed_features = (
             data_transformer.inverse_transform(transformed_x, transformed_y, transformed_features)
@@ -43,10 +61,10 @@ class TestUnrollingTextFeatureDatasetTransformer:
         )
         assert transformed_x == [['word11', 'word12', 'word21', 'word22']]
         assert transformed_features == [[
-            [0, 1, 'word11 word12'],
-            [0, 1, 'word11 word12'],
-            [0, 1, 'word21 word22'],
-            [0, 1, 'word21 word22']
+            [0, 1, 'word11 word12', LineStatus.LINESTART],
+            [0, 1, 'word11 word12', LineStatus.LINEEND],
+            [0, 1, 'word21 word22', LineStatus.LINESTART],
+            [0, 1, 'word21 word22', LineStatus.LINEEND]
         ]]
         inverse_transformed_y = data_transformer.inverse_transform_y(
             [['label1', 'label1', 'label2', 'label2']]
@@ -82,10 +100,10 @@ class TestUnrollingTextFeatureDatasetTransformer:
         assert transformed_x == [['word11', 'word12', 'word21', 'word22']]
         assert transformed_y == [['B-label1', 'I-label1', 'B-label2', 'I-label2']]
         assert transformed_features == [[
-            [0, 1, 'word11 word12'],
-            [0, 1, 'word11 word12'],
-            [0, 1, 'word21 word22'],
-            [0, 1, 'word21 word22']
+            [0, 1, 'word11 word12', LineStatus.LINESTART],
+            [0, 1, 'word11 word12', LineStatus.LINEEND],
+            [0, 1, 'word21 word22', LineStatus.LINESTART],
+            [0, 1, 'word21 word22', LineStatus.LINEEND]
         ]]
         inverse_transformed_y = data_transformer.inverse_transform_y(transformed_y)
         assert inverse_transformed_y == y

@@ -22,6 +22,13 @@ LOGGER = logging.getLogger(__name__)
 NBSP = '\u00A0'
 
 
+class LineStatus:
+    # replicate line status used in GROBID
+    LINESTART = 'LINESTART'
+    LINEIN = 'LINEIN'
+    LINEEND = 'LINEEND'
+
+
 def strip_tag_prefix(tag: str) -> str:
     if tag.startswith('B-') or tag.startswith('I-'):
         return tag[2:]
@@ -44,6 +51,25 @@ def inverse_transform_token_y(unrolled_token_y: List[str]) -> str:
         if top_tag_with_prefix in unrolled_token_y:
             return top_tag_with_prefix
     return top_tag
+
+
+def get_line_status(
+    token_index: int,
+    line_length: int
+):
+    if token_index == 0:
+        return LineStatus.LINESTART
+    if token_index == line_length - 1:
+        return LineStatus.LINEEND
+    return LineStatus.LINEIN
+
+
+def get_transformed_features(
+    token_features: List[str],
+    unrolled_token_index: int,
+    unrolled_tokens_length: int
+):
+    return token_features + [get_line_status(unrolled_token_index, unrolled_tokens_length)]
 
 
 class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
@@ -79,12 +105,19 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
             for features_row, y_row in zip_longest(features_doc, y_doc, fillvalue=None):
                 text = features_row[self.unroll_text_feature_index]
                 tokens = self.tokenize(text)
-                for token in tokens:
+                tokens_length = len(tokens)
+                for unrolled_token_index, token in enumerate(tokens):
                     x_doc_transformed.append(token)
                     y_doc_transformed.append(y_row)
-                    features_doc_transformed.append(features_row)
+                    features_doc_transformed.append(
+                        get_transformed_features(
+                            features_row,
+                            unrolled_token_index=unrolled_token_index,
+                            unrolled_tokens_length=tokens_length
+                        )
+                    )
                     y_row = get_next_transform_token_y(y_row)
-                unrolled_token_lengths_doc.append(len(tokens))
+                unrolled_token_lengths_doc.append(tokens_length)
             x_transformed.append(x_doc_transformed)
             y_transformed.append(y_doc_transformed)
             features_transformed.append(features_doc_transformed)

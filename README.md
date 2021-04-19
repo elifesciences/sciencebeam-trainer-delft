@@ -225,14 +225,17 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --unroll-text-feature-index="32" \
+    --use-features \
+    --feature-indices="6-11,33" \
     --max-char-length="60" \
     --max-sequence-length="100" \
     --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz" \
     --eval-input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-961-delft-segmentation-with-text-feature-32.validation.gz" \
     --limit="100" \
-    --eval-limit="100" \
+    --eval-batch-size="1" \
+    --eval-limit="10" \
     --eval-max-sequence-length="100" \
-    --early-stopping-patience="3" \
+    --early-stopping-patience="10" \
     --max-epoch="50"
 ```
 

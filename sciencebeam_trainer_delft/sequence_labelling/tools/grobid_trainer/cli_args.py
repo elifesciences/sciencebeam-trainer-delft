@@ -319,6 +319,8 @@ def add_train_arguments(parser: argparse.ArgumentParser):
             " this will only be used for the first token.",
             " All other labels will be the intermediate version of the tag."
             " The max sequence length will get applied to the unrolled tokens."
+            " Additionally a new token will be added, with the values:"
+            " LINESTART, LINEIN, LINEEND"
         ])
     )
 

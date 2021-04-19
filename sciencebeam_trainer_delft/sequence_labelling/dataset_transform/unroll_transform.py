@@ -3,6 +3,8 @@ from collections import Counter
 from itertools import zip_longest
 from typing import List, Optional
 
+import numpy as np
+
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
 
 from sciencebeam_trainer_delft.sequence_labelling.dataset_transform import (
@@ -130,6 +132,12 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         self._saved_x = x
         self._saved_features = features
         self._unrolled_token_lengths = unrolled_token_lengths
+        if isinstance(x, np.ndarray):
+            x_transformed = np.asarray(x_transformed, dtype='object')
+        if isinstance(y, np.ndarray):
+            y_transformed = np.asarray(y_transformed, dtype='object')
+        if isinstance(features, np.ndarray):
+            features_transformed = np.asarray(features_transformed, dtype='object')
         return x_transformed, y_transformed, features_transformed
 
     def inverse_transform(
@@ -159,4 +167,6 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
                     )
                     index += unrolled_token_length
                 inverse_transformed_y.append(inverse_transformed_y_doc)
+        if isinstance(y, np.ndarray):
+            inverse_transformed_y = np.asarray(inverse_transformed_y, dtype='object')
         return x, inverse_transformed_y, features

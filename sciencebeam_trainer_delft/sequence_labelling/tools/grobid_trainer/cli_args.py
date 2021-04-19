@@ -308,6 +308,21 @@ def add_train_arguments(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument(
+        "--unroll-text-feature-index",
+        type=int,
+        help="".join([
+            "Tokenizes the text at the specified index.",
+            " Each token will become a separate token.",
+            " The features will be duplicated for each token.",
+            " Labels will also be duplicated for each token.",
+            " Where a label refers to the beginning of a tag,",
+            " this will only be used for the first token.",
+            " All other labels will be the intermediate version of the tag."
+            " The max sequence length will get applied to the unrolled tokens."
+        ])
+    )
+
+    parser.add_argument(
         "--concatenated-embeddings-token-count",
         type=int,
         help="".join([

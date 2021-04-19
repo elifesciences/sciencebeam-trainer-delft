@@ -181,6 +181,7 @@ class GrobidTrainerSubCommand(SubCommand):
                 char_lstm_dropout=args.char_lstm_dropout,
                 additional_token_feature_indices=args.additional_token_feature_indices,
                 text_feature_indices=args.text_feature_indices,
+                unroll_text_feature_index=args.unroll_text_feature_index,
                 concatenated_embeddings_token_count=args.concatenated_embeddings_token_count,
                 use_word_embeddings=args.use_word_embeddings,
                 use_features_indices_input=args.use_features_indices_input,

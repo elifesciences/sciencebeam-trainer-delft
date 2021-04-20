@@ -36,7 +36,8 @@ from sciencebeam_trainer_delft.sequence_labelling.models import (
 )
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
     T_FeaturesPreprocessor,
-    FeaturesPreprocessor as ScienceBeamFeaturesPreprocessor
+    FeaturesPreprocessor as ScienceBeamFeaturesPreprocessor,
+    faster_preprocessor_fit
 )
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver, ModelLoader
 from sciencebeam_trainer_delft.sequence_labelling.tagger import Tagger
@@ -151,8 +152,12 @@ def prepare_preprocessor(X, y, model_config: ModelConfig, features: np.array = N
         additional_token_feature_indices=model_config.additional_token_feature_indices,
         text_feature_indices=model_config.text_feature_indices
     )
-    LOGGER.info('fitting preprocessor')
-    preprocessor.fit(batch_text_list_iterable, y)
+    if isinstance(preprocessor, WordPreprocessor):
+        LOGGER.info('fitting preprocessor (faster)')
+        faster_preprocessor_fit(preprocessor, batch_text_list_iterable, y)
+    else:
+        LOGGER.info('fitting preprocessor (default)')
+        preprocessor.fit(batch_text_list_iterable, y)
     if model_config.use_features and features is not None:
         LOGGER.info('fitting features preprocessor')
         preprocessor.fit_features(features)

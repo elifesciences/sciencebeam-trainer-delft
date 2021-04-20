@@ -823,8 +823,11 @@ def do_tag_input(
                 fp.write(text)
     else:
         LOGGER.info('writing tag_result to stdout')
-        for text in formatted_tag_result_iterable:
-            print(text, end='')
+        try:
+            for text in formatted_tag_result_iterable:
+                print(text, end='')
+        except BrokenPipeError:
+            LOGGER.info('received broken pipe error')
 
 
 def tag_input(

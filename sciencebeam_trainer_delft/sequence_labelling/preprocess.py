@@ -1,4 +1,5 @@
 import logging
+import itertools
 from functools import partial
 from typing import List, Iterable, Set, Union
 
@@ -11,7 +12,9 @@ from sklearn.preprocessing import FunctionTransformer
 
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
-    WordPreprocessor as DelftWordPreprocessor
+    WordPreprocessor as DelftWordPreprocessor,
+    PAD,
+    UNK
 )
 
 
@@ -29,6 +32,36 @@ def to_dict(value_list_batch: List[list], feature_indices: Set[int] = None):
         }
         for value_list in value_list_batch
     ]
+
+
+def faster_preprocessor_fit(self: DelftWordPreprocessor, X, y):
+    chars = {PAD: 0, UNK: 1}
+    tags = {PAD: 0}
+
+    if self.use_char_feature:
+        temp_chars = {
+            c
+            for w in set(itertools.chain(*X))
+            for c in w
+        }
+
+        sorted_chars = sorted(temp_chars)
+        sorted_chars_dict = {
+            c: idx + 2
+            for idx, c in enumerate(sorted_chars)
+        }
+        chars = {**chars, **sorted_chars_dict}
+
+    temp_tags = set(itertools.chain(*y))
+    sorted_tags = sorted(temp_tags)
+    sorted_tags_dict = {
+        tag: idx + 1
+        for idx, tag in enumerate(sorted_tags)
+    }
+    tags = {**tags, **sorted_tags_dict}
+
+    self.vocab_char = chars
+    self.vocab_tag = tags
 
 
 class WordPreprocessor(DelftWordPreprocessor):

@@ -177,78 +177,6 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
-Train with additional token features:
-
-```bash
-python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    segmentation \
-    train_eval \
-    --batch-size="10" \
-    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
-    --additional-token-feature-indices="0" \
-    --max-char-length="60" \
-    --max-sequence-length="100" \
-    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-segmentation.train.gz" \
-    --limit="100" \
-    --early-stopping-patience="3" \
-    --max-epoch="50"
-```
-
-Train with text features (using three tokens for word embeddings):
-
-```bash
-python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    segmentation \
-    train_eval \
-    --batch-size="10" \
-    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
-    --text-feature-indices="32" \
-    --concatenated-embeddings-token-count="3" \
-    --max-char-length="60" \
-    --max-sequence-length="100" \
-    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz" \
-    --eval-input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-961-delft-segmentation-with-text-feature-32.validation.gz" \
-    --limit="100" \
-    --eval-limit="100" \
-    --early-stopping-patience="3" \
-    --max-epoch="50"
-```
-
-In the [referenced training data](https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz), the last feature (`32`) represents the whole line (using non-breaking spaces instead of spaces). To use the model with GROBID, that [feature would need to be enabled](https://github.com/elifesciences/grobid/pull/25).
-
-The same text feature also allows us to explore, whether the model would perform better,
-if each token within the text feature was a separate token (data row).
-In that case one would specify `--unroll-text-feature-index` with the token index of the text feature
-that should get re-tokenized and "unrolled". The features and labels will get copied.
-Another feature will get added with the *line status* (`LINESTART`, `LINEIN`, `LINEEND`).
-Where the label has a beginning prefix (`B-`), it will get converted to an inside prefix (`I-`) for the remaining tokens
-(see [IOB format](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging))).
-At the prediction time, the model will receive the "unrolled" data, wheras the original data will get returned,
-with the majority label for that line (majority without prefix, a beginning prefix will be used if present).
-
-Example:
-
-```bash
-python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
-    segmentation \
-    train_eval \
-    --batch-size="10" \
-    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
-    --unroll-text-feature-index="32" \
-    --use-features \
-    --feature-indices="6-11,33" \
-    --max-char-length="60" \
-    --max-sequence-length="100" \
-    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz" \
-    --eval-input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-961-delft-segmentation-with-text-feature-32.validation.gz" \
-    --limit="100" \
-    --eval-batch-size="1" \
-    --eval-limit="10" \
-    --eval-max-sequence-length="100" \
-    --early-stopping-patience="10" \
-    --max-epoch="50"
-```
-
 ### Train with layout features
 
 Layout features are additional features provided with each token, e.g. whether it's the start of the line.
@@ -314,6 +242,86 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --features-indices="9-30" \
     --features-embedding-size="0" \
     --features-lstm-units="0" \
+    --early-stopping-patience="10" \
+    --max-epoch="50"
+```
+
+### Training with additional text features
+
+Layout features may also contain additional token or text features.
+
+For example the default GROBID *segmentation* model uses one data row for the whole line. With the first token being the main token, and the second token of the line being the the first feature (index `0`).
+
+Train with additional token features:
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    segmentation \
+    train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --additional-token-feature-indices="0" \
+    --max-char-length="60" \
+    --max-sequence-length="100" \
+    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-segmentation.train.gz" \
+    --limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+Additionally, a ScienceBeam modifcation of the GROBID *segmentation* model also contains a text feature containing the whole line (further details below).
+
+Train with text features (using three tokens for word embeddings):
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    segmentation \
+    train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --text-feature-indices="32" \
+    --concatenated-embeddings-token-count="3" \
+    --max-char-length="60" \
+    --max-sequence-length="100" \
+    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz" \
+    --eval-input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-961-delft-segmentation-with-text-feature-32.validation.gz" \
+    --limit="100" \
+    --eval-limit="100" \
+    --early-stopping-patience="3" \
+    --max-epoch="50"
+```
+
+In the [referenced training data](https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz), the last feature (`32`) represents the whole line (using non-breaking spaces instead of spaces). To use the model with GROBID, that [feature would need to be enabled](https://github.com/elifesciences/grobid/pull/25).
+
+The same text feature also allows us to explore, whether the model would perform better,
+if each token within the text feature was a separate token (data row).
+In that case one would specify `--unroll-text-feature-index` with the token index of the text feature
+that should get re-tokenized and "unrolled". The features and labels will get copied.
+Another feature will get added with the *line status* (`LINESTART`, `LINEIN`, `LINEEND`) - feature index `33` in the example below.
+Where the label has a beginning prefix (`B-`), it will get converted to an inside prefix (`I-`) for the remaining tokens
+(see [IOB format](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging))).
+At the prediction time, the model will receive the "unrolled" data, wheras the original data will get returned,
+with the majority label for that line (majority without prefix, a beginning prefix will be used if present).
+
+Example:
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    segmentation \
+    train_eval \
+    --batch-size="10" \
+    --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
+    --unroll-text-feature-index="32" \
+    --use-features \
+    --feature-indices="6-11,33" \
+    --max-char-length="60" \
+    --max-sequence-length="100" \
+    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz" \
+    --eval-input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-961-delft-segmentation-with-text-feature-32.validation.gz" \
+    --limit="100" \
+    --eval-batch-size="1" \
+    --eval-limit="10" \
+    --eval-max-sequence-length="100" \
     --early-stopping-patience="10" \
     --max-epoch="50"
 ```

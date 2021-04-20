@@ -216,7 +216,17 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 
 In the [referenced training data](https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-1927-delft-segmentation-with-text-feature-32.train.gz), the last feature (`32`) represents the whole line (using non-breaking spaces instead of spaces). To use the model with GROBID, that [feature would need to be enabled](https://github.com/elifesciences/grobid/pull/25).
 
-Train with text feature "unrolled" as if each token within the text feature was a separate token:
+The same text feature also allows us to explore, whether the model would perform better,
+if each token within the text feature was a separate token (data row).
+In that case one would specify `--unroll-text-feature-index` with the token index of the text feature
+that should get re-tokenized and "unrolled". The features and labels will get copied.
+Another feature will get added with the *line status* (`LINESTART`, `LINEIN`, `LINEEND`).
+Where the label has a beginning prefix (`B-`), it will get converted to an inside prefix (`I-`) for the remaining tokens
+(see [IOB format](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging))).
+At the prediction time, the model will receive the "unrolled" data, wheras the original data will get returned,
+with the majority label for that line (majority without prefix, a beginning prefix will be used if present).
+
+Example:
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \

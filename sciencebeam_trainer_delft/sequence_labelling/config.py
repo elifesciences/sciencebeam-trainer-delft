@@ -25,6 +25,7 @@ class ModelConfig(_ModelConfig):
             max_feature_size: int = 50,
             additional_token_feature_indices: List[int] = None,
             text_feature_indices: List[int] = None,
+            unroll_text_feature_index: Optional[int] = None,
             concatenated_embeddings_token_count: int = None,
             use_features_indices_input: bool = False,
             char_input_mask_zero: bool = False,
@@ -44,6 +45,7 @@ class ModelConfig(_ModelConfig):
         self.use_word_embeddings = use_word_embeddings
         self.additional_token_feature_indices = additional_token_feature_indices
         self.text_feature_indices = text_feature_indices
+        self.unroll_text_feature_index = unroll_text_feature_index
         self.concatenated_embeddings_token_count = concatenated_embeddings_token_count
         self.use_features = use_features
         self.max_feature_size = max_feature_size

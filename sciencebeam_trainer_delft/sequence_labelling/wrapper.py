@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from functools import partial
 from typing import Callable, Iterable, List, Optional, Tuple, Union, T
 
 import numpy as np
@@ -52,6 +53,14 @@ from sciencebeam_trainer_delft.sequence_labelling.transfer_learning import (
     TransferLearningConfig,
     TransferLearningSource,
     freeze_model_layers
+)
+
+from sciencebeam_trainer_delft.sequence_labelling.dataset_transform import (
+    DummyDatasetTransformer
+)
+
+from sciencebeam_trainer_delft.sequence_labelling.dataset_transform.unroll_transform import (
+    UnrollingTextFeatureDatasetTransformer
 )
 
 
@@ -213,6 +222,7 @@ class Sequence(_Sequence):
             stateful = get_default_stateful()
         self.stateful = stateful
         self.transfer_learning_config = transfer_learning_config
+        self.dataset_transformer_factory = DummyDatasetTransformer
         super().__init__(
             *args,
             max_sequence_length=max_sequence_length,
@@ -231,6 +241,7 @@ class Sequence(_Sequence):
         )
         self.update_model_config_word_embedding_size()
         updated_implicit_model_config_props(self.model_config)
+        self.update_dataset_transformer_factor()
         self.training_config = TrainingConfig(
             **vars(self.training_config),
             **(training_props or {})
@@ -254,6 +265,18 @@ class Sequence(_Sequence):
                 self.embeddings.embed_size * token_count
             )
 
+    def update_dataset_transformer_factor(self):
+        self.dataset_transformer_factory = DummyDatasetTransformer
+        if self.model_config.unroll_text_feature_index:
+            LOGGER.info(
+                'using unrolling text feature dataset transformer, index=%s',
+                self.model_config.unroll_text_feature_index
+            )
+            self.dataset_transformer_factory = partial(
+                UnrollingTextFeatureDatasetTransformer,
+                self.model_config.unroll_text_feature_index
+            )
+
     def clear_embedding_cache(self):
         if not self.embeddings:
             return
@@ -270,6 +293,8 @@ class Sequence(_Sequence):
         x_all = np.concatenate((x_train, x_valid), axis=0)
         y_all = np.concatenate((y_train, y_valid), axis=0)
         features_all = concatenate_or_none((features_train, features_valid), axis=0)
+        dataset_fransformer = self.dataset_transformer_factory()
+        x_all, y_all, features_all = dataset_fransformer.fit_transform(x_all, y_all, features_all)
         transfer_learning_source: Optional[TransferLearningSource] = None
         if self.p is None or self.model is None:
             transfer_learning_source = TransferLearningSource.from_config(
@@ -427,8 +452,11 @@ class Sequence(_Sequence):
         self._require_model()
         if self.model_config.use_features and features is None:
             raise ValueError('features required')
+        dataset_fransformer = self.dataset_transformer_factory()
+        x_test, y_test, features = dataset_fransformer.fit_transform(x_test, y_test, features)
         tagger = Tagger(
             self.model, self.model_config, self.embeddings,
+            dataset_transformer_factory=self.dataset_transformer_factory,
             max_sequence_length=self.eval_max_sequence_length,
             input_window_stride=self.eval_input_window_stride,
             preprocessor=self.p
@@ -444,6 +472,8 @@ class Sequence(_Sequence):
         ]
         # convert to list, get_entities is type checking for list but not ndarray
         y_true = [list(true_doc) for true_doc in y_test]
+        y_pred = dataset_fransformer.inverse_transform_y(y_pred)
+        y_true = dataset_fransformer.inverse_transform_y(y_true)
         return ClassificationResult(y_pred=y_pred, y_true=y_true)
 
     def eval_single(  # pylint: disable=arguments-differ
@@ -527,6 +557,7 @@ class Sequence(_Sequence):
             raise ValueError('features required')
         tagger = Tagger(
             self.model, self.model_config, self.embeddings,
+            dataset_transformer_factory=self.dataset_transformer_factory,
             max_sequence_length=self.max_sequence_length,
             input_window_stride=self.input_window_stride,
             preprocessor=self.p
@@ -665,3 +696,4 @@ class Sequence(_Sequence):
         self.model_config.stateful = is_model_stateful(self.model)
         # load weights
         model_loader.load_model_from_directory(directory, model=self.model)
+        self.update_dataset_transformer_factor()

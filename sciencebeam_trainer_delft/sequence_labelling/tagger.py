@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Iterable, List, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -12,6 +12,11 @@ from sciencebeam_trainer_delft.utils.progress_logger import logging_tqdm
 
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.data_generator import DataGenerator
+
+from sciencebeam_trainer_delft.sequence_labelling.dataset_transform import (
+    T_DatasetTransformerFactory,
+    DummyDatasetTransformer
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -157,6 +162,7 @@ class Tagger:
             model_config,
             embeddings=None,
             preprocessor=None,
+            dataset_transformer_factory: Optional[T_DatasetTransformerFactory] = None,
             max_sequence_length: int = None,
             input_window_stride: int = None):
         self.model = model
@@ -165,15 +171,24 @@ class Tagger:
         self.embeddings = embeddings
         self.max_sequence_length = max_sequence_length
         self.input_window_stride = input_window_stride
+        if dataset_transformer_factory is None:
+            self.dataset_transformer_factory = DummyDatasetTransformer
+        else:
+            self.dataset_transformer_factory = dataset_transformer_factory
 
     def iter_tag(
         self, texts, output_format, features=None
     ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
         assert isinstance(texts, list)
 
+        dataset_transformer = self.dataset_transformer_factory()
+        transformed_texts, transformed_features = dataset_transformer.fit_transform_x_and_features(
+            texts, features
+        )
+
         preds_concatenated_iterable = iter_predict_texts_with_sliding_window_if_enabled(
-            texts=texts,
-            features=features,
+            texts=transformed_texts,
+            features=transformed_features,
             model=self.model,
             model_config=self.model_config,
             preprocessor=self.preprocessor,
@@ -197,6 +212,7 @@ class Tagger:
                 offsets = []
 
             tags = self._get_tags(pred)
+            tags = dataset_transformer.inverse_transform_y([tags])[0]
             LOGGER.debug('tags: %s', tags)
 
             if output_format == 'json':

@@ -122,3 +122,18 @@ class TestUnrollingTextFeatureDatasetTransformer:
             [['O', 'B-label1', 'I-label1', 'B-label2', 'I-label2', 'I-label2']]
         )
         assert inverse_transformed_y == [['B-label1', 'B-label2']]
+
+    def test_should_select_beginning_class_name_only_if_tag_changes(self):
+        data_transformer = UnrollingTextFeatureDatasetTransformer(2)
+        x = [['token1', 'token2']]
+        features = [[
+            [0, 1, 'word11 word12 word13'],
+            [0, 1, 'word21 word22 word23']
+        ]]
+        data_transformer.fit_transform_x_and_features(
+            x, features
+        )
+        inverse_transformed_y = data_transformer.inverse_transform_y(
+            [['B-label1', 'I-label1', 'O', 'B-label1', 'O', 'B-label1']]
+        )
+        assert inverse_transformed_y == [['B-label1', 'I-label1']]

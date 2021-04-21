@@ -32,7 +32,7 @@ class LineStatus:
 
 
 def strip_tag_prefix(tag: str) -> str:
-    if tag.startswith('B-') or tag.startswith('I-'):
+    if tag and (tag.startswith('B-') or tag.startswith('I-')):
         return tag[2:]
     return tag
 
@@ -43,15 +43,15 @@ def get_next_transform_token_y(token_y: str) -> str:
     return token_y
 
 
-def inverse_transform_token_y(unrolled_token_y: List[str]) -> str:
+def inverse_transform_token_y(unrolled_token_y: List[str], previous_tag: Optional[str]) -> str:
     tags_with_stripped_prefix = [strip_tag_prefix(tag) for tag in unrolled_token_y]
     tag_counts = Counter(tags_with_stripped_prefix)
     top_tag = tag_counts.most_common(1)[0][0]
     LOGGER.debug('tag_counts: %s, top_tag=%r', tag_counts, top_tag)
-    for prefix in ['B-', 'I-']:
-        top_tag_with_prefix = prefix + top_tag
-        if top_tag_with_prefix in unrolled_token_y:
-            return top_tag_with_prefix
+    if f'B-{top_tag}' in unrolled_token_y or f'I-{top_tag}' in unrolled_token_y:
+        if top_tag != strip_tag_prefix(previous_tag):
+            return f'B-{top_tag}'
+        return f'I-{top_tag}'
     return top_tag
 
 
@@ -158,13 +158,17 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
                 LOGGER.debug('y_doc: %s', y_doc)
                 index = 0
                 inverse_transformed_y_doc = []
+                previous_tag = None
                 for unrolled_token_length in unrolled_token_lengths_doc:
                     if index >= len(y_doc):
                         # y_doc may be truncated using max sequence length
                         break
-                    inverse_transformed_y_doc.append(
-                        inverse_transform_token_y(y_doc[index:index + unrolled_token_length])
+                    y_token = inverse_transform_token_y(
+                        y_doc[index:index + unrolled_token_length],
+                        previous_tag=previous_tag
                     )
+                    previous_tag = y_token
+                    inverse_transformed_y_doc.append(y_token)
                     index += unrolled_token_length
                 inverse_transformed_y.append(inverse_transformed_y_doc)
         if isinstance(y, np.ndarray):

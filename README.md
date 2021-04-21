@@ -301,7 +301,7 @@ Another feature will get added with the *line status* (`LINESTART`, `LINEIN`, `L
 Where the label has a beginning prefix (`B-`), it will get converted to an inside prefix (`I-`) for the remaining tokens
 (see [IOB format](https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging))).
 At the prediction time, the model will receive the "unrolled" data, wheras the original data will get returned,
-with the majority label for that line (majority without prefix, a beginning prefix will be used if present).
+with the majority label for that line (majority without prefix, a beginning prefix will be used if the label has changed).
 
 Example:
 

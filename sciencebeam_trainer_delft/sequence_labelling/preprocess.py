@@ -125,7 +125,7 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
             ],
             logger=LOGGER,
             desc='FeaturesPreprocessor.fit: ',
-            unit='feature'
+            unit='token-features'
         )
         if LOGGER.isEnabledFor(logging.DEBUG):
             flattened_features = list(flattened_features)

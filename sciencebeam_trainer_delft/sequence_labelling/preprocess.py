@@ -17,6 +17,8 @@ from delft.sequenceLabelling.preprocess import (
     UNK
 )
 
+from sciencebeam_trainer_delft.utils.progress_logger import logging_tqdm
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -115,10 +117,15 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
         return self
 
     def fit(self, X):
-        flattened_features = (
-            word_features
-            for sentence_features in X
-            for word_features in sentence_features
+        flattened_features = logging_tqdm(
+            iterable=[
+                word_features
+                for sentence_features in X
+                for word_features in sentence_features
+            ],
+            logger=LOGGER,
+            desc='FeaturesPreprocessor.fit: ',
+            unit='feature'
         )
         if LOGGER.isEnabledFor(logging.DEBUG):
             flattened_features = list(flattened_features)

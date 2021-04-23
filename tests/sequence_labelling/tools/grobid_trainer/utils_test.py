@@ -418,6 +418,30 @@ class TestGrobidTrainerUtils:
                 embedding_registry_path=default_args['embedding_registry_path']
             )
 
+        @log_on_exception
+        def test_should_be_able_to_train_with_unrolled_text_feature_index(
+                self, default_args: dict, default_model_directory: str):
+            train_eval(
+                **{
+                    **default_args,
+                    'config_props': {
+                        **default_args.get('config_props', {}),
+                        'max_char_length': 60,
+                        'unroll_text_feature_index': 0
+                    }
+                }
+            )
+            model_config = load_model_config(default_model_directory)
+            assert model_config.max_char_length == 60
+            assert model_config.unroll_text_feature_index == 0
+            tag_input(
+                model=default_args['model'],
+                model_path=default_model_directory,
+                input_paths=default_args['input_paths'],
+                download_manager=default_args['download_manager'],
+                embedding_registry_path=default_args['embedding_registry_path']
+            )
+
         @pytest.mark.usefixtures('trainer_mock')
         @pytest.mark.parametrize("copy_preprocessor", [False, True])
         @log_on_exception

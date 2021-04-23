@@ -274,7 +274,8 @@ class Sequence(_Sequence):
             )
             self.dataset_transformer_factory = partial(
                 UnrollingTextFeatureDatasetTransformer,
-                self.model_config.unroll_text_feature_index
+                self.model_config.unroll_text_feature_index,
+                used_features_indices=self.model_config.features_indices
             )
 
     def clear_embedding_cache(self):

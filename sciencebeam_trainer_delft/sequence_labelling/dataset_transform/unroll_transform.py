@@ -32,7 +32,7 @@ class LineStatus:
 
 
 def strip_tag_prefix(tag: str) -> str:
-    if tag.startswith('B-') or tag.startswith('I-'):
+    if tag and (tag.startswith('B-') or tag.startswith('I-')):
         return tag[2:]
     return tag
 
@@ -43,15 +43,15 @@ def get_next_transform_token_y(token_y: str) -> str:
     return token_y
 
 
-def inverse_transform_token_y(unrolled_token_y: List[str]) -> str:
+def inverse_transform_token_y(unrolled_token_y: List[str], previous_tag: Optional[str]) -> str:
     tags_with_stripped_prefix = [strip_tag_prefix(tag) for tag in unrolled_token_y]
     tag_counts = Counter(tags_with_stripped_prefix)
     top_tag = tag_counts.most_common(1)[0][0]
     LOGGER.debug('tag_counts: %s, top_tag=%r', tag_counts, top_tag)
-    for prefix in ['B-', 'I-']:
-        top_tag_with_prefix = prefix + top_tag
-        if top_tag_with_prefix in unrolled_token_y:
-            return top_tag_with_prefix
+    if f'B-{top_tag}' in unrolled_token_y or f'I-{top_tag}' in unrolled_token_y:
+        if top_tag != strip_tag_prefix(previous_tag):
+            return f'B-{top_tag}'
+        return f'I-{top_tag}'
     return top_tag
 
 
@@ -69,14 +69,24 @@ def get_line_status(
 def get_transformed_features(
     token_features: List[str],
     unrolled_token_index: int,
-    unrolled_tokens_length: int
+    unrolled_tokens_length: int,
+    line_status_enabled: bool = True
 ):
-    return token_features + [get_line_status(unrolled_token_index, unrolled_tokens_length)]
+    if not line_status_enabled:
+        return token_features
+    return list(token_features) + [get_line_status(unrolled_token_index, unrolled_tokens_length)]
 
 
 class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
-    def __init__(self, unroll_text_feature_index: int):
+    def __init__(
+        self,
+        unroll_text_feature_index: int,
+        used_features_indices: Optional[List[int]] = None
+    ):
+        # Note: used_features_indices is used to determine, whether to add the line status
+        #   (i.e. no need to add it if it is not used)
         self.unroll_text_feature_index = unroll_text_feature_index
+        self.used_features_indices = used_features_indices
         self._saved_x: Optional[T_Batch_Tokens] = None
         self._saved_features: Optional[T_Batch_Features] = None
         self._unrolled_token_lengths: Optional[List[List[int]]] = None
@@ -94,6 +104,7 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         x_transformed = []
         y_transformed = []
         features_transformed = []
+        line_status_enabled: Optional[bool] = None
         unrolled_token_lengths = []
         for y_doc, features_doc in zip_longest(
             y if y is not None else [],
@@ -106,7 +117,14 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
             unrolled_token_lengths_doc = []
             for features_row, y_row in zip_longest(features_doc, y_doc, fillvalue=None):
                 text = features_row[self.unroll_text_feature_index]
+                if line_status_enabled is None:
+                    line_status_enabled = (
+                        self.used_features_indices is not None
+                        and len(features_row) in self.used_features_indices
+                    )
                 tokens = self.tokenize(text)
+                assert tokens
+                assert y is None or y_row is not None
                 tokens_length = len(tokens)
                 for unrolled_token_index, token in enumerate(tokens):
                     x_doc_transformed.append(token)
@@ -115,7 +133,8 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
                         get_transformed_features(
                             features_row,
                             unrolled_token_index=unrolled_token_index,
-                            unrolled_tokens_length=tokens_length
+                            unrolled_tokens_length=tokens_length,
+                            line_status_enabled=line_status_enabled
                         )
                     )
                     y_row = get_next_transform_token_y(y_row)
@@ -153,18 +172,33 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         inverse_transformed_y = None
         if y is not None:
             inverse_transformed_y = []
-            for y_doc, unrolled_token_lengths_doc in zip(y, self._unrolled_token_lengths):
-                LOGGER.debug('unrolled_token_lengths_doc: %s', unrolled_token_lengths_doc)
-                LOGGER.debug('y_doc: %s', y_doc)
+            for x_doc, features_doc, y_doc, unrolled_token_lengths_doc in zip(
+                self._saved_x, self._saved_features, y, self._unrolled_token_lengths
+            ):
+                if LOGGER.isEnabledFor(logging.DEBUG):
+                    LOGGER.debug('unrolled_token_lengths_doc: %s', unrolled_token_lengths_doc)
+                    LOGGER.debug('y_doc: %s', y_doc)
+                    LOGGER.debug('xy_doc: %s', list(zip(x_doc, y_doc)))
                 index = 0
                 inverse_transformed_y_doc = []
-                for unrolled_token_length in unrolled_token_lengths_doc:
+                previous_tag = None
+                for x_token, features_token, unrolled_token_length in zip(
+                    x_doc, features_doc, unrolled_token_lengths_doc
+                ):
                     if index >= len(y_doc):
                         # y_doc may be truncated using max sequence length
                         break
-                    inverse_transformed_y_doc.append(
-                        inverse_transform_token_y(y_doc[index:index + unrolled_token_length])
-                    )
+                    y_tokens = y_doc[index:index + unrolled_token_length]
+                    if LOGGER.isEnabledFor(logging.DEBUG):
+                        tokens = self.tokenize(features_token[self.unroll_text_feature_index])
+                        LOGGER.debug(
+                            'inverse transforming: indices=[%d:%d], x=%r, f=%r, tokens_y=%r',
+                            index, index + unrolled_token_length,
+                            x_token, features_token, list(zip_longest(tokens, y_tokens))
+                        )
+                    y_token = inverse_transform_token_y(y_tokens, previous_tag=previous_tag)
+                    previous_tag = y_token
+                    inverse_transformed_y_doc.append(y_token)
                     index += unrolled_token_length
                 inverse_transformed_y.append(inverse_transformed_y_doc)
         if isinstance(y, np.ndarray):

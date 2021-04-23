@@ -102,6 +102,9 @@ def iter_simple_unidiff(
     a, b, fromfile='', tofile='', lineterm='\n',
     force_output: bool = False
 ) -> Iterable[str]:
+    if len(a) > len(b):
+        # truncate expected, as predicted sequences may have truncuated
+        a = a[:len(b)]
     assert len(a) == len(b)
     line_count = len(a)
     is_diff_list = [

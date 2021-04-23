@@ -291,11 +291,17 @@ class Sequence(_Sequence):
             features_train: np.array = None,
             features_valid: np.array = None):
         # TBD if valid is None, segment train to get one
+        dataset_fransformer = self.dataset_transformer_factory()
+        x_train, y_train, features_train = dataset_fransformer.fit_transform(
+            x_train, y_train, features_train
+        )
+        if x_valid is not None:
+            x_valid, y_valid, features_valid = dataset_fransformer.fit_transform(
+                x_valid, y_valid, features_valid
+            )
         x_all = np.concatenate((x_train, x_valid), axis=0)
         y_all = np.concatenate((y_train, y_valid), axis=0)
         features_all = concatenate_or_none((features_train, features_valid), axis=0)
-        dataset_fransformer = self.dataset_transformer_factory()
-        x_all, y_all, features_all = dataset_fransformer.fit_transform(x_all, y_all, features_all)
         transfer_learning_source: Optional[TransferLearningSource] = None
         if self.p is None or self.model is None:
             transfer_learning_source = TransferLearningSource.from_config(

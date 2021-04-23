@@ -131,6 +131,9 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
             flattened_features = list(flattened_features)
             LOGGER.debug('flattened_features: %s', flattened_features)
         self.pipeline.fit(flattened_features)
+        vectorizer = self.vectorizer
+        LOGGER.info('vectorizer.feature_names: %r', vectorizer.feature_names_)
+        LOGGER.info('vectorizer.vocabulary size: %r', len(vectorizer.vocabulary_))
         return self
 
     def transform(self, X, **_):

@@ -71,7 +71,7 @@ def get_transformed_features(
     unrolled_token_index: int,
     unrolled_tokens_length: int
 ):
-    return token_features + [get_line_status(unrolled_token_index, unrolled_tokens_length)]
+    return list(token_features) + [get_line_status(unrolled_token_index, unrolled_tokens_length)]
 
 
 class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):

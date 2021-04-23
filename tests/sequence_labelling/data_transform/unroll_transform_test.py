@@ -1,3 +1,5 @@
+import numpy as np
+
 from sciencebeam_trainer_delft.sequence_labelling.dataset_transform.unroll_transform import (
     LineStatus,
     get_line_status,
@@ -22,7 +24,7 @@ class TestGetLineStatus:
 
 
 class TestUnrollingTextFeatureDatasetTransformer:
-    def test_should_unroll_and_inverse_transform_x_y_and_features(self):
+    def test_should_unroll_and_inverse_transform_x_y_and_features_using_list(self):
         data_transformer = UnrollingTextFeatureDatasetTransformer(2)
         x = [['token1', 'token2']]
         y = [['label1', 'label2']]
@@ -47,6 +49,32 @@ class TestUnrollingTextFeatureDatasetTransformer:
         assert inverse_transformed_x == x
         assert inverse_transformed_y == y
         assert inverse_transformed_features == features
+
+    def test_should_unroll_and_inverse_transform_x_y_and_features_using_ndarray(self):
+        data_transformer = UnrollingTextFeatureDatasetTransformer(2)
+        x = np.asarray([['token1', 'token2']], dtype='object')
+        y = np.asarray([['label1', 'label2']], dtype='object')
+        features = np.asarray([[
+            ['0', '1', 'word11 word12'],
+            ['0', '1', 'word21 word22']
+        ]], dtype='object')
+        transformed_x, transformed_y, transformed_features = data_transformer.fit_transform(
+            x, y, features
+        )
+        assert transformed_x.tolist() == [['word11', 'word12', 'word21', 'word22']]
+        assert transformed_y.tolist() == [['label1', 'label1', 'label2', 'label2']]
+        assert transformed_features.tolist() == [[
+            ['0', '1', 'word11 word12', LineStatus.LINESTART],
+            ['0', '1', 'word11 word12', LineStatus.LINEEND],
+            ['0', '1', 'word21 word22', LineStatus.LINESTART],
+            ['0', '1', 'word21 word22', LineStatus.LINEEND]
+        ]]
+        inverse_transformed_x, inverse_transformed_y, inverse_transformed_features = (
+            data_transformer.inverse_transform(transformed_x, transformed_y, transformed_features)
+        )
+        assert inverse_transformed_x.tolist() == x.tolist()
+        assert inverse_transformed_y.tolist() == y.tolist()
+        assert inverse_transformed_features.tolist() == features.tolist()
 
     def test_should_unroll_x_and_features_and_inverse_transform_y(self):
         data_transformer = UnrollingTextFeatureDatasetTransformer(2)

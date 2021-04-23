@@ -17,21 +17,23 @@ from delft.sequenceLabelling.preprocess import (
     UNK
 )
 
+from sciencebeam_trainer_delft.utils.progress_logger import logging_tqdm
+
 
 LOGGER = logging.getLogger(__name__)
 
 
-def to_dict(value_list_batch: List[list], feature_indices: Set[int] = None):
+def to_dict(value_list_batch: List[list], feature_indices: Set[int] = None) -> Iterable[dict]:
     # Note: keeping `feature_indices` name for pickle compatibility
     #   (also matches upstream for `to_dict`)
-    return [
+    return (
         {
             index: value
             for index, value in enumerate(value_list)
             if not feature_indices or index in feature_indices
         }
         for value_list in value_list_batch
-    ]
+    )
 
 
 def faster_preprocessor_fit(self: DelftWordPreprocessor, X, y):
@@ -115,13 +117,23 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
         return self
 
     def fit(self, X):
-        flattened_features = [
-            word_features
-            for sentence_features in X
-            for word_features in sentence_features
-        ]
-        LOGGER.debug('flattened_features: %s', flattened_features)
+        flattened_features = logging_tqdm(
+            iterable=[
+                word_features
+                for sentence_features in X
+                for word_features in sentence_features
+            ],
+            logger=LOGGER,
+            desc='FeaturesPreprocessor.fit: ',
+            unit='token-features'
+        )
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            flattened_features = list(flattened_features)
+            LOGGER.debug('flattened_features: %s', flattened_features)
         self.pipeline.fit(flattened_features)
+        vectorizer = self.vectorizer
+        LOGGER.info('vectorizer.feature_names: %r', vectorizer.feature_names_)
+        LOGGER.info('vectorizer.vocabulary size: %r', len(vectorizer.vocabulary_))
         return self
 
     def transform(self, X, **_):

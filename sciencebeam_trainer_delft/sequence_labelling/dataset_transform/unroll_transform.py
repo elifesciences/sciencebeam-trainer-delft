@@ -69,14 +69,24 @@ def get_line_status(
 def get_transformed_features(
     token_features: List[str],
     unrolled_token_index: int,
-    unrolled_tokens_length: int
+    unrolled_tokens_length: int,
+    line_status_enabled: bool = True
 ):
+    if not line_status_enabled:
+        return token_features
     return list(token_features) + [get_line_status(unrolled_token_index, unrolled_tokens_length)]
 
 
 class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
-    def __init__(self, unroll_text_feature_index: int):
+    def __init__(
+        self,
+        unroll_text_feature_index: int,
+        used_features_indices: Optional[List[int]] = None
+    ):
+        # Note: used_features_indices is used to determine, whether to add the line status
+        #   (i.e. no need to add it if it is not used)
         self.unroll_text_feature_index = unroll_text_feature_index
+        self.used_features_indices = used_features_indices
         self._saved_x: Optional[T_Batch_Tokens] = None
         self._saved_features: Optional[T_Batch_Features] = None
         self._unrolled_token_lengths: Optional[List[List[int]]] = None
@@ -94,6 +104,7 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         x_transformed = []
         y_transformed = []
         features_transformed = []
+        line_status_enabled: Optional[bool] = None
         unrolled_token_lengths = []
         for y_doc, features_doc in zip_longest(
             y if y is not None else [],
@@ -106,6 +117,11 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
             unrolled_token_lengths_doc = []
             for features_row, y_row in zip_longest(features_doc, y_doc, fillvalue=None):
                 text = features_row[self.unroll_text_feature_index]
+                if line_status_enabled is None:
+                    line_status_enabled = (
+                        self.used_features_indices is not None
+                        and len(features_row) in self.used_features_indices
+                    )
                 tokens = self.tokenize(text)
                 assert tokens
                 assert y is None or y_row is not None
@@ -117,7 +133,8 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
                         get_transformed_features(
                             features_row,
                             unrolled_token_index=unrolled_token_index,
-                            unrolled_tokens_length=tokens_length
+                            unrolled_tokens_length=tokens_length,
+                            line_status_enabled=line_status_enabled
                         )
                     )
                     y_row = get_next_transform_token_y(y_row)

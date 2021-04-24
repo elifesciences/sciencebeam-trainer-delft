@@ -22,6 +22,7 @@ class ModelConfig(_ModelConfig):
             *args,
             use_word_embeddings: bool = True,
             use_features: bool = False,
+            continuous_features_indices: List[int] = None,
             max_feature_size: int = 50,
             additional_token_feature_indices: List[int] = None,
             text_feature_indices: List[int] = None,
@@ -48,6 +49,7 @@ class ModelConfig(_ModelConfig):
         self.unroll_text_feature_index = unroll_text_feature_index
         self.concatenated_embeddings_token_count = concatenated_embeddings_token_count
         self.use_features = use_features
+        self.continuous_features_indices = continuous_features_indices
         self.max_feature_size = max_feature_size
         self.use_features_indices_input = use_features_indices_input
         self.char_input_mask_zero = char_input_mask_zero

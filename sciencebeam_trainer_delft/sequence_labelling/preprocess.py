@@ -1,7 +1,7 @@
 import logging
 import itertools
 from functools import partial
-from typing import Any, Dict, List, Iterable, Set, Tuple, Union
+from typing import Any, Dict, List, Iterable, Set, Tuple, Union, T
 
 import numpy as np
 
@@ -49,14 +49,14 @@ def to_float_features(
     value_list_batch: List[list],
     features_indices: Set[int] = None
 ) -> Iterable[dict]:
-    return [
+    return (
         [
             float(value)
             for index, value in enumerate(value_list)
             if index in features_indices
         ]
         for value_list in value_list_batch
-    ]
+    )
 
 
 def faster_preprocessor_fit(self: DelftWordPreprocessor, X, y):
@@ -94,11 +94,35 @@ class WordPreprocessor(DelftWordPreprocessor):
     pass
 
 
+def iter_batch(iterable: Iterable[T], n: int = 1) -> Iterable[List[T]]:
+    batch = []
+    for item in iterable:
+        batch.append(item)
+        if len(batch) >= n:
+            yield batch
+            batch = []
+    if batch:
+        yield batch
+
+
+class IterableMinMaxScaler(MinMaxScaler):
+    def fit(self, X, y=None):
+        batch_size = 1000
+        for batch in iter_batch(X, batch_size):
+            self.partial_fit(batch)
+
+    def transform(self, X):
+        return super().transform(list(X))
+
+
 STATE_ATTRIBUTE_NAMES_BY_TYPE = {
     DictVectorizer: ['feature_names_', 'vocabulary_'],
     StandardScaler: ['scale_', 'mean_', 'var_', 'n_samples_seen_'],
-    MinMaxScaler: ['min_', 'scale_', 'data_min_', 'data_max_', 'data_range_', 'n_samples_seen_'],
+    MinMaxScaler: ['min_', 'scale_', 'data_min_', 'data_max_', 'data_range_', 'n_samples_seen_']
 }
+
+
+STATE_ATTRIBUTE_NAMES_BY_TYPE[IterableMinMaxScaler] = STATE_ATTRIBUTE_NAMES_BY_TYPE[MinMaxScaler]
 
 
 def _iter_nested_pipeline_steps(steps: List[Tuple[str, Any]]) -> Iterable[Tuple[str, Any]]:
@@ -205,7 +229,7 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
             )
             continuous_features_pipeline = Pipeline(steps=[
                 ('to_float_features', FunctionTransformer(to_float_features_fn, validate=False)),
-                ('min_max_scalar', MinMaxScaler()),
+                ('min_max_scalar', IterableMinMaxScaler()),
             ])
             pipeline = Pipeline(steps=[
                 ('union', FeatureUnion([

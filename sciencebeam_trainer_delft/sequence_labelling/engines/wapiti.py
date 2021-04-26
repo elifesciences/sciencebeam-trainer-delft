@@ -116,7 +116,7 @@ class WapitiWrapper:
             args.append('--label')
         command = [self.wapiti_binary_path] + args
         LOGGER.debug('running wapiti: %s', command)
-        process = subprocess.Popen(
+        process = subprocess.Popen(  # pylint: disable=consider-using-with
             command,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -135,20 +135,20 @@ class WapitiWrapper:
     def run_wapiti(self, args: List[str]):
         command = [self.wapiti_binary_path] + args
         LOGGER.info('calling wapiti: %s', command)
-        process = subprocess.Popen(
+        with subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT
-        )
-        with process.stdout:
-            lines_to_log(LOGGER, logging.INFO, 'wapiti: %s', process.stdout)
-        process.wait()
-        if process.returncode != 0:
-            raise subprocess.CalledProcessError(
-                process.returncode,
-                command
-            )
-        LOGGER.debug('wapiti call succeeded')
+        ) as process:
+            with process.stdout:
+                lines_to_log(LOGGER, logging.INFO, 'wapiti: %s', process.stdout)
+            process.wait()
+            if process.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    process.returncode,
+                    command
+                )
+            LOGGER.debug('wapiti call succeeded')
 
     def label(
             self,

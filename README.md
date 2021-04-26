@@ -246,6 +246,31 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
+By default features are assumed to be categorical.
+But features may also be [continuous](https://en.wikipedia.org/wiki/Continuous_or_discrete_variable).
+Those values can be specified via the `--continuous-features-indices` parameter.
+In that case they will automatically be part of the `features` and do not need to specified separately.
+Continuous features will get [min-max scaled](https://en.wikipedia.org/wiki/Feature_scaling).
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    segmentation \
+    train_eval \
+    --batch-size="10" \
+    --no-embedding \
+    --max-sequence-length="100" \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-segmentation.train.gz \
+    --limit="100" \
+    --architecture="CustomBidLSTM_CRF" \
+    --use-features \
+    --features-indices="6-11" \
+    --continuous-features-indices="22,23,26" \
+    --features-embedding-size="0" \
+    --features-lstm-units="0" \
+    --early-stopping-patience="10" \
+    --max-epoch="50"
+```
+
 ### Training with additional text features
 
 Layout features may also contain additional token or text features.

@@ -1,6 +1,8 @@
 import logging
+from typing import T
 
 import numpy as np
+from sklearn.base import TransformerMixin
 
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
     WordPreprocessor,
@@ -73,6 +75,28 @@ def all_close(a: np.array, b: np.array):
     return np.allclose(_to_dense(a), _to_dense(b))
 
 
+def _get_state_and_restore(obj: T) -> T:
+    state = obj.__getstate__()
+    LOGGER.debug('state: %s', state)
+    obj = type(obj)()
+    obj.__setstate__(state)
+    new_state = obj.__getstate__()
+    LOGGER.debug('new_state: %s', new_state)
+    assert new_state == state
+    return obj
+
+
+def _fit_transform_with_state_restore_check(transformer: TransformerMixin, X, **kwargs):
+    transformed = transformer.fit_transform(X, **kwargs)
+    LOGGER.debug('transformed: %s', transformed)
+    LOGGER.debug('transformed.shape: %s', transformed.shape)
+    restored_transformer = _get_state_and_restore(transformer)
+    restored_transformed = restored_transformer.transform(X)
+    LOGGER.debug('restored_transformed: %s', restored_transformed)
+    assert restored_transformed.tolist() == transformed.tolist()
+    return transformed
+
+
 class TestFeaturesPreprocessor:
     def test_should_be_able_to_instantiate_with_default_values(self):
         FeaturesPreprocessor()
@@ -127,3 +151,28 @@ class TestFeaturesPreprocessor:
         LOGGER.debug('features_transformed.shape: %s', features_transformed.shape)
         assert features_transformed.shape == (1, 3, 3)
         assert all_close(features_transformed, [[[1, 0, 0], [0, 1, 0], [0, 0, 1]]])
+
+    def test_should_fit_and_scale_single_continuous_value_feature(self):
+        preprocessor = FeaturesPreprocessor(
+            continuous_features_indices=[0]
+        )
+        features_batch = [[['0'], ['100']]]
+        features_transformed = _fit_transform_with_state_restore_check(
+            preprocessor, features_batch
+        )
+        LOGGER.debug('features_transformed: %s', features_transformed)
+        LOGGER.debug('features_transformed.shape: %s', features_transformed.shape)
+        assert features_transformed.tolist() == [[[0.0], [1.0]]]
+
+    def test_should_append_continuous_and_discreet_features(self):
+        preprocessor = FeaturesPreprocessor(
+            features_indices=[1],
+            continuous_features_indices=[0]
+        )
+        features_batch = [[['0', FEATURE_VALUE_1], ['100', FEATURE_VALUE_2]]]
+        features_transformed = _fit_transform_with_state_restore_check(
+            preprocessor, features_batch
+        )
+        LOGGER.debug('features_transformed: %s', features_transformed)
+        LOGGER.debug('features_transformed.shape: %s', features_transformed.shape)
+        assert features_transformed.tolist() == [[[0.0, 1.0, 0.0], [1.0, 0.0, 1.0]]]

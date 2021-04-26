@@ -131,7 +131,8 @@ def get_features_preprocessor(
         'using feature indices=%s', model_config.features_indices
     )
     return ScienceBeamFeaturesPreprocessor(
-        features_indices=model_config.features_indices
+        features_indices=model_config.features_indices,
+        continuous_features_indices=model_config.continuous_features_indices
     )
 
 

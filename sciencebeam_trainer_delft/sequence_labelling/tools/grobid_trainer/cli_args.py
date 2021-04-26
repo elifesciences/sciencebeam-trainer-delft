@@ -344,6 +344,14 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         help="The feature indices to use. e.g. 7-10. If blank, all of the features will be used."
     )
     features_group.add_argument(
+        "--continuous-features-indices",
+        type=parse_number_ranges,
+        help=(
+            "The feature indices to use that are continous. e.g. 7-10."
+            " If blank, features will be assumed to be categorical."
+        )
+    )
+    features_group.add_argument(
         "--features-embedding-size", "--feature-embedding-size",
         type=int,
         help="size of feature embedding, use 0 to disable embedding"

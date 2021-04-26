@@ -462,8 +462,6 @@ class Sequence(_Sequence):
         self._require_model()
         if self.model_config.use_features and features is None:
             raise ValueError('features required')
-        dataset_fransformer = self.dataset_transformer_factory()
-        x_test, y_test, features = dataset_fransformer.fit_transform(x_test, y_test, features)
         tagger = Tagger(
             self.model, self.model_config, self.embeddings,
             dataset_transformer_factory=self.dataset_transformer_factory,
@@ -482,8 +480,6 @@ class Sequence(_Sequence):
         ]
         # convert to list, get_entities is type checking for list but not ndarray
         y_true = [list(true_doc) for true_doc in y_test]
-        y_pred = dataset_fransformer.inverse_transform_y(y_pred)
-        y_true = dataset_fransformer.inverse_transform_y(y_true)
         return ClassificationResult(y_pred=y_pred, y_true=y_true)
 
     def eval_single(  # pylint: disable=arguments-differ

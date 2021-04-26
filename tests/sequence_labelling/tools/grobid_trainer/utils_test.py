@@ -458,22 +458,22 @@ class TestGrobidTrainerUtils:
             model_config = load_model_config(default_model_directory)
             assert model_config.max_char_length == 60
             assert model_config.unroll_text_feature_index == 0
-            # tag_input(
-            #     model=default_args['model'],
-            #     model_path=default_model_directory,
-            #     input_paths=tag_input_paths,
-            #     download_manager=default_args['download_manager'],
-            #     embedding_registry_path=default_args['embedding_registry_path'],
-            #     tag_output_format=TagOutputFormats.DATA,
-            #     tag_output_path=str(tag_output_path),
-            #     tag_transformed=False
-            # )
-            # output_texts, output_labels, _ = load_data_and_labels_crf_file(
-            #     str(tag_output_path)
-            # )
-            # LOGGER.debug('output_texts=%s', output_texts)
-            # LOGGER.debug('output_labels=%s', output_labels)
-            # assert output_texts.tolist() == [[TOKEN_1, TOKEN_2]]
+            tag_input(
+                model=default_args['model'],
+                model_path=default_model_directory,
+                input_paths=tag_input_paths,
+                download_manager=default_args['download_manager'],
+                embedding_registry_path=default_args['embedding_registry_path'],
+                tag_output_format=TagOutputFormats.DATA,
+                tag_output_path=str(tag_output_path),
+                tag_transformed=False
+            )
+            output_texts, output_labels, _ = load_data_and_labels_crf_file(
+                str(tag_output_path)
+            )
+            LOGGER.debug('output_texts=%s', output_texts)
+            LOGGER.debug('output_labels=%s', output_labels)
+            assert output_texts.tolist() == [[TOKEN_1, TOKEN_2]]
             tag_input(
                 model=default_args['model'],
                 model_path=default_model_directory,

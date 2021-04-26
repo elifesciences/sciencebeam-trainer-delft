@@ -833,6 +833,7 @@ def do_tag_input(
         with auto_uploading_output_file(tag_output_path) as fp:
             for text in formatted_tag_result_iterable:
                 fp.write(text)
+        LOGGER.info('tag results written to: %r', tag_output_path)
     else:
         LOGGER.info('writing tag_result to stdout')
         try:

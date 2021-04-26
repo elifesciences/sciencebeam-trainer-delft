@@ -22,17 +22,17 @@ with open(os.path.join('requirements.delft.txt'), 'r') as f:
 def _run_command(command):
     command_args = shlex.split(command)
     print('Running command: %s' % command_args)
-    p = subprocess.Popen(
+    with subprocess.Popen(
         command_args,
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-    )
-    stdout_data, _ = p.communicate()
-    print('Command output: %s' % stdout_data)
-    if p.returncode != 0:
-        raise RuntimeError(
-            'Command %s failed: exit code: %s (output: %s)' %
-            (command_args, p.returncode, stdout_data)
-        )
+    ) as process:
+        stdout_data, _ = process.communicate()
+        print('Command output: %s' % stdout_data)
+        if process.returncode != 0:
+            raise RuntimeError(
+                'Command %s failed: exit code: %s (output: %s)' %
+                (command_args, process.returncode, stdout_data)
+            )
 
 
 def _is_delft_installed():

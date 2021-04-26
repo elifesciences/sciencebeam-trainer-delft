@@ -250,6 +250,7 @@ By default features are assumed to be categorical.
 But features may also be [continuous](https://en.wikipedia.org/wiki/Continuous_or_discrete_variable).
 Those values can be specified via the `--continuous-features-indices` parameter.
 In that case they will automatically be part of the `features` and do not need to specified separately.
+Continuous features will get [min-max scaled](https://en.wikipedia.org/wiki/Feature_scaling).
 
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \

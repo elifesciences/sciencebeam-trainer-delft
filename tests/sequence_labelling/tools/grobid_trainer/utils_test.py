@@ -438,13 +438,13 @@ class TestGrobidTrainerUtils:
             input_path = tmp_path / 'input.data'
             tag_output_path = tmp_path / 'output.data'
             input_path.write_text('\n'.join([
-                f'{TOKEN_1}\t{UNROLLED_TOKEN_1}{NBSP}{UNROLLED_TOKEN_2}\t{TAG_1}',
-                f'{TOKEN_2}\t{UNROLLED_TOKEN_3}{NBSP}{UNROLLED_TOKEN_4}\t{TAG_2}'
+                f'{TOKEN_1}\t{UNROLLED_TOKEN_1}{NBSP}{UNROLLED_TOKEN_2}\tB-{TAG_1}',
+                f'{TOKEN_2}\t{UNROLLED_TOKEN_3}{NBSP}{UNROLLED_TOKEN_4}\tB-{TAG_2}'
             ]))
             tag_input_paths = [str(input_path)]
             # duplicate the input paths to get past the train test split
             input_paths = [str(input_path)] * 10
-            train(
+            train_eval(
                 **{
                     **default_args,
                     'input_paths': input_paths,

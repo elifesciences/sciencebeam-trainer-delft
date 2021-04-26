@@ -12,6 +12,9 @@ from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
     WordPreprocessor
 )
+from sciencebeam_trainer_delft.sequence_labelling.dataset_transform.unroll_transform import (
+    UnrollingTextFeatureDatasetTransformer
+)
 
 from sciencebeam_trainer_delft.sequence_labelling.tagger import (
     Tagger
@@ -24,12 +27,25 @@ LOGGER = logging.getLogger(__name__)
 TOKEN_1 = 'token1'
 TOKEN_2 = 'token2'
 TOKEN_3 = 'token3'
-ALL_TOKENS = [TOKEN_1, TOKEN_2, TOKEN_3]
+
+UNROLLED_TOKEN_1 = 'unroll1'
+UNROLLED_TOKEN_2 = 'unroll2'
+UNROLLED_TOKEN_3 = 'unroll3'
+UNROLLED_TOKEN_4 = 'unroll4'
+
+UNROLLED_TOKENS = [UNROLLED_TOKEN_1, UNROLLED_TOKEN_2, UNROLLED_TOKEN_3, UNROLLED_TOKEN_4]
+
+ALL_TOKENS = [TOKEN_1, TOKEN_2, TOKEN_3] + UNROLLED_TOKENS
+
+TAG_BY_UNROLLED_TOKEN = {
+    token: f'tag-{token}'
+    for token in UNROLLED_TOKENS
+}
 
 TAG_1 = 'tag1'
 TAG_2 = 'tag2'
 TAG_3 = 'tag3'
-ALL_TAGS = [TAG_1, TAG_2, TAG_3]
+ALL_TAGS = [TAG_1, TAG_2, TAG_3] + list(TAG_BY_UNROLLED_TOKEN.values())
 
 DEFAULT_TAG_BY_TOKEN_MAP = dict(zip([''] + ALL_TOKENS, [PAD] + ALL_TAGS))
 
@@ -315,4 +331,55 @@ class TestTagger:
         assert tag_result == [
             [(TOKEN_1, TAG_1), (TOKEN_2, TAG_2), (TOKEN_3, TAG_3)],
             [(TOKEN_2, TAG_2), (TOKEN_3, TAG_3)]
+        ]
+
+    def test_should_tag_with_dataset_transformer(
+            self,
+            model_mock: MagicMock,
+            model_config: ModelConfig,
+            preprocessor: WordPreprocessor):
+        tagger = Tagger(
+            model=model_mock,
+            model_config=model_config,
+            preprocessor=preprocessor,
+            dataset_transformer_factory=lambda: (
+                UnrollingTextFeatureDatasetTransformer(0)
+            )
+        )
+        model_mock.predict_on_batch.side_effect = get_predict_on_batch_by_token_fn(
+            DEFAULT_TAG_BY_TOKEN_MAP,
+            preprocessor=preprocessor,
+            batch_size=model_config.batch_size
+        )
+        texts = [
+            [TOKEN_1, TOKEN_2],
+        ]
+        features = [
+            [
+                [f'{UNROLLED_TOKEN_1} {UNROLLED_TOKEN_2}'],
+                [f'{UNROLLED_TOKEN_3} {UNROLLED_TOKEN_4}']
+            ]
+        ]
+        tag_result = tagger.tag(
+            texts, features=features, output_format=None
+        )
+        LOGGER.debug('tag_result: %s', tag_result)
+        assert tag_result == [
+            [
+                (TOKEN_1, TAG_BY_UNROLLED_TOKEN[UNROLLED_TOKEN_1]),
+                (TOKEN_2, TAG_BY_UNROLLED_TOKEN[UNROLLED_TOKEN_3])
+            ]
+        ]
+        transformed_tag_result = tagger.tag(
+            texts, features=features, output_format=None,
+            tag_transformed=True
+        )
+        LOGGER.debug('transformed_tag_result: %s', transformed_tag_result)
+        assert transformed_tag_result == [
+            [
+                (UNROLLED_TOKEN_1, TAG_BY_UNROLLED_TOKEN[UNROLLED_TOKEN_1]),
+                (UNROLLED_TOKEN_2, TAG_BY_UNROLLED_TOKEN[UNROLLED_TOKEN_2]),
+                (UNROLLED_TOKEN_3, TAG_BY_UNROLLED_TOKEN[UNROLLED_TOKEN_3]),
+                (UNROLLED_TOKEN_4, TAG_BY_UNROLLED_TOKEN[UNROLLED_TOKEN_4])
+            ]
         ]

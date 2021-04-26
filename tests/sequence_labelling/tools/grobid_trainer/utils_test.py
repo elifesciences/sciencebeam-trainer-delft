@@ -35,8 +35,20 @@ from sciencebeam_trainer_delft.sequence_labelling.tools.grobid_trainer.utils imp
     wapiti_tag_input,
 )
 
+from sciencebeam_trainer_delft.sequence_labelling.reader import load_data_and_labels_crf_file
+from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import TagOutputFormats
+
+from sciencebeam_trainer_delft.sequence_labelling.data_generator import (
+    NBSP
+)
+
 from ....embedding.test_data import TEST_DATA_PATH
 from ....test_utils import log_on_exception
+from ...tagger_test import (
+    TOKEN_1, TOKEN_2,
+    UNROLLED_TOKEN_1, UNROLLED_TOKEN_2, UNROLLED_TOKEN_3, UNROLLED_TOKEN_4,
+    TAG_1, TAG_2
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -420,10 +432,22 @@ class TestGrobidTrainerUtils:
 
         @log_on_exception
         def test_should_be_able_to_train_with_unrolled_text_feature_index(
-                self, default_args: dict, default_model_directory: str):
+            self, default_args: dict, default_model_directory: str,
+            tmp_path: Path
+        ):
+            input_path = tmp_path / 'input.data'
+            tag_output_path = tmp_path / 'output.data'
+            input_path.write_text('\n'.join([
+                f'{TOKEN_1}\t{UNROLLED_TOKEN_1}{NBSP}{UNROLLED_TOKEN_2}\tB-{TAG_1}',
+                f'{TOKEN_2}\t{UNROLLED_TOKEN_3}{NBSP}{UNROLLED_TOKEN_4}\tB-{TAG_2}'
+            ]))
+            tag_input_paths = [str(input_path)]
+            # duplicate the input paths to get past the train test split
+            input_paths = [str(input_path)] * 10
             train_eval(
                 **{
                     **default_args,
+                    'input_paths': input_paths,
                     'config_props': {
                         **default_args.get('config_props', {}),
                         'max_char_length': 60,
@@ -437,10 +461,37 @@ class TestGrobidTrainerUtils:
             tag_input(
                 model=default_args['model'],
                 model_path=default_model_directory,
-                input_paths=default_args['input_paths'],
+                input_paths=tag_input_paths,
                 download_manager=default_args['download_manager'],
-                embedding_registry_path=default_args['embedding_registry_path']
+                embedding_registry_path=default_args['embedding_registry_path'],
+                tag_output_format=TagOutputFormats.DATA,
+                tag_output_path=str(tag_output_path),
+                tag_transformed=False
             )
+            output_texts, output_labels, _ = load_data_and_labels_crf_file(
+                str(tag_output_path)
+            )
+            LOGGER.debug('output_texts=%s', output_texts)
+            LOGGER.debug('output_labels=%s', output_labels)
+            assert output_texts.tolist() == [[TOKEN_1, TOKEN_2]]
+            tag_input(
+                model=default_args['model'],
+                model_path=default_model_directory,
+                input_paths=tag_input_paths,
+                download_manager=default_args['download_manager'],
+                embedding_registry_path=default_args['embedding_registry_path'],
+                tag_output_format=TagOutputFormats.DATA,
+                tag_output_path=str(tag_output_path),
+                tag_transformed=True
+            )
+            transformed_texts, transformed_labels, _ = load_data_and_labels_crf_file(
+                str(tag_output_path)
+            )
+            LOGGER.debug('transformed_texts=%s', transformed_texts)
+            LOGGER.debug('transformed_labels=%s', transformed_labels)
+            assert transformed_texts.tolist() == [
+                [UNROLLED_TOKEN_1, UNROLLED_TOKEN_2, UNROLLED_TOKEN_3, UNROLLED_TOKEN_4]
+            ]
 
         @pytest.mark.usefixtures('trainer_mock')
         @pytest.mark.parametrize("copy_preprocessor", [False, True])

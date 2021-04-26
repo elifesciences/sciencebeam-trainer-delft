@@ -59,6 +59,7 @@ from sciencebeam_trainer_delft.sequence_labelling.tools.grobid_trainer.cli_args 
     add_input_window_stride_argument,
     add_tag_output_format_argument,
     add_tag_output_path_argument,
+    add_tag_transformed_argument,
     add_model_positional_argument,
     create_argument_parser,
     process_args
@@ -397,12 +398,14 @@ class TagSubCommand(GrobidTrainerSubCommand):
         add_model_path_argument(parser, required=True, help='directory to load the model from')
         add_tag_output_format_argument(parser)
         add_tag_output_path_argument(parser)
+        add_tag_transformed_argument(parser)
 
     def do_run(self, args: argparse.Namespace):
         tag_input(
             model_path=args.model_path,
             tag_output_format=args.tag_output_format,
             tag_output_path=args.tag_output_path,
+            tag_transformed=args.tag_transformed,
             stateful=args.stateful,
             input_window_stride=args.input_window_stride,
             **self.get_common_args(args)

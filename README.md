@@ -351,6 +351,23 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-epoch="50"
 ```
 
+To inspect the unrolled predictions further, it is also possible to use the `tag` sub command using
+`--tag-transformed`.
+That flag will only make a difference for models already trained using the aforementioned
+`--unroll-text-feature-index` parameter.
+
+```bash
+python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
+    tag \
+    --tag-transformed \
+    --batch-size="16" \
+    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-07-30-biorxiv-961-delft-segmentation-with-text-feature-32.validation.gz" \
+    --model-path="data/models/sequenceLabelling/grobid-segmentation" \
+    --limit="2" \
+    --tag-output-format="data_unidiff" \
+    --tag-output-path="/tmp/test.diff"
+```
+
 ### Resume training
 
 Sometimes it can be useful to continue training a model.

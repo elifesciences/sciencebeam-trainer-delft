@@ -177,7 +177,8 @@ class Tagger:
             self.dataset_transformer_factory = dataset_transformer_factory
 
     def iter_tag(
-        self, texts, output_format, features=None
+        self, texts, output_format, features=None,
+        tag_transformed: bool = False
     ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
         assert isinstance(texts, list)
 
@@ -202,6 +203,8 @@ class Tagger:
 
             pred = [pred_item]
             text = texts[i]
+            if tag_transformed:
+                text = transformed_texts[i]
 
             if isinstance(text, str):
                 tokens, offsets = tokenizeAndFilter(text)
@@ -211,8 +214,11 @@ class Tagger:
                 tokens = text
                 offsets = []
 
+            LOGGER.debug('tokens: %s', tokens)
+
             tags = self._get_tags(pred)
-            tags = dataset_transformer.inverse_transform_y([tags])[0]
+            if not tag_transformed:
+                tags = dataset_transformer.inverse_transform_y([tags])[0]
             LOGGER.debug('tags: %s', tags)
 
             if output_format == 'json':
@@ -228,9 +234,9 @@ class Tagger:
                 yield the_tags
 
     def tag(
-        self, texts, output_format, features=None
+        self, texts, output_format, features=None, **kwargs
     ) -> Union[dict, List[List[Tuple[str, str]]]]:
-        result = list(self.iter_tag(texts, output_format, features))
+        result = list(self.iter_tag(texts, output_format, features, **kwargs))
         if output_format == 'json':
             return {
                 "software": "ScienceBeam Trainer DeLFT",

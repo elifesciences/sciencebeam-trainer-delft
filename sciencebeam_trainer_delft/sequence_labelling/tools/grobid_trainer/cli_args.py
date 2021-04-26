@@ -226,6 +226,17 @@ def add_tag_output_path_argument(parser: argparse.ArgumentParser):
     )
 
 
+def add_tag_transformed_argument(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--tag-transformed",
+        action='store_true',
+        help=(
+            'If enabled, the output will contain the transformed dataset (if any).'
+            ' More specifically, that will for example contain the "unrolled" data.'
+        )
+    )
+
+
 def add_output_argument(parser: argparse.ArgumentParser, **kwargs):
     parser.add_argument("--output", help="directory where to save a trained model", **kwargs)
 

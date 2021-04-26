@@ -802,18 +802,30 @@ def do_tag_input(
         output_format=None,
         features=features_all
     )
-    LOGGER.debug('actual raw tag_result: %s', tag_result)
+    if LOGGER.isEnabledFor(logging.DEBUG):
+        if not isinstance(tag_result, dict):
+            tag_result = list(tag_result)
+        LOGGER.debug('actual raw tag_result: %s', tag_result)
+    if isinstance(model, Sequence) and model.tag_transformed:
+        dataset_transformer = model.dataset_transformer_factory()
+        expected_x_all, expected_y_all, expected_features_all = dataset_transformer.fit_transform(
+            x_all, y_all, features=features_all
+        )
+    else:
+        expected_x_all = x_all
+        expected_y_all = y_all
+        expected_features_all = features_all
     expected_tag_result = get_tag_result(
-        texts=x_all,
-        labels=y_all
+        texts=expected_x_all,
+        labels=expected_y_all
     )
     LOGGER.debug('actual raw expected_tag_result: %s', expected_tag_result)
     formatted_tag_result_iterable = iter_format_tag_result(
         tag_result,
         output_format=tag_output_format,
         expected_tag_result=expected_tag_result,
-        texts=x_all,
-        features=features_all,
+        texts=expected_x_all,
+        features=expected_features_all,
         model_name=model._get_model_name()  # pylint: disable=protected-access
     )
     if tag_output_path:

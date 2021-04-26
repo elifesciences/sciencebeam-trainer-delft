@@ -193,6 +193,7 @@ class Sequence(_Sequence):
             eval_batch_size: int = None,
             stateful: bool = None,
             transfer_learning_config: TransferLearningConfig = None,
+            tag_transformed: bool = False,
             **kwargs):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
@@ -224,6 +225,7 @@ class Sequence(_Sequence):
         self.stateful = stateful
         self.transfer_learning_config = transfer_learning_config
         self.dataset_transformer_factory = DummyDatasetTransformer
+        self.tag_transformed = tag_transformed
         super().__init__(
             *args,
             max_sequence_length=max_sequence_length,
@@ -268,7 +270,7 @@ class Sequence(_Sequence):
 
     def update_dataset_transformer_factor(self):
         self.dataset_transformer_factory = DummyDatasetTransformer
-        if self.model_config.unroll_text_feature_index:
+        if self.model_config.unroll_text_feature_index is not None:
             LOGGER.info(
                 'using unrolling text feature dataset transformer, index=%s',
                 self.model_config.unroll_text_feature_index
@@ -570,18 +572,21 @@ class Sequence(_Sequence):
             input_window_stride=self.input_window_stride,
             preprocessor=self.p
         )
+        LOGGER.debug('tag_transformed: %s', self.tag_transformed)
         if output_format == 'json':
             start_time = time.time()
             annotations = tagger.tag(
                 list(texts), output_format,
-                features=features
+                features=features,
+                tag_transformed=self.tag_transformed
             )
             runtime = round(time.time() - start_time, 3)
             annotations["runtime"] = runtime
         else:
             annotations = tagger.iter_tag(
                 list(texts), output_format,
-                features=features
+                features=features,
+                tag_transformed=self.tag_transformed
             )
         if self.tag_debug_reporter:
             if not isinstance(annotations, dict):

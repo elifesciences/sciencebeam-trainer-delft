@@ -188,6 +188,31 @@ def _restore_pipeline_steps_state(steps: List[Tuple[str, Any]], state: dict) -> 
         _restore_attributes_state(step_value, step_state)
 
 
+def _fit_transformer_with_progress_logging(
+    transformer: TransformerMixin,
+    X,
+    logger: logging.Logger,
+    message_prefix: str,
+    unit: str,
+    message_suffx: str = ': '
+):
+    if isinstance(transformer, Pipeline):
+        steps = transformer.steps
+        if len(steps) == 1 and isinstance(steps[0][1], FeatureUnion):
+            feature_union = steps[0][1]
+            for name, union_transformer in feature_union.transformer_list:
+                X = logging_tqdm(
+                    iterable=X,
+                    logger=logger,
+                    desc=f'{message_prefix}.{name}{message_suffx}',
+                    unit=unit
+                )
+                union_transformer.fit(X)
+            return
+    X = logging_tqdm(iterable=X, logger=logger, desc=message_prefix + message_suffx, unit=unit)
+    transformer.fit(X)
+
+
 class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
     def __init__(
         self,
@@ -279,20 +304,21 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
         return self
 
     def fit(self, X):
-        flattened_features = logging_tqdm(
-            iterable=[
-                word_features
-                for sentence_features in X
-                for word_features in sentence_features
-            ],
+        flattened_features = [
+            word_features
+            for sentence_features in X
+            for word_features in sentence_features
+        ]
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug('flattened_features: %s', flattened_features)
+        _fit_transformer_with_progress_logging(
+            self.pipeline,
+            flattened_features,
             logger=LOGGER,
-            desc='FeaturesPreprocessor.fit: ',
+            message_prefix='FeaturesPreprocessor.fit',
             unit='token-features'
         )
-        if LOGGER.isEnabledFor(logging.DEBUG):
-            flattened_features = list(flattened_features)
-            LOGGER.debug('flattened_features: %s', flattened_features)
-        self.pipeline.fit(flattened_features)
+        # self.pipeline.fit(flattened_features)
         vectorizer = self.vectorizer
         LOGGER.info('vectorizer.feature_names: %r', vectorizer.feature_names_)
         LOGGER.info('vectorizer.vocabulary size: %r', len(vectorizer.vocabulary_))

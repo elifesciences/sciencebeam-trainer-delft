@@ -115,9 +115,11 @@ class TrainingConfig(_TrainingConfig):
             input_window_stride: int = None,
             checkpoint_epoch_interval: int = 1,
             initial_meta: Optional[dict] = None,
+            use_multiple_gpu_count: Optional[int] = None,
             **kwargs):
         super().__init__(*args, **kwargs)
         self.initial_epoch = initial_epoch
         self.input_window_stride = input_window_stride
         self.checkpoint_epoch_interval = checkpoint_epoch_interval
         self.initial_meta = initial_meta
+        self.use_multiple_gpu_count = use_multiple_gpu_count

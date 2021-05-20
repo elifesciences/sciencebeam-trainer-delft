@@ -537,6 +537,12 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 
 This will not allow the LSTM to capture long term dependencies beyond the max sequence length but it will allow it to have seen all of the data, in chunks. Therefore max sequence length should be large enough, which depends on the model.
 
+#### Training Using Multiple GPUs
+
+Model training time may be improved by using multiple GPUs.
+
+Add `--use-multiple-gpu-count` to enable that functionality by specifying the number of GPUs to use. It will use `multi_gpu_model` (Keras for TensorFlow 1.x).
+
 ### Eval Sub Command
 
 ```bash

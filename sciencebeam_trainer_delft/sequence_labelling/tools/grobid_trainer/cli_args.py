@@ -458,6 +458,11 @@ def add_train_arguments(parser: argparse.ArgumentParser):
         "--auto-resume", action='store_true',
         help="enables auto-resuming training using checkpoints"
     )
+    parser.add_argument(
+        "--use-multiple-gpu-count",
+        type=int,
+        help="use multiple gpus"
+    )
     add_transfer_learning_arguments(parser)
     add_train_notification_arguments(parser)
 

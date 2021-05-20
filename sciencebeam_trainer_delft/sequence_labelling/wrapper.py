@@ -5,6 +5,7 @@ from functools import partial
 from typing import Callable, Iterable, List, Optional, Tuple, Union, T
 
 import numpy as np
+from keras.utils import multi_gpu_model
 
 from delft.sequenceLabelling.preprocess import WordPreprocessor, FeaturesPreprocessor
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
@@ -342,7 +343,7 @@ class Sequence(_Sequence):
                     LOGGER.info('features do not implement shape, set max_feature_size manually')
 
         if self.model is None:
-            self.model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
+            self.model = self.create_train_model()
             if transfer_learning_source:
                 transfer_learning_source.apply_weights(target_model=self.model)
         if self.transfer_learning_config:
@@ -363,6 +364,13 @@ class Sequence(_Sequence):
             features_train=features_train, features_valid=features_valid
         )
         self.clear_embedding_cache()
+
+    def create_train_model(self):
+        model = get_model(self.model_config, self.p, len(self.p.vocab_tag))
+        gpu_count = self.training_config.use_multiple_gpu_count
+        if gpu_count and gpu_count > 1:
+            model.model = multi_gpu_model(model.model, gpus=gpu_count)
+        return model
 
     def get_model_saver(self):
         return ModelSaver(

@@ -193,7 +193,8 @@ class GrobidTrainerSubCommand(SubCommand):
             training_props=dict(
                 initial_epoch=args.initial_epoch,
                 input_window_stride=args.input_window_stride,
-                checkpoint_epoch_interval=args.checkpoint_epoch_interval
+                checkpoint_epoch_interval=args.checkpoint_epoch_interval,
+                use_multiple_gpu_count=args.use_multiple_gpu_count
             ),
             resume_train_model_path=args.resume_train_model_path,
             auto_resume=args.auto_resume,

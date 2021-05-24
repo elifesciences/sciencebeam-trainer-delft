@@ -682,7 +682,7 @@ def load_delft_model(
         use_ELMo: bool = False,
         output_path: str = None,
         model_path: str = None,
-        max_sequence_length: int = 100,
+        max_sequence_length: Optional[int] = 100,
         fold_count: int = 1,
         batch_size: int = 20,
         embedding_manager: EmbeddingManager = None,

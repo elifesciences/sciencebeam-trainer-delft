@@ -21,6 +21,8 @@ from delft.sequenceLabelling.preprocess import (
 
 from sciencebeam_trainer_delft.utils.progress_logger import logging_tqdm
 
+import sciencebeam_trainer_delft.utils.compat.sklearn  # noqa pylint: disable=unused-import
+
 
 LOGGER = logging.getLogger(__name__)
 

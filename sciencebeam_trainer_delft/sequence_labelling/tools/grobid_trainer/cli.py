@@ -425,7 +425,6 @@ class WapitiTagSubCommand(GrobidTrainerSubCommand):
             model_path=args.model_path,
             tag_output_format=args.tag_output_format,
             tag_output_path=args.tag_output_path,
-            model=args.model,
             input_paths=args.input,
             limit=args.limit,
             download_manager=self.download_manager,

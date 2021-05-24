@@ -891,7 +891,6 @@ def tag_input(
 
 
 def wapiti_tag_input(
-    model: str = None,
     tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
     tag_output_path: Optional[str] = None,
     input_paths: List[str] = None,
@@ -902,13 +901,13 @@ def wapiti_tag_input(
     download_manager: DownloadManager = None,
     wapiti_binary_path: str = None
 ):
-    model = WapitiModelAdapter.load_from(
+    model: WapitiModelAdapter = WapitiModelAdapter.load_from(
         model_path,
         download_manager=download_manager,
         wapiti_binary_path=wapiti_binary_path
     )
     do_tag_input(
-        model,
+        model=model,
         tag_output_format=tag_output_format,
         tag_output_path=tag_output_path,
         input_paths=input_paths,

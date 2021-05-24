@@ -5,8 +5,9 @@ from datetime import datetime
 from abc import ABC
 
 import joblib
+import keras
 
-from delft.sequenceLabelling.models import Model
+from delft.sequenceLabelling.models import Model, ChainCRF
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
     WordPreprocessor as DelftWordPreprocessor
@@ -230,5 +231,12 @@ class ModelLoader(_BaseModelSaverLoader):
         LOGGER.info('loading model from %s', filepath)
         # we need a seekable file, ensure we download the file first
         local_filepath = self.download_manager.download_if_url(filepath)
+        loaded_model = keras.models.load_model(
+            local_filepath,
+            custom_objects={'ChainCRF': ChainCRF}
+        )
+        loaded_model.summary(
+            print_fn=lambda msg: LOGGER.info('loaded model: %s', msg)
+        )
         # using load_weights to avoid print statement in load method
         model.model.load_weights(local_filepath)

@@ -2,7 +2,7 @@ import argparse
 import logging
 import json
 from abc import abstractmethod
-from typing import List
+from typing import List, Optional
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 import sciencebeam_trainer_delft.utils.no_keras_backend_message  # noqa, pylint: disable=unused-import
@@ -193,7 +193,7 @@ def add_eval_arguments(
 
 def _flatten_input_paths(input_paths_list: List[List[str]]) -> List[str]:
     if not input_paths_list:
-        return input_paths_list
+        return []
     return [input_path for input_paths in input_paths_list for input_path in input_paths]
 
 
@@ -218,7 +218,7 @@ class BaseSubCommand(SubCommand):
     def preload_and_validate_embedding(
             self,
             embedding_name: str,
-            use_word_embeddings: bool = True) -> str:
+            use_word_embeddings: bool = True) -> Optional[str]:
         if not use_word_embeddings:
             return None
         embedding_name = self.embedding_manager.ensure_available(embedding_name)

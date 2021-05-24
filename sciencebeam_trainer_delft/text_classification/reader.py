@@ -68,7 +68,7 @@ def get_texts_and_classes_from_data_frame(
 def load_texts_and_classes_pandas(
         filepath: str,
         limit: int = None,
-        **kwargs) -> Tuple[List[str], List[List[int]], List[str]]:
+        **kwargs) -> Tuple[List[str], List[List[str]], List[str]]:
     """
     Load texts and classes from a file in csv format using pandas dataframe:
 
@@ -92,7 +92,7 @@ def load_texts_and_classes_pandas(
 def load_classes_pandas(
         filepath: str,
         limit: int = None,
-        **kwargs) -> Tuple[List[List[int]], List[str]]:
+        **kwargs) -> Tuple[List[List[str]], List[str]]:
     """
     Load texts and classes from a file in csv format using pandas dataframe:
 

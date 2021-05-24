@@ -4,7 +4,7 @@
 import logging
 import argparse
 from abc import abstractmethod
-from typing import List
+from typing import List, Optional
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 import sciencebeam_trainer_delft.utils.no_keras_backend_message  # noqa, pylint: disable=unused-import
@@ -137,7 +137,7 @@ class GrobidTrainerSubCommand(SubCommand):
     def preload_and_validate_embedding(
             self,
             embedding_name: str,
-            use_word_embeddings: bool = True) -> str:
+            use_word_embeddings: bool = True) -> Optional[str]:
         if not use_word_embeddings:
             return None
         embedding_name = self.embedding_manager.ensure_available(embedding_name)

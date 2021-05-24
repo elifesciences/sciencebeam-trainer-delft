@@ -18,8 +18,8 @@ LOGGER = logging.getLogger(__name__)
 class ClassificationResult:
     def __init__(
             self,
-            y_true: List[List[int]],
-            y_pred: List[List[int]],
+            y_true: List[List[str]],
+            y_pred: List[List[str]],
             label_names: List[str]):
         LOGGER.info('y_true: %s', y_true)
         LOGGER.info('y_pred: %s', y_pred)

@@ -891,14 +891,14 @@ def tag_input(
 
 
 def wapiti_tag_input(
+    model_path: str,
+    download_manager: DownloadManager,
     tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
     tag_output_path: Optional[str] = None,
     input_paths: List[str] = None,
-    model_path: str = None,
     limit: int = None,
     random_seed: int = DEFAULT_RANDOM_SEED,
     shuffle_input: bool = False,
-    download_manager: DownloadManager = None,
     wapiti_binary_path: str = None
 ):
     model: WapitiModelAdapter = WapitiModelAdapter.load_from(

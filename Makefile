@@ -94,7 +94,7 @@ dev-pylint:
 
 
 dev-mypy:
-	$(PYTHON) -m mypy sciencebeam_trainer_delft tests setup.py $(ARGS)
+	$(PYTHON) -m mypy --ignore-missing-imports sciencebeam_trainer_delft tests setup.py $(ARGS)
 
 
 dev-lint: dev-flake8 dev-pylint dev-mypy
@@ -136,7 +136,7 @@ flake8:
 
 
 mypy:
-	$(DELFT_DEV_RUN) mypy sciencebeam_trainer_delft tests setup.py
+	$(DELFT_DEV_RUN) mypy --ignore-missing-imports sciencebeam_trainer_delft tests setup.py
 
 
 pytest:

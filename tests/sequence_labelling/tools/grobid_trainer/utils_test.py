@@ -3,7 +3,6 @@ import logging
 import os
 from functools import partial
 from pathlib import Path
-from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from unittest.mock import call, patch, MagicMock
 from typing import List, Optional, cast
 
@@ -15,6 +14,7 @@ import numpy as np
 
 from delft.utilities.Embeddings import Embeddings
 
+from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
 from sciencebeam_trainer_delft.sequence_labelling.saving import ModelLoader
 

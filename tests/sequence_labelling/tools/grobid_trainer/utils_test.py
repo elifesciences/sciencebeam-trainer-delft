@@ -3,8 +3,11 @@ import logging
 import os
 from functools import partial
 from pathlib import Path
+from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from unittest.mock import call, patch, MagicMock
-from typing import List
+from typing import List, Optional, cast
+
+from typing_extensions import TypedDict
 
 import pytest
 
@@ -151,12 +154,30 @@ def _model_base_path(temp_dir: Path):
     return p
 
 
+class DefaultArgsDict(TypedDict):
+    model: str
+    embeddings_name: Optional[str]
+    input_paths: List[str]
+    download_manager: Optional[DownloadManager]
+    output_path: Optional[str]
+    architecture: str
+    word_lstm_units: int
+    features_indices: Optional[List[int]]
+    embedding_registry_path: Optional[str]
+
+
+class TrainArgsDict(DefaultArgsDict):
+    pass
+
+
+
 @pytest.fixture(name='default_args')
 def _default_args(
-        sample_train_file: str,
-        model_base_path: Path,
-        embedding_registry_path: Path,
-        download_manager_mock: MagicMock):
+    sample_train_file: str,
+    model_base_path: Path,
+    embedding_registry_path: Path,
+    download_manager_mock: MagicMock
+) -> DefaultArgsDict:
     return dict(
         model='header',
         embeddings_name=EMBEDDING_NAME_1,
@@ -316,11 +337,11 @@ class TestGrobidTrainerUtils:
                 self, default_args: dict, default_model_directory: str):
             train(
                 use_features=True,
-                **{
+                **cast(TrainArgsDict, {
                     **default_args,
                     'features_indices': FEATURE_INDICES_1,
                     'features_embedding_size': None
-                }
+                })
             )
             model_config = load_model_config(default_model_directory)
             assert model_config.use_features
@@ -339,11 +360,11 @@ class TestGrobidTrainerUtils:
                 self, default_args: dict, default_model_directory: str):
             train(
                 use_features=True,
-                **{
+                **cast(TrainArgsDict, {
                     **default_args,
                     'features_indices': FEATURE_INDICES_1,
                     'features_embedding_size': FEATURES_EMBEDDING_SIZE_1
-                }
+                })
             )
             model_config = load_model_config(default_model_directory)
             assert model_config.use_features
@@ -361,14 +382,14 @@ class TestGrobidTrainerUtils:
         def test_should_be_able_to_train_without_word_embeddings(
                 self, default_args: dict, default_model_directory: str):
             train(
-                **{
+                **cast(TrainArgsDict, {
                     **default_args,
                     'embeddings_name': None,
                     'config_props': {
                         **default_args.get('config_props', {}),
                         'use_word_embeddings': False
                     }
-                }
+                })
             )
             model_config = load_model_config(default_model_directory)
             assert model_config.embeddings_name is None
@@ -384,14 +405,14 @@ class TestGrobidTrainerUtils:
         def test_should_be_able_to_train_with_additional_token_feature_indices(
                 self, default_args: dict, default_model_directory: str):
             train(
-                **{
+                **cast(TrainArgsDict, {
                     **default_args,
                     'config_props': {
                         **default_args.get('config_props', {}),
                         'max_char_length': 60,
                         'additional_token_feature_indices': [0]
                     }
-                }
+                })
             )
             model_config = load_model_config(default_model_directory)
             assert model_config.max_char_length == 60
@@ -408,7 +429,7 @@ class TestGrobidTrainerUtils:
         def test_should_be_able_to_train_with_text_feature_indices(
                 self, default_args: dict, default_model_directory: str):
             train(
-                **{
+                **cast(TrainArgsDict, {
                     **default_args,
                     'config_props': {
                         **default_args.get('config_props', {}),
@@ -416,7 +437,7 @@ class TestGrobidTrainerUtils:
                         'text_feature_indices': [0],
                         'concatenated_embeddings_token_count': 2
                     }
-                }
+                })
             )
             model_config = load_model_config(default_model_directory)
             assert model_config.max_char_length == 60
@@ -445,7 +466,7 @@ class TestGrobidTrainerUtils:
             # duplicate the input paths to get past the train test split
             input_paths = [str(input_path)] * 10
             train_eval(
-                **{
+                **cast(TrainArgsDict, {
                     **default_args,
                     'input_paths': input_paths,
                     'config_props': {
@@ -453,7 +474,7 @@ class TestGrobidTrainerUtils:
                         'max_char_length': 60,
                         'unroll_text_feature_index': 0
                     }
-                }
+                })
             )
             model_config = load_model_config(default_model_directory)
             assert model_config.max_char_length == 60
@@ -504,7 +525,7 @@ class TestGrobidTrainerUtils:
         ):
             source_model_output_path = tmp_path / 'source_model'
             train(
-                **{
+                **cast(TrainArgsDict, {
                     **default_args,
                     'output_path': str(source_model_output_path),
                     'embeddings_name': None,
@@ -512,10 +533,10 @@ class TestGrobidTrainerUtils:
                         **default_args.get('config_props', {}),
                         'use_word_embeddings': False
                     }
-                }
+                })
             )
             train(
-                **{
+                **cast(DefaultArgsDict, {
                     **default_args,
                     'transfer_learning_config': TransferLearningConfig(
                         source_model_path=str(source_model_output_path / default_args['model']),
@@ -532,20 +553,20 @@ class TestGrobidTrainerUtils:
                         **default_args.get('config_props', {}),
                         'use_word_embeddings': False
                     }
-                }
+                })
             )
 
         @log_on_exception
         def test_should_be_able_to_train_BidLSTM_CRF_FEATURES(
                 self, default_args: dict, default_model_directory: str):
-            train_args = {
+            train_args = cast(TrainArgsDict, {
                 **default_args,
                 'architecture': 'BidLSTM_CRF_FEATURES',
                 'features_embedding_size': 4,
                 'config_props': {
                     'features_lstm_units': 4
                 }
-            }
+            })
             train(
                 **train_args
             )
@@ -563,15 +584,15 @@ class TestGrobidTrainerUtils:
 
         @log_on_exception
         def test_should_be_able_to_train_CustomBidLSTM_CRF_FEATURES(
-                self, default_args: dict, default_model_directory: str):
-            train_args = {
+                self, default_args: DefaultArgsDict, default_model_directory: str):
+            train_args = cast(TrainArgsDict, {
                 **default_args,
                 'architecture': 'CustomBidLSTM_CRF_FEATURES',
                 'features_embedding_size': 4,
                 'config_props': {
                     'features_lstm_units': 4
                 }
-            }
+            })
             train(
                 **train_args
             )

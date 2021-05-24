@@ -1,5 +1,5 @@
 from collections import Counter, defaultdict, OrderedDict
-from typing import Dict, List
+from typing import Dict, Iterable, List
 
 import numpy as np
 
@@ -20,7 +20,7 @@ def iter_flat_features(features: np.ndarray):
     )
 
 
-def get_quantiles(values: List[float]) -> Dict[str, float]:
+def get_quantiles(values: Iterable[float]) -> Dict[str, float]:
     arr = np.array(list(values))
     return OrderedDict([
         ('q.00', np.quantile(arr, 0)),

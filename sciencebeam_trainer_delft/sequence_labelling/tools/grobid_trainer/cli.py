@@ -147,7 +147,7 @@ class GrobidTrainerSubCommand(SubCommand):
 
     def get_common_args(self, args: argparse.Namespace) -> dict:
         return dict(
-            model=args.model,
+            model_name=args.model,
             input_paths=args.input,
             limit=args.limit,
             shuffle_input=args.shuffle_input,

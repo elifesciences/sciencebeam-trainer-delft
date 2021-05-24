@@ -663,14 +663,14 @@ def do_eval_model(
 
 
 def get_model_name(
-        model: str,
+        model_name: str,
         use_ELMo: bool = False,
         output_path: str = None,
         model_path: str = None):
     if output_path or model_path:
-        model_name = model
+        pass
     else:
-        model_name = 'grobid-' + model
+        model_name = 'grobid-' + model_name
 
     if use_ELMo:
         model_name += '-with_ELMo'
@@ -678,7 +678,7 @@ def get_model_name(
 
 
 def load_delft_model(
-        model: str,
+        model_name: str,
         use_ELMo: bool = False,
         output_path: str = None,
         model_path: str = None,
@@ -689,7 +689,7 @@ def load_delft_model(
         **kwargs):
     model = Sequence(
         get_model_name(
-            model,
+            model_name,
             use_ELMo=use_ELMo,
             output_path=output_path,
             model_path=model_path
@@ -844,7 +844,7 @@ def do_tag_input(
 
 
 def tag_input(
-    model: str,
+    model_name: str,
     tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
     tag_output_path: Optional[str] = None,
     use_ELMo: bool = False,
@@ -865,7 +865,7 @@ def tag_input(
 ):
 
     model = load_delft_model(
-        model=model,
+        model_name=model_name,
         use_ELMo=use_ELMo,
         output_path=output_path,
         model_path=model_path,

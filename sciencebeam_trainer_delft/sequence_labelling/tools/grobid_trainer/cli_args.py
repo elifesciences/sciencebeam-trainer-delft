@@ -513,7 +513,7 @@ def _flatten_input_paths(input_paths_list: List[List[str]]) -> List[str]:
     return [input_path for input_paths in input_paths_list for input_path in input_paths]
 
 
-def process_args(args: argparse.Namespace) -> argparse.Namespace:
+def process_args(args: argparse.Namespace) -> None:
     args.input = _flatten_input_paths(args.input)
     try:
         args.eval_input = _flatten_input_paths(args.eval_input)

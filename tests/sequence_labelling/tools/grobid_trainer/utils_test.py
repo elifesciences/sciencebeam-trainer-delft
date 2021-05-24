@@ -220,8 +220,7 @@ class TestGrobidTrainerUtils:
                 download_manager_mock: MagicMock):
             get_default_training_data_mock.return_value = '/tmp/dummy/training/data'
             load_data_and_labels(
-                MODEL_NAME_1,
-                [],
+                input_paths=[],
                 download_manager=download_manager_mock
             )
             get_default_training_data_mock.assert_called_with(MODEL_NAME_1)
@@ -237,8 +236,7 @@ class TestGrobidTrainerUtils:
                 self,
                 download_manager_mock: MagicMock):
             load_data_and_labels(
-                MODEL_NAME_1,
-                [INPUT_PATH_1],
+                input_paths=[INPUT_PATH_1],
                 download_manager=download_manager_mock
             )
             download_manager_mock.download_if_url.assert_called_with(
@@ -250,13 +248,12 @@ class TestGrobidTrainerUtils:
                 load_data_and_labels_crf_file_mock: MagicMock,
                 download_manager_mock: MagicMock):
             load_data_and_labels(
-                MODEL_NAME_1,
-                [INPUT_PATH_1],
+                input_paths=[INPUT_PATH_1],
                 limit=123,
                 download_manager=download_manager_mock
             )
             load_data_and_labels_crf_file_mock.assert_called_with(
-                INPUT_PATH_1,
+                input_paths=INPUT_PATH_1,
                 limit=123
             )
 
@@ -270,8 +267,7 @@ class TestGrobidTrainerUtils:
                 (np.array([['x2']]), np.array([['y2']]), np.array([[['f2']]]))
             ]
             x, y, f = load_data_and_labels(
-                MODEL_NAME_1,
-                [INPUT_PATH_1, INPUT_PATH_2],
+                input_paths=[INPUT_PATH_1, INPUT_PATH_2],
                 limit=123,
                 download_manager=download_manager_mock
             )
@@ -295,8 +291,7 @@ class TestGrobidTrainerUtils:
                 (x_unshuffled, y_unshuffled, f_unshuffled)
             ]
             x, y, f = load_data_and_labels(
-                MODEL_NAME_1,
-                [INPUT_PATH_1],
+                input_paths=[INPUT_PATH_1],
                 limit=123,
                 shuffle_input=True,
                 random_seed=424,

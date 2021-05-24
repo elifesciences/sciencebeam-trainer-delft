@@ -144,15 +144,14 @@ def get_clean_x_y_features(x: np.array, y: np.array, features: np.array):
 
 
 def load_data_and_labels(
-        model: str, input_paths: List[str] = None,
+        input_paths: List[str] = None,
         limit: int = None,
         shuffle_input: bool = False,
         clean_features: bool = True,
         random_seed: int = DEFAULT_RANDOM_SEED,
         download_manager: DownloadManager = None):
     assert download_manager
-    if not input_paths:
-        input_paths = [get_default_training_data(model)]
+    assert input_paths
     LOGGER.info('loading data from: %s', input_paths)
     downloaded_input_paths = [
         download_manager.download_if_url(input_path)
@@ -196,7 +195,7 @@ def do_train(
         train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
         download_manager=download_manager
     )
@@ -416,14 +415,13 @@ def do_train_eval(
         train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
         download_manager=download_manager
     )
 
     if eval_input_paths:
         x_eval, y_eval, features_eval = load_data_and_labels(
-            model=model,
             input_paths=eval_input_paths, limit=eval_limit,
             download_manager=download_manager
         )
@@ -633,7 +631,7 @@ def do_eval_model(
         eval_output_args: dict = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
         download_manager=download_manager
     )
@@ -790,7 +788,7 @@ def do_tag_input(
         random_seed: int = DEFAULT_RANDOM_SEED,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
         download_manager=download_manager
     )
@@ -919,12 +917,11 @@ def wapiti_tag_input(
 
 
 def print_input_info(
-        model: str,
         input_paths: List[str],
         limit: int = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit,
+        input_paths=input_paths, limit=limit,
         download_manager=download_manager,
         clean_features=False
     )

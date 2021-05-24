@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 from abc import abstractmethod, ABC
-from typing import List, Callable
+from typing import List, Callable, Sequence
 
 
 LOGGER = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class SubCommand(ABC):
 class SubCommandProcessor:
     def __init__(
             self,
-            sub_commands: List[SubCommand],
+            sub_commands: Sequence[SubCommand],
             description: str = None,
             command_dest: str = 'command'):
         self.sub_commands = sub_commands

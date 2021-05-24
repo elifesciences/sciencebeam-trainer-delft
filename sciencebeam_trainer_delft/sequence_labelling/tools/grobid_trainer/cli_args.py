@@ -3,6 +3,7 @@
 
 import logging
 import argparse
+from argparse import _ActionsContainer as ArgParseActionsContainer
 from typing import List
 
 from sciencebeam_trainer_delft.utils.misc import parse_number_ranges
@@ -237,7 +238,7 @@ def add_tag_transformed_argument(parser: argparse.ArgumentParser):
     )
 
 
-def add_output_argument(parser: argparse.ArgumentParser, **kwargs):
+def add_output_argument(parser: ArgParseActionsContainer, **kwargs):
     parser.add_argument("--output", help="directory where to save a trained model", **kwargs)
 
 

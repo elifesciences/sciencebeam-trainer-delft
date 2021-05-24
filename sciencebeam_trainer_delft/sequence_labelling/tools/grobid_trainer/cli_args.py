@@ -509,7 +509,7 @@ def add_model_positional_argument(parser: argparse.ArgumentParser):
 
 def _flatten_input_paths(input_paths_list: List[List[str]]) -> List[str]:
     if not input_paths_list:
-        return input_paths_list
+        return []
     return [input_path for input_paths in input_paths_list for input_path in input_paths]
 
 

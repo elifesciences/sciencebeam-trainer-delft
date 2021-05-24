@@ -708,6 +708,9 @@ class Sequence(_Sequence):
         self.update_model_config_word_embedding_size()
 
         self.model = get_model(self.model_config, self.p, ntags=len(self.p.vocab_tag))
+        self.model.model.summary(
+            print_fn=lambda msg: LOGGER.info('model: %s', msg)
+        )
         # update stateful flag depending on whether the model is actually stateful
         # (and supports that)
         self.model_config.stateful = is_model_stateful(self.model)

@@ -595,7 +595,7 @@ class TestGrobidTrainerUtils:
             template_path.write_text('U00:%x[-4,0]')
             wapiti_train(
                 model=default_args['model'],
-                template_path=template_path,
+                template_path=str(template_path),
                 input_paths=default_args['input_paths'],
                 output_path=default_args['output_path'],
                 download_manager=default_args['download_manager'],
@@ -620,7 +620,7 @@ class TestGrobidTrainerUtils:
             template_path.write_text('U00:%x[-4,0]')
             wapiti_train_eval(
                 model=default_args['model'],
-                template_path=template_path,
+                template_path=str(template_path),
                 input_paths=default_args['input_paths'],
                 output_path=default_args['output_path'],
                 download_manager=default_args['download_manager']
@@ -639,7 +639,7 @@ class TestGrobidTrainerUtils:
             template_path.write_text('U00:%x[-4,0]')
             wapiti_train(
                 model=default_args['model'],
-                template_path=template_path,
+                template_path=str(template_path),
                 input_paths=default_args['input_paths'],
                 output_path=default_args['output_path'],
                 download_manager=default_args['download_manager'],

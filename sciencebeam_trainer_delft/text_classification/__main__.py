@@ -471,8 +471,8 @@ def run(args: argparse.Namespace, subcommand_processor: SubCommandProcessor = No
         subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
     try:
         subcommand_processor.run(args)
-    except BaseException as e:
-        LOGGER.error('uncaught exception: %s', e, exc_info=1)
+    except BaseException as exc:
+        LOGGER.error('uncaught exception: %s', exc, exc_info=exc)
         raise
 
 

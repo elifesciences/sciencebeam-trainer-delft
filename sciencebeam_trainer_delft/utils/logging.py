@@ -127,8 +127,10 @@ class LineWriterLoggingHandler(logging.Handler):
         for line_writer in self.line_writers:
             try:
                 line_writer(line)
-            except Exception as e:  # pylint: disable=broad-except
-                LOGGER.warning('failed to write: %r due to %s', line, e, exc_info=1)
+            except Exception as exc:  # pylint: disable=broad-except
+                LOGGER.warning(
+                    'failed to write: %r due to %s', line, exc, exc_info=exc
+                )
 
     def emit(self, record: logging.LogRecord):
         if self._logging:

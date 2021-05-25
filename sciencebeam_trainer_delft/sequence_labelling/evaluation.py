@@ -2,13 +2,15 @@ import logging
 import json
 from itertools import groupby
 from collections import defaultdict, OrderedDict
-from typing import Iterator, List, Union, Tuple, Sequence, T, cast
+from typing import Iterator, List, Union, Tuple, Sequence, cast
 
 import numpy as np
 
 from delft.sequenceLabelling.evaluation import (
     get_entities
 )
+
+from sciencebeam_trainer_delft.utils.typing import T
 
 
 LOGGER = logging.getLogger(__name__)

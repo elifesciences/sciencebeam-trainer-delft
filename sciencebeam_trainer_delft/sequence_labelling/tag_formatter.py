@@ -313,7 +313,7 @@ def iter_format_list_tag_result(
         yield from iter_format_list_tag_result_as_data(*args, **kwargs)
         return
     if output_format == TagOutputFormats.DATA_UNIDIFF:
-        yield from iter_format_list_tag_result_as_data_unidiff(
+        yield from iter_format_list_tag_result_as_data_unidiff(  # type: ignore
             *args,
             expected_tag_result=expected_tag_result,
             **kwargs
@@ -326,7 +326,7 @@ def iter_format_list_tag_result(
         yield from iter_format_list_tag_result_as_xml(*args, **kwargs)
         return
     if output_format == TagOutputFormats.XML_DIFF:
-        yield from iter_format_list_tag_result_as_xml_diff(
+        yield from iter_format_list_tag_result_as_xml_diff(  # type: ignore
             *args,
             expected_tag_result=expected_tag_result,
             **kwargs

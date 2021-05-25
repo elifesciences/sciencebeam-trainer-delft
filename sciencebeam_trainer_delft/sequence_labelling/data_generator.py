@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, List, Tuple, T
+from typing import Iterable, List, Optional, Tuple, T
 
 import numpy as np
 import keras
@@ -193,7 +193,7 @@ def iter_batch_text_list(
         batch_tokens: List[List[str]],
         batch_features: List[List[List[str]]],
         additional_token_feature_indices: List[int],
-        text_feature_indices: List[int]) -> Iterable[List[str]]:
+        text_feature_indices: Optional[List[int]]) -> Iterable[List[str]]:
     if additional_token_feature_indices and text_feature_indices:
         raise ValueError('both, additional token and text features, not supported')
     if additional_token_feature_indices:

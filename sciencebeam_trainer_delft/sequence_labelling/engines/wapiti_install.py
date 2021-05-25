@@ -2,6 +2,7 @@ import logging
 import tarfile
 import os
 import subprocess
+from typing import Optional
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 
@@ -13,8 +14,9 @@ TAR_GZ_EXT = '.tar.gz'
 
 
 def install_wapiti_and_get_path_or_none(
-        install_url: str,
-        download_manager: DownloadManager) -> str:
+    install_url: Optional[str],
+    download_manager: DownloadManager
+) -> Optional[str]:
     if not install_url:
         return None
     if not install_url.endswith(TAR_GZ_EXT):

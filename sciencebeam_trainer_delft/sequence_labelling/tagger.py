@@ -34,7 +34,7 @@ def iter_predict_texts_with_sliding_window_if_enabled(
         texts: List[Union[str, List[str]]],
         model_config: ModelConfig,
         preprocessor: WordPreprocessor,
-        max_sequence_length: int,
+        max_sequence_length: Optional[int],
         model,
         input_window_stride: int = None,
         embeddings: Embeddings = None,

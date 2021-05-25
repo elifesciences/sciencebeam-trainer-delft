@@ -91,6 +91,7 @@ class TestMain:
             '--override-url=%s=%s' % (EMBEDDING_NAME_1, EXTERNAL_TXT_URL_1)
         ])
         embedding_config = embedding_manager.get_embedding_config(EMBEDDING_NAME_1)
+        assert embedding_config
         assert embedding_config['url'] == EXTERNAL_TXT_URL_1
 
     def test_should_preload_embedding(

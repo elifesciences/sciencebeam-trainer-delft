@@ -153,7 +153,9 @@ class TestEmbeddingManager:
                 embedding_manager: EmbeddingManager):
             embedding_manager.download_and_install_embedding(EXTERNAL_TXT_URL_1)
             download_manager.reset_mock()
-            Path(embedding_manager.get_embedding_config(EMBEDDING_NAME_1)['path']).touch()
+            embedding_config = embedding_manager.get_embedding_config(EMBEDDING_NAME_1)
+            assert embedding_config
+            Path(embedding_config['path']).touch()
 
             assert embedding_manager.ensure_available(EXTERNAL_TXT_URL_1) == EMBEDDING_NAME_1
             download_manager.download_if_url.assert_not_called()

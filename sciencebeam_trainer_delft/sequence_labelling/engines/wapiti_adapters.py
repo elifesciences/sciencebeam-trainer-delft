@@ -72,7 +72,7 @@ def write_wapiti_input_data(fp: IO, x: np.array, features: np.array):
 
 
 def iter_read_tagged_result(fp: IO) -> Iterable[List[Tuple[str, str]]]:
-    token_and_label_pairs = []
+    token_and_label_pairs: List[Tuple[str, str]] = []
     for line in fp:
         LOGGER.debug('line: %r', line)
         line = line.rstrip()

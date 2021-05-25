@@ -85,11 +85,11 @@ class ModelConfig(_ModelConfig):
 
     # alias due to properties having been renamed in upstream implementation
     @property
-    def feature_indices(self) -> List[int]:
-        return (
-            self.features_indices
-            or self.__dict__.get('feature_indices')
-        )
+    def feature_indices(self) -> Optional[List[int]]:
+        features_indices = self.features_indices
+        if not features_indices:
+            features_indices = self.__dict__.get('feature_indices', [])
+        return features_indices
 
     @feature_indices.setter
     def feature_indices(self, feature_indices: List[int]):

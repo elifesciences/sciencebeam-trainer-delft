@@ -2,13 +2,14 @@ import logging
 import os
 import time
 from functools import partial
-from typing import Callable, Iterable, List, Optional, Tuple, Union, T
-from delft.sequenceLabelling.models import BaseModel
+from typing import Callable, Iterable, List, Optional, Tuple, Union, T, cast
 
 import numpy as np
 
+from delft.sequenceLabelling.models import BaseModel
 from delft.sequenceLabelling.preprocess import WordPreprocessor, FeaturesPreprocessor
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
+from delft.sequenceLabelling.config import TrainingConfig as DelftTrainingConfig
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
@@ -246,8 +247,8 @@ class Sequence(_Sequence):
         self.update_model_config_word_embedding_size()
         updated_implicit_model_config_props(self.model_config)
         self.update_dataset_transformer_factor()
-        self.training_config = TrainingConfig(
-            **vars(self.training_config),
+        self.training_config: TrainingConfig = TrainingConfig(
+            **vars(cast(DelftTrainingConfig, self.training_config)),
             **(training_props or {})
         )
         LOGGER.info('training_config: %s', vars(self.training_config))

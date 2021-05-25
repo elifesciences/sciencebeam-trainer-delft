@@ -71,9 +71,10 @@ def get_checkpoint_meta_map_sorted_by_f1(checkpoint_meta_map: Dict[str, dict]):
 
 
 def get_checkpoint_summary_list(
-        checkpoint_meta_map_sorted_by_f1: Dict[str, dict],
-        last_checkpoint: dict,
-        limit: int) -> str:
+    checkpoint_meta_map_sorted_by_f1: Dict[str, dict],
+    last_checkpoint: dict,
+    limit: int
+) -> List[dict]:
     last_checkpoint_path = last_checkpoint.get('path')
     best_meta = list(checkpoint_meta_map_sorted_by_f1.values())[-1]
     best_f1 = best_meta.get('f1')

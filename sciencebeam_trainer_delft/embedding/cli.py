@@ -124,6 +124,7 @@ class OverrideEmbeddingUrlSubCommand(SubCommand):
         for embedding_name, embedding_url in url_by_embedding_name.items():
             LOGGER.info('setting url of embedding %s to %s', embedding_name, embedding_url)
             embedding_config = embedding_manager.get_embedding_config(embedding_name)
+            assert embedding_config
             embedding_manager.add_embedding_config({
                 **embedding_config,
                 'url': embedding_url

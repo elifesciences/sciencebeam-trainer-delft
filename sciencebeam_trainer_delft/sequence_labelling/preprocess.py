@@ -50,7 +50,7 @@ def to_dict(
 def to_float_features(
     value_list_batch: List[list],
     features_indices: Set[int]
-) -> Iterable[dict]:
+) -> Iterable[List[float]]:
     return (
         [
             float(value)

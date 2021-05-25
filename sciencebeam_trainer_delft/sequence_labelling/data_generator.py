@@ -1,6 +1,8 @@
 import logging
 from typing import Iterable, List, Optional, Tuple, T, Union
 
+from typing_extensions import Protocol
+
 import numpy as np
 import keras
 
@@ -155,9 +157,10 @@ def get_tokens_from_text_features(
 
 
 def iter_batch_text_from_tokens_with_additional_token_features(
-        batch_tokens: Iterable[List[str]],
-        batch_features: Iterable[List[List[str]]],
-        additional_token_feature_indices: List[int]) -> List[List[List[str]]]:
+    batch_tokens: Iterable[List[str]],
+    batch_features: Iterable[List[List[str]]],
+    additional_token_feature_indices: List[int]
+) -> Iterable[List[str]]:
     if not additional_token_feature_indices:
         return batch_tokens
     return (
@@ -197,12 +200,14 @@ def iter_batch_text_list(
     if additional_token_feature_indices and text_feature_indices:
         raise ValueError('both, additional token and text features, not supported')
     if additional_token_feature_indices:
+        assert batch_features is not None
         return iter_batch_text_from_tokens_with_additional_token_features(
             batch_tokens=batch_tokens,
             batch_features=batch_features,
             additional_token_feature_indices=additional_token_feature_indices
         )
     if text_feature_indices:
+        assert batch_features is not None
         return iter_batch_text_from_text_features(
             batch_features=batch_features,
             text_feature_indices=text_feature_indices
@@ -244,8 +249,17 @@ def iter_batch_tokens_by_token_index(
         ]
 
 
+class ToBatchVectorCallableProtocol(Protocol):
+    def __call__(
+        self,
+        batch_tokens: List[List[str]],
+        max_length: int
+    ) -> np.ndarray:
+        pass
+
+
 def to_concatenated_batch_vector_from_batch_text_list(
-        to_batch_vector_fn: callable,
+        to_batch_vector_fn: ToBatchVectorCallableProtocol,
         batch_text_list: List[List[str]],
         *args,
         concatenated_embeddings_token_count: int,

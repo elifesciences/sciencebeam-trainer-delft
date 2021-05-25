@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+from typing import Iterator
 
 import pytest
 from py._path.local import LocalPath
@@ -46,7 +47,7 @@ def tf_eager_mode():
 
 
 @pytest.fixture
-def env_mock() -> dict:
+def env_mock() -> Iterator[dict]:
     env: dict = {}
     with patch('os.environ', env):
         yield env

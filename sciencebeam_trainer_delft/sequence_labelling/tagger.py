@@ -172,7 +172,9 @@ class Tagger:
         self.max_sequence_length = max_sequence_length
         self.input_window_stride = input_window_stride
         if dataset_transformer_factory is None:
-            self.dataset_transformer_factory = DummyDatasetTransformer
+            self.dataset_transformer_factory: T_DatasetTransformerFactory = (
+                DummyDatasetTransformer
+            )
         else:
             self.dataset_transformer_factory = dataset_transformer_factory
 

@@ -2,7 +2,7 @@ import logging
 import tempfile
 import os
 from pathlib import Path
-from typing import Iterable, IO, List, Tuple
+from typing import Iterable, IO, List, Optional, Tuple
 
 import numpy as np
 
@@ -338,7 +338,7 @@ class WapitiModelTrainAdapter:
         return self._model_adapter
 
     @property
-    def last_checkpoint_path(self) -> str:
+    def last_checkpoint_path(self) -> Optional[str]:
         return None
 
     @property

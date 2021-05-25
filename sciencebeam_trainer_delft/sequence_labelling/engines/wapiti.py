@@ -5,7 +5,7 @@ import sys
 from collections import Counter
 from itertools import islice
 from multiprocessing import cpu_count
-from typing import List, Iterable, Optional
+from typing import List, Iterable, Optional, cast
 
 import subprocess
 
@@ -141,7 +141,12 @@ class WapitiWrapper:
             stderr=subprocess.STDOUT
         ) as process:
             with process.stdout:
-                lines_to_log(LOGGER, logging.INFO, 'wapiti: %s', process.stdout)
+                lines_to_log(
+                    LOGGER,
+                    logging.INFO,
+                    'wapiti: %s',
+                    cast(Iterable[str], process.stdout)
+                )
             process.wait()
             if process.returncode != 0:
                 raise subprocess.CalledProcessError(

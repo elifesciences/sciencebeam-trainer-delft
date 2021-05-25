@@ -579,6 +579,7 @@ def train_eval(
 def wapiti_train_eval(
         model_name: str,
         template_path: str,
+        download_manager: DownloadManager,
         input_paths: List[str] = None,
         output_path: str = None,
         limit: int = None,
@@ -590,7 +591,6 @@ def wapiti_train_eval(
         fold_count: int = 1,
         max_epoch: int = 100,
         train_notification_manager: TrainNotificationManager = None,
-        download_manager: DownloadManager = None,
         gzip_enabled: bool = False,
         wapiti_binary_path: str = None,
         wapiti_train_args: dict = None):

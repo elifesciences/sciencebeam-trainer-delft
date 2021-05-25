@@ -31,7 +31,9 @@ class TestCheckPoints:
                 'epoch': 1
             }]
         }))
-        assert CheckPoints(tmp_path).latest_checkpoint.path == latest_checkpoint_path
+        latest_checkpoint = CheckPoints(tmp_path).latest_checkpoint
+        assert latest_checkpoint
+        assert latest_checkpoint.path == latest_checkpoint_path
 
     def test_should_return_get_latest_checkpoint_with_highest_epoch(self, tmp_path: Path):
         checkpoint_path_with_highest_epoch = str(tmp_path / 'epoch-00002')
@@ -45,7 +47,9 @@ class TestCheckPoints:
                 'epoch': 1
             }]
         }))
-        assert CheckPoints(tmp_path).latest_checkpoint.path == checkpoint_path_with_highest_epoch
+        latest_checkpoint = CheckPoints(tmp_path).latest_checkpoint
+        assert latest_checkpoint
+        assert latest_checkpoint.path == checkpoint_path_with_highest_epoch
 
 
 class TestGetResumeTrainModelParams:
@@ -66,6 +70,7 @@ class TestGetResumeTrainModelParams:
             auto_resume=True,
             resume_train_model_path=resume_train_model_path
         )
+        assert result
         assert result.model_path == resume_train_model_path
 
     def test_should_return_latest_checkpoint_if_auto_resume_is_enabled(
@@ -89,6 +94,7 @@ class TestGetResumeTrainModelParams:
             initial_epoch=123,
             resume_train_model_path=resume_train_model_path
         )
+        assert result
         assert result.model_path == latest_checkpoint_path
         assert result.initial_epoch == 2
 
@@ -113,6 +119,7 @@ class TestGetResumeTrainModelParams:
             initial_epoch=123,
             resume_train_model_path=resume_train_model_path
         )
+        assert result
         assert result.model_path == resume_train_model_path
         assert result.initial_epoch == 123
 
@@ -137,6 +144,7 @@ class TestGetResumeTrainModelParams:
             auto_resume=True,
             resume_train_model_path=None
         )
+        assert result
         assert result.model_path == str(latest_checkpoint_path)
         assert result.initial_epoch == 1
         assert result.initial_meta == meta

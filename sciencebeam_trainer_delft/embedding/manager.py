@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.embedding.embedding import Embeddings
@@ -116,7 +116,7 @@ class EmbeddingManager:
             registry_data['embedding-lmdb-path'] = self.default_embedding_lmdb_path
         self._save(registry_data)
 
-    def get_embedding_config(self, embedding_name: str) -> dict:
+    def get_embedding_config(self, embedding_name: str) -> Optional[dict]:
         embedding_list = self._get_registry_data().get('embeddings', [])
         index = _find_embedding_index(embedding_list, embedding_name)
         if index < 0:

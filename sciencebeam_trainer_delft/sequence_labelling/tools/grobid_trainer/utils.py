@@ -366,11 +366,12 @@ def wapiti_train(
 
 def output_classification_result(
         classification_result: ClassificationResult,
-        eval_output_args: dict,
+        eval_output_args: Optional[dict],
         eval_input_paths: List[str] = None,
         model_path: str = None,
         model_summary_props: dict = None):
     eval_output_args = eval_output_args or dict()
+    assert eval_output_args is not None
     output_format = eval_output_args.get('eval_output_args')
     output_path = eval_output_args.get('eval_output_path')
     eval_first_entity = eval_output_args.get('eval_first_entity')

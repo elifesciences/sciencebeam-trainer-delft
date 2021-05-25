@@ -13,6 +13,7 @@ from delft.sequenceLabelling.evaluation import (
 
 from delft.sequenceLabelling.trainer import Trainer as _Trainer
 from delft.sequenceLabelling.trainer import Scorer as _Scorer
+from delft.sequenceLabelling.models import BaseModel
 
 from sciencebeam_trainer_delft.sequence_labelling.utils.types import (
     T_Batch_Tokens,
@@ -155,6 +156,7 @@ class Trainer(_Trainer):
         self.model_saver = model_saver
         self.multiprocessing = multiprocessing
         super().__init__(*args, training_config=training_config, **kwargs)
+        self.model: Optional[BaseModel] = None
 
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid, y_valid,

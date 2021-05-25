@@ -58,7 +58,7 @@ class WapitiModel:
             LOGGER.debug('read line: %s', line)
             yield line
 
-    def iter_label(self, data: str) -> str:
+    def iter_label(self, data: str) -> Iterable[str]:
         self.process_stdin.write((data + '\n\n\n').encode('utf-8'))
         self.process_stdin.flush()
         yield from self.iter_read_lines()

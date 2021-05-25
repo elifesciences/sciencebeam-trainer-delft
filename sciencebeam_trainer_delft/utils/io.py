@@ -315,8 +315,13 @@ class TarFileRef(FileRef):
         self.tar_file = tar_file
         self.tar_info = tar_info
 
+    def open_tar_file(self) -> IO:
+        fp = self.tar_file.extractfile(self.tar_info)
+        assert fp
+        return fp
+
     def copy_to(self, target_url: str):
-        with self.tar_file.extractfile(self.tar_info) as source_fp:
+        with self.open_tar_file() as source_fp:
             with open_file(
                     target_url,
                     mode='wb',

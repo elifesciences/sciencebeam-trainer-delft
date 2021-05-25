@@ -65,7 +65,7 @@ def format_list_tag_result_as_json(
 
 def iter_to_data_lines(
     features: np.array,
-    annotations: List[List[Tuple[str, str]]]
+    annotations: Iterable[List[Tuple[str, str]]]
 ) -> Iterable[str]:
     return (
         ' '.join([token_annoation[0]] + list(token_features) + [token_annoation[1]])

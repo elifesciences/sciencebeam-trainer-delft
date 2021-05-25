@@ -4,7 +4,7 @@ import logging
 import json
 import os
 from collections import OrderedDict
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from tqdm.auto import tqdm
 
@@ -43,7 +43,7 @@ def get_checkpoint_urls(checkpoints_json: dict) -> List[str]:
     })
 
 
-def get_last_checkpoint_url(checkpoints_json: dict) -> str:
+def get_last_checkpoint_url(checkpoints_json: dict) -> Optional[str]:
     checkpoint_urls = get_checkpoint_urls(checkpoints_json)
     return checkpoint_urls[-1] if checkpoint_urls else None
 

@@ -218,9 +218,10 @@ def get_xml_tag_for_annotation_label(annotation_label: str) -> str:
 
 
 def iter_add_untagged_token_spans(
-        entity_chunks: List[Tuple[str, int, int]],
-        token_count: int,
-        untagged_chunk_type: str = None) -> List[Tuple[str, int, int]]:
+    entity_chunks: Iterable[Tuple[str, int, int]],
+    token_count: int,
+    untagged_chunk_type: str = None
+) -> Iterable[Tuple[str, int, int]]:
     prev_chunk_end_excl = 0
     for chunk_type, chunk_start, chunk_end in entity_chunks:
         if chunk_start > prev_chunk_end_excl:

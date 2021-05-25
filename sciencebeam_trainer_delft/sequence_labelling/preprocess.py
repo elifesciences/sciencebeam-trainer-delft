@@ -1,7 +1,7 @@
 import logging
 import itertools
 from functools import partial
-from typing import Any, Dict, List, Iterable, Set, Tuple, Union, T
+from typing import Any, Dict, List, Iterable, Set, Tuple, Union
 
 import numpy as np
 
@@ -19,6 +19,7 @@ from delft.sequenceLabelling.preprocess import (
     UNK
 )
 
+from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.utils.progress_logger import logging_tqdm
 
 import sciencebeam_trainer_delft.utils.compat.sklearn  # noqa pylint: disable=unused-import

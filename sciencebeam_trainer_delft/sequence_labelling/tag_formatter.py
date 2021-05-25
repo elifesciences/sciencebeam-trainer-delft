@@ -287,11 +287,12 @@ def format_list_tag_result_as_xml(*args, **kwargs) -> str:
 
 
 def iter_format_list_tag_result_as_xml_diff(
-        tag_result: Iterable[List[Tuple[str, str]]],
-        expected_tag_result: List[Tuple[str, str]] = None,
-        texts: np.array = None,  # pylint: disable=unused-argument
-        features: np.array = None,  # pylint: disable=unused-argument
-        model_name: str = None) -> str:  # pylint: disable=unused-argument
+    tag_result: Iterable[List[Tuple[str, str]]],
+    expected_tag_result: List[Tuple[str, str]] = None,
+    texts: np.array = None,  # pylint: disable=unused-argument
+    features: np.array = None,  # pylint: disable=unused-argument
+    model_name: str = None  # pylint: disable=unused-argument
+) -> Iterable[str]:
     assert expected_tag_result
     actual_xml = format_list_tag_result_as_xml(tag_result)
     expected_xml = format_list_tag_result_as_xml(expected_tag_result)

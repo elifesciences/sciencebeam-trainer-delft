@@ -140,7 +140,7 @@ def get_features_preprocessor(
 
 def get_preprocessor(
         model_config: ModelConfig,
-        features: np.array = None) -> T_FeaturesPreprocessor:
+        features: np.array = None) -> WordPreprocessor:
     feature_preprocessor = get_features_preprocessor(model_config, features=features)
     return WordPreprocessor(
         max_char_length=model_config.max_char_length,

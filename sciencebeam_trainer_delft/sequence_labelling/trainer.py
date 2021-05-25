@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, NamedTuple, Optional
+from typing import NamedTuple, Optional
 
 import numpy as np
 
@@ -15,9 +15,6 @@ from delft.sequenceLabelling.trainer import Trainer as _Trainer
 from delft.sequenceLabelling.trainer import Scorer as _Scorer
 from delft.sequenceLabelling.models import BaseModel
 
-from sciencebeam_trainer_delft.sequence_labelling.utils.types import (
-    T_Batch_Labels
-)
 from sciencebeam_trainer_delft.sequence_labelling.utils.types import (
     T_Batch_Tokens,
     T_Batch_Features,

@@ -47,5 +47,6 @@ def tf_eager_mode():
 
 @pytest.fixture
 def env_mock() -> dict:
-    with patch('os.environ', {}) as mock:
-        yield mock
+    env: dict = {}
+    with patch('os.environ', env):
+        yield env

@@ -33,7 +33,7 @@ def _download_dir(data_dir: Path):
 
 @pytest.fixture(name='download_manager')
 def _download_manager(download_dir: Path):
-    return DownloadManager(download_dir=download_dir)
+    return DownloadManager(download_dir=str(download_dir))
 
 
 class TestDownloadManager:
@@ -66,7 +66,7 @@ class TestDownloadManager:
             copy_file_mock: MagicMock,
             download_dir: Path):
         download_file = str(download_dir.joinpath('custom.file'))
-        download_manager = DownloadManager(download_dir=download_dir)
+        download_manager = DownloadManager(download_dir=str(download_dir))
         assert download_manager.download(
             EXTERNAL_TXT_URL_1, local_file=download_file
         ) == download_file

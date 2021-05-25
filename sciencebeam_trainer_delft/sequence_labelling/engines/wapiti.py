@@ -5,7 +5,7 @@ import sys
 from collections import Counter
 from itertools import islice
 from multiprocessing import cpu_count
-from typing import List, Iterable, Optional, cast
+from typing import List, Iterable, Optional, Tuple, cast
 
 import subprocess
 
@@ -82,13 +82,17 @@ class WapitiModel:
     def label_raw_text(self, data: str) -> str:
         return '\n'.join(self.label_lines(data.splitlines()))
 
-    def label_features(self, features: List[List[str]]) -> List[str]:
+    def get_token_label_from_response_line(self, response_line: str) -> Tuple[str, str]:
+        fragments = response_line.split('\t')
+        return fragments[0], fragments[-1]
+
+    def label_features(self, features: List[List[str]]) -> List[List[str]]:
         lines = [
             format_feature_line(feature_line)
             for feature_line in features
         ]
         return [
-            labelled_line.rsplit('\t', maxsplit=1)[-1]
+            list(self.get_token_label_from_response_line(labelled_line))
             for labelled_line in self.label_lines(lines)
         ]
 

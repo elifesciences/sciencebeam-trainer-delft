@@ -5,7 +5,7 @@ import sys
 from collections import Counter
 from itertools import islice
 from multiprocessing import cpu_count
-from typing import List, Iterable, Optional, Tuple, cast
+from typing import IO, List, Iterable, Optional, Tuple, cast
 
 import subprocess
 
@@ -46,6 +46,12 @@ class WapitiModel:
     def __init__(self, process: subprocess.Popen):
         self.process = process
 
+    @property
+    def process_stdin(self) -> IO:
+        stdin = self.process.stdin
+        assert stdin
+        return stdin
+
     def iter_read_lines(self) -> Iterable[str]:
         while self.process.poll() is None:
             line = self.process.stdout.readline().decode('utf-8').rstrip()
@@ -53,8 +59,8 @@ class WapitiModel:
             yield line
 
     def iter_label(self, data: str) -> str:
-        self.process.stdin.write((data + '\n\n\n').encode('utf-8'))
-        self.process.stdin.flush()
+        self.process_stdin.write((data + '\n\n\n').encode('utf-8'))
+        self.process_stdin.flush()
         yield from self.iter_read_lines()
 
     def label_lines(self, lines: List[str], clean_input: bool = False) -> List[str]:
@@ -67,14 +73,14 @@ class WapitiModel:
             try:
                 LOGGER.debug('writing line: %s', cleaned_line)
                 LOGGER.debug('line counts: %s', Counter(cleaned_line))
-                self.process.stdin.write(
+                self.process_stdin.write(
                     (cleaned_line + '\n').encode('utf-8')
                 )
-                self.process.stdin.flush()
+                self.process_stdin.flush()
             except BrokenPipeError:
                 LOGGER.error('failed to write line: %s', [(c, hex(ord(c))) for c in cleaned_line])
                 raise
-        self.process.stdin.flush()
+        self.process_stdin.flush()
         labelled_lines = list(islice(self.iter_read_lines(), len(lines) + 1))
         LOGGER.debug('labelled_lines: %s', labelled_lines)
         return labelled_lines[:-1]

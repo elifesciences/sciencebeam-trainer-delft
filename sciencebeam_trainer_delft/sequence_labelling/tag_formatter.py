@@ -260,7 +260,8 @@ def iter_doc_annotations_xml_text(
 
 
 def iter_annotations_xml_text(
-        annotations: List[List[Tuple[str, str]]]) -> Iterable[str]:
+    annotations: Iterable[List[Tuple[str, str]]]
+) -> Iterable[str]:
     for doc_index, doc_annotations in enumerate(annotations):
         if doc_index > 0:
             yield '\n\n'

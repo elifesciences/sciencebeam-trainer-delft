@@ -617,7 +617,7 @@ class Sequence(_Sequence):
         return self.model_config.model_name
 
     @property
-    def last_checkpoint_path(self) -> str:
+    def last_checkpoint_path(self) -> Optional[str]:
         if not self.log_dir:
             return None
         return get_last_checkpoint_url(get_checkpoints_json(self.log_dir))

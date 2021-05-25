@@ -31,13 +31,13 @@ class TestWapitiWrapper:
         ]))
         output_model_path = temp_dir.joinpath('model.wapiti')
         wapiti.train(
-            template_path=template_path,
-            data_path=data_path,
-            output_model_path=output_model_path
+            template_path=str(template_path),
+            data_path=str(data_path),
+            output_model_path=str(output_model_path)
         )
         assert output_model_path.exists()
 
-        wapiti_model = wapiti.load_model(output_model_path)
+        wapiti_model = wapiti.load_model(str(output_model_path))
 
         label_data_path = temp_dir.joinpath('label.data')
         label_data_path.write_text('\n'.join([

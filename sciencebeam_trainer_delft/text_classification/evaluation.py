@@ -17,19 +17,22 @@ LOGGER = logging.getLogger(__name__)
 
 class ClassificationResult:
     def __init__(
-            self,
-            y_true: List[List[str]],
-            y_pred: List[List[str]],
-            label_names: List[str]):
+        self,
+        y_true: List[List[str]],
+        y_pred: List[List[str]],
+        label_names: List[str]
+    ):
+        y_true_array: np.ndarray = np.asarray(y_true)
+        y_pred_array: np.ndarray = np.asarray(y_pred)
         LOGGER.info('y_true: %s', y_true)
         LOGGER.info('y_pred: %s', y_pred)
         self.scores = OrderedDict()
         for j, label_name in enumerate(label_names):
             labels = [0, 1]
-            y_true_class = y_true[:, j]
-            y_pred_class = y_pred[:, j]
-            y_true_binary_class = y_true[:, j] >= 0.5
-            y_pred_binary_class = y_pred[:, j] >= 0.5
+            y_true_class = y_true_array[:, j]
+            y_pred_class = y_pred_array[:, j]
+            y_true_binary_class = y_true_array[:, j] >= 0.5
+            y_pred_binary_class = y_pred_array[:, j] >= 0.5
             loss = log_loss(y_true_class, y_pred_class, labels=labels)
             precision = precision_score(y_true_binary_class, y_pred_binary_class, zero_division=0)
             recall = recall_score(y_true_binary_class, y_pred_binary_class, zero_division=0)

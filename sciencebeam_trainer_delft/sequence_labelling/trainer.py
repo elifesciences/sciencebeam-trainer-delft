@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Optional
+from typing import List, NamedTuple, Optional
 
 import numpy as np
 
@@ -15,6 +15,9 @@ from delft.sequenceLabelling.trainer import Trainer as _Trainer
 from delft.sequenceLabelling.trainer import Scorer as _Scorer
 from delft.sequenceLabelling.models import BaseModel
 
+from sciencebeam_trainer_delft.sequence_labelling.utils.types import (
+    T_Batch_Labels
+)
 from sciencebeam_trainer_delft.sequence_labelling.utils.types import (
     T_Batch_Tokens,
     T_Batch_Features,
@@ -86,10 +89,9 @@ def get_callbacks(
     return callbacks
 
 
-class PredictedResults:
-    def __init__(self, y_pred: List[List[str]], y_true: List[List[str]] = None):
-        self.y_pred = y_pred
-        self.y_true = y_true
+class PredictedResults(NamedTuple):
+    y_pred: T_Batch_Labels
+    y_true: T_Batch_Labels
 
 
 def get_model_results(model, valid_batches: list, preprocessor=None) -> PredictedResults:

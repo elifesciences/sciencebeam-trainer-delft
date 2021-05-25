@@ -110,13 +110,15 @@ class WapitiModelAdapter:
         self.wapiti_wrapper = wapiti_wrapper
         self.model_file_path = model_file_path
         self.model_path = model_path
-        self._wapiti_model = None
+        self._wapiti_model: Optional[WapitiModel] = None
 
     @property
     def wapiti_model(self) -> WapitiModel:
-        if self._wapiti_model is None:
-            self._wapiti_model = self.wapiti_wrapper.load_model(self.model_file_path)
-        return self._wapiti_model
+        if self._wapiti_model is not None:
+            return self._wapiti_model
+        wapiti_model = self.wapiti_wrapper.load_model(self.model_file_path)
+        self._wapiti_model = wapiti_model
+        return wapiti_model
 
     @staticmethod
     def load_from(

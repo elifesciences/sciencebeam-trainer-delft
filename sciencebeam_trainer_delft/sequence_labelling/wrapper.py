@@ -148,7 +148,11 @@ def get_preprocessor(
     )
 
 
-def prepare_preprocessor(X, y, model_config: ModelConfig, features: np.array = None):
+def prepare_preprocessor(
+    X, y,
+    model_config: ModelConfig,
+    features: Optional[List[List[List[str]]]] = None
+):
     preprocessor = get_preprocessor(model_config, features=features)
     batch_text_list_iterable = iter_batch_text_list(
         X, features,

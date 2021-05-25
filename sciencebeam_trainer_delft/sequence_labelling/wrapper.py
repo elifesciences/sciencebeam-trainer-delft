@@ -218,7 +218,7 @@ class Sequence(_Sequence):
         self.eval_max_sequence_length = eval_max_sequence_length
         self.eval_input_window_stride = eval_input_window_stride
         self.eval_batch_size = eval_batch_size
-        self.model_path = None
+        self.model_path: Optional[str] = None
         if stateful is None:
             # use a stateful model, if supported
             stateful = get_default_stateful()

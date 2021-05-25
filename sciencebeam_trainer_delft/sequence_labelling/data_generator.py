@@ -508,7 +508,8 @@ class DataGenerator(keras.utils.Sequence):
             max_length: int) -> np.array:
         if not self.use_word_embeddings:
             return to_dummy_batch_embedding_vector(batch_tokens, max_length)
-        elif self.embeddings.use_ELMo:
+        assert self.embeddings is not None
+        if self.embeddings.use_ELMo:
             return to_vector_simple_with_elmo(batch_tokens, self.embeddings, max_length)
         elif self.embeddings.use_BERT:
             return to_vector_simple_with_bert(batch_tokens, self.embeddings, max_length)

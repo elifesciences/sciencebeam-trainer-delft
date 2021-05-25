@@ -82,7 +82,7 @@ class WapitiModel:
     def label_raw_text(self, data: str) -> str:
         return '\n'.join(self.label_lines(data.splitlines()))
 
-    def label_features(self, features: List[List[str]]) -> str:
+    def label_features(self, features: List[List[str]]) -> List[List[str]]:
         lines = [
             format_feature_line(feature_line)
             for feature_line in features

@@ -8,7 +8,7 @@ import os
 from collections import Counter
 from datetime import datetime, timezone
 from itertools import islice
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -379,7 +379,7 @@ def output_classification_result(
         output_format = EvaluationOutputFormats.TEXT
     if eval_first_entity:
         classification_result = classification_result.with_first_entities()
-    meta = {}
+    meta:  Dict[str, Any] = {}
     meta['eval_timestamp'] = datetime.now(timezone.utc).isoformat()
     if eval_input_paths:
         meta['eval_input_paths'] = eval_input_paths

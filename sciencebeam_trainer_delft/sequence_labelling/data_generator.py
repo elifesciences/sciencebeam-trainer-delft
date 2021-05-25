@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, List, Optional, Tuple, T
+from typing import Iterable, List, Optional, Tuple, T, Union
 
 import numpy as np
 import keras
@@ -322,7 +322,7 @@ class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
     def __init__(
             self,
-            x: List[List[str]],
+            x: List[Union[str, List[str]]],
             y: Optional[List[List[str]]],
             batch_size: int = 24,
             preprocessor: WordPreprocessor = None,

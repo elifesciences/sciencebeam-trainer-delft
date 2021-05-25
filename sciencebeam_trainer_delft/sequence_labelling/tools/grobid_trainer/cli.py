@@ -321,7 +321,7 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
         if not args.model:
             raise ValueError("model required")
         wapiti_train_eval(
-            model=args.model,
+            model_name=args.model,
             template_path=args.wapiti_template,
             input_paths=args.input,
             limit=args.limit,

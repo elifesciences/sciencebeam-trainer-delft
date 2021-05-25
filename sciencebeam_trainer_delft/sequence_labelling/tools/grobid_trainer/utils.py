@@ -577,7 +577,7 @@ def train_eval(
 
 
 def wapiti_train_eval(
-        model: str,
+        model_name: str,
         template_path: str,
         input_paths: List[str] = None,
         output_path: str = None,
@@ -598,7 +598,7 @@ def wapiti_train_eval(
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
         model = WapitiModelTrainAdapter(
-            model_name=model,
+            model_name=model_name,
             template_path=template_path,
             temp_model_path=temp_model_path,
             max_epoch=max_epoch,

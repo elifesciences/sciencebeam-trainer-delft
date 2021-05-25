@@ -1,6 +1,6 @@
 import logging
 from unittest.mock import MagicMock
-from typing import List
+from typing import Dict, List, Tuple
 
 import pytest
 
@@ -38,7 +38,7 @@ SHORT_SENTENCE_TOKENS = SENTENCE_TOKENS_1
 WORD_FEATURES_1 = ('feature1-1', 'feature1-2')
 WORD_FEATURES_2 = ('feature2-1', 'feature2-2')
 
-FEATURE_MAP = {
+FEATURE_MAP: Dict[Tuple[str, ...], np.ndarray] = {
     WORD_FEATURES_1: np.asarray([1, 0, 0, 1]),
     WORD_FEATURES_2: np.asarray([2, 0, 0, 2])
 }

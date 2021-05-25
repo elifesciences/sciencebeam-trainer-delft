@@ -124,7 +124,7 @@ class EmbeddingManager:
             return None
         return embedding_list[index]
 
-    def set_embedding_aliases(self, embedding_aliases: Dict[str, str]) -> dict:
+    def set_embedding_aliases(self, embedding_aliases: Dict[str, str]):
         registry_data = self._get_registry_data()
         registry_data['embedding-aliases'] = embedding_aliases
         self._save(registry_data)
@@ -152,7 +152,7 @@ class EmbeddingManager:
         })
         return embedding_name
 
-    def _download_lmdb_cache_embedding(self, embedding_name: str, embedding_url: str) -> str:
+    def _download_lmdb_cache_embedding(self, embedding_name: str, embedding_url: str):
         self.download_manager.download(
             embedding_url,
             local_file=str(self.get_embedding_lmdb_cache_data_path(embedding_name))

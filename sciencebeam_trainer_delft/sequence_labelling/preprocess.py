@@ -49,7 +49,7 @@ def to_dict(
 
 def to_float_features(
     value_list_batch: List[list],
-    features_indices: Set[int] = None
+    features_indices: Set[int]
 ) -> Iterable[dict]:
     return (
         [

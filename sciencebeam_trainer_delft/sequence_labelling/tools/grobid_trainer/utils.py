@@ -455,6 +455,8 @@ def do_train_eval(
             features_train=features_train, features_valid=features_valid
         )
     else:
+        assert isinstance(model, Sequence), \
+            'nfold evaluation currently only supported for DL models'
         model.train_nfold(
             x_train, y_train, x_valid, y_valid,
             features_train=features_train, features_valid=features_valid,

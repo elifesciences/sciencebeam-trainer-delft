@@ -182,8 +182,8 @@ class WapitiModelAdapter:
                 )
             self.wapiti_wrapper.label(
                 model_path=self.model_file_path,
-                data_path=data_path,
-                output_data_path=output_data_path,
+                data_path=str(data_path),
+                output_data_path=str(output_data_path),
                 output_only_labels=False
             )
             with output_data_path.open(mode='r') as output_data_fp:
@@ -319,7 +319,7 @@ class WapitiModelTrainAdapter:
                         fp, x=x_valid, y=y_valid, features=features_valid
                     )
             WapitiWrapper(wapiti_binary_path=self.wapiti_binary_path).train(
-                data_path=data_path,
+                data_path=str(data_path),
                 output_model_path=self.temp_model_path,
                 template_path=local_template_path,
                 max_iter=self.max_epoch,

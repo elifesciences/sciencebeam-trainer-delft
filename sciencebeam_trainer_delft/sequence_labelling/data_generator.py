@@ -574,6 +574,7 @@ class DataGenerator(keras.utils.Sequence):
                 or self.additional_token_feature_indices
                 or self.text_feature_indices
         ):
+            assert self.features is not None
             sub_f = take_with_offset(
                 self.features,
                 window_indices_and_offsets,

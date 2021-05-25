@@ -52,9 +52,15 @@ class WapitiModel:
         assert stdin
         return stdin
 
+    @property
+    def process_stdout(self) -> IO:
+        stdout = self.process.stdout
+        assert stdout
+        return stdout
+
     def iter_read_lines(self) -> Iterable[str]:
         while self.process.poll() is None:
-            line = self.process.stdout.readline().decode('utf-8').rstrip()
+            line = self.process_stdout.readline().decode('utf-8').rstrip()
             LOGGER.debug('read line: %s', line)
             yield line
 

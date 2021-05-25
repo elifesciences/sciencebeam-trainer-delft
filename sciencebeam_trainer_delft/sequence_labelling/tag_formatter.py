@@ -2,7 +2,7 @@ import json
 import difflib
 import logging
 from xml.sax.saxutils import escape as xml_escape
-from typing import Union, Iterable, List, Tuple
+from typing import Optional, Union, Iterable, List, Tuple
 
 import numpy as np
 
@@ -221,7 +221,7 @@ def iter_add_untagged_token_spans(
     entity_chunks: Iterable[Tuple[str, int, int]],
     token_count: int,
     untagged_chunk_type: str = None
-) -> Iterable[Tuple[str, int, int]]:
+) -> Iterable[Tuple[Optional[str], int, int]]:
     prev_chunk_end_excl = 0
     for chunk_type, chunk_start, chunk_end in entity_chunks:
         if chunk_start > prev_chunk_end_excl:

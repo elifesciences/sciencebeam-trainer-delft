@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime
 from abc import ABC
+from typing import Callable, Dict
 
 import joblib
 
@@ -12,6 +13,7 @@ from delft.sequenceLabelling.preprocess import (
     WordPreprocessor as DelftWordPreprocessor
 )
 
+from sciencebeam_trainer_delft.utils.typing import T, U, V
 from sciencebeam_trainer_delft.utils.cloud_support import auto_upload_from_local_file
 from sciencebeam_trainer_delft.utils.io import open_file, write_text, read_text
 from sciencebeam_trainer_delft.utils.json import to_json, from_json
@@ -38,7 +40,10 @@ class _BaseModelSaverLoader(ABC):
     meta_file = 'meta.json'
 
 
-def _convert_keys(d: dict, convert_fn: callable) -> dict:
+def _convert_keys(
+    d: Dict[T, V],
+    convert_fn: Callable[[T], U]
+) -> Dict[U, V]:
     return {
         convert_fn(key): value
         for key, value in d.items()

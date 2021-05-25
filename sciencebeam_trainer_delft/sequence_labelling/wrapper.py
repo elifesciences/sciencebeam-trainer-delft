@@ -235,8 +235,8 @@ class Sequence(_Sequence):
             **kwargs
         )
         LOGGER.debug('use_features=%s', use_features)
-        self.model_config = ModelConfig(
-            **{
+        self.model_config: ModelConfig = ModelConfig(
+            **{  # type: ignore
                 **vars(self.model_config),
                 **(config_props or {}),
                 'features_indices': features_indices,

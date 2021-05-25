@@ -47,8 +47,8 @@ class NpJsonEncoder(json.JSONEncoder):
             return super().default(obj)
 
 
-def _get_first(some_iterator: Iterator[T], default_value: T = None) -> T:
-    return next(some_iterator, default_value)
+def _get_first(some_iterator: Iterator[T]) -> T:
+    return next(some_iterator)
 
 
 def get_first_entities(

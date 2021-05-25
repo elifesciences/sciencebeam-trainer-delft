@@ -2,7 +2,7 @@ import logging
 import json
 from itertools import groupby
 from collections import defaultdict, OrderedDict
-from typing import List, Union, Tuple, T
+from typing import List, Union, Tuple, Sequence, T
 
 import numpy as np
 
@@ -76,8 +76,8 @@ def get_first_entities(
 class ClassificationResult:
     def __init__(
             self,
-            y_true: List[Union[str, List[str]]],
-            y_pred: List[Union[str, List[str]]],
+            y_true: Sequence[Union[str, Sequence[str]]],
+            y_pred: Sequence[Union[str, Sequence[str]]],
             evaluate_first_entities: bool = False):
         self._y_true = y_true
         self._y_pred = y_pred

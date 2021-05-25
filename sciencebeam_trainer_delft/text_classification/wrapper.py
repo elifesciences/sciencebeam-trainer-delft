@@ -38,7 +38,7 @@ class Classifier(_Classifier):
         if embedding_manager is None:
             embedding_manager = EmbeddingManager(
                 path=self.embedding_registry_path,
-                download_manager=download_manager()
+                download_manager=download_manager
             )
         self.download_manager = download_manager
         self.embedding_manager = embedding_manager

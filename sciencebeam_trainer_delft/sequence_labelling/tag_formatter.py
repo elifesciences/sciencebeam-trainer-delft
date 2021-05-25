@@ -79,10 +79,11 @@ def to_data_lines(*args, **kwargs) -> List[str]:
 
 
 def iter_format_list_tag_result_as_data(
-        tag_result: Iterable[List[Tuple[str, str]]],
-        texts: np.array = None,  # pylint: disable=unused-argument
-        features: np.array = None,
-        model_name: str = None) -> str:  # pylint: disable=unused-argument
+    tag_result: Iterable[List[Tuple[str, str]]],
+    texts: np.array = None,  # pylint: disable=unused-argument
+    features: np.array = None,
+    model_name: str = None  # pylint: disable=unused-argument
+) -> Iterable[str]:
     assert features is not None
     data_text_iterable = iter_to_data_lines(
         features=features,

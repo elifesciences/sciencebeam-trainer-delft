@@ -10,7 +10,7 @@ from gzip import GzipFile
 from lzma import LZMAFile
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
-from typing import List, IO, Iterator, ContextManager
+from typing import List, IO, Iterator
 
 from six import string_types, text_type
 
@@ -228,7 +228,7 @@ def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
 
 
 @contextmanager
-def auto_download_input_file(filepath: str, auto_decompress: bool = False) -> ContextManager[str]:
+def auto_download_input_file(filepath: str, auto_decompress: bool = False) -> Iterator[str]:
     if not is_external_location(filepath):
         yield filepath
         return

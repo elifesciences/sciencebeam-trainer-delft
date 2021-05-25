@@ -1,9 +1,9 @@
 import logging
-from typing import T
 
 import numpy as np
 from sklearn.base import TransformerMixin
 
+from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
     WordPreprocessor,
     FeaturesPreprocessor

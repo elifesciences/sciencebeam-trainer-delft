@@ -14,6 +14,11 @@ from delft.sequenceLabelling.evaluation import (
 from delft.sequenceLabelling.trainer import Trainer as _Trainer
 from delft.sequenceLabelling.trainer import Scorer as _Scorer
 
+from sciencebeam_trainer_delft.sequence_labelling.utils.types import (
+    T_Batch_Tokens,
+    T_Batch_Features,
+    T_Batch_Labels
+)
 from sciencebeam_trainer_delft.utils.keras.callbacks import ResumableEarlyStopping
 
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import classification_report
@@ -284,9 +289,14 @@ class Trainer(_Trainer):
         return local_model
 
     def train_nfold(  # pylint: disable=arguments-differ
-            self, x_train, y_train, x_valid=None, y_valid=None,
-            features_train: np.array = None,
-            features_valid: np.array = None):
+        self,
+        x_train: T_Batch_Tokens,
+        y_train: T_Batch_Labels,
+        x_valid: Optional[T_Batch_Tokens] = None,
+        y_valid: Optional[T_Batch_Labels] = None,
+        features_train: Optional[T_Batch_Features] = None,
+        features_valid: Optional[T_Batch_Features] = None
+    ):
         """ n-fold training for the instance model
             the n models are stored in self.models, and self.model left unset at this stage """
         fold_count = len(self.models)
@@ -312,7 +322,7 @@ class Trainer(_Trainer):
                 val_x = x_train[fold_start:fold_end]
                 val_y = y_train[fold_start:fold_end]
 
-                if features_train is None:
+                if features_train is not None:
                     train_features = np.concatenate(
                         [features_train[:fold_start], features_train[fold_end:]]
                     )

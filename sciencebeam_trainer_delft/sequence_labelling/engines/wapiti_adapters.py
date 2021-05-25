@@ -290,7 +290,7 @@ class WapitiModelTrainAdapter:
         self.gzip_enabled = gzip_enabled
         self.wapiti_binary_path = wapiti_binary_path
         self.wapiti_train_args = wapiti_train_args
-        self._model_adapter = None
+        self._model_adapter: Optional[WapitiModelAdapter] = None
         # additional properties to keep "compatibility" with wrapper.Sequence
         self.log_dir = None
         self.model_path = None
@@ -328,14 +328,16 @@ class WapitiModelTrainAdapter:
             LOGGER.info('wapiti model trained: %s', self.temp_model_path)
 
     def get_model_adapter(self) -> WapitiModelAdapter:
-        if self._model_adapter is None:
-            assert self.temp_model_path, "temp_model_path required"
-            self._model_adapter = WapitiModelAdapter.load_from(
-                os.path.dirname(self.temp_model_path),
-                download_manager=self.download_manager,
-                wapiti_binary_path=self.wapiti_binary_path
-            )
-        return self._model_adapter
+        if self._model_adapter is not None:
+            return self._model_adapter
+        assert self.temp_model_path, "temp_model_path required"
+        model_adapter = WapitiModelAdapter.load_from(
+            os.path.dirname(self.temp_model_path),
+            download_manager=self.download_manager,
+            wapiti_binary_path=self.wapiti_binary_path
+        )
+        self._model_adapter = model_adapter
+        return model_adapter
 
     @property
     def last_checkpoint_path(self) -> Optional[str]:

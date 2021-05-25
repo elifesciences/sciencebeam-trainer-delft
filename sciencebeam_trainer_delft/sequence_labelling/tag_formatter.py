@@ -179,7 +179,7 @@ def iter_format_document_list_tag_result_as_data_unidiff(
 
 def iter_format_list_tag_result_as_data_unidiff(
     tag_result: Iterable[List[Tuple[str, str]]],
-    expected_tag_result: List[Tuple[str, str]] = None,
+    expected_tag_result: List[List[Tuple[str, str]]],
     texts: np.ndarray = None,  # pylint: disable=unused-argument
     features: np.ndarray = None,
     model_name: str = None  # pylint: disable=unused-argument
@@ -290,7 +290,7 @@ def format_list_tag_result_as_xml(*args, **kwargs) -> str:
 
 def iter_format_list_tag_result_as_xml_diff(
     tag_result: Iterable[List[Tuple[str, str]]],
-    expected_tag_result: List[Tuple[str, str]] = None,
+    expected_tag_result: List[List[Tuple[str, str]]],
     texts: np.array = None,  # pylint: disable=unused-argument
     features: np.array = None,  # pylint: disable=unused-argument
     model_name: str = None  # pylint: disable=unused-argument
@@ -307,7 +307,7 @@ def iter_format_list_tag_result_as_xml_diff(
 def iter_format_list_tag_result(
         *args,
         output_format: str,
-        expected_tag_result: List[Tuple[str, str]] = None,
+        expected_tag_result: Optional[List[List[Tuple[str, str]]]] = None,
         **kwargs) -> Iterable[str]:
     if output_format == TagOutputFormats.JSON:
         yield format_list_tag_result_as_json(*args, **kwargs)
@@ -316,6 +316,7 @@ def iter_format_list_tag_result(
         yield from iter_format_list_tag_result_as_data(*args, **kwargs)
         return
     if output_format == TagOutputFormats.DATA_UNIDIFF:
+        assert expected_tag_result
         yield from iter_format_list_tag_result_as_data_unidiff(  # type: ignore
             *args,
             expected_tag_result=expected_tag_result,
@@ -329,6 +330,7 @@ def iter_format_list_tag_result(
         yield from iter_format_list_tag_result_as_xml(*args, **kwargs)
         return
     if output_format == TagOutputFormats.XML_DIFF:
+        assert expected_tag_result
         yield from iter_format_list_tag_result_as_xml_diff(  # type: ignore
             *args,
             expected_tag_result=expected_tag_result,
@@ -341,7 +343,7 @@ def iter_format_list_tag_result(
 def iter_format_tag_result(
         tag_result: Union[dict, list, Iterable],
         output_format: str,
-        expected_tag_result: List[Tuple[str, str]] = None,
+        expected_tag_result: Optional[List[List[Tuple[str, str]]]] = None,
         texts: np.array = None,
         features: np.array = None,
         model_name: str = None) -> Iterable[str]:

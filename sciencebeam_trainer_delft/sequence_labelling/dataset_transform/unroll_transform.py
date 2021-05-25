@@ -31,10 +31,10 @@ class LineStatus:
     LINEEND = 'LINEEND'
 
 
-def strip_tag_prefix(tag: str) -> str:
+def strip_tag_prefix(tag: Optional[str]) -> str:
     if tag and (tag.startswith('B-') or tag.startswith('I-')):
         return tag[2:]
-    return tag
+    return tag or ''
 
 
 def get_next_transform_token_y(token_y: str) -> str:

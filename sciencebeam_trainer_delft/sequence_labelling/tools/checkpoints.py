@@ -95,7 +95,7 @@ def format_checkpoint_summary_as_text(
         checkpoint_summary_list: List[dict]) -> str:
     return 'best checkpoints:\n%s' % '\n\n'.join([
         '%05d: %s (%s)%s%s' % (
-            checkpoint_summary.get('epoch'),
+            int(checkpoint_summary.get('epoch', 0)),
             checkpoint_summary.get('f1'),
             checkpoint_summary.get('path'),
             ' (last)' if checkpoint_summary.get('is_last') else '',

@@ -111,7 +111,7 @@ class XzCompressionWrapper(CompressionWrapper):
         return strip_xz_filename_ext(filepath)
 
     def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
-        return LZMAFile(filename=fileobj, mode=mode)
+        return LZMAFile(filename=fileobj, mode=mode or 'r')
 
 
 class DummyCompressionWrapper(CompressionWrapper):

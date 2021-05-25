@@ -208,7 +208,7 @@ class WapitiModelAdapter:
         self.eval_single(x_test, y_test, features=features)
 
     @property
-    def model_summary_props(self) -> str:
+    def model_summary_props(self) -> dict:
         return {
             'model_type': 'wapiti'
         }
@@ -342,7 +342,7 @@ class WapitiModelTrainAdapter:
         return None
 
     @property
-    def model_summary_props(self) -> str:
+    def model_summary_props(self) -> dict:
         return self.get_model_adapter().model_summary_props
 
     def get_evaluation_result(

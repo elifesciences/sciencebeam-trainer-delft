@@ -623,7 +623,7 @@ class Sequence(_Sequence):
         return get_last_checkpoint_url(get_checkpoints_json(self.log_dir))
 
     @property
-    def model_summary_props(self) -> str:
+    def model_summary_props(self) -> dict:
         return {
             'model_type': 'delft',
             'architecture': self.model_config.model_type,

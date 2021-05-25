@@ -748,15 +748,15 @@ def eval_model(
 
 
 def wapiti_eval_model(
+        model_path: str,
+        download_manager: DownloadManager,
         input_paths: List[str] = None,
-        model_path: str = None,
         limit: int = None,
         shuffle_input: bool = False,
         split_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         fold_count: int = 1,
         eval_output_args: dict = None,
-        download_manager: DownloadManager = None,
         wapiti_binary_path: str = None):
     assert fold_count == 1, 'only fold_count == 1 supported'
 

@@ -64,12 +64,14 @@ class CompressionWrapper(ABC):
     def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
         pass
 
-    def open(self, filename: str, mode: str):
-        return self.wrap_fileobj(
-            filename=filename,
-            fileobj=_open_raw(filename, mode=mode),
-            mode=mode
-        )
+    @contextmanager
+    def open(self, filename: str, mode: str) -> Iterator[IO]:
+        with _open_raw(filename, mode=mode) as fp:
+            return self.wrap_fileobj(
+                filename=filename,
+                fileobj=fp,
+                mode=mode
+            )
 
 
 class ClosingGzipFile(GzipFile):
@@ -140,7 +142,7 @@ def strip_compression_filename_ext(filepath: str) -> str:
 
 
 @contextmanager
-def _open_raw(filepath: str, mode: str):
+def _open_raw(filepath: str, mode: str) -> Iterator[IO]:
     if filepath.startswith('https://'):
         try:
             with tempfile.TemporaryDirectory(suffix='download') as temp_dir:

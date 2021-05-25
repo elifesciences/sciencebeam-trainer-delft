@@ -10,7 +10,7 @@ from gzip import GzipFile
 from lzma import LZMAFile
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
-from typing import List, IO, ContextManager
+from typing import List, IO, Iterator, ContextManager
 
 from six import string_types, text_type
 
@@ -370,7 +370,7 @@ class ZipFileContainer(FileContainer):
 
 
 @contextmanager
-def open_file_container(directory_url: str) -> ContextManager[FileContainer]:
+def open_file_container(directory_url: str) -> Iterator[FileContainer]:
     if str(directory_url).endswith('.tar.gz'):
         with auto_download_input_file(directory_url) as local_tar_file:
             with tarfile.open(local_tar_file) as tar_file:

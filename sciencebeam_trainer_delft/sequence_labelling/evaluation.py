@@ -54,8 +54,9 @@ def _get_first(some_list: List[T], default_value: T = None) -> T:
 
 
 def get_first_entities(
-        y: List[Union[str, List[str]]],
-        prefix: str = 'first_') -> List[Tuple[str, int, int]]:
+    y: Sequence[Union[str, Sequence[str]]],
+    prefix: str = 'first_'
+) -> List[Tuple[str, int, int]]:
     if not any(isinstance(s, list) for s in y):
         y = [y]
     offset = 0

@@ -102,7 +102,7 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
     ):
         assert features is not None
         x_transformed = []
-        y_transformed = []
+        _y_transformed = []
         features_transformed = []
         line_status_enabled: Optional[bool] = None
         unrolled_token_lengths = []
@@ -140,14 +140,13 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
                     y_row = get_next_transform_token_y(y_row)
                 unrolled_token_lengths_doc.append(tokens_length)
             x_transformed.append(x_doc_transformed)
-            y_transformed.append(y_doc_transformed)
+            _y_transformed.append(y_doc_transformed)
             features_transformed.append(features_doc_transformed)
             unrolled_token_lengths.append(unrolled_token_lengths_doc)
         LOGGER.debug('x_transformed: %s', x_transformed)
-        LOGGER.debug('y_transformed: %s', y_transformed)
+        LOGGER.debug('y_transformed: %s', _y_transformed)
         LOGGER.debug('features_transformed: %s', features_transformed)
-        if y is None:
-            y_transformed = None
+        y_transformed = _y_transformed if y is not None else None
         self._saved_x = x
         self._saved_features = features
         self._unrolled_token_lengths = unrolled_token_lengths

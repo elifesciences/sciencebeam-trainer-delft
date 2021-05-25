@@ -126,7 +126,7 @@ class WapitiWrapper:
         if stderr_to_log_enabled:
             t = threading.Thread(target=lambda: lines_to_log(
                 LOGGER, logging.INFO, 'wapiti, stderr: %s',
-                process.stderr
+                cast(Iterable[str], process.stderr)
             ))
             t.daemon = True
             t.start()
@@ -140,6 +140,7 @@ class WapitiWrapper:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT
         ) as process:
+            assert process.stdout
             with process.stdout:
                 lines_to_log(
                     LOGGER,

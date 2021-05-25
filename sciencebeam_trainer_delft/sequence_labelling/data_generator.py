@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, List, Optional, Tuple, T, Union
+from typing import Iterable, List, Optional, Tuple, Union
 
 from typing_extensions import Protocol
 
@@ -15,6 +15,7 @@ from delft.sequenceLabelling.preprocess import (
 )
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
 
+from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 
 

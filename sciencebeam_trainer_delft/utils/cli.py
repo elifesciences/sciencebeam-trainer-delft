@@ -99,7 +99,10 @@ class SubCommandProcessor:
         subparsers.required = True
         self.add_sub_command_parsers_to_subparsers(subparsers)
 
-    def add_sub_command_parsers_to_subparsers(self, subparsers: argparse.ArgumentParser):
+    def add_sub_command_parsers_to_subparsers(
+        self,
+        subparsers: argparse._SubParsersAction  # pylint: disable=protected-access
+    ):
         for sub_command in self.sub_commands:
             sub_parser = subparsers.add_parser(
                 sub_command.name, help=sub_command.description,

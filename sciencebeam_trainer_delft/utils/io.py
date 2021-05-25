@@ -15,8 +15,10 @@ from typing import List, IO, Iterator, ContextManager
 from six import string_types, text_type
 
 try:
-    from tensorflow.python.lib.io import file_io as tf_file_io
-    from tensorflow.python.framework.errors_impl import NotFoundError as tf_NotFoundError
+    from tensorflow.python.lib.io import file_io as tf_file_io  # type: ignore
+    from tensorflow.python.framework.errors_impl import (  # type: ignore
+        NotFoundError as tf_NotFoundError
+    )
 except ImportError:
     tf_file_io = None
     tf_NotFoundError = None

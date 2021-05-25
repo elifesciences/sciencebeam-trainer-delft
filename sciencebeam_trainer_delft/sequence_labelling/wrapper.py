@@ -206,7 +206,7 @@ class Sequence(_Sequence):
             )
         self.download_manager = embedding_manager.download_manager
         self.embedding_manager = embedding_manager
-        self.embeddings = None
+        self.embeddings: Optional[Embeddings] = None
         if not batch_size:
             batch_size = get_default_batch_size()
         if not max_sequence_length:
@@ -415,10 +415,11 @@ class Sequence(_Sequence):
             features_train=features_train,
             features_valid=features_valid
         )
-        if self.embeddings.use_ELMo:
-            self.embeddings.clean_ELMo_cache()
-        if self.embeddings.use_BERT:
-            self.embeddings.clean_BERT_cache()
+        if self.embeddings:
+            if self.embeddings.use_ELMo:
+                self.embeddings.clean_ELMo_cache()
+            if self.embeddings.use_BERT:
+                self.embeddings.clean_BERT_cache()
 
     def eval(  # pylint: disable=arguments-differ
             self, x_test, y_test, features: np.array = None):

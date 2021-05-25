@@ -35,7 +35,7 @@ def save_data_frame(
 
 
 def get_texts_and_classes_from_data_frame(
-        df: pd.DataFrame) -> Tuple[List[str], List[List[int]], List[str]]:
+        df: pd.DataFrame) -> Tuple[List[str], List[List[str]], List[str]]:
     """
     Load texts and classes from a file in csv format using pandas dataframe:
 

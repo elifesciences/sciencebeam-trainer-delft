@@ -5,7 +5,7 @@ import sys
 from collections import Counter
 from itertools import islice
 from multiprocessing import cpu_count
-from typing import List, Iterable
+from typing import List, Iterable, Optional
 
 import subprocess
 
@@ -172,14 +172,15 @@ class WapitiWrapper:
         self.run_wapiti(args)
 
     def train(
-            self,
-            data_path: str,
-            output_model_path: str,
-            template_path: str = None,
-            max_iter: str = None,
-            num_threads: int = None,
-            stop_epsilon_value: str = None,
-            stop_window_size: int = None):
+        self,
+        data_path: str,
+        output_model_path: str,
+        template_path: Optional[str] = None,
+        max_iter: Optional[int] = None,
+        num_threads: Optional[int] = None,
+        stop_epsilon_value: Optional[str] = None,
+        stop_window_size: Optional[int] = None
+    ):
         if not os.path.isfile(str(data_path)):
             raise FileNotFoundError('data file not found: %s' % data_path)
 

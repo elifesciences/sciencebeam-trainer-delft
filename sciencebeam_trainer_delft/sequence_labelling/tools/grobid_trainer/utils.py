@@ -748,7 +748,6 @@ def eval_model(
 
 
 def wapiti_eval_model(
-        model: str = None,
         input_paths: List[str] = None,
         model_path: str = None,
         limit: int = None,

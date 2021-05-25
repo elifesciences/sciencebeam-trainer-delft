@@ -378,7 +378,6 @@ class WapitiEvalSubCommand(GrobidTrainerSubCommand):
     def do_run(self, args: argparse.Namespace):
         wapiti_eval_model(
             model_path=args.model_path,
-            model=args.model,
             input_paths=args.input,
             limit=args.limit,
             eval_output_args=get_eval_output_args(args),
@@ -441,7 +440,6 @@ class InputInfoSubCommand(GrobidTrainerSubCommand):
 
     def do_run(self, args: argparse.Namespace):
         print_input_info(
-            model=args.model,
             input_paths=args.input,
             limit=args.limit,
             download_manager=self.download_manager

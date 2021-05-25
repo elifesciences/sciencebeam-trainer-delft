@@ -182,7 +182,7 @@ def _get_pipeline_steps_state(steps: List[Tuple[str, Any]]) -> dict:
     return result
 
 
-def _restore_pipeline_steps_state(steps: List[Tuple[str, Any]], state: dict) -> dict:
+def _restore_pipeline_steps_state(steps: List[Tuple[str, Any]], state: dict):
     for step_name, step_value in _iter_nested_pipeline_steps(steps):
         step_state = state.get(step_name)
         if not step_state:

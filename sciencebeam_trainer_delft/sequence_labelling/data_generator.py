@@ -323,7 +323,7 @@ class DataGenerator(keras.utils.Sequence):
     def __init__(
             self,
             x: List[List[str]],
-            y: List[List[str]],
+            y: Optional[List[List[str]]],
             batch_size: int = 24,
             preprocessor: WordPreprocessor = None,
             input_window_stride: int = None,

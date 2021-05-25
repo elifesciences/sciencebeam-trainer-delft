@@ -75,8 +75,8 @@ def iter_predict_texts_with_sliding_window_if_enabled(
             )
 
     predict_generator = DataGenerator(
-        texts,
-        None,
+        x=texts,
+        y=None,
         batch_size=model_config.batch_size,
         preprocessor=preprocessor,
         additional_token_feature_indices=model_config.additional_token_feature_indices,

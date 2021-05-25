@@ -162,6 +162,7 @@ class Trainer(_Trainer):
             self, x_train, y_train, x_valid, y_valid,
             features_train: np.array = None,
             features_valid: np.array = None):
+        assert self.model is not None
         self.model.summary()
 
         if self.model_config.use_crf:

@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from functools import partial
-from typing import Callable, Iterable, List, Optional, Tuple, Union, T, cast
+from typing import Callable, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 
@@ -11,6 +11,7 @@ from delft.sequenceLabelling.preprocess import WordPreprocessor, FeaturesPreproc
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.config import TrainingConfig as DelftTrainingConfig
 
+from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
 from sciencebeam_trainer_delft.utils.misc import str_to_bool

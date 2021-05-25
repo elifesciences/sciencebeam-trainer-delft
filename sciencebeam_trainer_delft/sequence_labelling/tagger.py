@@ -98,7 +98,7 @@ def iter_predict_texts_with_sliding_window_if_enabled(
         name='%s.predict_generator' % model_config.model_name
     )
 
-    prediction_list_list = [[] for _ in texts]
+    prediction_list_list: List[List[np.ndarray]] = [[] for _ in texts]
     batch_window_indices_and_offsets_iterable = logging_tqdm(
         iter_batch_window_indices_and_offsets(
             predict_generator

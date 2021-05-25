@@ -189,7 +189,7 @@ class Trainer(_Trainer):
         }
 
     def create_data_generator(self, *args, name_suffix: str, **kwargs) -> DataGenerator:
-        return DataGenerator(
+        return DataGenerator(  # type: ignore
             *args,
             batch_size=self.training_config.batch_size,
             input_window_stride=self.training_config.input_window_stride,

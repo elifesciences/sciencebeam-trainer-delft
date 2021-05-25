@@ -96,14 +96,14 @@ class ModelConfig(_ModelConfig):
         self.features_indices = feature_indices
 
     @property
-    def feature_embedding_size(self):
+    def feature_embedding_size(self) -> Optional[int]:
         return (
             self.features_embedding_size
             or self.__dict__.get('feature_embedding_size')
         )
 
     @feature_embedding_size.setter
-    def feature_embedding_size(self, feature_embedding_size: List[int]):
+    def feature_embedding_size(self, feature_embedding_size: int):
         self.features_embedding_size = feature_embedding_size
 
 

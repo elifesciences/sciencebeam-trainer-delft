@@ -1,6 +1,8 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, NamedTuple, Union, T
+from typing import List, Optional, NamedTuple, Union
+
+from sciencebeam_trainer_delft.utils.typing import T
 
 from sciencebeam_trainer_delft.sequence_labelling.tools.checkpoints import (
     get_checkpoints_json,

@@ -270,6 +270,10 @@ class FileRef(ABC):
     def __repr__(self):
         return '%s(%r)' % (type(self).__name__, self.file_url)
 
+    @abstractmethod
+    def copy_to(self, target_url: str):
+        pass
+
 
 class FileContainer(ABC):
     def __init__(self, directory_url: str):

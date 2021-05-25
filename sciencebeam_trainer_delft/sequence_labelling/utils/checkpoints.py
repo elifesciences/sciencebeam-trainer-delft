@@ -36,6 +36,7 @@ def get_checkpoint_for_json(checkpoint_json: Optional[dict]) -> Optional[CheckPo
     if not checkpoint_json:
         return None
     path = checkpoint_json.get('path')
+    assert path
     epoch = checkpoint_json.get('epoch')
     assert epoch
     meta = get_checkpoint_meta_or_none(path) or {}
@@ -53,7 +54,7 @@ class CheckPoints:
     def __init__(self, log_dir: Union[str, Path]):
         assert log_dir
         self.log_dir = str(log_dir)
-        self._checkpoints_json: dict = None
+        self._checkpoints_json: Optional[dict] = None
 
     def _load_checkpoints_json(self) -> dict:
         try:

@@ -2,7 +2,7 @@ import logging
 import json
 from itertools import groupby
 from collections import defaultdict, OrderedDict
-from typing import List, Union, Tuple, Sequence, T
+from typing import Iterator, List, Union, Tuple, Sequence, T
 
 import numpy as np
 
@@ -45,12 +45,8 @@ class NpJsonEncoder(json.JSONEncoder):
             return super().default(obj)
 
 
-def _get_first(some_list: List[T], default_value: T = None) -> T:
-    return next(some_list, default_value)
-    # try:
-    #     return some_list[0]
-    # except IndexError:
-    #     return default_value
+def _get_first(some_iterator: Iterator[T], default_value: T = None) -> T:
+    return next(some_iterator, default_value)
 
 
 def get_first_entities(

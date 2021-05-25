@@ -569,6 +569,7 @@ class Sequence(_Sequence):
             preprocessor=self.p
         )
         LOGGER.debug('tag_transformed: %s', self.tag_transformed)
+        annotations: Union[dict, Iterable[List[Tuple[str, str]]]]
         if output_format == 'json':
             start_time = time.time()
             annotations = tagger.tag(
@@ -577,6 +578,7 @@ class Sequence(_Sequence):
                 tag_transformed=self.tag_transformed
             )
             runtime = round(time.time() - start_time, 3)
+            assert isinstance(annotations, dict)
             annotations["runtime"] = runtime
         else:
             annotations = tagger.iter_tag(

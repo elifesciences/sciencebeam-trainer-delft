@@ -327,7 +327,7 @@ def train(
 
 
 def wapiti_train(
-        model: str,
+        model_name: str,
         template_path: str,
         output_path: str,
         input_paths: List[str] = None,
@@ -343,7 +343,7 @@ def wapiti_train(
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
         model = WapitiModelTrainAdapter(
-            model_name=model,
+            model_name=model_name,
             template_path=template_path,
             temp_model_path=temp_model_path,
             max_epoch=max_epoch,

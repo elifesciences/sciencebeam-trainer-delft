@@ -610,7 +610,7 @@ class TestGrobidTrainerUtils:
             template_path = temp_dir.joinpath('template')
             template_path.write_text('U00:%x[-4,0]')
             wapiti_train(
-                model=default_args['model'],
+                model_name=default_args['model'],
                 template_path=str(template_path),
                 input_paths=default_args['input_paths'],
                 output_path=default_args['output_path'],
@@ -654,7 +654,7 @@ class TestGrobidTrainerUtils:
             template_path = temp_dir.joinpath('template')
             template_path.write_text('U00:%x[-4,0]')
             wapiti_train(
-                model=default_args['model'],
+                model_name=default_args['model'],
                 template_path=str(template_path),
                 input_paths=default_args['input_paths'],
                 output_path=default_args['output_path'],

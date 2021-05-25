@@ -85,26 +85,30 @@ class EnvironmentVariables:
     STATEFUL = 'SCIENCEBEAM_DELFT_STATEFUL'
 
 
-def get_typed_env(key: str, type_fn: Callable[[str], T], default_value: T = None) -> T:
+def get_typed_env(
+    key: str,
+    type_fn: Callable[[str], T],
+    default_value: Optional[T] = None
+) -> Optional[T]:
     max_sequence_length_str = os.getenv(key)
     if not max_sequence_length_str:
         return default_value
     return type_fn(max_sequence_length_str)
 
 
-def get_default_max_sequence_length() -> int:
+def get_default_max_sequence_length() -> Optional[int]:
     return get_typed_env(EnvironmentVariables.MAX_SEQUENCE_LENGTH, int, default_value=None)
 
 
-def get_default_input_window_stride() -> int:
+def get_default_input_window_stride() -> Optional[int]:
     return get_typed_env(EnvironmentVariables.INPUT_WINDOW_STRIDE, int, default_value=None)
 
 
-def get_default_batch_size() -> int:
+def get_default_batch_size() -> Optional[int]:
     return get_typed_env(EnvironmentVariables.BATCH_SIZE, int, default_value=DEFAUT_BATCH_SIZE)
 
 
-def get_default_stateful() -> bool:
+def get_default_stateful() -> Optional[bool]:
     return get_typed_env(
         EnvironmentVariables.STATEFUL,
         str_to_bool,

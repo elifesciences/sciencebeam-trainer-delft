@@ -3,6 +3,7 @@ import os
 import time
 from functools import partial
 from typing import Callable, Iterable, List, Optional, Tuple, Union, T
+from delft.sequenceLabelling.models import BaseModel
 
 import numpy as np
 
@@ -253,6 +254,9 @@ class Sequence(_Sequence):
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
         self._load_exception = None
+        self.p: Optional[WordPreprocessor] = None
+        self.model: Optional[BaseModel] = None
+        self.models: List[BaseModel] = []
 
     def update_model_config_word_embedding_size(self):
         if self.embeddings:

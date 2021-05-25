@@ -433,7 +433,7 @@ class Sequence(_Sequence):
             self.eval_single(x_test, y_test, features=features)
 
     def create_eval_data_generator(self, *args, **kwargs) -> DataGenerator:
-        return DataGenerator(
+        return DataGenerator(  # type: ignore
             *args,
             batch_size=(
                 self.eval_batch_size

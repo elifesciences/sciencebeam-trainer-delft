@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from sklearn.base import TransformerMixin
 
-from sciencebeam_trainer_delft.utils.typing import T
+from sciencebeam_trainer_delft.utils.typing import T_GetSetStateProtocol
 from sciencebeam_trainer_delft.sequence_labelling.preprocess import (
     WordPreprocessor,
     FeaturesPreprocessor
@@ -75,7 +75,7 @@ def all_close(a: np.array, b: np.array):
     return np.allclose(_to_dense(a), _to_dense(b))
 
 
-def _get_state_and_restore(obj: T) -> T:
+def _get_state_and_restore(obj: T_GetSetStateProtocol) -> T_GetSetStateProtocol:
     state = obj.__getstate__()
     LOGGER.debug('state: %s', state)
     obj = type(obj)()

@@ -277,7 +277,7 @@ class WapitiModelTrainAdapter:
             model_name: str,
             template_path: str,
             temp_model_path: str,
-            max_epoch: str,
+            max_epoch: int,
             download_manager: DownloadManager,
             gzip_enabled: bool = False,
             wapiti_binary_path: str = None,

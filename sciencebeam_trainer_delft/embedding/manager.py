@@ -49,7 +49,7 @@ def _get_embedding_type_for_filename(filename: str) -> str:
     return filename
 
 
-def _get_embedding_config_for_filename(filename: str) -> str:
+def _get_embedding_config_for_filename(filename: str) -> dict:
     return {
         'name': _get_embedding_name_for_filename(filename),
         'format': _get_embedding_format_for_filename(filename),

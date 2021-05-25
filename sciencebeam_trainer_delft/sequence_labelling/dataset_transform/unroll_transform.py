@@ -172,6 +172,9 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         inverse_transformed_y = None
         if y is not None:
             inverse_transformed_y = []
+            assert self._saved_x is not None
+            assert self._saved_features is not None
+            assert self._unrolled_token_lengths is not None
             for x_doc, features_doc, y_doc, unrolled_token_lengths_doc in zip(
                 self._saved_x, self._saved_features, y, self._unrolled_token_lengths
             ):

@@ -2,7 +2,7 @@ import logging
 import json
 from itertools import groupby
 from collections import defaultdict, OrderedDict
-from typing import Iterator, List, Union, Tuple, Sequence, T
+from typing import Iterator, List, Union, Tuple, Sequence, T, cast
 
 import numpy as np
 
@@ -53,11 +53,14 @@ def get_first_entities(
     y: Sequence[Union[str, Sequence[str]]],
     prefix: str = 'first_'
 ) -> List[Tuple[str, int, int]]:
-    if not any(isinstance(s, list) for s in y):
-        y = [y]
+    y_list_of_lists: Sequence[Sequence[str]] = (
+        [cast(Sequence[str], y)]
+        if not any(isinstance(s, list) for s in y)
+        else y
+    )
     offset = 0
     first_entities = []
-    for seq in y:
+    for seq in y_list_of_lists:
         entities = sorted(set(get_entities(seq)))
         for type_name, grouped_entities in groupby(entities, key=lambda entity: entity[0]):
             first_entity = _get_first(grouped_entities)

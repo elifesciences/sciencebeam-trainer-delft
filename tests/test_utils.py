@@ -1,11 +1,15 @@
 import logging
 from functools import wraps
+from typing import Callable, TypeVar, cast
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-def log_on_exception(f: callable) -> callable:
+T_Callable = TypeVar('T_Callable', bound=Callable)
+
+
+def log_on_exception(f: T_Callable) -> T_Callable:
     """
     Wraps function to log error on exception.
     That is useful for tests that log a lot of things,
@@ -19,4 +23,4 @@ def log_on_exception(f: callable) -> callable:
         except Exception as e:  # pylint: disable=broad-except
             LOGGER.exception('failed due to %s', repr(e))
             raise
-    return wrapper
+    return cast(T_Callable, wrapper)

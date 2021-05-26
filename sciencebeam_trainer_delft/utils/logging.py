@@ -4,7 +4,7 @@ import logging
 import sys
 from io import StringIO
 from contextlib import contextmanager
-from typing import Callable, IO, List, Optional
+from typing import Callable, IO, List, Optional, Sequence, TextIO, cast
 
 
 LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ def reset_logging(**kwargs):
 class TeeStreamToLineWriter:
     def __init__(
             self,
-            *line_writers: List[Callable[[str], None]],
+            *line_writers: Callable[[str], None],
             raw_fp: IO = None,
             append_line_feed: bool = False):
         self.line_writers = line_writers
@@ -71,15 +71,15 @@ class TeeStreamToLineWriter:
 
 @contextmanager
 def tee_stdout_lines_to(
-        *line_writers: List[Callable[[str], None]],
+        *line_writers: Callable[[str], None],
         **kwargs):
     prev_stdout = sys.stdout
     try:
-        sys.stdout = TeeStreamToLineWriter(
+        sys.stdout = cast(TextIO, TeeStreamToLineWriter(
             *line_writers,
             raw_fp=prev_stdout,
             **kwargs
-        )
+        ))
         yield sys.stdout
     finally:
         sys.stdout = prev_stdout
@@ -87,15 +87,15 @@ def tee_stdout_lines_to(
 
 @contextmanager
 def tee_stderr_lines_to(
-        *line_writers: List[Callable[[str], None]],
+        *line_writers: Callable[[str], None],
         **kwargs):
     prev_stderr = sys.stderr
     try:
-        sys.stderr = TeeStreamToLineWriter(
+        sys.stderr = cast(TextIO, TeeStreamToLineWriter(
             *line_writers,
             raw_fp=prev_stderr,
             **kwargs
-        )
+        ))
         yield sys.stderr
     finally:
         sys.stderr = prev_stderr
@@ -103,7 +103,7 @@ def tee_stderr_lines_to(
 
 @contextmanager
 def tee_stdout_and_stderr_lines_to(
-        *line_writers: List[Callable[[str], None]],
+        *line_writers: Callable[[str], None],
         **kwargs):
     with tee_stdout_lines_to(*line_writers, **kwargs) as stdout:
         with tee_stderr_lines_to(*line_writers, **kwargs) as stderr:
@@ -113,10 +113,10 @@ def tee_stdout_and_stderr_lines_to(
 class LineWriterLoggingHandler(logging.Handler):
     def __init__(
             self,
-            *line_writers: List[Callable[[str], None]],
+            *line_writers: Callable[[str], None],
             append_line_feed: bool = False,
             **kwargs):
-        self.line_writers = line_writers
+        self.line_writers: Sequence[Callable[[str], None]] = line_writers
         self.append_line_feed = append_line_feed
         self._logging = False
         super().__init__(**kwargs)
@@ -156,7 +156,7 @@ def flush_logging_handlers(handlers: List[logging.Handler]):
 
 @contextmanager
 def tee_logging_lines_to(
-        *line_writers: List[Callable[[str], None]],
+        *line_writers: Callable[[str], None],
         logger: logging.Logger = None,
         formatter: logging.Formatter = None,
         **kwargs):

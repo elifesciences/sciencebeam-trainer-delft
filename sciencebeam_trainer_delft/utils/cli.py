@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 from abc import abstractmethod, ABC
-from typing import List, Callable, Sequence
+from typing import List, Callable, Optional, Sequence
 
 
 LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ def process_default_args(args: argparse.Namespace):
 
 
 def default_main(
-        parse_args: Callable[[List[str]], argparse.Namespace],
+        parse_args: Callable[[Optional[List[str]]], argparse.Namespace],
         run: Callable[[argparse.Namespace], None],
         argv: List[str] = None):
     LOGGER.debug('argv: %s', argv)

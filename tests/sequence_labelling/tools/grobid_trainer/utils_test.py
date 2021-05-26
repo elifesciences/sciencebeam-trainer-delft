@@ -252,7 +252,7 @@ class TestGrobidTrainerUtils:
                 download_manager=download_manager_mock
             )
             load_data_and_labels_crf_file_mock.assert_called_with(
-                input_paths=INPUT_PATH_1,
+                INPUT_PATH_1,
                 limit=123
             )
 

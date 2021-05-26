@@ -10,7 +10,7 @@ def concatenate_or_none(arrays: Sequence[np.array], **kwargs) -> np.array:
 
 
 # https://stackoverflow.com/a/51526109/8676953
-def shuffle_arrays(arrays: List[np.array], random_seed: int = None) -> List[np.array]:
+def shuffle_arrays(arrays: List[np.array], random_seed: int = None):
     """Shuffles arrays in-place, in the same order, along axis=0
 
     Parameters:

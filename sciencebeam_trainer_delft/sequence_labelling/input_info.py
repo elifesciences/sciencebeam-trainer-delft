@@ -77,8 +77,8 @@ def format_dict(d: dict) -> str:
     ]) + '}'
 
 
-def iter_index_groups(indices: List[int]) -> str:
-    group = []
+def iter_index_groups(indices: List[int]) -> Iterable[List[int]]:
+    group: List[int] = []
     for index in indices:
         if not group or group[-1] + 1 == index:
             group.append(index)
@@ -89,8 +89,7 @@ def iter_index_groups(indices: List[int]) -> str:
         yield group
 
 
-def iter_formatted_index_groups(indices: List[int]) -> str:
-    group = []
+def iter_formatted_index_groups(indices: List[int]) -> Iterable[str]:
     for group in iter_index_groups(indices):
         if len(group) == 1:
             yield str(group[0])

@@ -170,7 +170,6 @@ class TrainArgsDict(DefaultArgsDict):
     pass
 
 
-
 @pytest.fixture(name='default_args')
 def _default_args(
     sample_train_file: str,

@@ -1,6 +1,8 @@
 import logging
 import warnings
-from typing import Optional
+from typing import Any, Dict, Optional
+
+from typing_extensions import Protocol
 
 import numpy as np
 
@@ -80,12 +82,17 @@ class ResumableEarlyStopping(EarlyStopping):
         LOGGER.info('on_epoch_end: logs=%s', logs)
 
 
+class SaveFunctionProtocol(Protocol):
+    def __call__(self, epoch: int, logs: Dict[str, Any], **kwargs):
+        pass
+
+
 class ModelSaverCallback(Callback):
     """Similar to ModelCheckpoint but leaves the actual saving to the save_fn.
     """
     def __init__(
             self,
-            save_fn: callable = None,
+            save_fn: Optional[SaveFunctionProtocol],
             monitor: str = 'val_loss',
             mode: str = 'auto',
             period: int = 1,

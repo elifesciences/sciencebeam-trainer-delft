@@ -95,7 +95,10 @@ class SubCommandProcessor:
         kwargs = {}
         if sys.version_info >= (3, 7):
             kwargs['required'] = True
-        subparsers = parser.add_subparsers(dest=self.command_dest, **kwargs)
+        subparsers = parser.add_subparsers(
+            dest=self.command_dest,
+            **kwargs  # type: ignore
+        )
         subparsers.required = True
         self.add_sub_command_parsers_to_subparsers(subparsers)
 

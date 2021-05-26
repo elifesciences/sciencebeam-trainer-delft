@@ -155,7 +155,7 @@ def _model_base_path(temp_dir: Path):
 
 
 class DefaultArgsDict(TypedDict):
-    model: str
+    model_name: str
     embeddings_name: Optional[str]
     input_paths: List[str]
     download_manager: Optional[DownloadManager]

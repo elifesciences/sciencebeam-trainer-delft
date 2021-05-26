@@ -66,8 +66,9 @@ class CompressionWrapper(ABC):
 
     @contextmanager
     def open(self, filename: str, mode: str) -> Iterator[IO]:
+        LOGGER.debug('opening file: %r, mode=%r', filename, mode)
         with _open_raw(filename, mode=mode) as fp:
-            return self.wrap_fileobj(
+            yield self.wrap_fileobj(
                 filename=filename,
                 fileobj=fp,
                 mode=mode

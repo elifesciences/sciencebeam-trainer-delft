@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Optional, Tuple
 
 
 def parse_comma_separated_str(s: str) -> List[str]:
@@ -47,7 +47,7 @@ def merge_dicts(dict_list: List[dict]) -> dict:
     return result
 
 
-def str_to_bool(value: str, default_value: bool = None) -> bool:
+def str_to_bool(value: str, default_value: Optional[bool] = None) -> Optional[bool]:
     if not value:
         return default_value
     if value.lower() in {'true', 't', 'yes', '1'}:

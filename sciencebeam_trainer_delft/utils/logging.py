@@ -4,7 +4,7 @@ import logging
 import sys
 from io import StringIO
 from contextlib import contextmanager
-from typing import Callable, IO, List
+from typing import Callable, IO, List, Optional
 
 
 LOGGER = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ class LineWriterLoggingHandler(logging.Handler):
             self._logging = False
 
 
-def get_default_logging_formatter() -> logging.Formatter:
+def get_default_logging_formatter() -> Optional[logging.Formatter]:
     for root_handler in logging.root.handlers:
         if isinstance(root_handler, logging.StreamHandler):
             return root_handler.formatter
@@ -167,7 +167,8 @@ def tee_logging_lines_to(
     prev_handlers = logger.handlers
     try:
         handler = LineWriterLoggingHandler(*line_writers, **kwargs)
-        handler.setFormatter(formatter)
+        if formatter is not None:
+            handler.setFormatter(formatter)
         logger.addHandler(handler)
         yield logger
     finally:

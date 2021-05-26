@@ -275,7 +275,8 @@ def process_resume_train_model_params(
 
 # train a GROBID model with all available data
 def train(
-        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+        model_name: str,
+        embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_paths: List[str] = None,
         output_path: str = None,
         limit: int = None,
@@ -290,13 +291,9 @@ def train(
         embedding_manager: EmbeddingManager = None,
         **kwargs):
 
-    if output_path:
-        model_name = model
-    else:
-        model_name = 'grobid-' + model
-
-    if use_ELMo:
-        model_name += '-with_ELMo'
+    model_name = get_model_name(
+        model_name, output_path=output_path, use_ELMo=use_ELMo
+    )
 
     model = Sequence(
         model_name,
@@ -516,7 +513,8 @@ def do_train_eval_with_error_notification(
 
 # split data, train a GROBID model and evaluate it
 def train_eval(
-        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+        model_name: str,
+        embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_paths: List[str] = None,
         output_path: str = None,
         limit: int = None,
@@ -534,15 +532,9 @@ def train_eval(
         embedding_manager: EmbeddingManager = None,
         **kwargs):
 
-    if output_path:
-        model_name = model
-    else:
-        model_name = 'grobid-' + model
-
-    if use_ELMo:
-        model_name += '-with_ELMo'
-        if model_name in {'software-with_ELMo', 'grobid-software-with_ELMo'}:
-            batch_size = 3
+    model_name = get_model_name(
+        model_name, output_path=output_path, use_ELMo=use_ELMo
+    )
 
     model = Sequence(
         model_name,

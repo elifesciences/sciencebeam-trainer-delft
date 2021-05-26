@@ -1,5 +1,5 @@
 from collections import Counter, defaultdict, OrderedDict
-from typing import Dict, List
+from typing import Dict, Iterable, List
 
 import numpy as np
 
@@ -20,7 +20,7 @@ def iter_flat_features(features: np.ndarray):
     )
 
 
-def get_quantiles(values: List[float]) -> Dict[str, float]:
+def get_quantiles(values: Iterable[float]) -> Dict[str, float]:
     arr = np.array(list(values))
     return OrderedDict([
         ('q.00', np.quantile(arr, 0)),
@@ -39,7 +39,7 @@ def get_quantiles_feature_value_length_by_index(features: np.ndarray):
 
 
 def get_feature_value_counts_by_index(features: np.ndarray, max_feature_values: int = 1000):
-    feature_value_counts_by_index = defaultdict(Counter)
+    feature_value_counts_by_index: Dict[int, Counter] = defaultdict(Counter)
     for feature_vector in iter_flat_features(features):
         for index, value in enumerate(feature_vector):
             feature_value_counts = feature_value_counts_by_index[index]
@@ -77,8 +77,8 @@ def format_dict(d: dict) -> str:
     ]) + '}'
 
 
-def iter_index_groups(indices: List[int]) -> str:
-    group = []
+def iter_index_groups(indices: List[int]) -> Iterable[List[int]]:
+    group: List[int] = []
     for index in indices:
         if not group or group[-1] + 1 == index:
             group.append(index)
@@ -89,8 +89,7 @@ def iter_index_groups(indices: List[int]) -> str:
         yield group
 
 
-def iter_formatted_index_groups(indices: List[int]) -> str:
-    group = []
+def iter_formatted_index_groups(indices: List[int]) -> Iterable[str]:
     for group in iter_index_groups(indices):
         if len(group) == 1:
             yield str(group[0])

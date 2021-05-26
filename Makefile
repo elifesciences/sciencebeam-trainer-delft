@@ -93,7 +93,11 @@ dev-pylint:
 	$(PYTHON) -m pylint sciencebeam_trainer_delft tests setup.py
 
 
-dev-lint: dev-flake8 dev-pylint
+dev-mypy:
+	$(PYTHON) -m mypy --ignore-missing-imports sciencebeam_trainer_delft tests setup.py $(ARGS)
+
+
+dev-lint: dev-flake8 dev-pylint dev-mypy
 
 
 dev-pytest:
@@ -131,6 +135,10 @@ flake8:
 	$(DELFT_DEV_RUN) flake8 sciencebeam_trainer_delft tests setup.py
 
 
+mypy:
+	$(DELFT_DEV_RUN) mypy --ignore-missing-imports sciencebeam_trainer_delft tests setup.py
+
+
 pytest:
 	$(DELFT_DEV_RUN) pytest -v -p no:cacheprovider $(PYTEST_ARGS)
 
@@ -161,7 +169,8 @@ test-setup-install:
 
 lint: \
 	flake8 \
-	pylint
+	pylint \
+	mypy
 
 
 test: \

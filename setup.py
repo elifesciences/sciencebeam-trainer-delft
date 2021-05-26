@@ -4,7 +4,7 @@ import os
 import subprocess
 import shlex
 
-from distutils.command.build import build  # pylint: disable=import-error, no-name-in-module
+from distutils.command.build import build  # type: ignore
 
 from setuptools import (
     find_packages,

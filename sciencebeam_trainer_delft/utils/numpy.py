@@ -1,16 +1,16 @@
-from typing import List
+from typing import List, Sequence
 
 import numpy as np
 
 
-def concatenate_or_none(arrays: List[np.array], **kwargs) -> np.array:
+def concatenate_or_none(arrays: Sequence[np.array], **kwargs) -> np.array:
     if arrays[0] is None:
         return None
     return np.concatenate(arrays, **kwargs)
 
 
 # https://stackoverflow.com/a/51526109/8676953
-def shuffle_arrays(arrays: List[np.array], random_seed: int = None) -> List[np.array]:
+def shuffle_arrays(arrays: List[np.array], random_seed: int = None):
     """Shuffles arrays in-place, in the same order, along axis=0
 
     Parameters:

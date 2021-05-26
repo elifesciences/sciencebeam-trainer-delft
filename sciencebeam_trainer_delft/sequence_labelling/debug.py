@@ -3,6 +3,7 @@ import logging
 import time
 from contextlib import contextmanager
 from pathlib import Path
+from typing import IO, Iterator, Optional
 
 import numpy as np
 
@@ -19,7 +20,7 @@ SCIENCEBEAM_DELFT_TAGGING_DEBUG_OUT = "SCIENCEBEAM_DELFT_TAGGING_DEBUG_OUT"
 
 
 @contextmanager
-def exclusive_prefixed_file(prefix: str, suffix: str = '') -> str:
+def exclusive_prefixed_file(prefix: str, suffix: str = '') -> Iterator[IO]:
     for index in range(1, 10000):
         filename = '%s-%d%s' % (prefix, index, suffix)
         try:
@@ -86,7 +87,7 @@ class TagDebugReporter:
                 Path(filename_prefix + '.data').write_text(formatted_data, encoding='utf-8')
 
 
-def get_tag_debug_reporter_if_enabled() -> TagDebugReporter:
+def get_tag_debug_reporter_if_enabled() -> Optional[TagDebugReporter]:
     output_directory = os.environ.get(SCIENCEBEAM_DELFT_TAGGING_DEBUG_OUT)
     if not output_directory:
         return None

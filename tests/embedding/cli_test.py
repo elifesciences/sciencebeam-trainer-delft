@@ -36,7 +36,7 @@ def _embedding_manager(
         embedding_registry_path: Path,
         embedding_lmdb_path: Path):
     embedding_manager = EmbeddingManager(
-        embedding_registry_path,
+        str(embedding_registry_path),
         download_manager=download_manager,
         default_embedding_lmdb_path=str(embedding_lmdb_path),
         min_lmdb_cache_size=0
@@ -91,6 +91,7 @@ class TestMain:
             '--override-url=%s=%s' % (EMBEDDING_NAME_1, EXTERNAL_TXT_URL_1)
         ])
         embedding_config = embedding_manager.get_embedding_config(EMBEDDING_NAME_1)
+        assert embedding_config
         assert embedding_config['url'] == EXTERNAL_TXT_URL_1
 
     def test_should_preload_embedding(

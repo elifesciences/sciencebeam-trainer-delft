@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 from abc import abstractmethod, ABC
-from typing import List, Callable
+from typing import List, Callable, Optional, Sequence
 
 
 LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ def process_default_args(args: argparse.Namespace):
 
 
 def default_main(
-        parse_args: Callable[[List[str]], argparse.Namespace],
+        parse_args: Callable[[Optional[List[str]]], argparse.Namespace],
         run: Callable[[argparse.Namespace], None],
         argv: List[str] = None):
     LOGGER.debug('argv: %s', argv)
@@ -45,7 +45,7 @@ def configure_main_logging():
     logging.basicConfig(level='INFO')
 
 
-def initialize_and_call_main(main: callable):
+def initialize_and_call_main(main: Callable[[], None]):
     configure_main_logging()
     main()
 
@@ -67,7 +67,7 @@ class SubCommand(ABC):
 class SubCommandProcessor:
     def __init__(
             self,
-            sub_commands: List[SubCommand],
+            sub_commands: Sequence[SubCommand],
             description: str = None,
             command_dest: str = 'command'):
         self.sub_commands = sub_commands
@@ -95,11 +95,17 @@ class SubCommandProcessor:
         kwargs = {}
         if sys.version_info >= (3, 7):
             kwargs['required'] = True
-        subparsers = parser.add_subparsers(dest=self.command_dest, **kwargs)
+        subparsers = parser.add_subparsers(
+            dest=self.command_dest,
+            **kwargs  # type: ignore
+        )
         subparsers.required = True
         self.add_sub_command_parsers_to_subparsers(subparsers)
 
-    def add_sub_command_parsers_to_subparsers(self, subparsers: argparse.ArgumentParser):
+    def add_sub_command_parsers_to_subparsers(
+        self,
+        subparsers: argparse._SubParsersAction  # pylint: disable=protected-access
+    ):
         for sub_command in self.sub_commands:
             sub_parser = subparsers.add_parser(
                 sub_command.name, help=sub_command.description,

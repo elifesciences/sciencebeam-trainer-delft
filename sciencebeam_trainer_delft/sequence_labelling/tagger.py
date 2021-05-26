@@ -34,7 +34,7 @@ def iter_predict_texts_with_sliding_window_if_enabled(
         texts: List[Union[str, List[str]]],
         model_config: ModelConfig,
         preprocessor: WordPreprocessor,
-        max_sequence_length: int,
+        max_sequence_length: Optional[int],
         model,
         input_window_stride: int = None,
         embeddings: Embeddings = None,
@@ -75,8 +75,8 @@ def iter_predict_texts_with_sliding_window_if_enabled(
             )
 
     predict_generator = DataGenerator(
-        texts,
-        None,
+        x=texts,
+        y=None,
         batch_size=model_config.batch_size,
         preprocessor=preprocessor,
         additional_token_feature_indices=model_config.additional_token_feature_indices,
@@ -98,7 +98,7 @@ def iter_predict_texts_with_sliding_window_if_enabled(
         name='%s.predict_generator' % model_config.model_name
     )
 
-    prediction_list_list = [[] for _ in texts]
+    prediction_list_list: List[List[np.ndarray]] = [[] for _ in texts]
     batch_window_indices_and_offsets_iterable = logging_tqdm(
         iter_batch_window_indices_and_offsets(
             predict_generator
@@ -172,7 +172,9 @@ class Tagger:
         self.max_sequence_length = max_sequence_length
         self.input_window_stride = input_window_stride
         if dataset_transformer_factory is None:
-            self.dataset_transformer_factory = DummyDatasetTransformer
+            self.dataset_transformer_factory: T_DatasetTransformerFactory = (
+                DummyDatasetTransformer
+            )
         else:
             self.dataset_transformer_factory = dataset_transformer_factory
 

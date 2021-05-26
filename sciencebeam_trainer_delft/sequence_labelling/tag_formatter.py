@@ -2,7 +2,7 @@ import json
 import difflib
 import logging
 from xml.sax.saxutils import escape as xml_escape
-from typing import Union, Iterable, List, Tuple
+from typing import Optional, Union, Iterable, List, Tuple
 
 import numpy as np
 
@@ -65,7 +65,7 @@ def format_list_tag_result_as_json(
 
 def iter_to_data_lines(
     features: np.array,
-    annotations: List[List[Tuple[str, str]]]
+    annotations: Iterable[List[Tuple[str, str]]]
 ) -> Iterable[str]:
     return (
         ' '.join([token_annoation[0]] + list(token_features) + [token_annoation[1]])
@@ -79,10 +79,11 @@ def to_data_lines(*args, **kwargs) -> List[str]:
 
 
 def iter_format_list_tag_result_as_data(
-        tag_result: Iterable[List[Tuple[str, str]]],
-        texts: np.array = None,  # pylint: disable=unused-argument
-        features: np.array = None,
-        model_name: str = None) -> str:  # pylint: disable=unused-argument
+    tag_result: Iterable[List[Tuple[str, str]]],
+    texts: np.array = None,  # pylint: disable=unused-argument
+    features: np.array = None,
+    model_name: str = None  # pylint: disable=unused-argument
+) -> Iterable[str]:
     assert features is not None
     data_text_iterable = iter_to_data_lines(
         features=features,
@@ -179,7 +180,7 @@ def iter_format_document_list_tag_result_as_data_unidiff(
 
 def iter_format_list_tag_result_as_data_unidiff(
     tag_result: Iterable[List[Tuple[str, str]]],
-    expected_tag_result: List[Tuple[str, str]] = None,
+    expected_tag_result: List[List[Tuple[str, str]]],
     texts: np.ndarray = None,  # pylint: disable=unused-argument
     features: np.ndarray = None,
     model_name: str = None  # pylint: disable=unused-argument
@@ -218,9 +219,10 @@ def get_xml_tag_for_annotation_label(annotation_label: str) -> str:
 
 
 def iter_add_untagged_token_spans(
-        entity_chunks: List[Tuple[str, int, int]],
-        token_count: int,
-        untagged_chunk_type: str = None) -> List[Tuple[str, int, int]]:
+    entity_chunks: Iterable[Tuple[str, int, int]],
+    token_count: int,
+    untagged_chunk_type: str = None
+) -> Iterable[Tuple[Optional[str], int, int]]:
     prev_chunk_end_excl = 0
     for chunk_type, chunk_start, chunk_end in entity_chunks:
         if chunk_start > prev_chunk_end_excl:
@@ -260,7 +262,8 @@ def iter_doc_annotations_xml_text(
 
 
 def iter_annotations_xml_text(
-        annotations: List[List[Tuple[str, str]]]) -> Iterable[str]:
+    annotations: Iterable[List[Tuple[str, str]]]
+) -> Iterable[str]:
     for doc_index, doc_annotations in enumerate(annotations):
         if doc_index > 0:
             yield '\n\n'
@@ -287,11 +290,12 @@ def format_list_tag_result_as_xml(*args, **kwargs) -> str:
 
 
 def iter_format_list_tag_result_as_xml_diff(
-        tag_result: Iterable[List[Tuple[str, str]]],
-        expected_tag_result: List[Tuple[str, str]] = None,
-        texts: np.array = None,  # pylint: disable=unused-argument
-        features: np.array = None,  # pylint: disable=unused-argument
-        model_name: str = None) -> str:  # pylint: disable=unused-argument
+    tag_result: Iterable[List[Tuple[str, str]]],
+    expected_tag_result: List[List[Tuple[str, str]]],
+    texts: np.array = None,  # pylint: disable=unused-argument
+    features: np.array = None,  # pylint: disable=unused-argument
+    model_name: str = None  # pylint: disable=unused-argument
+) -> Iterable[str]:
     assert expected_tag_result
     actual_xml = format_list_tag_result_as_xml(tag_result)
     expected_xml = format_list_tag_result_as_xml(expected_tag_result)
@@ -304,7 +308,7 @@ def iter_format_list_tag_result_as_xml_diff(
 def iter_format_list_tag_result(
         *args,
         output_format: str,
-        expected_tag_result: List[Tuple[str, str]] = None,
+        expected_tag_result: Optional[List[List[Tuple[str, str]]]] = None,
         **kwargs) -> Iterable[str]:
     if output_format == TagOutputFormats.JSON:
         yield format_list_tag_result_as_json(*args, **kwargs)
@@ -313,7 +317,8 @@ def iter_format_list_tag_result(
         yield from iter_format_list_tag_result_as_data(*args, **kwargs)
         return
     if output_format == TagOutputFormats.DATA_UNIDIFF:
-        yield from iter_format_list_tag_result_as_data_unidiff(
+        assert expected_tag_result
+        yield from iter_format_list_tag_result_as_data_unidiff(  # type: ignore
             *args,
             expected_tag_result=expected_tag_result,
             **kwargs
@@ -326,7 +331,8 @@ def iter_format_list_tag_result(
         yield from iter_format_list_tag_result_as_xml(*args, **kwargs)
         return
     if output_format == TagOutputFormats.XML_DIFF:
-        yield from iter_format_list_tag_result_as_xml_diff(
+        assert expected_tag_result
+        yield from iter_format_list_tag_result_as_xml_diff(  # type: ignore
             *args,
             expected_tag_result=expected_tag_result,
             **kwargs
@@ -338,7 +344,7 @@ def iter_format_list_tag_result(
 def iter_format_tag_result(
         tag_result: Union[dict, list, Iterable],
         output_format: str,
-        expected_tag_result: List[Tuple[str, str]] = None,
+        expected_tag_result: Optional[List[List[Tuple[str, str]]]] = None,
         texts: np.array = None,
         features: np.array = None,
         model_name: str = None) -> Iterable[str]:

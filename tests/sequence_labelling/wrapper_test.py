@@ -117,7 +117,10 @@ class TestSequenceEndToEnd:
             x_train=x_train, y_train=y_train,
             x_valid=x_train, y_valid=y_train
         )
-        model_wrapper = Sequence(MODEL_NAME_1, **model_kwargs)
+        model_wrapper = Sequence(
+            MODEL_NAME_1,
+            **model_kwargs  # type: ignore
+        )
         model_wrapper.train(**train_kwargs)
         layer_name = 'word_lstm'
         expected_weights_list = get_layer_by_name(model_wrapper.model, layer_name).get_weights()
@@ -129,7 +132,7 @@ class TestSequenceEndToEnd:
                 copy_layers={layer_name: layer_name},
                 freeze_layers=[layer_name]
             ),
-            **model_kwargs
+            **model_kwargs  # type: ignore
         )
         model_wrapper_2.train(**train_kwargs)
         actual_weights_list = get_layer_by_name(model_wrapper_2.model, layer_name).get_weights()

@@ -10,13 +10,15 @@ from gzip import GzipFile
 from lzma import LZMAFile
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
-from typing import List, IO, ContextManager
+from typing import List, IO, Iterator
 
 from six import string_types, text_type
 
 try:
-    from tensorflow.python.lib.io import file_io as tf_file_io
-    from tensorflow.python.framework.errors_impl import NotFoundError as tf_NotFoundError
+    from tensorflow.python.lib.io import file_io as tf_file_io  # type: ignore
+    from tensorflow.python.framework.errors_impl import (  # type: ignore
+        NotFoundError as tf_NotFoundError
+    )
 except ImportError:
     tf_file_io = None
     tf_NotFoundError = None
@@ -62,12 +64,15 @@ class CompressionWrapper(ABC):
     def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
         pass
 
-    def open(self, filename: str, mode: str):
-        return self.wrap_fileobj(
-            filename=filename,
-            fileobj=_open_raw(filename, mode=mode),
-            mode=mode
-        )
+    @contextmanager
+    def open(self, filename: str, mode: str) -> Iterator[IO]:
+        LOGGER.debug('opening file: %r, mode=%r', filename, mode)
+        with _open_raw(filename, mode=mode) as fp:
+            yield self.wrap_fileobj(
+                filename=filename,
+                fileobj=fp,
+                mode=mode
+            )
 
 
 class ClosingGzipFile(GzipFile):
@@ -109,7 +114,7 @@ class XzCompressionWrapper(CompressionWrapper):
         return strip_xz_filename_ext(filepath)
 
     def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
-        return LZMAFile(filename=fileobj, mode=mode)
+        return LZMAFile(filename=fileobj, mode=mode or 'r')
 
 
 class DummyCompressionWrapper(CompressionWrapper):
@@ -138,7 +143,7 @@ def strip_compression_filename_ext(filepath: str) -> str:
 
 
 @contextmanager
-def _open_raw(filepath: str, mode: str):
+def _open_raw(filepath: str, mode: str) -> Iterator[IO]:
     if filepath.startswith('https://'):
         try:
             with tempfile.TemporaryDirectory(suffix='download') as temp_dir:
@@ -226,7 +231,7 @@ def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
 
 
 @contextmanager
-def auto_download_input_file(filepath: str, auto_decompress: bool = False) -> ContextManager[str]:
+def auto_download_input_file(filepath: str, auto_decompress: bool = False) -> Iterator[str]:
     if not is_external_location(filepath):
         yield filepath
         return
@@ -270,6 +275,10 @@ class FileRef(ABC):
     def __repr__(self):
         return '%s(%r)' % (type(self).__name__, self.file_url)
 
+    @abstractmethod
+    def copy_to(self, target_url: str):
+        pass
+
 
 class FileContainer(ABC):
     def __init__(self, directory_url: str):
@@ -309,8 +318,13 @@ class TarFileRef(FileRef):
         self.tar_file = tar_file
         self.tar_info = tar_info
 
+    def open_tar_file(self) -> IO:
+        fp = self.tar_file.extractfile(self.tar_info)
+        assert fp
+        return fp
+
     def copy_to(self, target_url: str):
-        with self.tar_file.extractfile(self.tar_info) as source_fp:
+        with self.open_tar_file() as source_fp:
             with open_file(
                     target_url,
                     mode='wb',
@@ -370,7 +384,7 @@ class ZipFileContainer(FileContainer):
 
 
 @contextmanager
-def open_file_container(directory_url: str) -> ContextManager[FileContainer]:
+def open_file_container(directory_url: str) -> Iterator[FileContainer]:
     if str(directory_url).endswith('.tar.gz'):
         with auto_download_input_file(directory_url) as local_tar_file:
             with tarfile.open(local_tar_file) as tar_file:

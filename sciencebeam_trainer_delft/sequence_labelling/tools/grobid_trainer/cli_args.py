@@ -3,6 +3,7 @@
 
 import logging
 import argparse
+from argparse import _ActionsContainer as ArgParseActionsContainer
 from typing import List
 
 from sciencebeam_trainer_delft.utils.misc import parse_number_ranges
@@ -237,7 +238,7 @@ def add_tag_transformed_argument(parser: argparse.ArgumentParser):
     )
 
 
-def add_output_argument(parser: argparse.ArgumentParser, **kwargs):
+def add_output_argument(parser: ArgParseActionsContainer, **kwargs):
     parser.add_argument("--output", help="directory where to save a trained model", **kwargs)
 
 
@@ -509,11 +510,11 @@ def add_model_positional_argument(parser: argparse.ArgumentParser):
 
 def _flatten_input_paths(input_paths_list: List[List[str]]) -> List[str]:
     if not input_paths_list:
-        return input_paths_list
+        return []
     return [input_path for input_paths in input_paths_list for input_path in input_paths]
 
 
-def process_args(args: argparse.Namespace) -> argparse.Namespace:
+def process_args(args: argparse.Namespace) -> None:
     args.input = _flatten_input_paths(args.input)
     try:
         args.eval_input = _flatten_input_paths(args.eval_input)

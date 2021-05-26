@@ -69,7 +69,7 @@ def load_input_data_frame(
 def load_input_data(
         input_paths: List[str],
         download_manager: DownloadManager,
-        limit: int = None) -> Tuple[List[str], List[List[int]], List[str]]:
+        limit: int = None) -> Tuple[List[str], List[List[str]], List[str]]:
     assert len(input_paths) == 1
     LOGGER.info('loading data: %s', input_paths)
     downloaded_input_paths = get_downloaded_input_paths(
@@ -87,7 +87,7 @@ def load_input_data(
 def load_label_data(
         input_paths: List[str],
         download_manager: DownloadManager,
-        limit: int = None) -> Tuple[List[List[int]], List[str]]:
+        limit: int = None) -> Tuple[List[List[str]], List[str]]:
     assert len(input_paths) == 1
     LOGGER.info('loading data: %s', input_paths)
     downloaded_input_paths = get_downloaded_input_paths(
@@ -165,7 +165,7 @@ def predict(
 def evaluate(
         app_config: AppConfig,
         eval_input_texts: List[str],
-        eval_input_labels: List[List[int]],
+        eval_input_labels: List[List[str]],
         model_path: str):
     model = Classifier(
         download_manager=app_config.download_manager,

@@ -2,13 +2,16 @@ import logging
 import os
 import time
 from functools import partial
-from typing import Callable, Iterable, List, Optional, Tuple, Union, T
+from typing import Callable, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 
+from delft.sequenceLabelling.models import BaseModel
 from delft.sequenceLabelling.preprocess import WordPreprocessor, FeaturesPreprocessor
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
+from delft.sequenceLabelling.config import TrainingConfig as DelftTrainingConfig
 
+from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
 from sciencebeam_trainer_delft.utils.misc import str_to_bool
@@ -82,26 +85,30 @@ class EnvironmentVariables:
     STATEFUL = 'SCIENCEBEAM_DELFT_STATEFUL'
 
 
-def get_typed_env(key: str, type_fn: Callable[[str], T], default_value: T = None) -> T:
+def get_typed_env(
+    key: str,
+    type_fn: Callable[[str], T],
+    default_value: Optional[T] = None
+) -> Optional[T]:
     max_sequence_length_str = os.getenv(key)
     if not max_sequence_length_str:
         return default_value
     return type_fn(max_sequence_length_str)
 
 
-def get_default_max_sequence_length() -> int:
+def get_default_max_sequence_length() -> Optional[int]:
     return get_typed_env(EnvironmentVariables.MAX_SEQUENCE_LENGTH, int, default_value=None)
 
 
-def get_default_input_window_stride() -> int:
+def get_default_input_window_stride() -> Optional[int]:
     return get_typed_env(EnvironmentVariables.INPUT_WINDOW_STRIDE, int, default_value=None)
 
 
-def get_default_batch_size() -> int:
+def get_default_batch_size() -> Optional[int]:
     return get_typed_env(EnvironmentVariables.BATCH_SIZE, int, default_value=DEFAUT_BATCH_SIZE)
 
 
-def get_default_stateful() -> bool:
+def get_default_stateful() -> Optional[bool]:
     return get_typed_env(
         EnvironmentVariables.STATEFUL,
         str_to_bool,
@@ -138,7 +145,7 @@ def get_features_preprocessor(
 
 def get_preprocessor(
         model_config: ModelConfig,
-        features: np.array = None) -> T_FeaturesPreprocessor:
+        features: np.array = None) -> WordPreprocessor:
     feature_preprocessor = get_features_preprocessor(model_config, features=features)
     return WordPreprocessor(
         max_char_length=model_config.max_char_length,
@@ -146,7 +153,11 @@ def get_preprocessor(
     )
 
 
-def prepare_preprocessor(X, y, model_config: ModelConfig, features: np.array = None):
+def prepare_preprocessor(
+    X, y,
+    model_config: ModelConfig,
+    features: Optional[List[List[List[str]]]] = None
+):
     preprocessor = get_preprocessor(model_config, features=features)
     batch_text_list_iterable = iter_batch_text_list(
         X, features,
@@ -206,7 +217,7 @@ class Sequence(_Sequence):
             )
         self.download_manager = embedding_manager.download_manager
         self.embedding_manager = embedding_manager
-        self.embeddings = None
+        self.embeddings: Optional[Embeddings] = None
         if not batch_size:
             batch_size = get_default_batch_size()
         if not max_sequence_length:
@@ -218,7 +229,7 @@ class Sequence(_Sequence):
         self.eval_max_sequence_length = eval_max_sequence_length
         self.eval_input_window_stride = eval_input_window_stride
         self.eval_batch_size = eval_batch_size
-        self.model_path = None
+        self.model_path: Optional[str] = None
         if stateful is None:
             # use a stateful model, if supported
             stateful = get_default_stateful()
@@ -233,8 +244,8 @@ class Sequence(_Sequence):
             **kwargs
         )
         LOGGER.debug('use_features=%s', use_features)
-        self.model_config = ModelConfig(
-            **{
+        self.model_config: ModelConfig = ModelConfig(
+            **{  # type: ignore
                 **vars(self.model_config),
                 **(config_props or {}),
                 'features_indices': features_indices,
@@ -245,14 +256,17 @@ class Sequence(_Sequence):
         self.update_model_config_word_embedding_size()
         updated_implicit_model_config_props(self.model_config)
         self.update_dataset_transformer_factor()
-        self.training_config = TrainingConfig(
-            **vars(self.training_config),
+        self.training_config: TrainingConfig = TrainingConfig(
+            **vars(cast(DelftTrainingConfig, self.training_config)),
             **(training_props or {})
         )
         LOGGER.info('training_config: %s', vars(self.training_config))
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
         self._load_exception = None
+        self.p: Optional[WordPreprocessor] = None
+        self.model: Optional[BaseModel] = None
+        self.models: List[BaseModel] = []
 
     def update_model_config_word_embedding_size(self):
         if self.embeddings:
@@ -415,10 +429,11 @@ class Sequence(_Sequence):
             features_train=features_train,
             features_valid=features_valid
         )
-        if self.embeddings.use_ELMo:
-            self.embeddings.clean_ELMo_cache()
-        if self.embeddings.use_BERT:
-            self.embeddings.clean_BERT_cache()
+        if self.embeddings:
+            if self.embeddings.use_ELMo:
+                self.embeddings.clean_ELMo_cache()
+            if self.embeddings.use_BERT:
+                self.embeddings.clean_BERT_cache()
 
     def eval(  # pylint: disable=arguments-differ
             self, x_test, y_test, features: np.array = None):
@@ -433,7 +448,7 @@ class Sequence(_Sequence):
             self.eval_single(x_test, y_test, features=features)
 
     def create_eval_data_generator(self, *args, **kwargs) -> DataGenerator:
-        return DataGenerator(
+        return DataGenerator(  # type: ignore
             *args,
             batch_size=(
                 self.eval_batch_size
@@ -569,6 +584,7 @@ class Sequence(_Sequence):
             preprocessor=self.p
         )
         LOGGER.debug('tag_transformed: %s', self.tag_transformed)
+        annotations: Union[dict, Iterable[List[Tuple[str, str]]]]
         if output_format == 'json':
             start_time = time.time()
             annotations = tagger.tag(
@@ -577,6 +593,7 @@ class Sequence(_Sequence):
                 tag_transformed=self.tag_transformed
             )
             runtime = round(time.time() - start_time, 3)
+            assert isinstance(annotations, dict)
             annotations["runtime"] = runtime
         else:
             annotations = tagger.iter_tag(
@@ -617,13 +634,13 @@ class Sequence(_Sequence):
         return self.model_config.model_name
 
     @property
-    def last_checkpoint_path(self) -> str:
+    def last_checkpoint_path(self) -> Optional[str]:
         if not self.log_dir:
             return None
         return get_last_checkpoint_url(get_checkpoints_json(self.log_dir))
 
     @property
-    def model_summary_props(self) -> str:
+    def model_summary_props(self) -> dict:
         return {
             'model_type': 'delft',
             'architecture': self.model_config.model_type,

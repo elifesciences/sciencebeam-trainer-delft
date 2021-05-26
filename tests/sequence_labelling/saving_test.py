@@ -31,7 +31,7 @@ SAMPLE_Y = [['label1']]
 
 
 class DummyModel(BaseModel):
-    def __init__(self, config, ntags: int = None, data: str = b'dummy data'):
+    def __init__(self, config, ntags: int = None, data: bytes = b'dummy data'):
         super().__init__(config, ntags)
         self.data = data
 

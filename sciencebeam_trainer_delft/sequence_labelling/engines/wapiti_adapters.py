@@ -2,7 +2,7 @@ import logging
 import tempfile
 import os
 from pathlib import Path
-from typing import Iterable, IO, List, Tuple
+from typing import Iterable, IO, List, Optional, Tuple
 
 import numpy as np
 
@@ -72,7 +72,7 @@ def write_wapiti_input_data(fp: IO, x: np.array, features: np.array):
 
 
 def iter_read_tagged_result(fp: IO) -> Iterable[List[Tuple[str, str]]]:
-    token_and_label_pairs = []
+    token_and_label_pairs: List[Tuple[str, str]] = []
     for line in fp:
         LOGGER.debug('line: %r', line)
         line = line.rstrip()
@@ -110,13 +110,15 @@ class WapitiModelAdapter:
         self.wapiti_wrapper = wapiti_wrapper
         self.model_file_path = model_file_path
         self.model_path = model_path
-        self._wapiti_model = None
+        self._wapiti_model: Optional[WapitiModel] = None
 
     @property
     def wapiti_model(self) -> WapitiModel:
-        if self._wapiti_model is None:
-            self._wapiti_model = self.wapiti_wrapper.load_model(self.model_file_path)
-        return self._wapiti_model
+        if self._wapiti_model is not None:
+            return self._wapiti_model
+        wapiti_model = self.wapiti_wrapper.load_model(self.model_file_path)
+        self._wapiti_model = wapiti_model
+        return wapiti_model
 
     @staticmethod
     def load_from(
@@ -182,8 +184,8 @@ class WapitiModelAdapter:
                 )
             self.wapiti_wrapper.label(
                 model_path=self.model_file_path,
-                data_path=data_path,
-                output_data_path=output_data_path,
+                data_path=str(data_path),
+                output_data_path=str(output_data_path),
                 output_only_labels=False
             )
             with output_data_path.open(mode='r') as output_data_fp:
@@ -208,7 +210,7 @@ class WapitiModelAdapter:
         self.eval_single(x_test, y_test, features=features)
 
     @property
-    def model_summary_props(self) -> str:
+    def model_summary_props(self) -> dict:
         return {
             'model_type': 'wapiti'
         }
@@ -277,7 +279,7 @@ class WapitiModelTrainAdapter:
             model_name: str,
             template_path: str,
             temp_model_path: str,
-            max_epoch: str,
+            max_epoch: int,
             download_manager: DownloadManager,
             gzip_enabled: bool = False,
             wapiti_binary_path: str = None,
@@ -290,7 +292,7 @@ class WapitiModelTrainAdapter:
         self.gzip_enabled = gzip_enabled
         self.wapiti_binary_path = wapiti_binary_path
         self.wapiti_train_args = wapiti_train_args
-        self._model_adapter = None
+        self._model_adapter: Optional[WapitiModelAdapter] = None
         # additional properties to keep "compatibility" with wrapper.Sequence
         self.log_dir = None
         self.model_path = None
@@ -319,7 +321,7 @@ class WapitiModelTrainAdapter:
                         fp, x=x_valid, y=y_valid, features=features_valid
                     )
             WapitiWrapper(wapiti_binary_path=self.wapiti_binary_path).train(
-                data_path=data_path,
+                data_path=str(data_path),
                 output_model_path=self.temp_model_path,
                 template_path=local_template_path,
                 max_iter=self.max_epoch,
@@ -328,21 +330,23 @@ class WapitiModelTrainAdapter:
             LOGGER.info('wapiti model trained: %s', self.temp_model_path)
 
     def get_model_adapter(self) -> WapitiModelAdapter:
-        if self._model_adapter is None:
-            assert self.temp_model_path, "temp_model_path required"
-            self._model_adapter = WapitiModelAdapter.load_from(
-                os.path.dirname(self.temp_model_path),
-                download_manager=self.download_manager,
-                wapiti_binary_path=self.wapiti_binary_path
-            )
-        return self._model_adapter
+        if self._model_adapter is not None:
+            return self._model_adapter
+        assert self.temp_model_path, "temp_model_path required"
+        model_adapter = WapitiModelAdapter.load_from(
+            os.path.dirname(self.temp_model_path),
+            download_manager=self.download_manager,
+            wapiti_binary_path=self.wapiti_binary_path
+        )
+        self._model_adapter = model_adapter
+        return model_adapter
 
     @property
-    def last_checkpoint_path(self) -> str:
+    def last_checkpoint_path(self) -> Optional[str]:
         return None
 
     @property
-    def model_summary_props(self) -> str:
+    def model_summary_props(self) -> dict:
         return self.get_model_adapter().model_summary_props
 
     def get_evaluation_result(

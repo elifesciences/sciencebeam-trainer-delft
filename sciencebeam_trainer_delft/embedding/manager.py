@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.embedding.embedding import Embeddings
@@ -49,7 +49,7 @@ def _get_embedding_type_for_filename(filename: str) -> str:
     return filename
 
 
-def _get_embedding_config_for_filename(filename: str) -> str:
+def _get_embedding_config_for_filename(filename: str) -> dict:
     return {
         'name': _get_embedding_name_for_filename(filename),
         'format': _get_embedding_format_for_filename(filename),
@@ -116,7 +116,7 @@ class EmbeddingManager:
             registry_data['embedding-lmdb-path'] = self.default_embedding_lmdb_path
         self._save(registry_data)
 
-    def get_embedding_config(self, embedding_name: str) -> dict:
+    def get_embedding_config(self, embedding_name: str) -> Optional[dict]:
         embedding_list = self._get_registry_data().get('embeddings', [])
         index = _find_embedding_index(embedding_list, embedding_name)
         if index < 0:
@@ -124,7 +124,7 @@ class EmbeddingManager:
             return None
         return embedding_list[index]
 
-    def set_embedding_aliases(self, embedding_aliases: Dict[str, str]) -> dict:
+    def set_embedding_aliases(self, embedding_aliases: Dict[str, str]):
         registry_data = self._get_registry_data()
         registry_data['embedding-aliases'] = embedding_aliases
         self._save(registry_data)
@@ -152,7 +152,7 @@ class EmbeddingManager:
         })
         return embedding_name
 
-    def _download_lmdb_cache_embedding(self, embedding_name: str, embedding_url: str) -> str:
+    def _download_lmdb_cache_embedding(self, embedding_name: str, embedding_url: str):
         self.download_manager.download(
             embedding_url,
             local_file=str(self.get_embedding_lmdb_cache_data_path(embedding_name))

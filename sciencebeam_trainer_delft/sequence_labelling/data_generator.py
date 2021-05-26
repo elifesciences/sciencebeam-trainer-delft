@@ -1,5 +1,7 @@
 import logging
-from typing import Iterable, List, Tuple, T
+from typing import Iterable, List, Optional, Tuple, Union
+
+from typing_extensions import Protocol
 
 import numpy as np
 import keras
@@ -13,6 +15,7 @@ from delft.sequenceLabelling.preprocess import (
 )
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
 
+from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 
 
@@ -155,9 +158,10 @@ def get_tokens_from_text_features(
 
 
 def iter_batch_text_from_tokens_with_additional_token_features(
-        batch_tokens: Iterable[List[str]],
-        batch_features: Iterable[List[List[str]]],
-        additional_token_feature_indices: List[int]) -> List[List[List[str]]]:
+    batch_tokens: Iterable[List[str]],
+    batch_features: Iterable[List[List[str]]],
+    additional_token_feature_indices: List[int]
+) -> Iterable[List[str]]:
     if not additional_token_feature_indices:
         return batch_tokens
     return (
@@ -191,18 +195,20 @@ def iter_batch_text_from_text_features(
 
 def iter_batch_text_list(
         batch_tokens: List[List[str]],
-        batch_features: List[List[List[str]]],
-        additional_token_feature_indices: List[int],
-        text_feature_indices: List[int]) -> Iterable[List[str]]:
+        batch_features: Optional[List[List[List[str]]]],
+        additional_token_feature_indices: Optional[List[int]],
+        text_feature_indices: Optional[List[int]]) -> Iterable[List[str]]:
     if additional_token_feature_indices and text_feature_indices:
         raise ValueError('both, additional token and text features, not supported')
     if additional_token_feature_indices:
+        assert batch_features is not None
         return iter_batch_text_from_tokens_with_additional_token_features(
             batch_tokens=batch_tokens,
             batch_features=batch_features,
             additional_token_feature_indices=additional_token_feature_indices
         )
     if text_feature_indices:
+        assert batch_features is not None
         return iter_batch_text_from_text_features(
             batch_features=batch_features,
             text_feature_indices=text_feature_indices
@@ -244,8 +250,17 @@ def iter_batch_tokens_by_token_index(
         ]
 
 
+class ToBatchVectorCallableProtocol(Protocol):
+    def __call__(
+        self,
+        batch_tokens: List[List[str]],
+        max_length: int
+    ) -> np.ndarray:
+        pass
+
+
 def to_concatenated_batch_vector_from_batch_text_list(
-        to_batch_vector_fn: callable,
+        to_batch_vector_fn: ToBatchVectorCallableProtocol,
         batch_text_list: List[List[str]],
         *args,
         concatenated_embeddings_token_count: int,
@@ -322,10 +337,10 @@ class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
     def __init__(
             self,
-            x: List[List[str]],
-            y: List[List[str]],
+            x: List[Union[str, List[str]]],
+            y: Optional[List[List[str]]],
+            preprocessor: WordPreprocessor,
             batch_size: int = 24,
-            preprocessor: WordPreprocessor = None,
             input_window_stride: int = None,
             stateful: bool = True,
             char_embed_size: int = 25,
@@ -508,7 +523,8 @@ class DataGenerator(keras.utils.Sequence):
             max_length: int) -> np.array:
         if not self.use_word_embeddings:
             return to_dummy_batch_embedding_vector(batch_tokens, max_length)
-        elif self.embeddings.use_ELMo:
+        assert self.embeddings is not None
+        if self.embeddings.use_ELMo:
             return to_vector_simple_with_elmo(batch_tokens, self.embeddings, max_length)
         elif self.embeddings.use_BERT:
             return to_vector_simple_with_bert(batch_tokens, self.embeddings, max_length)
@@ -574,6 +590,7 @@ class DataGenerator(keras.utils.Sequence):
                 or self.additional_token_feature_indices
                 or self.text_feature_indices
         ):
+            assert self.features is not None
             sub_f = take_with_offset(
                 self.features,
                 window_indices_and_offsets,

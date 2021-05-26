@@ -2,13 +2,15 @@ import logging
 import json
 from itertools import groupby
 from collections import defaultdict, OrderedDict
-from typing import List, Union, Tuple, T
+from typing import Iterator, List, Union, Tuple, Sequence, cast
 
 import numpy as np
 
 from delft.sequenceLabelling.evaluation import (
     get_entities
 )
+
+from sciencebeam_trainer_delft.utils.typing import T
 
 
 LOGGER = logging.getLogger(__name__)
@@ -45,22 +47,22 @@ class NpJsonEncoder(json.JSONEncoder):
             return super().default(obj)
 
 
-def _get_first(some_list: List[T], default_value: T = None) -> T:
-    return next(some_list, default_value)
-    # try:
-    #     return some_list[0]
-    # except IndexError:
-    #     return default_value
+def _get_first(some_iterator: Iterator[T]) -> T:
+    return next(some_iterator)
 
 
 def get_first_entities(
-        y: List[Union[str, List[str]]],
-        prefix: str = 'first_') -> List[Tuple[str, int, int]]:
-    if not any(isinstance(s, list) for s in y):
-        y = [y]
+    y: Sequence[Union[str, Sequence[str]]],
+    prefix: str = 'first_'
+) -> List[Tuple[str, int, int]]:
+    y_list_of_lists: Sequence[Sequence[str]] = (
+        [cast(Sequence[str], y)]
+        if not any(isinstance(s, list) for s in y)
+        else y
+    )
     offset = 0
     first_entities = []
-    for seq in y:
+    for seq in y_list_of_lists:
         entities = sorted(set(get_entities(seq)))
         for type_name, grouped_entities in groupby(entities, key=lambda entity: entity[0]):
             first_entity = _get_first(grouped_entities)
@@ -76,8 +78,8 @@ def get_first_entities(
 class ClassificationResult:
     def __init__(
             self,
-            y_true: List[Union[str, List[str]]],
-            y_pred: List[Union[str, List[str]]],
+            y_true: Sequence[Union[str, Sequence[str]]],
+            y_pred: Sequence[Union[str, Sequence[str]]],
             evaluate_first_entities: bool = False):
         self._y_true = y_true
         self._y_pred = y_pred
@@ -250,8 +252,8 @@ class ClassificationResult:
 
 
 def classification_report(
-        y_true: List[Union[str, List[str]]],
-        y_pred: List[Union[str, List[str]]],
+        y_true: Sequence[Union[str, List[str]]],
+        y_pred: Sequence[Union[str, List[str]]],
         digits: int = 2,
         exclude_no_support: bool = False):
     return ClassificationResult(

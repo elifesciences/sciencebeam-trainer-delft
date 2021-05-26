@@ -31,10 +31,10 @@ class LineStatus:
     LINEEND = 'LINEEND'
 
 
-def strip_tag_prefix(tag: str) -> str:
+def strip_tag_prefix(tag: Optional[str]) -> str:
     if tag and (tag.startswith('B-') or tag.startswith('I-')):
         return tag[2:]
-    return tag
+    return tag or ''
 
 
 def get_next_transform_token_y(token_y: str) -> str:
@@ -102,7 +102,7 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
     ):
         assert features is not None
         x_transformed = []
-        y_transformed = []
+        _y_transformed = []
         features_transformed = []
         line_status_enabled: Optional[bool] = None
         unrolled_token_lengths = []
@@ -140,14 +140,13 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
                     y_row = get_next_transform_token_y(y_row)
                 unrolled_token_lengths_doc.append(tokens_length)
             x_transformed.append(x_doc_transformed)
-            y_transformed.append(y_doc_transformed)
+            _y_transformed.append(y_doc_transformed)
             features_transformed.append(features_doc_transformed)
             unrolled_token_lengths.append(unrolled_token_lengths_doc)
         LOGGER.debug('x_transformed: %s', x_transformed)
-        LOGGER.debug('y_transformed: %s', y_transformed)
+        LOGGER.debug('y_transformed: %s', _y_transformed)
         LOGGER.debug('features_transformed: %s', features_transformed)
-        if y is None:
-            y_transformed = None
+        y_transformed = _y_transformed if y is not None else None
         self._saved_x = x
         self._saved_features = features
         self._unrolled_token_lengths = unrolled_token_lengths
@@ -172,6 +171,9 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         inverse_transformed_y = None
         if y is not None:
             inverse_transformed_y = []
+            assert self._saved_x is not None
+            assert self._saved_features is not None
+            assert self._unrolled_token_lengths is not None
             for x_doc, features_doc, y_doc, unrolled_token_lengths_doc in zip(
                 self._saved_x, self._saved_features, y, self._unrolled_token_lengths
             ):

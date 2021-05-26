@@ -1,7 +1,7 @@
 import logging
 import re
 from itertools import islice
-from typing import Iterable, Tuple
+from typing import Iterable, List, Tuple
 
 import numpy as np
 
@@ -14,8 +14,11 @@ LOGGER = logging.getLogger(__name__)
 # partially copied from delft/sequenceLabelling/reader.py
 
 def iter_load_data_and_labels_crf_lines(
-        lines: Iterable[str]) -> Iterable[Tuple[list, list, list]]:
-    tokens, tags, features = [], [], []
+    lines: Iterable[str]
+) -> Iterable[Tuple[List[str], List[str], List[List[str]]]]:
+    tokens: List[str] = []
+    tags: List[str] = []
+    features: List[List[str]] = []
     for line in lines:
         line = line.strip()
         LOGGER.debug('line: %s', line)
@@ -36,8 +39,10 @@ def iter_load_data_and_labels_crf_lines(
 
 
 def iter_load_data_crf_lines(
-        lines: Iterable[str]) -> Iterable[Tuple[list, list]]:
-    tokens, features = [], []
+    lines: Iterable[str]
+) -> Iterable[Tuple[List[str], List[List[str]]]]:
+    tokens: List[str] = []
+    features: List[List[str]] = []
     for line in lines:
         line = line.strip()
         LOGGER.debug('line: %s', line)

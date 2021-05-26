@@ -5,7 +5,7 @@ import sys
 from collections import Counter
 from itertools import islice
 from multiprocessing import cpu_count
-from typing import List, Iterable
+from typing import IO, List, Iterable, Optional, cast
 
 import subprocess
 
@@ -46,15 +46,27 @@ class WapitiModel:
     def __init__(self, process: subprocess.Popen):
         self.process = process
 
+    @property
+    def process_stdin(self) -> IO:
+        stdin = self.process.stdin
+        assert stdin
+        return stdin
+
+    @property
+    def process_stdout(self) -> IO:
+        stdout = self.process.stdout
+        assert stdout
+        return stdout
+
     def iter_read_lines(self) -> Iterable[str]:
         while self.process.poll() is None:
-            line = self.process.stdout.readline().decode('utf-8').rstrip()
+            line = self.process_stdout.readline().decode('utf-8').rstrip()
             LOGGER.debug('read line: %s', line)
             yield line
 
-    def iter_label(self, data: str) -> str:
-        self.process.stdin.write((data + '\n\n\n').encode('utf-8'))
-        self.process.stdin.flush()
+    def iter_label(self, data: str) -> Iterable[str]:
+        self.process_stdin.write((data + '\n\n\n').encode('utf-8'))
+        self.process_stdin.flush()
         yield from self.iter_read_lines()
 
     def label_lines(self, lines: List[str], clean_input: bool = False) -> List[str]:
@@ -67,14 +79,14 @@ class WapitiModel:
             try:
                 LOGGER.debug('writing line: %s', cleaned_line)
                 LOGGER.debug('line counts: %s', Counter(cleaned_line))
-                self.process.stdin.write(
+                self.process_stdin.write(
                     (cleaned_line + '\n').encode('utf-8')
                 )
-                self.process.stdin.flush()
+                self.process_stdin.flush()
             except BrokenPipeError:
                 LOGGER.error('failed to write line: %s', [(c, hex(ord(c))) for c in cleaned_line])
                 raise
-        self.process.stdin.flush()
+        self.process_stdin.flush()
         labelled_lines = list(islice(self.iter_read_lines(), len(lines) + 1))
         LOGGER.debug('labelled_lines: %s', labelled_lines)
         return labelled_lines[:-1]
@@ -82,14 +94,17 @@ class WapitiModel:
     def label_raw_text(self, data: str) -> str:
         return '\n'.join(self.label_lines(data.splitlines()))
 
-    def label_features(self, features: List[List[str]]) -> str:
+    def label_features(self, features: List[List[str]]) -> List[List[str]]:
         lines = [
             format_feature_line(feature_line)
             for feature_line in features
         ]
         return [
-            labelled_line.rsplit('\t', maxsplit=1)[-1]
-            for labelled_line in self.label_lines(lines)
+            [
+                token_features[0],
+                labelled_line.rsplit('\t', maxsplit=1)[-1]
+            ]
+            for labelled_line, token_features in zip(self.label_lines(lines), features)
         ]
 
 
@@ -126,7 +141,7 @@ class WapitiWrapper:
         if stderr_to_log_enabled:
             t = threading.Thread(target=lambda: lines_to_log(
                 LOGGER, logging.INFO, 'wapiti, stderr: %s',
-                process.stderr
+                cast(Iterable[str], process.stderr)
             ))
             t.daemon = True
             t.start()
@@ -140,8 +155,14 @@ class WapitiWrapper:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT
         ) as process:
+            assert process.stdout
             with process.stdout:
-                lines_to_log(LOGGER, logging.INFO, 'wapiti: %s', process.stdout)
+                lines_to_log(
+                    LOGGER,
+                    logging.INFO,
+                    'wapiti: %s',
+                    cast(Iterable[str], process.stdout)
+                )
             process.wait()
             if process.returncode != 0:
                 raise subprocess.CalledProcessError(
@@ -172,14 +193,15 @@ class WapitiWrapper:
         self.run_wapiti(args)
 
     def train(
-            self,
-            data_path: str,
-            output_model_path: str,
-            template_path: str = None,
-            max_iter: str = None,
-            num_threads: int = None,
-            stop_epsilon_value: str = None,
-            stop_window_size: int = None):
+        self,
+        data_path: str,
+        output_model_path: str,
+        template_path: Optional[str] = None,
+        max_iter: Optional[int] = None,
+        num_threads: Optional[int] = None,
+        stop_epsilon_value: Optional[str] = None,
+        stop_window_size: Optional[int] = None
+    ):
         if not os.path.isfile(str(data_path)):
             raise FileNotFoundError('data file not found: %s' % data_path)
 

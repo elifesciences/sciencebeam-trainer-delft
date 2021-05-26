@@ -38,9 +38,10 @@ class DatasetTransformer(ABC):
     def inverse_transform_y(
         self,
         y: T_Batch_Labels,
-    ):
-        _, y, _ = self.inverse_transform(None, y, None)
-        return y
+    ) -> T_Batch_Labels:
+        _, inverse_transformed_y, _ = self.inverse_transform(None, y, None)
+        assert inverse_transformed_y is not None
+        return inverse_transformed_y
 
 
 class DummyDatasetTransformer(DatasetTransformer):

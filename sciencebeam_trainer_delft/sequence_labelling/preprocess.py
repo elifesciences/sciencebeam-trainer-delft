@@ -1,7 +1,7 @@
 import logging
 import itertools
 from functools import partial
-from typing import Any, Dict, List, Iterable, Set, Tuple, Union, T
+from typing import Any, Dict, List, Iterable, Set, Tuple, Union
 
 import numpy as np
 
@@ -19,6 +19,7 @@ from delft.sequenceLabelling.preprocess import (
     UNK
 )
 
+from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.utils.progress_logger import logging_tqdm
 
 import sciencebeam_trainer_delft.utils.compat.sklearn  # noqa pylint: disable=unused-import
@@ -49,8 +50,8 @@ def to_dict(
 
 def to_float_features(
     value_list_batch: List[list],
-    features_indices: Set[int] = None
-) -> Iterable[dict]:
+    features_indices: Set[int]
+) -> Iterable[List[float]]:
     return (
         [
             float(value)
@@ -182,7 +183,7 @@ def _get_pipeline_steps_state(steps: List[Tuple[str, Any]]) -> dict:
     return result
 
 
-def _restore_pipeline_steps_state(steps: List[Tuple[str, Any]], state: dict) -> dict:
+def _restore_pipeline_steps_state(steps: List[Tuple[str, Any]], state: dict):
     for step_name, step_value in _iter_nested_pipeline_steps(steps):
         step_state = state.get(step_name)
         if not step_state:

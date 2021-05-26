@@ -4,7 +4,7 @@
 import logging
 import argparse
 from abc import abstractmethod
-from typing import List
+from typing import List, Optional
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 import sciencebeam_trainer_delft.utils.no_keras_backend_message  # noqa, pylint: disable=unused-import
@@ -137,7 +137,7 @@ class GrobidTrainerSubCommand(SubCommand):
     def preload_and_validate_embedding(
             self,
             embedding_name: str,
-            use_word_embeddings: bool = True) -> str:
+            use_word_embeddings: bool = True) -> Optional[str]:
         if not use_word_embeddings:
             return None
         embedding_name = self.embedding_manager.ensure_available(embedding_name)
@@ -147,7 +147,7 @@ class GrobidTrainerSubCommand(SubCommand):
 
     def get_common_args(self, args: argparse.Namespace) -> dict:
         return dict(
-            model=args.model,
+            model_name=args.model,
             input_paths=args.input,
             limit=args.limit,
             shuffle_input=args.shuffle_input,
@@ -257,7 +257,7 @@ class WapitiTrainSubCommand(GrobidTrainerSubCommand):
         if not args.model:
             raise ValueError("model required")
         wapiti_train(
-            model=args.model,
+            model_name=args.model,
             template_path=args.wapiti_template,
             input_paths=args.input,
             limit=args.limit,
@@ -321,7 +321,7 @@ class WapitiTrainEvalSubCommand(GrobidTrainerSubCommand):
         if not args.model:
             raise ValueError("model required")
         wapiti_train_eval(
-            model=args.model,
+            model_name=args.model,
             template_path=args.wapiti_template,
             input_paths=args.input,
             limit=args.limit,
@@ -378,7 +378,6 @@ class WapitiEvalSubCommand(GrobidTrainerSubCommand):
     def do_run(self, args: argparse.Namespace):
         wapiti_eval_model(
             model_path=args.model_path,
-            model=args.model,
             input_paths=args.input,
             limit=args.limit,
             eval_output_args=get_eval_output_args(args),
@@ -425,7 +424,6 @@ class WapitiTagSubCommand(GrobidTrainerSubCommand):
             model_path=args.model_path,
             tag_output_format=args.tag_output_format,
             tag_output_path=args.tag_output_path,
-            model=args.model,
             input_paths=args.input,
             limit=args.limit,
             download_manager=self.download_manager,
@@ -442,7 +440,6 @@ class InputInfoSubCommand(GrobidTrainerSubCommand):
 
     def do_run(self, args: argparse.Namespace):
         print_input_info(
-            model=args.model,
             input_paths=args.input,
             limit=args.limit,
             download_manager=self.download_manager
@@ -511,8 +508,8 @@ def run(args: argparse.Namespace, subcommand_processor: SubCommandProcessor = No
         subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
     try:
         subcommand_processor.run(args)
-    except BaseException as e:
-        LOGGER.error('uncaught exception: %s', e, exc_info=1)
+    except BaseException as exc:
+        LOGGER.error('uncaught exception: %s', exc, exc_info=exc)
         raise
 
 

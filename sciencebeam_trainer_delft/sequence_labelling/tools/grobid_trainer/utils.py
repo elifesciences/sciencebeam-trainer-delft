@@ -8,7 +8,7 @@ import os
 from collections import Counter
 from datetime import datetime, timezone
 from itertools import islice
-from typing import List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -144,15 +144,14 @@ def get_clean_x_y_features(x: np.array, y: np.array, features: np.array):
 
 
 def load_data_and_labels(
-        model: str, input_paths: List[str] = None,
+        input_paths: List[str] = None,
         limit: int = None,
         shuffle_input: bool = False,
         clean_features: bool = True,
         random_seed: int = DEFAULT_RANDOM_SEED,
         download_manager: DownloadManager = None):
     assert download_manager
-    if not input_paths:
-        input_paths = [get_default_training_data(model)]
+    assert input_paths
     LOGGER.info('loading data from: %s', input_paths)
     downloaded_input_paths = [
         download_manager.download_if_url(input_path)
@@ -196,7 +195,7 @@ def do_train(
         train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
         download_manager=download_manager
     )
@@ -276,7 +275,8 @@ def process_resume_train_model_params(
 
 # train a GROBID model with all available data
 def train(
-        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+        model_name: str,
+        embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_paths: List[str] = None,
         output_path: str = None,
         limit: int = None,
@@ -291,13 +291,9 @@ def train(
         embedding_manager: EmbeddingManager = None,
         **kwargs):
 
-    if output_path:
-        model_name = model
-    else:
-        model_name = 'grobid-' + model
-
-    if use_ELMo:
-        model_name += '-with_ELMo'
+    model_name = get_model_name(
+        model_name, output_path=output_path, use_ELMo=use_ELMo
+    )
 
     model = Sequence(
         model_name,
@@ -328,23 +324,23 @@ def train(
 
 
 def wapiti_train(
-        model: str,
+        model_name: str,
         template_path: str,
         output_path: str,
+        download_manager: DownloadManager,
         input_paths: List[str] = None,
         limit: int = None,
         shuffle_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         max_epoch: int = 100,
         train_notification_manager: TrainNotificationManager = None,
-        download_manager: DownloadManager = None,
         gzip_enabled: bool = False,
         wapiti_binary_path: str = None,
         wapiti_train_args: dict = None):
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
         model = WapitiModelTrainAdapter(
-            model_name=model,
+            model_name=model_name,
             template_path=template_path,
             temp_model_path=temp_model_path,
             max_epoch=max_epoch,
@@ -367,11 +363,12 @@ def wapiti_train(
 
 def output_classification_result(
         classification_result: ClassificationResult,
-        eval_output_args: dict,
+        eval_output_args: Optional[dict],
         eval_input_paths: List[str] = None,
         model_path: str = None,
         model_summary_props: dict = None):
     eval_output_args = eval_output_args or dict()
+    assert eval_output_args is not None
     output_format = eval_output_args.get('eval_output_args')
     output_path = eval_output_args.get('eval_output_path')
     eval_first_entity = eval_output_args.get('eval_first_entity')
@@ -379,7 +376,7 @@ def output_classification_result(
         output_format = EvaluationOutputFormats.TEXT
     if eval_first_entity:
         classification_result = classification_result.with_first_entities()
-    meta = {}
+    meta:  Dict[str, Any] = {}
     meta['eval_timestamp'] = datetime.now(timezone.utc).isoformat()
     if eval_input_paths:
         meta['eval_input_paths'] = eval_input_paths
@@ -416,14 +413,13 @@ def do_train_eval(
         train_notification_manager: TrainNotificationManager = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
         download_manager=download_manager
     )
 
     if eval_input_paths:
         x_eval, y_eval, features_eval = load_data_and_labels(
-            model=model,
             input_paths=eval_input_paths, limit=eval_limit,
             download_manager=download_manager
         )
@@ -456,6 +452,8 @@ def do_train_eval(
             features_train=features_train, features_valid=features_valid
         )
     else:
+        assert isinstance(model, Sequence), \
+            'nfold evaluation currently only supported for DL models'
         model.train_nfold(
             x_train, y_train, x_valid, y_valid,
             features_train=features_train, features_valid=features_valid,
@@ -515,7 +513,8 @@ def do_train_eval_with_error_notification(
 
 # split data, train a GROBID model and evaluate it
 def train_eval(
-        model, embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+        model_name: str,
+        embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
         input_paths: List[str] = None,
         output_path: str = None,
         limit: int = None,
@@ -533,15 +532,9 @@ def train_eval(
         embedding_manager: EmbeddingManager = None,
         **kwargs):
 
-    if output_path:
-        model_name = model
-    else:
-        model_name = 'grobid-' + model
-
-    if use_ELMo:
-        model_name += '-with_ELMo'
-        if model_name in {'software-with_ELMo', 'grobid-software-with_ELMo'}:
-            batch_size = 3
+    model_name = get_model_name(
+        model_name, output_path=output_path, use_ELMo=use_ELMo
+    )
 
     model = Sequence(
         model_name,
@@ -578,8 +571,9 @@ def train_eval(
 
 
 def wapiti_train_eval(
-        model: str,
+        model_name: str,
         template_path: str,
+        download_manager: DownloadManager,
         input_paths: List[str] = None,
         output_path: str = None,
         limit: int = None,
@@ -591,7 +585,6 @@ def wapiti_train_eval(
         fold_count: int = 1,
         max_epoch: int = 100,
         train_notification_manager: TrainNotificationManager = None,
-        download_manager: DownloadManager = None,
         gzip_enabled: bool = False,
         wapiti_binary_path: str = None,
         wapiti_train_args: dict = None):
@@ -599,7 +592,7 @@ def wapiti_train_eval(
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
         model = WapitiModelTrainAdapter(
-            model_name=model,
+            model_name=model_name,
             template_path=template_path,
             temp_model_path=temp_model_path,
             max_epoch=max_epoch,
@@ -633,7 +626,7 @@ def do_eval_model(
         eval_output_args: dict = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
         download_manager=download_manager
     )
@@ -663,14 +656,14 @@ def do_eval_model(
 
 
 def get_model_name(
-        model: str,
+        model_name: str,
         use_ELMo: bool = False,
         output_path: str = None,
         model_path: str = None):
     if output_path or model_path:
-        model_name = model
+        pass
     else:
-        model_name = 'grobid-' + model
+        model_name = 'grobid-' + model_name
 
     if use_ELMo:
         model_name += '-with_ELMo'
@@ -678,18 +671,18 @@ def get_model_name(
 
 
 def load_delft_model(
-        model: str,
+        model_name: str,
         use_ELMo: bool = False,
         output_path: str = None,
         model_path: str = None,
-        max_sequence_length: int = 100,
+        max_sequence_length: Optional[int] = 100,
         fold_count: int = 1,
         batch_size: int = 20,
         embedding_manager: EmbeddingManager = None,
         **kwargs):
     model = Sequence(
         get_model_name(
-            model,
+            model_name,
             use_ELMo=use_ELMo,
             output_path=output_path,
             model_path=model_path
@@ -708,7 +701,7 @@ def load_delft_model(
 
 
 def eval_model(
-        model,
+        model_name: str,
         use_ELMo: bool = False,
         input_paths: List[str] = None,
         output_path: str = None,
@@ -726,7 +719,7 @@ def eval_model(
         **kwargs):
 
     model = load_delft_model(
-        model=model,
+        model_name=model_name,
         use_ELMo=use_ELMo,
         output_path=output_path,
         model_path=model_path,
@@ -750,16 +743,15 @@ def eval_model(
 
 
 def wapiti_eval_model(
-        model: str = None,
+        model_path: str,
+        download_manager: DownloadManager,
         input_paths: List[str] = None,
-        model_path: str = None,
         limit: int = None,
         shuffle_input: bool = False,
         split_input: bool = False,
         random_seed: int = DEFAULT_RANDOM_SEED,
         fold_count: int = 1,
         eval_output_args: dict = None,
-        download_manager: DownloadManager = None,
         wapiti_binary_path: str = None):
     assert fold_count == 1, 'only fold_count == 1 supported'
 
@@ -790,7 +782,7 @@ def do_tag_input(
         random_seed: int = DEFAULT_RANDOM_SEED,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
+        input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
         download_manager=download_manager
     )
@@ -844,7 +836,7 @@ def do_tag_input(
 
 
 def tag_input(
-    model: str,
+    model_name: str,
     tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
     tag_output_path: Optional[str] = None,
     use_ELMo: bool = False,
@@ -865,7 +857,7 @@ def tag_input(
 ):
 
     model = load_delft_model(
-        model=model,
+        model_name=model_name,
         use_ELMo=use_ELMo,
         output_path=output_path,
         model_path=model_path,
@@ -891,24 +883,23 @@ def tag_input(
 
 
 def wapiti_tag_input(
-    model: str = None,
+    model_path: str,
+    download_manager: DownloadManager,
     tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
     tag_output_path: Optional[str] = None,
     input_paths: List[str] = None,
-    model_path: str = None,
     limit: int = None,
     random_seed: int = DEFAULT_RANDOM_SEED,
     shuffle_input: bool = False,
-    download_manager: DownloadManager = None,
     wapiti_binary_path: str = None
 ):
-    model = WapitiModelAdapter.load_from(
+    model: WapitiModelAdapter = WapitiModelAdapter.load_from(
         model_path,
         download_manager=download_manager,
         wapiti_binary_path=wapiti_binary_path
     )
     do_tag_input(
-        model,
+        model=model,
         tag_output_format=tag_output_format,
         tag_output_path=tag_output_path,
         input_paths=input_paths,
@@ -920,12 +911,11 @@ def wapiti_tag_input(
 
 
 def print_input_info(
-        model: str,
         input_paths: List[str],
         limit: int = None,
         download_manager: DownloadManager = None):
     x_all, y_all, features_all = load_data_and_labels(
-        model=model, input_paths=input_paths, limit=limit,
+        input_paths=input_paths, limit=limit,
         download_manager=download_manager,
         clean_features=False
     )

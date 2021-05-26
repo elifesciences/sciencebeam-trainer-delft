@@ -50,9 +50,11 @@ def get_fallback_notification_message(message_format: str, conversion_error: str
 def safe_rendered_notification_message(message_format: str, **kwargs):
     try:
         return get_rendered_notification_message(message_format, **kwargs)
-    except Exception as e:  # pylint: disable=broad-except
-        LOGGER.warning('failed to convert message due to: %s', e, exc_info=1)
-        return get_fallback_notification_message(message_format, str(e), kwargs)
+    except Exception as exc:  # pylint: disable=broad-except
+        LOGGER.warning(
+            'failed to convert message due to: %s', exc, exc_info=exc
+        )
+        return get_fallback_notification_message(message_format, str(exc), kwargs)
 
 
 class TrainNotificationManager:

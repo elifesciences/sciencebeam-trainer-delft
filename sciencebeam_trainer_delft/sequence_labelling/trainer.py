@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Optional
+from typing import NamedTuple, Optional
 
 import numpy as np
 
@@ -13,7 +13,13 @@ from delft.sequenceLabelling.evaluation import (
 
 from delft.sequenceLabelling.trainer import Trainer as _Trainer
 from delft.sequenceLabelling.trainer import Scorer as _Scorer
+from delft.sequenceLabelling.models import BaseModel
 
+from sciencebeam_trainer_delft.sequence_labelling.utils.types import (
+    T_Batch_Tokens,
+    T_Batch_Features,
+    T_Batch_Labels
+)
 from sciencebeam_trainer_delft.utils.keras.callbacks import ResumableEarlyStopping
 
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import classification_report
@@ -80,10 +86,9 @@ def get_callbacks(
     return callbacks
 
 
-class PredictedResults:
-    def __init__(self, y_pred: List[List[str]], y_true: List[List[str]] = None):
-        self.y_pred = y_pred
-        self.y_true = y_true
+class PredictedResults(NamedTuple):
+    y_pred: T_Batch_Labels
+    y_true: T_Batch_Labels
 
 
 def get_model_results(model, valid_batches: list, preprocessor=None) -> PredictedResults:
@@ -149,12 +154,14 @@ class Trainer(_Trainer):
             **kwargs):
         self.model_saver = model_saver
         self.multiprocessing = multiprocessing
+        self.model: Optional[BaseModel] = None
         super().__init__(*args, training_config=training_config, **kwargs)
 
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid, y_valid,
             features_train: np.array = None,
             features_valid: np.array = None):
+        assert self.model is not None
         self.model.summary()
 
         if self.model_config.use_crf:
@@ -184,7 +191,7 @@ class Trainer(_Trainer):
         }
 
     def create_data_generator(self, *args, name_suffix: str, **kwargs) -> DataGenerator:
-        return DataGenerator(
+        return DataGenerator(  # type: ignore
             *args,
             batch_size=self.training_config.batch_size,
             input_window_stride=self.training_config.input_window_stride,
@@ -284,9 +291,14 @@ class Trainer(_Trainer):
         return local_model
 
     def train_nfold(  # pylint: disable=arguments-differ
-            self, x_train, y_train, x_valid=None, y_valid=None,
-            features_train: np.array = None,
-            features_valid: np.array = None):
+        self,
+        x_train: T_Batch_Tokens,
+        y_train: T_Batch_Labels,
+        x_valid: Optional[T_Batch_Tokens] = None,
+        y_valid: Optional[T_Batch_Labels] = None,
+        features_train: Optional[T_Batch_Features] = None,
+        features_valid: Optional[T_Batch_Features] = None
+    ):
         """ n-fold training for the instance model
             the n models are stored in self.models, and self.model left unset at this stage """
         fold_count = len(self.models)
@@ -312,7 +324,7 @@ class Trainer(_Trainer):
                 val_x = x_train[fold_start:fold_end]
                 val_y = y_train[fold_start:fold_end]
 
-                if features_train is None:
+                if features_train is not None:
                     train_features = np.concatenate(
                         [features_train[:fold_start], features_train[fold_end:]]
                     )

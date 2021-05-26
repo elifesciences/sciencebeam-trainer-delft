@@ -4,7 +4,7 @@ import logging
 import json
 import os
 from collections import OrderedDict
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from tqdm.auto import tqdm
 
@@ -43,7 +43,7 @@ def get_checkpoint_urls(checkpoints_json: dict) -> List[str]:
     })
 
 
-def get_last_checkpoint_url(checkpoints_json: dict) -> str:
+def get_last_checkpoint_url(checkpoints_json: dict) -> Optional[str]:
     checkpoint_urls = get_checkpoint_urls(checkpoints_json)
     return checkpoint_urls[-1] if checkpoint_urls else None
 
@@ -71,9 +71,10 @@ def get_checkpoint_meta_map_sorted_by_f1(checkpoint_meta_map: Dict[str, dict]):
 
 
 def get_checkpoint_summary_list(
-        checkpoint_meta_map_sorted_by_f1: Dict[str, dict],
-        last_checkpoint: dict,
-        limit: int) -> str:
+    checkpoint_meta_map_sorted_by_f1: Dict[str, dict],
+    last_checkpoint: dict,
+    limit: int
+) -> List[dict]:
     last_checkpoint_path = last_checkpoint.get('path')
     best_meta = list(checkpoint_meta_map_sorted_by_f1.values())[-1]
     best_f1 = best_meta.get('f1')
@@ -94,7 +95,7 @@ def format_checkpoint_summary_as_text(
         checkpoint_summary_list: List[dict]) -> str:
     return 'best checkpoints:\n%s' % '\n\n'.join([
         '%05d: %s (%s)%s%s' % (
-            checkpoint_summary.get('epoch'),
+            int(checkpoint_summary.get('epoch', 0)),
             checkpoint_summary.get('f1'),
             checkpoint_summary.get('path'),
             ' (last)' if checkpoint_summary.get('is_last') else '',

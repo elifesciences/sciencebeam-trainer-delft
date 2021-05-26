@@ -45,7 +45,7 @@ def configure_main_logging():
     logging.basicConfig(level='INFO')
 
 
-def initialize_and_call_main(main: callable):
+def initialize_and_call_main(main: Callable[[], None]):
     configure_main_logging()
     main()
 

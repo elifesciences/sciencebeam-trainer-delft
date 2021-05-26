@@ -154,8 +154,8 @@ class Trainer(_Trainer):
             **kwargs):
         self.model_saver = model_saver
         self.multiprocessing = multiprocessing
-        super().__init__(*args, training_config=training_config, **kwargs)
         self.model: Optional[BaseModel] = None
+        super().__init__(*args, training_config=training_config, **kwargs)
 
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid, y_valid,

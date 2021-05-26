@@ -709,7 +709,7 @@ def load_delft_model(
 
 
 def eval_model(
-        model,
+        model_name: str,
         use_ELMo: bool = False,
         input_paths: List[str] = None,
         output_path: str = None,
@@ -727,7 +727,7 @@ def eval_model(
         **kwargs):
 
     model = load_delft_model(
-        model=model,
+        model_name=model_name,
         use_ELMo=use_ELMo,
         output_path=output_path,
         model_path=model_path,

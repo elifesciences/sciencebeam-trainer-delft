@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Optional, Tuple
 
-from numpy.core.numeric import asarray
-
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
     T_Batch_Tokens,
     T_Batch_Features,

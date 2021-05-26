@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Optional, Tuple
 
+from numpy.core.numeric import asarray
+
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
     T_Batch_Tokens,
     T_Batch_Features,
@@ -38,9 +40,10 @@ class DatasetTransformer(ABC):
     def inverse_transform_y(
         self,
         y: T_Batch_Labels,
-    ):
-        _, y, _ = self.inverse_transform(None, y, None)
-        return y
+    ) -> T_Batch_Labels:
+        _, inverse_transformed_y, _ = self.inverse_transform(None, y, None)
+        assert inverse_transformed_y is not None
+        return inverse_transformed_y
 
 
 class DummyDatasetTransformer(DatasetTransformer):

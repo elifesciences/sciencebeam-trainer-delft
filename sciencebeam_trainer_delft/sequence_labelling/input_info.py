@@ -39,7 +39,7 @@ def get_quantiles_feature_value_length_by_index(features: np.ndarray):
 
 
 def get_feature_value_counts_by_index(features: np.ndarray, max_feature_values: int = 1000):
-    feature_value_counts_by_index = defaultdict(Counter)
+    feature_value_counts_by_index: Dict[int, Counter] = defaultdict(Counter)
     for feature_vector in iter_flat_features(features):
         for index, value in enumerate(feature_vector):
             feature_value_counts = feature_value_counts_by_index[index]

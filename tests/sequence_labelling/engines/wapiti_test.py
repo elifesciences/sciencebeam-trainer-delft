@@ -50,6 +50,6 @@ class TestWapitiWrapper:
         ])
         LOGGER.debug('labelled_features: %s', labelled_features)
         assert labelled_features == [
-            '<label>',
-            '<label>'
+            ['Token1', '<label>'],
+            ['Token2', '<label>']
         ]

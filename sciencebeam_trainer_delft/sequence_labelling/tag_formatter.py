@@ -67,11 +67,15 @@ def iter_to_data_lines(
     features: np.array,
     annotations: Iterable[List[Tuple[str, str]]]
 ) -> Iterable[str]:
-    return (
-        ' '.join([token_annoation[0]] + list(token_features) + [token_annoation[1]])
-        for line_annotations, line_features in zip(annotations, features.tolist())
-        for token_annoation, token_features in zip(line_annotations, line_features)
-    )
+    for document_lindex, (line_annotations, line_features) in enumerate(
+        zip(annotations, features.tolist())
+    ):
+        if document_lindex > 0:
+            yield ''  # blank line separator
+        yield from (
+            ' '.join([token_annoation[0]] + list(token_features) + [token_annoation[1]])
+            for token_annoation, token_features in zip(line_annotations, line_features)
+        )
 
 
 def to_data_lines(*args, **kwargs) -> List[str]:
@@ -89,8 +93,8 @@ def iter_format_list_tag_result_as_data(
         features=features,
         annotations=tag_result
     )
-    for document_index, data_text in enumerate(data_text_iterable):
-        if document_index > 0:
+    for line_index, data_text in enumerate(data_text_iterable):
+        if line_index > 0:
             yield '\n'
         yield data_text
 

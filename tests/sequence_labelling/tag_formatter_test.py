@@ -108,6 +108,16 @@ class TestFormatTagResult:
         )
         assert result.splitlines() == DATA_LINES_1
 
+    def test_should_separate_document_data_lines_using_blank_line(self):
+        result = format_tag_result(
+            tag_result=to_iterable(ANNOTATIONS_1 * 2),
+            output_format=TagOutputFormats.DATA,
+            texts=np.asarray(TEXTS_1.tolist() * 2),
+            features=np.asarray(FEATURES_1.tolist() * 2),
+            model_name=MODEL_1
+        )
+        assert result.splitlines() == DATA_LINES_1 + [''] + DATA_LINES_1
+
     def test_should_format_tag_list_result_as_data_unidiff_and_combined_tags(self):
         result = format_tag_result(
             tag_result=to_iterable(

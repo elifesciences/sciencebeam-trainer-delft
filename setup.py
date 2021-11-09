@@ -96,9 +96,9 @@ setup(
         'build': CustomBuild,
         'CustomCommands': CustomCommands
     },
-    url='https://github.com/elifesciences/sciencebeam-alignment',
+    url='https://github.com/elifesciences/sciencebeam-trainer-delft',
     license='MIT',
-    keywords="sequence alignment",
+    keywords="sciencebeam delft",
     long_description=long_description,
     long_description_content_type='text/markdown'
 )

@@ -21,6 +21,9 @@ with open(os.path.join('requirements.txt'), 'r') as f:
 with open(os.path.join('requirements.delft.txt'), 'r') as f:
     DELFT_PACKAGES = f.readlines()
 
+with open('README.md', 'r') as f:
+    long_description = f.read()
+
 
 def _run_command(command_args):
     print('Running command: %s' % command_args)
@@ -92,5 +95,10 @@ setup(
     cmdclass={
         'build': CustomBuild,
         'CustomCommands': CustomCommands
-    }
+    },
+    url='https://github.com/elifesciences/sciencebeam-alignment',
+    license='MIT',
+    keywords="sequence alignment",
+    long_description=long_description,
+    long_description_content_type='text/markdown'
 )

@@ -26,18 +26,18 @@ elifePipeline {
                     withCommitStatus({
                         sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-core"
                     }, 'ci-build-core', commit)
-                    withCommitStatus({
-                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-lint"
-                    }, 'ci-lint', commit)
-                    withCommitStatus({
-                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-pytest-not-slow"
-                    }, 'ci-pytest-not-slow', commit)
-                    withCommitStatus({
-                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-pytest-slow"
-                    }, 'ci-pytest-slow', commit)
-                    withCommitStatus({
-                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-test-setup-install"
-                    }, 'ci-test-setup-install', commit)
+                    // withCommitStatus({
+                    //     sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-lint"
+                    // }, 'ci-lint', commit)
+                    // withCommitStatus({
+                    //     sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-pytest-not-slow"
+                    // }, 'ci-pytest-not-slow', commit)
+                    // withCommitStatus({
+                    //     sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-pytest-slow"
+                    // }, 'ci-pytest-slow', commit)
+                    // withCommitStatus({
+                    //     sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-test-setup-install"
+                    // }, 'ci-test-setup-install', commit)
                     withCommitStatus({
                         sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-push-testpypi"
                     }, 'ci-push-testpypi', commit)

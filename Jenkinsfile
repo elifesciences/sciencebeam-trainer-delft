@@ -20,6 +20,10 @@ elifePipeline {
             }
         }
 
+        stage 'Push package to test.pypi.org', {
+            elifePypiRelease('test')
+        }
+
         stage 'Build and run tests', {
             def actions = [
                 'ci-build-and-test-core': {

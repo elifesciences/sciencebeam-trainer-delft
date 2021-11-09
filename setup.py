@@ -12,6 +12,9 @@ from setuptools import (
     Command
 )
 
+import sciencebeam_trainer_delft
+
+
 with open(os.path.join('requirements.txt'), 'r') as f:
     REQUIRED_PACKAGES = f.readlines()
 
@@ -81,7 +84,7 @@ packages = find_packages()
 
 setup(
     name='sciencebeam_trainer_delft',
-    version='0.0.1',
+    version=sciencebeam_trainer_delft.__version__,
     install_requires=REQUIRED_PACKAGES,
     packages=packages,
     include_package_data=True,

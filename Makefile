@@ -393,10 +393,6 @@ ci-test-setup-install:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" test-setup-install
 
 
-ci-push-testpypi:
-	@echo "dummy ci-push-testpypi"
-
-
 ci-build-grobid:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" grobid-build
 

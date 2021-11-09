@@ -397,7 +397,7 @@ ci-push-testpypi:
 	$(DOCKER_COMPOSE_CI) run --rm \
 		-v $$PWD/.pypirc:/root/.pypirc \
 		delft \
-		./scripts/dev/push-testpypi-commit-version.sh "$(COMMIT)"
+		./scripts/dev/push-testpypi-commit-version.sh "$(REVISION)"
 
 
 ci-build-grobid:

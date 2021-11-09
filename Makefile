@@ -400,6 +400,13 @@ ci-push-testpypi:
 		./scripts/dev/push-testpypi-commit-version.sh "$(REVISION)"
 
 
+ci-push-pypi:
+	$(DOCKER_COMPOSE_CI) run --rm \
+		-v $$PWD/.pypirc:/root/.pypirc \
+		delft \
+		./scripts/dev/push-pypi-version.sh "$(VERSION)"
+
+
 ci-build-grobid:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" grobid-build
 

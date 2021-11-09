@@ -139,6 +139,12 @@ elifePipeline {
                 image.tag('latest').push()
                 image.tag(version).push()
             }
+
+            stage 'Push release to pypi', {
+                withPypiCredentials 'prod', 'pypi', {
+                    sh "make IMAGE_TAG=${commit} VERSION=${version} NO_BUILD=y ci-push-pypi"
+                }
+            }
         }
     }
 }

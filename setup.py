@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import os
 import subprocess
-import shlex
+import sys
 
 from distutils.command.build import build  # type: ignore
 
@@ -19,8 +19,7 @@ with open(os.path.join('requirements.delft.txt'), 'r') as f:
     DELFT_PACKAGES = f.readlines()
 
 
-def _run_command(command):
-    command_args = shlex.split(command)
+def _run_command(command_args):
     print('Running command: %s' % command_args)
     with subprocess.Popen(
         command_args,
@@ -44,7 +43,10 @@ def _is_delft_installed():
 
 
 def _install_delft():
-    _run_command('pip3 install --no-deps %s' % ' '.join(DELFT_PACKAGES))
+    _run_command(
+        [sys.executable, '-m', 'pip', 'install', '--no-deps']
+        + DELFT_PACKAGES
+    )
 
 
 def _install_delft_if_not_installed():

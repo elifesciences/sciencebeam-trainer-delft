@@ -1,6 +1,7 @@
 venv
 build
 data
+dist
 logs
 *.egg-info
 

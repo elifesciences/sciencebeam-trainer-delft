@@ -115,6 +115,14 @@ dev-watch-slow:
 dev-test: dev-lint dev-pytest
 
 
+dev-remove-dist:
+	rm -rf ./dist
+
+
+dev-build-dist:
+	$(PYTHON) setup.py sdist bdist_wheel
+
+
 build:
 	$(DOCKER_COMPOSE) build delft
 

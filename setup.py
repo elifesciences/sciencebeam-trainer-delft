@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import subprocess
 import sys
+from time import time
 
 from distutils.command.build import build  # type: ignore
 
@@ -77,11 +78,20 @@ class CustomBuild(build):
     sub_commands = build.sub_commands + [('CustomCommands', None)]
 
 
+def local_scheme(version):
+    if not version.distance and not version.dirty:
+        return ""
+    return str(int(time()))
+
+
 packages = find_packages()
 
 setup(
     name='sciencebeam_trainer_delft',
-    version='0.0.1',
+    use_scm_version={
+        "local_scheme": local_scheme
+    },
+    setup_requires=['setuptools_scm'],
     install_requires=REQUIRED_PACKAGES,
     packages=packages,
     include_package_data=True,

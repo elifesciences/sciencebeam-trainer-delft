@@ -60,11 +60,6 @@ elifePipeline {
                     withCommitStatus({
                         sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-test-setup-install"
                     }, 'ci-test-setup-install', commit)
-                    withCommitStatus({
-                        withPypiCredentials 'staging', 'testpypi', {
-                            sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-push-testpypi"
-                        }
-                    }, 'ci-push-testpypi', commit)
                 },
                 'ci-build-grobid': {
                     withCommitStatus({
@@ -118,6 +113,14 @@ elifePipeline {
             }
         }
 
+        elifePullRequestOnly { prNumber ->
+            stage 'Push package to test.pypi.org', {
+                withPypiCredentials 'staging', 'testpypi', {
+                    sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-push-testpypi"
+                }
+            }
+        }
+
         elifeTagOnly { repoTag ->
             stage 'Push stable sciencebeam-trainer-delft image', {
                 def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft', commit)
@@ -139,7 +142,7 @@ elifePipeline {
                 image.tag(version).push()
             }
 
-            stage 'Push release to pypi', {
+            stage 'Push package to pypi', {
                 withPypiCredentials 'prod', 'pypi', {
                     sh "make IMAGE_TAG=${commit} VERSION=${version} NO_BUILD=y ci-push-pypi"
                 }

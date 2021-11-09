@@ -9,6 +9,7 @@ def jsonToPypirc(String jsonText, String sectionName) {
 
 def withPypiCredentials(String env, String sectionName, doSomething) {
     try {
+        sh 'rm .pypirc'
         writeFile(file: '.pypirc', text: jsonToPypirc(sh(
             script: "vault.sh kv get -format=json secret/containers/pypi/${env} | jq .data.data",
             returnStdout: true

@@ -47,7 +47,7 @@ COPY requirements.dev.txt ./
 RUN if [ "${install_dev}" = "y" ]; then pip install -r requirements.dev.txt; fi
 
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
-COPY setup.py  MANIFEST.in ./
+COPY README.md MANIFEST.in setup.py ./
 
 COPY config/embedding-registry.json ./
 

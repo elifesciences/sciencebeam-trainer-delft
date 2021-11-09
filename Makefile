@@ -115,6 +115,14 @@ dev-watch-slow:
 dev-test: dev-lint dev-pytest
 
 
+dev-remove-dist:
+	rm -rf ./dist
+
+
+dev-build-dist:
+	$(PYTHON) setup.py sdist bdist_wheel
+
+
 build:
 	$(DOCKER_COMPOSE) build delft
 
@@ -383,6 +391,20 @@ ci-pytest-slow:
 
 ci-test-setup-install:
 	$(MAKE) DOCKER_COMPOSE="$(DOCKER_COMPOSE_CI)" test-setup-install
+
+
+ci-push-testpypi:
+	$(DOCKER_COMPOSE_CI) run --rm \
+		-v $$PWD/.pypirc:/root/.pypirc \
+		delft \
+		./scripts/dev/push-testpypi-commit-version.sh "$(REVISION)"
+
+
+ci-push-pypi:
+	$(DOCKER_COMPOSE_CI) run --rm \
+		-v $$PWD/.pypirc:/root/.pypirc \
+		delft \
+		./scripts/dev/push-pypi-version.sh "$(VERSION)"
 
 
 ci-build-grobid:

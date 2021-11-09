@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import os
 import subprocess
-import shlex
+import sys
 
 from distutils.command.build import build  # type: ignore
 
@@ -12,15 +12,20 @@ from setuptools import (
     Command
 )
 
+import sciencebeam_trainer_delft
+
+
 with open(os.path.join('requirements.txt'), 'r') as f:
     REQUIRED_PACKAGES = f.readlines()
 
 with open(os.path.join('requirements.delft.txt'), 'r') as f:
     DELFT_PACKAGES = f.readlines()
 
+with open('README.md', 'r') as f:
+    long_description = f.read()
 
-def _run_command(command):
-    command_args = shlex.split(command)
+
+def _run_command(command_args):
     print('Running command: %s' % command_args)
     with subprocess.Popen(
         command_args,
@@ -44,7 +49,10 @@ def _is_delft_installed():
 
 
 def _install_delft():
-    _run_command('pip3 install --no-deps %s' % ' '.join(DELFT_PACKAGES))
+    _run_command(
+        [sys.executable, '-m', 'pip', 'install', '--no-deps']
+        + DELFT_PACKAGES
+    )
 
 
 def _install_delft_if_not_installed():
@@ -79,7 +87,7 @@ packages = find_packages()
 
 setup(
     name='sciencebeam_trainer_delft',
-    version='0.0.1',
+    version=sciencebeam_trainer_delft.__version__,
     install_requires=REQUIRED_PACKAGES,
     packages=packages,
     include_package_data=True,
@@ -87,5 +95,10 @@ setup(
     cmdclass={
         'build': CustomBuild,
         'CustomCommands': CustomCommands
-    }
+    },
+    url='https://github.com/elifesciences/sciencebeam-trainer-delft',
+    license='MIT',
+    keywords="sciencebeam delft",
+    long_description=long_description,
+    long_description_content_type='text/markdown'
 )

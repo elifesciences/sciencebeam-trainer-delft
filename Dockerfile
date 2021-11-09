@@ -47,12 +47,14 @@ COPY requirements.dev.txt ./
 RUN if [ "${install_dev}" = "y" ]; then pip install -r requirements.dev.txt; fi
 
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
-COPY setup.py  MANIFEST.in ./
+COPY README.md MANIFEST.in setup.py ./
 
 COPY config/embedding-registry.json ./
 
 COPY .flake8 .pylintrc pytest.ini ./
 COPY tests ./tests
+
+COPY scripts/dev ./scripts/dev
 
 # add additional wrapper entrypoint for OVERRIDE_EMBEDDING_URL
 COPY ./docker/entrypoint.sh ${PROJECT_FOLDER}/entrypoint.sh

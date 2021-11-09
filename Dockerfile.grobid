@@ -53,7 +53,7 @@ RUN pip install -r ${PROJECT_FOLDER}/requirements.delft.txt --no-deps
 COPY sciencebeam_trainer_delft ${PROJECT_FOLDER}/sciencebeam_trainer_delft
 
 # install into venv
-COPY setup.py MANIFEST.in ${PROJECT_FOLDER}/
+COPY README.md MANIFEST.in setup.py ${PROJECT_FOLDER}/
 RUN pip install -e ${PROJECT_FOLDER} --no-deps
 
 # add embedding registry with download locations

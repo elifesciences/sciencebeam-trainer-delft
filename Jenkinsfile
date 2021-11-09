@@ -38,6 +38,9 @@ elifePipeline {
                     // withCommitStatus({
                     //     sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-test-setup-install"
                     // }, 'ci-test-setup-install', commit)
+                    withCommitStatus({
+                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-push-testpypi"
+                    }, 'ci-push-testpypi', commit)
                 },
                 'ci-build-grobid': {
                     withCommitStatus({

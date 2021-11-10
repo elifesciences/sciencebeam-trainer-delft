@@ -12,7 +12,11 @@ fi
 
 echo "version=${version}, repository=${repository}"
 
+$(dirname $0)/set-version.sh "${version}"
+
 cat sciencebeam_trainer_delft/__init__.py
+
+python setup.py sdist
 
 ls -l $HOME/.pypirc
 

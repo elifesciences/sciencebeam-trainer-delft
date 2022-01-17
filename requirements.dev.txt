@@ -3,7 +3,7 @@ mypy==0.910
 pylint==2.8.3
 pytest==6.2.5
 pytest-watch==4.2.0
-setuptools-scm==6.3.2
+setuptools-scm==6.4.0
 types-requests==2.27.5
 types-six==1.16.9
 twine==3.7.1

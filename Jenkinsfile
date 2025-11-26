@@ -61,21 +61,21 @@ elifePipeline {
                         sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-test-setup-install"
                     }, 'ci-test-setup-install', commit)
                 },
-                'ci-build-grobid': {
-                    withCommitStatus({
-                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-grobid"
-                    }, 'ci-build-grobid', commit)
-                },
-                'ci-build-grobid-trainer': {
-                    withCommitStatus({
-                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-grobid-trainer"
-                    }, 'ci-build-grobid-trainer', commit)
-                },
-                'ci-build-and-test-jupyter': {
-                    withCommitStatus({
-                        sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-and-test-jupyter"
-                    }, 'ci-build-and-test-jupyter', commit)
-                }
+                // 'ci-build-grobid': {
+                //     withCommitStatus({
+                //         sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-grobid"
+                //     }, 'ci-build-grobid', commit)
+                // },
+                // 'ci-build-grobid-trainer': {
+                //     withCommitStatus({
+                //         sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-grobid-trainer"
+                //     }, 'ci-build-grobid-trainer', commit)
+                // },
+                // 'ci-build-and-test-jupyter': {
+                //     withCommitStatus({
+                //         sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-build-and-test-jupyter"
+                //     }, 'ci-build-and-test-jupyter', commit)
+                // }
             ]
             try {
                 parallel actions

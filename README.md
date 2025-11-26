@@ -1,11 +1,5 @@
 # ScienceBeam Trainer DeLFT
 
-## ⚠️ Under new stewardship
-
-eLife have handed over stewardship of ScienceBeam to The Coko Foundation. You can now find the updated code repository at https://gitlab.coko.foundation/sciencebeam/sciencebeam-trainer-delft and continue the conversation on Coko's Mattermost chat server: https://mattermost.coko.foundation/
-
-For more information on why we're doing this read our latest update on our new technology direction: https://elifesciences.org/inside-elife/daf1b699/elife-latest-announcing-a-new-technology-direction
-
 ## Overview
 
 Work in-progress..
@@ -619,8 +613,8 @@ With the result (the second document contains differences):
       <author>Michael Luby y Dana Randall z Alistair Sinclair</author>
       <abstract>Abstract Consider the following Markov chain , whose states are all domino tilings of a 2n 񮽙 2n chessboard : starting from some arbitrary tiling , pick a 2 񮽙 2 window uniformly at random . If the four squares appearing in this window are covered by two parallel dominoes , rotate the dominoes in place . Repeat many times . This process is used in practice to generate a tiling , and is a tool in the study of the combinatorics of tilings and the behavior of dimer systems in statistical physics . Analogous Markov chains are used to randomly generate other structures on various two - dimensional lattices . This paper presents techniques which prove for the 񮽙rst time that , in many interesting cases , a small number of random moves suuce to obtain a uniform distribution .</abstract>
     </p>
-  
-  
+
+
     <p>
       <title>Translucent Sums : A Foundation for Higher - Order Module Systems</title>
       <author>Mark Lillibridge</author>

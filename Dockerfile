@@ -42,9 +42,8 @@ RUN pip install --user -r requirements.cpu.txt
 COPY requirements.delft.txt ./
 RUN pip install --user -r requirements.delft.txt --no-deps
 
-ARG install_dev
 COPY requirements.dev.txt ./
-RUN if [ "${install_dev}" = "y" ]; then pip install -r requirements.dev.txt; fi
+RUN pip install -r requirements.dev.txt
 
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
 COPY README.md MANIFEST.in setup.py ./

@@ -34,16 +34,23 @@ COPY requirements.build.txt ./
 RUN pip install --user -r requirements.build.txt
 
 COPY requirements.cpu.txt ./
-RUN pip install --user -r requirements.cpu.txt
+RUN pip install --user \
+    -r requirements.cpu.txt
 
 COPY requirements.txt ./
-RUN pip install --user -r requirements.txt
+RUN pip install --user \
+    -r requirements.cpu.txt \
+    -r requirements.txt
 
 COPY requirements.delft.txt ./
-RUN pip install --user -r requirements.delft.txt --no-deps
+RUN pip install --user \
+    -r requirements.delft.txt --no-deps
 
 COPY requirements.dev.txt ./
-RUN pip install -r requirements.dev.txt
+RUN pip install \
+    -r requirements.cpu.txt \
+    -r requirements.txt \
+    -r requirements.dev.txt
 
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
 COPY README.md MANIFEST.in setup.py ./

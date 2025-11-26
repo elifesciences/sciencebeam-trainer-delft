@@ -1,4 +1,4 @@
-FROM python:3.7.10-buster AS dev
+FROM python:3.9.25-bookworm AS dev
 
 # # install gcloud to make it easier to access cloud storage
 # RUN mkdir -p /usr/local/gcloud \

@@ -1,4 +1,4 @@
-FROM python:3.7.10-buster
+FROM python:3.7.10-buster AS dev
 
 # # install gcloud to make it easier to access cloud storage
 # RUN mkdir -p /usr/local/gcloud \
@@ -42,9 +42,8 @@ RUN pip install --user -r requirements.cpu.txt
 COPY requirements.delft.txt ./
 RUN pip install --user -r requirements.delft.txt --no-deps
 
-ARG install_dev
 COPY requirements.dev.txt ./
-RUN if [ "${install_dev}" = "y" ]; then pip install -r requirements.dev.txt; fi
+RUN pip install -r requirements.dev.txt
 
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
 COPY README.md MANIFEST.in setup.py ./
@@ -55,6 +54,58 @@ COPY .flake8 .pylintrc pytest.ini ./
 COPY tests ./tests
 
 COPY scripts/dev ./scripts/dev
+
+
+# python-dist-builder
+FROM dev AS python-dist-builder
+
+ARG python_package_version
+RUN echo "Setting version to: $version" && \
+    ./scripts/dev/set-version.sh "$python_package_version"
+RUN python setup.py sdist && \
+    ls -l dist
+
+
+# python-dist
+FROM scratch AS python-dist
+
+WORKDIR /dist
+
+COPY --from=python-dist-builder /opt/sciencebeam-trainer-delft/dist /dist
+
+
+# lint-flake8
+FROM dev AS lint-flake8
+
+RUN python -m flake8 sciencebeam_trainer_delft tests setup.py
+
+
+# lint-pylint
+FROM dev AS lint-pylint
+
+RUN python -m pylint sciencebeam_trainer_delft tests setup.py
+
+
+# lint-mypy
+FROM dev AS lint-mypy
+
+RUN python -m mypy --ignore-missing-imports sciencebeam_trainer_delft tests setup.py
+
+
+# pytest-not-slow
+FROM dev AS pytest-not-slow
+
+RUN python -m pytest -p no:cacheprovider -m 'not slow'
+
+
+# pytest-slow
+FROM dev AS pytest-slow
+
+RUN python -m pytest -p no:cacheprovider -m 'slow'
+
+
+# main image
+FROM dev AS delft
 
 # add additional wrapper entrypoint for OVERRIDE_EMBEDDING_URL
 COPY ./docker/entrypoint.sh ${PROJECT_FOLDER}/entrypoint.sh

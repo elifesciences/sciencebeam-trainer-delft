@@ -189,6 +189,18 @@ test: \
 	test-setup-install
 
 
+docker-buildx-bake-build-all:
+	docker buildx bake \
+		--file docker-bake.hcl \
+		--set python-dist.args.python_package_version="$(VERSION)" \
+		lint-flake8 \
+		lint-pylint \
+		lint-mypy \
+		pytest-not-slow \
+		python-dist \
+		delft
+
+
 .grobid-common-args:
 	$(eval _GROBID_COMMON_ARGS = \
 		--batch-size="$(BATCH_SIZE)" \

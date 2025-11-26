@@ -84,69 +84,69 @@ elifePipeline {
             }
         }
 
-        elifeMainlineOnly {
-            stage 'Merge to master', {
-                elifeGitMoveToBranch commit, 'master'
-            }
+        // elifeMainlineOnly {
+        //     stage 'Merge to master', {
+        //         elifeGitMoveToBranch commit, 'master'
+        //     }
 
-            stage 'Push unstable sciencebeam-trainer-delft image', {
-                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft', commit)
-                def unstable_image = image.addSuffixAndTag('_unstable', commit)
-                unstable_image.tag('latest').push()
-                unstable_image.push()
-            }
+        //     stage 'Push unstable sciencebeam-trainer-delft image', {
+        //         def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft', commit)
+        //         def unstable_image = image.addSuffixAndTag('_unstable', commit)
+        //         unstable_image.tag('latest').push()
+        //         unstable_image.push()
+        //     }
 
-            stage 'Push unstable sciencebeam-trainer-delft-grobid image', {
-                def tag = "${baseGrobidTag}-${commit}"
-                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-grobid', tag)
-                def unstable_image = image.addSuffixAndTag('_unstable', tag)
-                unstable_image.tag('latest').push()
-                unstable_image.push()
-            }
+        //     stage 'Push unstable sciencebeam-trainer-delft-grobid image', {
+        //         def tag = "${baseGrobidTag}-${commit}"
+        //         def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-grobid', tag)
+        //         def unstable_image = image.addSuffixAndTag('_unstable', tag)
+        //         unstable_image.tag('latest').push()
+        //         unstable_image.push()
+        //     }
 
-            stage 'Push unstable sciencebeam-trainer-delft-trainer-grobid image', {
-                def tag = "${baseGrobidTag}-${commit}"
-                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-trainer-grobid', tag)
-                def unstable_image = image.addSuffixAndTag('_unstable', tag)
-                unstable_image.tag('latest').push()
-                unstable_image.push()
-            }
-        }
+        //     stage 'Push unstable sciencebeam-trainer-delft-trainer-grobid image', {
+        //         def tag = "${baseGrobidTag}-${commit}"
+        //         def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-trainer-grobid', tag)
+        //         def unstable_image = image.addSuffixAndTag('_unstable', tag)
+        //         unstable_image.tag('latest').push()
+        //         unstable_image.push()
+        //     }
+        // }
 
-        elifePullRequestOnly { prNumber ->
-            stage 'Push package to test.pypi.org', {
-                withPypiCredentials 'staging', 'testpypi', {
-                    sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-push-testpypi"
-                }
-            }
-        }
+        // elifePullRequestOnly { prNumber ->
+        //     stage 'Push package to test.pypi.org', {
+        //         withPypiCredentials 'staging', 'testpypi', {
+        //             sh "make IMAGE_TAG=${commit} REVISION=${commit} ci-push-testpypi"
+        //         }
+        //     }
+        // }
 
-        elifeTagOnly { repoTag ->
-            stage 'Push stable sciencebeam-trainer-delft image', {
-                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft', commit)
-                image.tag('latest').push()
-                image.tag(version).push()
-            }
+        // elifeTagOnly { repoTag ->
+        //     stage 'Push stable sciencebeam-trainer-delft image', {
+        //         def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft', commit)
+        //         image.tag('latest').push()
+        //         image.tag(version).push()
+        //     }
 
-            stage 'Push stable sciencebeam-trainer-delft-grobid image', {
-                def tag = "${baseGrobidTag}-${commit}"
-                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-grobid', tag)
-                image.tag('latest').push()
-                image.tag(version).push()
-            }
+        //     stage 'Push stable sciencebeam-trainer-delft-grobid image', {
+        //         def tag = "${baseGrobidTag}-${commit}"
+        //         def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-grobid', tag)
+        //         image.tag('latest').push()
+        //         image.tag(version).push()
+        //     }
 
-            stage 'Push stable sciencebeam-trainer-delft-trainer-grobid image', {
-                def tag = "${baseGrobidTag}-${commit}"
-                def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-trainer-grobid', tag)
-                image.tag('latest').push()
-                image.tag(version).push()
-            }
+        //     stage 'Push stable sciencebeam-trainer-delft-trainer-grobid image', {
+        //         def tag = "${baseGrobidTag}-${commit}"
+        //         def image = DockerImage.elifesciences(this, 'sciencebeam-trainer-delft-trainer-grobid', tag)
+        //         image.tag('latest').push()
+        //         image.tag(version).push()
+        //     }
 
-            stage 'Push package to pypi', {
-                withPypiCredentials 'prod', 'pypi', {
-                    sh "make IMAGE_TAG=${commit} VERSION=${version} NO_BUILD=y ci-push-pypi"
-                }
-            }
-        }
+        //     stage 'Push package to pypi', {
+        //         withPypiCredentials 'prod', 'pypi', {
+        //             sh "make IMAGE_TAG=${commit} VERSION=${version} NO_BUILD=y ci-push-pypi"
+        //         }
+        //     }
+        // }
     }
 }

@@ -78,8 +78,8 @@ dev-install:
 	$(PIP) install \
 		-r requirements.txt \
 		-r requirements.cpu.txt \
-		-r requirements.dev.txt
-	$(PIP) install -r requirements.delft.txt --no-deps
+		-r requirements.dev.txt \
+		-r requirements.delft.txt
 # 	$(PIP) install -r requirements.jep.txt
 # 	$(PIP) install -e . --no-deps
 

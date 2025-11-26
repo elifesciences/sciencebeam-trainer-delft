@@ -46,12 +46,15 @@ RUN uv pip install \
 
 COPY requirements.delft.txt ./
 RUN uv pip install \
-    -r requirements.delft.txt --no-deps
+    -r requirements.cpu.txt \
+    -r requirements.txt \
+    -r requirements.delft.txt
 
 COPY requirements.dev.txt ./
 RUN uv pip install \
     -r requirements.cpu.txt \
     -r requirements.txt \
+    -r requirements.delft.txt \
     -r requirements.dev.txt
 
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft

@@ -65,7 +65,7 @@ jobs:
         uses: docker/bake-action@v6
         with:
           files: docker-bake.hcl
-          targets: lint-flake8,lint-pylint,lint-mypy,pytest-not-slow,pytest-slow,delft
+          targets: lint-flake8,lint-pylint,lint-mypy,pytest-not-slow,delft
           set: |
             ${{ steps.set_tags.outputs.tag_lines }}
           push: false

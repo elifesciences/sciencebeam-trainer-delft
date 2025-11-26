@@ -33,11 +33,11 @@ ENV PATH=/root/.local/bin:${PATH}
 COPY requirements.build.txt ./
 RUN pip install --user -r requirements.build.txt
 
-COPY requirements.txt ./
-RUN pip install --user -r requirements.txt
-
 COPY requirements.cpu.txt ./
 RUN pip install --user -r requirements.cpu.txt
+
+COPY requirements.txt ./
+RUN pip install --user -r requirements.txt
 
 COPY requirements.delft.txt ./
 RUN pip install --user -r requirements.delft.txt --no-deps

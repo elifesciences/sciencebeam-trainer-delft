@@ -6,7 +6,7 @@ import numpy as np
 
 from delft.utilities.Embeddings import Embeddings
 from delft.utilities.Tokenizer import tokenizeAndFilter
-from delft.sequenceLabelling.preprocess import WordPreprocessor
+from delft.sequenceLabelling.preprocess import Preprocessor
 
 from sciencebeam_trainer_delft.utils.progress_logger import logging_tqdm
 
@@ -33,7 +33,7 @@ def iter_batch_window_indices_and_offsets(
 def iter_predict_texts_with_sliding_window_if_enabled(
         texts: List[Union[str, List[str]]],
         model_config: ModelConfig,
-        preprocessor: WordPreprocessor,
+        preprocessor: Preprocessor,
         max_sequence_length: Optional[int],
         model,
         input_window_stride: int = None,

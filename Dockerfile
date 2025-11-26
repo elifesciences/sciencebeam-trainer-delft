@@ -1,4 +1,4 @@
-FROM python:3.7.10-buster
+FROM python:3.7.10-buster AS dev
 
 # # install gcloud to make it easier to access cloud storage
 # RUN mkdir -p /usr/local/gcloud \
@@ -55,6 +55,10 @@ COPY .flake8 .pylintrc pytest.ini ./
 COPY tests ./tests
 
 COPY scripts/dev ./scripts/dev
+
+
+# main image
+FROM dev AS delft
 
 # add additional wrapper entrypoint for OVERRIDE_EMBEDDING_URL
 COPY ./docker/entrypoint.sh ${PROJECT_FOLDER}/entrypoint.sh

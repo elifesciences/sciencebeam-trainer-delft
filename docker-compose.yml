@@ -44,6 +44,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: delft
       args:
         install_dev: "y"
         wapiti_source_download_url: ${WAPITI_SOURCE_DOWNLOAD_URL}

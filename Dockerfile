@@ -1,14 +1,14 @@
 FROM python:3.7.10-buster
 
-# install gcloud to make it easier to access cloud storage
-RUN mkdir -p /usr/local/gcloud \
-    && curl -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz -o /tmp/google-cloud-sdk.tar.gz \
-    && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
-    && rm /tmp/google-cloud-sdk.tar.gz \
-    && /usr/local/gcloud/google-cloud-sdk/install.sh --usage-reporting false \
-    && /usr/local/gcloud/google-cloud-sdk/bin/gcloud components install --quiet beta
+# # install gcloud to make it easier to access cloud storage
+# RUN mkdir -p /usr/local/gcloud \
+#     && curl -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz -o /tmp/google-cloud-sdk.tar.gz \
+#     && tar -C /usr/local/gcloud -xvf /tmp/google-cloud-sdk.tar.gz \
+#     && rm /tmp/google-cloud-sdk.tar.gz \
+#     && /usr/local/gcloud/google-cloud-sdk/install.sh --usage-reporting false \
+#     && /usr/local/gcloud/google-cloud-sdk/bin/gcloud components install --quiet beta
 
-ENV PATH /usr/local/gcloud/google-cloud-sdk/bin:$PATH
+# ENV PATH /usr/local/gcloud/google-cloud-sdk/bin:$PATH
 
 # install wapiti
 ARG wapiti_source_download_url

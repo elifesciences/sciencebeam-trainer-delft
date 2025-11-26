@@ -71,7 +71,7 @@ FROM scratch AS python-dist
 
 WORKDIR /dist
 
-COPY --from=python-dist-builder /opt/sciencebeam_parser/dist /dist
+COPY --from=python-dist-builder /opt/sciencebeam-trainer-delft/dist /dist
 
 
 # lint-flake8

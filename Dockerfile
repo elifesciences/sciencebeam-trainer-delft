@@ -1,4 +1,4 @@
-FROM python:3.9.25-bookworm AS dev
+FROM ghcr.io/astral-sh/uv:python3.9-bookworm AS dev
 
 # # install gcloud to make it easier to access cloud storage
 # RUN mkdir -p /usr/local/gcloud \
@@ -28,26 +28,28 @@ ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
 
 WORKDIR ${PROJECT_FOLDER}
 
-ENV PATH=/root/.local/bin:${PATH}
+ENV VENV=/opt/venv
+ENV VIRTUAL_ENV=${VENV} PYTHONUSERBASE=${VENV} PATH=${VENV}/bin:$PATH
 
 COPY requirements.build.txt ./
-RUN pip install --user -r requirements.build.txt
+RUN uv venv \
+    && uv pip install -r requirements.build.txt
 
 COPY requirements.cpu.txt ./
-RUN pip install --user \
+RUN uv pip install \
     -r requirements.cpu.txt
 
 COPY requirements.txt ./
-RUN pip install --user \
+RUN uv pip install \
     -r requirements.cpu.txt \
     -r requirements.txt
 
 COPY requirements.delft.txt ./
-RUN pip install --user \
+RUN uv pip install \
     -r requirements.delft.txt --no-deps
 
 COPY requirements.dev.txt ./
-RUN pip install \
+RUN uv pip install \
     -r requirements.cpu.txt \
     -r requirements.txt \
     -r requirements.dev.txt

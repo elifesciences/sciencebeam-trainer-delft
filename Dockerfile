@@ -57,6 +57,36 @@ COPY tests ./tests
 COPY scripts/dev ./scripts/dev
 
 
+# lint-flake8
+FROM dev AS lint-flake8
+
+RUN python -m flake8 sciencebeam_trainer_delft tests setup.py
+
+
+# lint-pylint
+FROM dev AS lint-pylint
+
+RUN python -m pylint sciencebeam_trainer_delft tests setup.py
+
+
+# lint-mypy
+FROM dev AS lint-mypy
+
+RUN python -m mypy --ignore-missing-imports sciencebeam_trainer_delft tests setup.py
+
+
+# pytest-not-slow
+FROM dev AS pytest-not-slow
+
+RUN python -m pytest -p no:cacheprovider -m 'not slow'
+
+
+# pytest-slow
+FROM dev AS pytest-slow
+
+RUN python -m pytest -p no:cacheprovider -m 'slow'
+
+
 # main image
 FROM dev AS delft
 

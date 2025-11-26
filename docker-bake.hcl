@@ -61,6 +61,12 @@ target "pytest-slow" {
   }
 }
 
+target "python-dist" {
+  context    = "."
+  dockerfile = "Dockerfile"
+  target     = "python-dist"
+}
+
 group "default" {
   targets = ["delft"]
 }

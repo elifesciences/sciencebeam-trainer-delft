@@ -56,6 +56,24 @@ COPY tests ./tests
 COPY scripts/dev ./scripts/dev
 
 
+# python-dist-builder
+FROM dev AS python-dist-builder
+
+ARG python_package_version
+RUN echo "Setting version to: $version" && \
+    ./scripts/dev/set-version.sh "$python_package_version"
+RUN python setup.py sdist && \
+    ls -l dist
+
+
+# python-dist
+FROM scratch AS python-dist
+
+WORKDIR /dist
+
+COPY --from=python-dist-builder /opt/sciencebeam_parser/dist /dist
+
+
 # lint-flake8
 FROM dev AS lint-flake8
 

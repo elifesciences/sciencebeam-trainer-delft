@@ -3,7 +3,8 @@ DOCKER_COMPOSE_CI = docker-compose -f docker-compose.yml
 DOCKER_COMPOSE = $(DOCKER_COMPOSE_DEV)
 
 VENV = venv
-PIP = $(VENV)/bin/pip
+PIP = VIRTUAL_ENV=./venv uv pip
+# PIP = $(VENV)/bin/pip
 PYTHON = $(VENV)/bin/python
 
 BATCH_SIZE = 10

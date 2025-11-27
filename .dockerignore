@@ -5,6 +5,7 @@ logs
 
 .ipynb_checkpoints
 .pytest_cache
+.mypy_cache
 
 notebooks/data
 notebooks/embedding-registry.json

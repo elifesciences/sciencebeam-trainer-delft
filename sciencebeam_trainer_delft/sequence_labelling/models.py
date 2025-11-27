@@ -3,8 +3,8 @@ import json
 from typing import List, Type, Union
 
 from keras.models import Model
-from keras.layers.merge import Concatenate
 from keras.layers import (
+    Concatenate,
     Dense, LSTM, Bidirectional, Embedding, Input, Dropout,
     TimeDistributed
 )

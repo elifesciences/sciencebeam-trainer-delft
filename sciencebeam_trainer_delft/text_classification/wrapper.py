@@ -83,8 +83,7 @@ class Classifier(_Classifier):
         LOGGER.info('embedding_name: %s', embedding_name)
         embeddings = self.embedding_manager.get_embeddings_for_name(
             embedding_name,
-            use_ELMo=model_config.use_ELMo,
-            use_BERT=model_config.use_BERT
+            use_ELMo=model_config.use_ELMo
         )
         if not embeddings.embed_size > 0:
             raise AssertionError(

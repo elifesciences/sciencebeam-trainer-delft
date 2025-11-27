@@ -56,7 +56,6 @@ def train_model(  # pylint: disable=too-many-statements
         validation_generator,
         val_y,
         use_ELMo=False,
-        use_BERT=False,
         multiprocessing: bool = True,
         nb_workers: int = 6,
         callbacks: List[Callback] = None):
@@ -66,7 +65,7 @@ def train_model(  # pylint: disable=too-many-statements
     best_epoch = 0
     current_epoch = 1
 
-    if use_ELMo or use_BERT:
+    if use_ELMo:
         # worker at 0 means the training will be executed in the main thread
         nb_workers = 0
         multiprocessing = False

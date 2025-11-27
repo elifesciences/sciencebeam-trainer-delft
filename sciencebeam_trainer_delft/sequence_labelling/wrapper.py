@@ -307,8 +307,6 @@ class Sequence(_Sequence):
             return
         if self.embeddings.use_ELMo:
             self.embeddings.clean_ELMo_cache()
-        if self.embeddings.use_BERT:
-            self.embeddings.clean_BERT_cache()
 
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid=None, y_valid=None,
@@ -439,8 +437,6 @@ class Sequence(_Sequence):
         if self.embeddings:
             if self.embeddings.use_ELMo:
                 self.embeddings.clean_ELMo_cache()
-            if self.embeddings.use_BERT:
-                self.embeddings.clean_BERT_cache()
 
     def eval(  # pylint: disable=arguments-differ
             self, x_test, y_test, features: np.array = None):
@@ -668,8 +664,7 @@ class Sequence(_Sequence):
         LOGGER.info('embedding_name: %s', embedding_name)
         embeddings = self.embedding_manager.get_embeddings_for_name(
             embedding_name,
-            use_ELMo=model_config.use_ELMo,
-            use_BERT=model_config.use_BERT
+            use_ELMo=model_config.use_ELMo
         )
         if not embeddings.embed_size > 0:
             raise AssertionError(

@@ -3,7 +3,7 @@ import json
 import os
 from datetime import datetime
 from abc import ABC
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 import joblib
 
@@ -157,7 +157,13 @@ class ModelSaver(_BaseModelSaverLoader):
             json.dump(meta, fp, sort_keys=False, indent=4)
         LOGGER.info('updated checkpoints meta: %s', filepath)
 
-    def save_to(self, directory: str, model: Model, meta: dict = None):
+    def save_to(
+        self,
+        directory: str,
+        model: Model,
+        meta: dict = None,
+        weight_file: Optional[str] = None
+    ):
         os.makedirs(directory, exist_ok=True)
         self._save_preprocessor_json(
             self.preprocessor, os.path.join(directory, self.preprocessor_json_file)
@@ -166,7 +172,7 @@ class ModelSaver(_BaseModelSaverLoader):
             self.preprocessor, os.path.join(directory, self.preprocessor_pickle_file)
         )
         self._save_model_config(self.model_config, os.path.join(directory, self.config_file))
-        self._save_model(model, os.path.join(directory, self.weight_file))
+        self._save_model(model, os.path.join(directory, weight_file or self.weight_file))
         if meta:
             self._save_meta(meta, os.path.join(directory, self.meta_file))
 
@@ -225,9 +231,14 @@ class ModelLoader(_BaseModelSaverLoader):
         with open_file(filepath, 'r') as fp:
             return ModelConfig.load(fp)
 
-    def load_model_from_directory(self, directory: str, model: Model):
+    def load_model_from_directory(
+        self,
+        directory: str,
+        model: Model,
+        weight_file: Optional[str] = None
+    ):
         return self.load_model_from_file(
-            os.path.join(directory, self.weight_file),
+            os.path.join(directory, weight_file or self.weight_file),
             model=model
         )
 

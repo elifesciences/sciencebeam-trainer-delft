@@ -675,17 +675,22 @@ class Sequence(_Sequence):
             'training_config': vars(self.training_config)
         }
 
-    def save(self, dir_path=None):
+    def save(self, dir_path=None, weight_file: Optional[str] = None):
         # create subfolder for the model if not already exists
         directory = self._get_model_directory(dir_path)
         os.makedirs(directory, exist_ok=True)
-        self.get_model_saver().save_to(directory, model=self.model, meta=self.get_meta())
+        self.get_model_saver().save_to(
+            directory,
+            model=self.model,
+            meta=self.get_meta(),
+            weight_file=weight_file
+        )
 
-    def load(self, dir_path=None):
+    def load(self, dir_path=None, weight_file: Optional[str] = None):
         directory = None
         try:
             directory = self._get_model_directory(dir_path)
-            self.load_from(directory)
+            self.load_from(directory, weight_file=weight_file)
         except Exception as exc:
             self._load_exception = exc
             LOGGER.exception('failed to load model from %r', directory, exc_info=exc)
@@ -700,7 +705,7 @@ class Sequence(_Sequence):
         copy_directory_with_source_meta(dir_path, local_dir_path)
         return local_dir_path
 
-    def load_from(self, directory: str):
+    def load_from(self, directory: str, weight_file: Optional[str] = None):
         model_loader = ModelLoader(download_manager=self.download_manager)
         directory = self.download_model(directory)
         self.model_path = directory
@@ -720,5 +725,9 @@ class Sequence(_Sequence):
         # (and supports that)
         self.model_config.stateful = is_model_stateful(self.model)
         # load weights
-        model_loader.load_model_from_directory(directory, model=self.model)
+        model_loader.load_model_from_directory(
+            directory,
+            model=self.model,
+            weight_file=weight_file
+        )
         self.update_dataset_transformer_factor()

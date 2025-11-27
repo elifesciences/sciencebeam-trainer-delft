@@ -142,12 +142,12 @@ def _wrapper_load_resource_registry_mock(
         yield mock
 
 
-@pytest.fixture(autouse=True)
-def _embedding_class(embedding_registry_path: Path):
-    embedding_class_with_defaults = partial(Embeddings, path=str(embedding_registry_path))
-    target = 'delft.sequenceLabelling.wrapper.Embeddings'
-    with patch(target, new=embedding_class_with_defaults) as mock:
-        yield mock
+# @pytest.fixture(autouse=True)
+# def _embedding_class(embedding_registry_path: Path):
+#     embedding_class_with_defaults = partial(Embeddings, path=str(embedding_registry_path))
+#     target = 'delft.sequenceLabelling.wrapper.Embeddings'
+#     with patch(target, new=embedding_class_with_defaults) as mock:
+#         yield mock
 
 
 @pytest.fixture(name='trainer_class_mock')

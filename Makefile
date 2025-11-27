@@ -111,7 +111,7 @@ dev-watch:
 
 
 dev-watch-slow:
-	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings $(ARGS)
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings -vv $(ARGS)
 
 
 dev-test: dev-lint dev-pytest

@@ -69,7 +69,7 @@ class CustomBidLSTM_CRF(CustomModel):
         lstm_inputs = []
         # build input, directly feed with word embedding by the data generator
         word_input = Input(
-            shape=(None, config.word_embedding_size),
+            # shape=(None, config.word_embedding_size),
             batch_shape=(input_batch_size, None, config.word_embedding_size),
             name='word_input'
         )
@@ -78,7 +78,7 @@ class CustomBidLSTM_CRF(CustomModel):
 
         # build character based embedding
         char_input = Input(
-            shape=(None, config.max_char_length),
+            # shape=(None, config.max_char_length),
             batch_shape=(input_batch_size, None, config.max_char_length),
             dtype='int32',
             name='char_input'

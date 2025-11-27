@@ -643,7 +643,7 @@ class Sequence(_Sequence):
     def model_summary_props(self) -> dict:
         return {
             'model_type': 'delft',
-            'architecture': self.model_config.model_type,
+            'architecture': self.model_config.architecture,
             'model_config': vars(self.model_config)
         }
 

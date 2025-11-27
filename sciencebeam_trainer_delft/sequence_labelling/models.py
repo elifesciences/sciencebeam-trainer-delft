@@ -274,7 +274,7 @@ def register_model(name: str, model_class: Type[CustomModel]):
 
 
 def updated_implicit_model_config_props(model_config: ModelConfig):
-    implicit_model_config_props = IMPLICIT_MODEL_CONFIG_PROPS_MAP.get(model_config.model_type)
+    implicit_model_config_props = IMPLICIT_MODEL_CONFIG_PROPS_MAP.get(model_config.architecture)
     if not implicit_model_config_props:
         return
     for key, value in implicit_model_config_props.items():
@@ -295,14 +295,14 @@ def is_model_stateful(model: Union[BaseModel, CustomModel]) -> bool:
         return False
 
 
-def get_model(config, preprocessor, ntags=None):
+def get_model(config: ModelConfig, preprocessor, ntags=None):
     LOGGER.info(
         'get_model, config: %s, ntags=%s',
         json.dumps(vars(config), indent=4),
         ntags
     )
 
-    model_class = MODEL_MAP.get(config.model_type)
+    model_class = MODEL_MAP.get(config.architecture)
     if not model_class:
         return _get_model(config, preprocessor, ntags=ntags)
 

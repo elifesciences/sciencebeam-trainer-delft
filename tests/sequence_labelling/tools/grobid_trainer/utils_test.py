@@ -548,7 +548,7 @@ class TestGrobidTrainerUtils:
                 **train_args
             )
             model_config = load_model_config(default_model_directory)
-            assert model_config.model_type == 'BidLSTM_CRF_FEATURES'
+            assert model_config.architecture == 'BidLSTM_CRF_FEATURES'
             assert model_config.features_embedding_size == 4
             assert model_config.features_lstm_units == 4
             tag_input(
@@ -574,7 +574,7 @@ class TestGrobidTrainerUtils:
                 **train_args
             )
             model_config = load_model_config(default_model_directory)
-            assert model_config.model_type == 'CustomBidLSTM_CRF_FEATURES'
+            assert model_config.architecture == 'CustomBidLSTM_CRF_FEATURES'
             assert model_config.features_embedding_size == 4
             assert model_config.features_lstm_units == 4
             tag_input(

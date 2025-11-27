@@ -59,7 +59,7 @@ class Classifier(_Classifier):
                     self.model,
                     os.path.join(
                         model_path,
-                        self.model_config.model_type + "." + self.weight_file
+                        self.model_config.architecture + "." + self.weight_file
                     )
                 )
             else:
@@ -73,7 +73,7 @@ class Classifier(_Classifier):
                         self.models[i],
                         os.path.join(
                             model_path,
-                            self.model_config.model_type + ".model{0}_weights.hdf5".format(i)
+                            self.model_config.architecture + ".model{0}_weights.hdf5".format(i)
                         )
                     )
                 LOGGER.info('nfolds model saved')
@@ -109,7 +109,7 @@ class Classifier(_Classifier):
             loader.load_model_weights_from_file(
                 os.path.join(
                     model_path,
-                    self.model_config.model_type + "." + self.weight_file
+                    self.model_config.architecture + "." + self.weight_file
                 ),
                 self.model
             )
@@ -120,7 +120,7 @@ class Classifier(_Classifier):
                 loader.load_model_weights_from_file(
                     os.path.join(
                         model_path,
-                        self.model_config.model_type + ".model{0}_weights.hdf5".format(i)
+                        self.model_config.architecture + ".model{0}_weights.hdf5".format(i)
                     ),
                     local_model
                 )

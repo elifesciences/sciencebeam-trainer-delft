@@ -111,12 +111,13 @@ class TrainingConfig(_TrainingConfig):
     def __init__(
             self,
             *args,
+            learning_rate=0.001,
             initial_epoch: int = None,
             input_window_stride: int = None,
             checkpoint_epoch_interval: int = 1,
             initial_meta: Optional[dict] = None,
             **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, learning_rate=learning_rate, **kwargs)
         self.initial_epoch = initial_epoch
         self.input_window_stride = input_window_stride
         self.checkpoint_epoch_interval = checkpoint_epoch_interval

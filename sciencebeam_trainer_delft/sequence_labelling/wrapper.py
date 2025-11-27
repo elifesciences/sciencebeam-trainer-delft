@@ -659,9 +659,8 @@ class Sequence(_Sequence):
             return None
         embedding_name = self.embedding_manager.ensure_available(embedding_name)
         LOGGER.info('embedding_name: %s', embedding_name)
-        embeddings = Embeddings(
+        embeddings = self.embedding_manager.get_embeddings_for_name(
             embedding_name,
-            path=self.embedding_registry_path,
             use_ELMo=model_config.use_ELMo,
             use_BERT=model_config.use_BERT
         )

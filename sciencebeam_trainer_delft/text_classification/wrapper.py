@@ -9,7 +9,6 @@ from delft.textClassification.wrapper import (
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 
-from sciencebeam_trainer_delft.embedding.embedding import Embeddings
 from sciencebeam_trainer_delft.embedding.manager import EmbeddingManager
 
 from sciencebeam_trainer_delft.text_classification.config import ModelConfig
@@ -82,9 +81,8 @@ class Classifier(_Classifier):
         embedding_name = model_config.embeddings_name
         embedding_name = self.embedding_manager.ensure_available(embedding_name)
         LOGGER.info('embedding_name: %s', embedding_name)
-        embeddings = Embeddings(
+        embeddings = self.embedding_manager.get_embeddings_for_name(
             embedding_name,
-            path=self.embedding_registry_path,
             use_ELMo=model_config.use_ELMo,
             use_BERT=model_config.use_BERT
         )

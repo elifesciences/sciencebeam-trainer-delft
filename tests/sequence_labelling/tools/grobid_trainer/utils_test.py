@@ -1,7 +1,5 @@
-import json
 import logging
 import os
-from functools import partial
 from pathlib import Path
 from unittest.mock import call, patch, MagicMock
 from typing import Iterator, List, Optional, cast
@@ -11,8 +9,6 @@ from typing_extensions import TypedDict
 import pytest
 
 import numpy as np
-
-from delft.utilities.Embeddings import Embeddings
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig

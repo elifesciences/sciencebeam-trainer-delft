@@ -4,7 +4,7 @@ from typing import NamedTuple, Optional
 
 import numpy as np
 
-from tensorflow.keras.callbacks import ProgbarLogger
+from keras.callbacks import ProgbarLogger
 
 from delft.sequenceLabelling.evaluation import (
     f1_score,

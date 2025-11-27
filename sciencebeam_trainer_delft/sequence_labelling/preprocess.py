@@ -66,7 +66,7 @@ def faster_preprocessor_fit(self: DelftWordPreprocessor, X, y):
     chars = {PAD: 0, UNK: 1}
     tags = {PAD: 0}
 
-    if self.use_char_feature:
+    if self.return_chars:
         temp_chars = {
             c
             for w in set(itertools.chain(*X))

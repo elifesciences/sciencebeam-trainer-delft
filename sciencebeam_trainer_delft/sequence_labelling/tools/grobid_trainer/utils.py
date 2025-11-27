@@ -78,7 +78,7 @@ DEFAULT_TAG_OUTPUT_FORMAT = TagOutputFormats.XML
 
 def set_random_seeds(random_seed: int):
     np.random.seed(random_seed)
-    tf.set_random_seed(random_seed)
+    tf.random.set_seed(random_seed)
 
 
 def get_default_training_data(model: str) -> str:

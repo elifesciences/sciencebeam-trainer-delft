@@ -80,7 +80,7 @@ FEATURES_EMBEDDING_SIZE_1 = 13
 
 @pytest.fixture(name='embedding_registry_path')
 def _embedding_registry_path(temp_dir: Path):
-    return temp_dir.joinpath('embedding-registry.json')
+    return temp_dir.joinpath('resources-registry.json')
 
 
 @pytest.fixture(name='embedding_registry', autouse=True)

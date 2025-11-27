@@ -21,7 +21,7 @@ from sciencebeam_trainer_delft.text_classification.saving import (
 LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_EMBEDDINGS_PATH = './embedding-registry.json'
+DEFAULT_EMBEDDINGS_PATH = 'delft/resources-registry.json'
 
 
 class Classifier(_Classifier):

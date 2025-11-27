@@ -60,7 +60,7 @@ RUN uv pip install \
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
 COPY README.md MANIFEST.in setup.py ./
 
-COPY config/embedding-registry.json ./
+COPY delft ./delft
 
 COPY .flake8 .pylintrc pytest.ini ./
 COPY tests ./tests

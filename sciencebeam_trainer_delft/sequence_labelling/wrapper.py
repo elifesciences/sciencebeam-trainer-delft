@@ -71,7 +71,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 DEFAUT_MODEL_PATH = 'data/models/sequenceLabelling/'
-DEFAULT_EMBEDDINGS_PATH = './embedding-registry.json'
+DEFAULT_EMBEDDINGS_PATH = 'delft/resources-registry.json'
 
 
 DEFAUT_BATCH_SIZE = 10
@@ -209,6 +209,13 @@ class Sequence(_Sequence):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
         LOGGER.debug('Sequence, args=%s, kwargs=%s', args, kwargs)
+        if (
+            embedding_registry_path is not None
+            and embedding_registry_path != DEFAULT_EMBEDDINGS_PATH
+        ):
+            raise AssertionError(
+                f'custom embedding_registry_path not supported: {repr(embedding_registry_path)} '
+            )
         self.embedding_registry_path = embedding_registry_path or DEFAULT_EMBEDDINGS_PATH
         if embedding_manager is None:
             embedding_manager = EmbeddingManager(

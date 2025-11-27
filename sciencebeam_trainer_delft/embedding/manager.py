@@ -16,7 +16,7 @@ from sciencebeam_trainer_delft.utils.io import (
 LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_EMBEDDING_REGISTRY = 'embedding-registry.json'
+DEFAULT_EMBEDDING_REGISTRY = 'delft/resources-registry.json'
 DEFAULT_DOWNLOAD_DIR = 'data/download'
 DEFAULT_EMBEDDING_LMDB_PATH = 'data/db'
 

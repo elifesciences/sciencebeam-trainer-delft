@@ -4,6 +4,8 @@ from typing import NamedTuple, Optional
 
 import numpy as np
 
+from tensorflow.keras.callbacks import ProgbarLogger
+
 from delft.sequenceLabelling.evaluation import (
     f1_score,
     accuracy_score,
@@ -30,6 +32,21 @@ from sciencebeam_trainer_delft.sequence_labelling.saving import ModelSaver
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+class SafeProgbarLogger(ProgbarLogger):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # ensure early_stopping is treated as stateful
+        self.stateful_metrics = set(getattr(self, 'stateful_metrics', []) or [])
+        self.stateful_metrics.add('early_stopping')
+
+    def on_train_batch_end(self, batch, logs=None):
+        logs = dict(logs or {})
+        if 'early_stopping' in logs and isinstance(logs['early_stopping'], dict):
+            # prevent dict from going into internal averaging
+            logs.pop('early_stopping', None)
+        super().on_train_batch_end(batch, logs=logs)
 
 
 def get_callbacks(
@@ -82,6 +99,8 @@ def get_callbacks(
             meta=meta
         )
         callbacks.append(save_callback)
+
+    callbacks.append(SafeProgbarLogger())
 
     return callbacks
 
@@ -285,7 +304,8 @@ class Trainer(_Trainer):
             epochs=max_epoch,
             use_multiprocessing=multiprocessing,
             workers=nb_workers,
-            callbacks=callbacks
+            callbacks=callbacks,
+            verbose=0
         )
 
         return local_model

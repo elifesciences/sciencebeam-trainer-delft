@@ -10,7 +10,7 @@ from delft.utilities.Embeddings import Embeddings
 from delft.sequenceLabelling.preprocess import (
     to_vector_single, to_casing_single,
     to_vector_simple_with_elmo, to_vector_simple_with_bert,
-    WordPreprocessor,
+    Preprocessor,
     PAD
 )
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
@@ -339,7 +339,7 @@ class DataGenerator(keras.utils.Sequence):
             self,
             x: List[Union[str, List[str]]],
             y: Optional[List[List[str]]],
-            preprocessor: WordPreprocessor,
+            preprocessor: Preprocessor,
             batch_size: int = 24,
             input_window_stride: int = None,
             stateful: bool = True,

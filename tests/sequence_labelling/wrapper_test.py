@@ -8,7 +8,7 @@ import numpy as np
 import keras
 
 from delft.sequenceLabelling.preprocess import (
-    WordPreprocessor as DelftWordPreprocessor,
+    Preprocessor as DelftWordPreprocessor,
     FeaturesPreprocessor as DelftFeaturesPreprocessor
 )
 

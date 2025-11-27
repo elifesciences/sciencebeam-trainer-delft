@@ -14,7 +14,7 @@ from sklearn.preprocessing import FunctionTransformer
 
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
-    WordPreprocessor as DelftWordPreprocessor,
+    Preprocessor as DelftWordPreprocessor,
     PAD,
     UNK
 )

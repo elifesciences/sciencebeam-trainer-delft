@@ -10,7 +10,7 @@ import joblib
 from delft.sequenceLabelling.models import Model
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
-    WordPreprocessor as DelftWordPreprocessor
+    Preprocessor as DelftWordPreprocessor
 )
 
 from sciencebeam_trainer_delft.utils.typing import T, U, V

@@ -7,7 +7,7 @@ from typing import Callable, Iterable, List, Optional, Tuple, Union, cast
 import numpy as np
 
 from delft.sequenceLabelling.models import BaseModel
-from delft.sequenceLabelling.preprocess import WordPreprocessor, FeaturesPreprocessor
+from delft.sequenceLabelling.preprocess import Preprocessor, FeaturesPreprocessor
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.config import TrainingConfig as DelftTrainingConfig
 
@@ -145,9 +145,9 @@ def get_features_preprocessor(
 
 def get_preprocessor(
         model_config: ModelConfig,
-        features: np.array = None) -> WordPreprocessor:
+        features: np.array = None) -> Preprocessor:
     feature_preprocessor = get_features_preprocessor(model_config, features=features)
-    return WordPreprocessor(
+    return Preprocessor(
         max_char_length=model_config.max_char_length,
         feature_preprocessor=feature_preprocessor
     )
@@ -164,7 +164,7 @@ def prepare_preprocessor(
         additional_token_feature_indices=model_config.additional_token_feature_indices,
         text_feature_indices=model_config.text_feature_indices
     )
-    if isinstance(preprocessor, WordPreprocessor):
+    if isinstance(preprocessor, Preprocessor):
         LOGGER.info('fitting preprocessor (faster)')
         faster_preprocessor_fit(preprocessor, batch_text_list_iterable, y)
     else:
@@ -264,7 +264,7 @@ class Sequence(_Sequence):
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
         self._load_exception = None
-        self.p: Optional[WordPreprocessor] = None
+        self.p: Optional[Preprocessor] = None
         self.model: Optional[BaseModel] = None
         self.models: List[BaseModel] = []
 

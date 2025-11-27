@@ -10,7 +10,7 @@ from keras.layers import (
 )
 
 import delft.sequenceLabelling.wrapper
-from delft.utilities.layers import ChainCRF
+from delft.utilities.crf_layer import ChainCRF
 from delft.sequenceLabelling.models import BaseModel
 from delft.sequenceLabelling.models import get_model as _get_model, BidLSTM_CRF_FEATURES
 

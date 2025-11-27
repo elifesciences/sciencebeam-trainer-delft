@@ -103,6 +103,25 @@ def get_preprocessor_for_json(preprocessor_json: dict) -> DelftWordPreprocessor:
     return preprocessor
 
 
+class BytesOnlyWriter:
+    def __init__(self, raw_fp):
+        self._fp = raw_fp
+
+    def write(self, b):
+        # joblib / pickle may pass memoryview; convert to bytes on the fly
+        if isinstance(b, memoryview):
+            b = b.tobytes()
+        self._fp.write(b)
+
+    def flush(self):
+        if hasattr(self._fp, "flush"):
+            self._fp.flush()
+
+    def close(self):
+        if hasattr(self._fp, "close"):
+            self._fp.close()
+
+
 class ModelSaver(_BaseModelSaverLoader):
     def __init__(
             self,
@@ -119,7 +138,8 @@ class ModelSaver(_BaseModelSaverLoader):
         LOGGER.info('preprocessor json saved to %s', filepath)
 
     def _save_preprocessor_pickle(self, preprocessor: DelftWordPreprocessor, filepath: str):
-        with open_file(filepath, 'wb') as fp:
+        with open_file(filepath, 'wb') as raw_fp:
+            fp = BytesOnlyWriter(raw_fp)
             joblib.dump(preprocessor, fp)
         LOGGER.info('preprocessor pickle saved to %s', filepath)
 

@@ -32,7 +32,7 @@ ENV VENV=/opt/venv
 ENV VIRTUAL_ENV=${VENV} PYTHONUSERBASE=${VENV} PATH=${VENV}/bin:$PATH
 
 COPY requirements.build.txt ./
-RUN uv venv \
+RUN uv venv "${VENV}" \
     && uv pip install -r requirements.build.txt
 
 COPY requirements.cpu.txt ./

@@ -87,6 +87,15 @@ def _embedding_registry_path():
     return 'delft/resources-registry.json'
 
 
+@pytest.fixture(name='embedding_manager_load_mock', autouse=True)
+def _embedding_manager_load_mock() -> Iterator[MagicMock]:
+    with patch(
+        'sciencebeam_trainer_delft.embedding.EmbeddingManager._load'
+    ) as mock:
+        mock.return_value = RESOURCE_REGISTRY_1
+        yield mock
+
+
 @pytest.fixture(name='load_resource_registry_mock', autouse=True)
 def _load_resource_registry_mock() -> Iterator[MagicMock]:
     with patch('delft.utilities.Embeddings.load_resource_registry') as mock:

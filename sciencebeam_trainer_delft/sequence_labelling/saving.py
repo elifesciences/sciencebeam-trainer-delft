@@ -3,14 +3,14 @@ import json
 import os
 from datetime import datetime
 from abc import ABC
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 import joblib
 
 from delft.sequenceLabelling.models import Model
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
-    WordPreprocessor as DelftWordPreprocessor
+    Preprocessor as DelftWordPreprocessor
 )
 
 from sciencebeam_trainer_delft.utils.typing import T, U, V
@@ -103,6 +103,25 @@ def get_preprocessor_for_json(preprocessor_json: dict) -> DelftWordPreprocessor:
     return preprocessor
 
 
+class BytesOnlyWriter:
+    def __init__(self, raw_fp):
+        self._fp = raw_fp
+
+    def write(self, b):
+        # joblib / pickle may pass memoryview; convert to bytes on the fly
+        if isinstance(b, memoryview):
+            b = b.tobytes()
+        self._fp.write(b)
+
+    def flush(self):
+        if hasattr(self._fp, "flush"):
+            self._fp.flush()
+
+    def close(self):
+        if hasattr(self._fp, "close"):
+            self._fp.close()
+
+
 class ModelSaver(_BaseModelSaverLoader):
     def __init__(
             self,
@@ -119,7 +138,8 @@ class ModelSaver(_BaseModelSaverLoader):
         LOGGER.info('preprocessor json saved to %s', filepath)
 
     def _save_preprocessor_pickle(self, preprocessor: DelftWordPreprocessor, filepath: str):
-        with open_file(filepath, 'wb') as fp:
+        with open_file(filepath, 'wb') as raw_fp:
+            fp = BytesOnlyWriter(raw_fp)
             joblib.dump(preprocessor, fp)
         LOGGER.info('preprocessor pickle saved to %s', filepath)
 
@@ -157,7 +177,13 @@ class ModelSaver(_BaseModelSaverLoader):
             json.dump(meta, fp, sort_keys=False, indent=4)
         LOGGER.info('updated checkpoints meta: %s', filepath)
 
-    def save_to(self, directory: str, model: Model, meta: dict = None):
+    def save_to(
+        self,
+        directory: str,
+        model: Model,
+        meta: dict = None,
+        weight_file: Optional[str] = None
+    ):
         os.makedirs(directory, exist_ok=True)
         self._save_preprocessor_json(
             self.preprocessor, os.path.join(directory, self.preprocessor_json_file)
@@ -166,7 +192,7 @@ class ModelSaver(_BaseModelSaverLoader):
             self.preprocessor, os.path.join(directory, self.preprocessor_pickle_file)
         )
         self._save_model_config(self.model_config, os.path.join(directory, self.config_file))
-        self._save_model(model, os.path.join(directory, self.weight_file))
+        self._save_model(model, os.path.join(directory, weight_file or self.weight_file))
         if meta:
             self._save_meta(meta, os.path.join(directory, self.meta_file))
 
@@ -225,9 +251,14 @@ class ModelLoader(_BaseModelSaverLoader):
         with open_file(filepath, 'r') as fp:
             return ModelConfig.load(fp)
 
-    def load_model_from_directory(self, directory: str, model: Model):
+    def load_model_from_directory(
+        self,
+        directory: str,
+        model: Model,
+        weight_file: Optional[str] = None
+    ):
         return self.load_model_from_file(
-            os.path.join(directory, self.weight_file),
+            os.path.join(directory, weight_file or self.weight_file),
             model=model
         )
 

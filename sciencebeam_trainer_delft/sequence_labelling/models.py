@@ -3,14 +3,14 @@ import json
 from typing import List, Type, Union
 
 from keras.models import Model
-from keras.layers.merge import Concatenate
 from keras.layers import (
+    Concatenate,
     Dense, LSTM, Bidirectional, Embedding, Input, Dropout,
     TimeDistributed
 )
 
 import delft.sequenceLabelling.wrapper
-from delft.utilities.layers import ChainCRF
+from delft.utilities.crf_layer import ChainCRF
 from delft.sequenceLabelling.models import BaseModel
 from delft.sequenceLabelling.models import get_model as _get_model, BidLSTM_CRF_FEATURES
 
@@ -69,7 +69,7 @@ class CustomBidLSTM_CRF(CustomModel):
         lstm_inputs = []
         # build input, directly feed with word embedding by the data generator
         word_input = Input(
-            shape=(None, config.word_embedding_size),
+            # shape=(None, config.word_embedding_size),
             batch_shape=(input_batch_size, None, config.word_embedding_size),
             name='word_input'
         )
@@ -78,7 +78,7 @@ class CustomBidLSTM_CRF(CustomModel):
 
         # build character based embedding
         char_input = Input(
-            shape=(None, config.max_char_length),
+            # shape=(None, config.max_char_length),
             batch_shape=(input_batch_size, None, config.max_char_length),
             dtype='int32',
             name='char_input'
@@ -274,7 +274,7 @@ def register_model(name: str, model_class: Type[CustomModel]):
 
 
 def updated_implicit_model_config_props(model_config: ModelConfig):
-    implicit_model_config_props = IMPLICIT_MODEL_CONFIG_PROPS_MAP.get(model_config.model_type)
+    implicit_model_config_props = IMPLICIT_MODEL_CONFIG_PROPS_MAP.get(model_config.architecture)
     if not implicit_model_config_props:
         return
     for key, value in implicit_model_config_props.items():
@@ -295,14 +295,14 @@ def is_model_stateful(model: Union[BaseModel, CustomModel]) -> bool:
         return False
 
 
-def get_model(config, preprocessor, ntags=None):
+def get_model(config: ModelConfig, preprocessor, ntags=None):
     LOGGER.info(
         'get_model, config: %s, ntags=%s',
         json.dumps(vars(config), indent=4),
         ntags
     )
 
-    model_class = MODEL_MAP.get(config.model_type)
+    model_class = MODEL_MAP.get(config.architecture)
     if not model_class:
         return _get_model(config, preprocessor, ntags=ntags)
 

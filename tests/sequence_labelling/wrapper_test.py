@@ -8,7 +8,7 @@ import numpy as np
 import keras
 
 from delft.sequenceLabelling.preprocess import (
-    WordPreprocessor as DelftWordPreprocessor,
+    Preprocessor as DelftWordPreprocessor,
     FeaturesPreprocessor as DelftFeaturesPreprocessor
 )
 
@@ -103,13 +103,13 @@ class TestSequenceEndToEnd:
         x_train = [[TOKEN_1, TOKEN_2]]
         y_train = [[LABEL_1, LABEL_2]]
         model_kwargs = dict(
-            model_type='CustomBidLSTM_CRF',
+            architecture='CustomBidLSTM_CRF',
             char_emb_size=2,
             max_char_length=3,
             char_lstm_units=4,
             word_lstm_units=5,
             max_sequence_length=6,
-            use_char_feature=False,
+            return_chars=False,
             multiprocessing=False,
             max_epoch=1
         )

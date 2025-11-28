@@ -10,7 +10,7 @@ import delft.textClassification.wrapper
 
 from sciencebeam_trainer_delft.text_classification.wrapper import Classifier
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
-from sciencebeam_trainer_delft.utils.models.Attention import Attention
+# from sciencebeam_trainer_delft.utils.models.Attention import Attention
 from sciencebeam_trainer_delft.text_classification.models import (
     get_callbacks,
     train_model
@@ -103,7 +103,7 @@ def load_label_data(
 
 
 def _patch_delft():
-    delft.textClassification.models.Attention = Attention
+    # delft.textClassification.models.Attention = Attention
     delft.textClassification.wrapper.train_model = train_model
 
 

@@ -7,7 +7,7 @@ from typing import Callable, Iterable, List, Optional, Tuple, Union, cast
 import numpy as np
 
 from delft.sequenceLabelling.models import BaseModel
-from delft.sequenceLabelling.preprocess import WordPreprocessor, FeaturesPreprocessor
+from delft.sequenceLabelling.preprocess import Preprocessor, FeaturesPreprocessor
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.config import TrainingConfig as DelftTrainingConfig
 
@@ -71,7 +71,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 DEFAUT_MODEL_PATH = 'data/models/sequenceLabelling/'
-DEFAULT_EMBEDDINGS_PATH = './embedding-registry.json'
+DEFAULT_EMBEDDINGS_PATH = 'delft/resources-registry.json'
 
 
 DEFAUT_BATCH_SIZE = 10
@@ -145,9 +145,9 @@ def get_features_preprocessor(
 
 def get_preprocessor(
         model_config: ModelConfig,
-        features: np.array = None) -> WordPreprocessor:
+        features: np.array = None) -> Preprocessor:
     feature_preprocessor = get_features_preprocessor(model_config, features=features)
-    return WordPreprocessor(
+    return Preprocessor(
         max_char_length=model_config.max_char_length,
         feature_preprocessor=feature_preprocessor
     )
@@ -164,7 +164,7 @@ def prepare_preprocessor(
         additional_token_feature_indices=model_config.additional_token_feature_indices,
         text_feature_indices=model_config.text_feature_indices
     )
-    if isinstance(preprocessor, WordPreprocessor):
+    if isinstance(preprocessor, Preprocessor):
         LOGGER.info('fitting preprocessor (faster)')
         faster_preprocessor_fit(preprocessor, batch_text_list_iterable, y)
     else:
@@ -209,6 +209,13 @@ class Sequence(_Sequence):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
         LOGGER.debug('Sequence, args=%s, kwargs=%s', args, kwargs)
+        if (
+            embedding_registry_path is not None
+            and embedding_registry_path != DEFAULT_EMBEDDINGS_PATH
+        ):
+            raise AssertionError(
+                f'custom embedding_registry_path not supported: {repr(embedding_registry_path)} '
+            )
         self.embedding_registry_path = embedding_registry_path or DEFAULT_EMBEDDINGS_PATH
         if embedding_manager is None:
             embedding_manager = EmbeddingManager(
@@ -264,7 +271,7 @@ class Sequence(_Sequence):
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
         self._load_exception = None
-        self.p: Optional[WordPreprocessor] = None
+        self.p: Optional[Preprocessor] = None
         self.model: Optional[BaseModel] = None
         self.models: List[BaseModel] = []
 
@@ -300,8 +307,6 @@ class Sequence(_Sequence):
             return
         if self.embeddings.use_ELMo:
             self.embeddings.clean_ELMo_cache()
-        if self.embeddings.use_BERT:
-            self.embeddings.clean_BERT_cache()
 
     def train(  # pylint: disable=arguments-differ
             self, x_train, y_train, x_valid=None, y_valid=None,
@@ -432,8 +437,6 @@ class Sequence(_Sequence):
         if self.embeddings:
             if self.embeddings.use_ELMo:
                 self.embeddings.clean_ELMo_cache()
-            if self.embeddings.use_BERT:
-                self.embeddings.clean_BERT_cache()
 
     def eval(  # pylint: disable=arguments-differ
             self, x_test, y_test, features: np.array = None):
@@ -643,7 +646,7 @@ class Sequence(_Sequence):
     def model_summary_props(self) -> dict:
         return {
             'model_type': 'delft',
-            'architecture': self.model_config.model_type,
+            'architecture': self.model_config.architecture,
             'model_config': vars(self.model_config)
         }
 
@@ -659,11 +662,9 @@ class Sequence(_Sequence):
             return None
         embedding_name = self.embedding_manager.ensure_available(embedding_name)
         LOGGER.info('embedding_name: %s', embedding_name)
-        embeddings = Embeddings(
+        embeddings = self.embedding_manager.get_embeddings_for_name(
             embedding_name,
-            path=self.embedding_registry_path,
-            use_ELMo=model_config.use_ELMo,
-            use_BERT=model_config.use_BERT
+            use_ELMo=model_config.use_ELMo
         )
         if not embeddings.embed_size > 0:
             raise AssertionError(
@@ -676,17 +677,22 @@ class Sequence(_Sequence):
             'training_config': vars(self.training_config)
         }
 
-    def save(self, dir_path=None):
+    def save(self, dir_path=None, weight_file: Optional[str] = None):
         # create subfolder for the model if not already exists
         directory = self._get_model_directory(dir_path)
         os.makedirs(directory, exist_ok=True)
-        self.get_model_saver().save_to(directory, model=self.model, meta=self.get_meta())
+        self.get_model_saver().save_to(
+            directory,
+            model=self.model,
+            meta=self.get_meta(),
+            weight_file=weight_file
+        )
 
-    def load(self, dir_path=None):
+    def load(self, dir_path=None, weight_file: Optional[str] = None):
         directory = None
         try:
             directory = self._get_model_directory(dir_path)
-            self.load_from(directory)
+            self.load_from(directory, weight_file=weight_file)
         except Exception as exc:
             self._load_exception = exc
             LOGGER.exception('failed to load model from %r', directory, exc_info=exc)
@@ -701,7 +707,7 @@ class Sequence(_Sequence):
         copy_directory_with_source_meta(dir_path, local_dir_path)
         return local_dir_path
 
-    def load_from(self, directory: str):
+    def load_from(self, directory: str, weight_file: Optional[str] = None):
         model_loader = ModelLoader(download_manager=self.download_manager)
         directory = self.download_model(directory)
         self.model_path = directory
@@ -721,5 +727,9 @@ class Sequence(_Sequence):
         # (and supports that)
         self.model_config.stateful = is_model_stateful(self.model)
         # load weights
-        model_loader.load_model_from_directory(directory, model=self.model)
+        model_loader.load_model_from_directory(
+            directory,
+            model=self.model,
+            weight_file=weight_file
+        )
         self.update_dataset_transformer_factor()

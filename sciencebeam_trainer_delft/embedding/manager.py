@@ -16,7 +16,7 @@ from sciencebeam_trainer_delft.utils.io import (
 LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_EMBEDDING_REGISTRY = 'embedding-registry.json'
+DEFAULT_EMBEDDING_REGISTRY = 'delft/resources-registry.json'
 DEFAULT_DOWNLOAD_DIR = 'data/download'
 DEFAULT_EMBEDDING_LMDB_PATH = 'data/db'
 
@@ -60,7 +60,8 @@ def _get_embedding_config_for_filename(filename: str) -> dict:
 
 class EmbeddingManager:
     def __init__(
-            self, path: str = DEFAULT_EMBEDDING_REGISTRY,
+            self,
+            path: str = DEFAULT_EMBEDDING_REGISTRY,
             download_manager: DownloadManager = None,
             download_dir: str = DEFAULT_DOWNLOAD_DIR,
             default_embedding_lmdb_path: str = DEFAULT_EMBEDDING_LMDB_PATH,
@@ -246,7 +247,7 @@ class EmbeddingManager:
     def ensure_lmdb_cache_if_enabled(self, embedding_name: str):
         if not self.get_embedding_lmdb_path():
             return
-        Embeddings(embedding_name, path=self.path)
+        self.get_embeddings_for_name(embedding_name)
         assert self.has_lmdb_cache(embedding_name)
 
     def ensure_available(self, embedding_url_or_name: str):
@@ -259,3 +260,8 @@ class EmbeddingManager:
     def validate_embedding(self, embedding_name):
         if not self.get_embedding_config(embedding_name):
             raise ValueError('invalid embedding name: %s' % embedding_name)
+
+    def get_embeddings_for_name(self, embedding_name: str, **kwargs) -> Embeddings:
+        self.validate_embedding(embedding_name)
+        registry = self._get_registry_data()
+        return Embeddings(embedding_name, resource_registry=registry, **kwargs)

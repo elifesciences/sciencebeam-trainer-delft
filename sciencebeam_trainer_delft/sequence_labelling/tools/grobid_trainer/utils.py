@@ -78,7 +78,7 @@ DEFAULT_TAG_OUTPUT_FORMAT = TagOutputFormats.XML
 
 def set_random_seeds(random_seed: int):
     np.random.seed(random_seed)
-    tf.set_random_seed(random_seed)
+    tf.random.set_seed(random_seed)
 
 
 def get_default_training_data(model: str) -> str:
@@ -301,7 +301,7 @@ def train(
         embeddings_name=embeddings_name,
         embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
-        model_type=architecture,
+        architecture=architecture,
         use_ELMo=use_ELMo,
         **kwargs
     )
@@ -542,7 +542,7 @@ def train_eval(
         embeddings_name=embeddings_name,
         embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
-        model_type=architecture,
+        architecture=architecture,
         use_ELMo=use_ELMo,
         batch_size=batch_size,
         fold_number=fold_count,

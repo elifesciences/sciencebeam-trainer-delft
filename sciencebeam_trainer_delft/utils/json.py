@@ -9,7 +9,7 @@ def to_json(obj, plain_json: bool = False):
 
 
 def from_json(json, default_class=None):
-    result = jsonpickle.Unpickler().restore(json)
+    result = jsonpickle.Unpickler(keys=True).restore(json)
     if not isinstance(result, dict) or default_class is None:
         return result
     obj = default_class()

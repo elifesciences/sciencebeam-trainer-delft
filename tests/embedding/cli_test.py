@@ -16,7 +16,7 @@ EXTERNAL_TXT_URL_1 = 'http://host/%s.txt' % EMBEDDING_NAME_1
 
 @pytest.fixture(name='embedding_registry_path')
 def _embedding_registry_path(temp_dir: Path):
-    return temp_dir.joinpath('embedding-registry.json')
+    return temp_dir.joinpath('resources-registry.json')
 
 
 @pytest.fixture(name='embedding_lmdb_path')

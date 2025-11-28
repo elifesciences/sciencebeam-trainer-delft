@@ -1,18 +1,14 @@
-import json
 import logging
 import os
-from functools import partial
 from pathlib import Path
 from unittest.mock import call, patch, MagicMock
-from typing import List, Optional, cast
+from typing import Iterator, List, Optional, cast
 
 from typing_extensions import TypedDict
 
 import pytest
 
 import numpy as np
-
-from delft.utilities.Embeddings import Embeddings
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.sequence_labelling.config import ModelConfig
@@ -68,6 +64,14 @@ EMBEDDING_1 = {
     "item": "word"
 }
 
+
+RESOURCE_REGISTRY_1 = {
+    'embedding-lmdb-path': None,
+    'embeddings': [EMBEDDING_1],
+    'embeddings-contextualized': []
+}
+
+
 MODEL_NAME_1 = 'model1'
 
 INPUT_PATH_1 = '/path/to/dataset1'
@@ -79,25 +83,76 @@ FEATURES_EMBEDDING_SIZE_1 = 13
 
 
 @pytest.fixture(name='embedding_registry_path')
-def _embedding_registry_path(temp_dir: Path):
-    return temp_dir.joinpath('embedding-registry.json')
+def _embedding_registry_path():
+    return 'delft/resources-registry.json'
 
 
-@pytest.fixture(name='embedding_registry', autouse=True)
-def _embedding_registry(embedding_registry_path: Path):
-    embedding_registry_path.write_text(json.dumps({
-        'embedding-lmdb-path': None,
-        'embeddings': [EMBEDDING_1],
-        'embeddings-contextualized': []
-    }, indent=4), encoding='utf-8')
-
-
-@pytest.fixture(autouse=True)
-def _embedding_class(embedding_registry_path: Path):
-    embedding_class_with_defaults = partial(Embeddings, path=str(embedding_registry_path))
-    target = 'delft.sequenceLabelling.wrapper.Embeddings'
-    with patch(target, new=embedding_class_with_defaults) as mock:
+@pytest.fixture(name='embedding_manager_load_mock', autouse=True)
+def _embedding_manager_load_mock() -> Iterator[MagicMock]:
+    with patch(
+        'sciencebeam_trainer_delft.embedding.EmbeddingManager._load'
+    ) as mock:
+        mock.return_value = RESOURCE_REGISTRY_1
         yield mock
+
+
+@pytest.fixture(name='load_resource_registry_mock', autouse=True)
+def _load_resource_registry_mock() -> Iterator[MagicMock]:
+    with patch('delft.utilities.Embeddings.load_resource_registry') as mock:
+        mock.return_value = RESOURCE_REGISTRY_1
+        yield mock
+
+
+@pytest.fixture(name='seq_wrapper_load_resource_registry_mock', autouse=True)
+def _seq_wrapper_load_resource_registry_mock(
+    load_resource_registry_mock: MagicMock
+) -> Iterator[MagicMock]:
+    with patch(
+        'delft.sequenceLabelling.wrapper.load_resource_registry',
+        load_resource_registry_mock
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(name='text_models_load_resource_registry_mock', autouse=True)
+def _text_models_load_resource_registry_mock(
+    load_resource_registry_mock: MagicMock
+) -> Iterator[MagicMock]:
+    with patch(
+        'delft.textClassification.models.load_resource_registry',
+        load_resource_registry_mock
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(name='text_wrapper_load_resource_registry_mock', autouse=True)
+def _text_wrapper_load_resource_registry_mock(
+    load_resource_registry_mock: MagicMock
+) -> Iterator[MagicMock]:
+    with patch(
+        'delft.textClassification.wrapper.load_resource_registry',
+        load_resource_registry_mock
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(name='wrapper_load_resource_registry_mock', autouse=True)
+def _wrapper_load_resource_registry_mock(
+    load_resource_registry_mock: MagicMock
+) -> Iterator[MagicMock]:
+    with patch(
+        'delft.textClassification.wrapper.load_resource_registry',
+        load_resource_registry_mock
+    ) as mock:
+        yield mock
+
+
+# @pytest.fixture(autouse=True)
+# def _embedding_class(embedding_registry_path: Path):
+#     embedding_class_with_defaults = partial(Embeddings, path=str(embedding_registry_path))
+#     target = 'delft.sequenceLabelling.wrapper.Embeddings'
+#     with patch(target, new=embedding_class_with_defaults) as mock:
+#         yield mock
 
 
 @pytest.fixture(name='trainer_class_mock')
@@ -548,7 +603,7 @@ class TestGrobidTrainerUtils:
                 **train_args
             )
             model_config = load_model_config(default_model_directory)
-            assert model_config.model_type == 'BidLSTM_CRF_FEATURES'
+            assert model_config.architecture == 'BidLSTM_CRF_FEATURES'
             assert model_config.features_embedding_size == 4
             assert model_config.features_lstm_units == 4
             tag_input(
@@ -574,7 +629,7 @@ class TestGrobidTrainerUtils:
                 **train_args
             )
             model_config = load_model_config(default_model_directory)
-            assert model_config.model_type == 'CustomBidLSTM_CRF_FEATURES'
+            assert model_config.architecture == 'CustomBidLSTM_CRF_FEATURES'
             assert model_config.features_embedding_size == 4
             assert model_config.features_lstm_units == 4
             tag_input(

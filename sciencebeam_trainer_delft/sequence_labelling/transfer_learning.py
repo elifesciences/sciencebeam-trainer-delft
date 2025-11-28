@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, NamedTuple
 import keras
 import numpy as np
 
-from delft.sequenceLabelling.preprocess import WordPreprocessor
+from delft.sequenceLabelling.preprocess import Preprocessor
 from delft.sequenceLabelling.models import BaseModel
 
 from sciencebeam_trainer_delft.utils.misc import (
@@ -58,7 +58,7 @@ class TransferLearningSource:
         self,
         transfer_learning_config: TransferLearningConfig,
         source_model: BaseModel,
-        source_preprocessor: WordPreprocessor
+        source_preprocessor: Preprocessor
     ):
         self.transfer_learning_config = transfer_learning_config
         self.source_model = source_model
@@ -92,13 +92,13 @@ class TransferLearningSource:
             source_preprocessor=source_preprocessor
         )
 
-    def copy_preprocessor_if_enabled(self) -> Optional[WordPreprocessor]:
+    def copy_preprocessor_if_enabled(self) -> Optional[Preprocessor]:
         if self.transfer_learning_config.copy_preprocessor:
             LOGGER.info('copying preprocessor')
             return self.source_preprocessor
         return None
 
-    def apply_preprocessor(self, target_preprocessor: WordPreprocessor):
+    def apply_preprocessor(self, target_preprocessor: Preprocessor):
         if not self.transfer_learning_config.copy_preprocessor_fields:
             LOGGER.info('no transfer learning preprocessor fields specified')
             return

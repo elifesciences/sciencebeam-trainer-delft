@@ -9,8 +9,9 @@ import keras
 from delft.utilities.Embeddings import Embeddings
 from delft.sequenceLabelling.preprocess import (
     to_vector_single, to_casing_single,
-    to_vector_simple_with_elmo, to_vector_simple_with_bert,
-    WordPreprocessor,
+    to_vector_simple_with_elmo,
+    # to_vector_simple_with_bert,
+    Preprocessor,
     PAD
 )
 from delft.utilities.Tokenizer import tokenizeAndFilterSimple
@@ -339,7 +340,7 @@ class DataGenerator(keras.utils.Sequence):
             self,
             x: List[Union[str, List[str]]],
             y: Optional[List[List[str]]],
-            preprocessor: WordPreprocessor,
+            preprocessor: Preprocessor,
             batch_size: int = 24,
             input_window_stride: int = None,
             stateful: bool = True,
@@ -526,8 +527,6 @@ class DataGenerator(keras.utils.Sequence):
         assert self.embeddings is not None
         if self.embeddings.use_ELMo:
             return to_vector_simple_with_elmo(batch_tokens, self.embeddings, max_length)
-        elif self.embeddings.use_BERT:
-            return to_vector_simple_with_bert(batch_tokens, self.embeddings, max_length)
         else:
             return to_batch_embedding_vector(batch_tokens, self.embeddings, max_length)
 

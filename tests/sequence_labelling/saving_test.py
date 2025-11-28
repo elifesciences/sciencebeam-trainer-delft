@@ -4,7 +4,7 @@ from pathlib import Path
 
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
-    WordPreprocessor as DelftWordPreprocessor
+    Preprocessor as DelftWordPreprocessor
 )
 from delft.sequenceLabelling.models import BaseModel
 

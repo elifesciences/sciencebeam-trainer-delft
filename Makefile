@@ -55,6 +55,8 @@ PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 SLOW_PYTEST_ARGS = -m 'slow'
 
+WAPITI_SOURCE_DOWNLOAD_URL = https://github.com/kermitt2/Wapiti/archive/5f9a52351fddf21916008daa4becd41d56e7f608.tar.gz
+
 SYSTEM_PYTHON = python3
 
 ARGS =
@@ -103,6 +105,7 @@ dev-lint: dev-flake8 dev-pylint dev-mypy
 
 
 dev-pytest:
+	PATH=./third-parties/wapiti:$$PATH \
 	$(PYTHON) -m pytest -v -p no:cacheprovider $(ARGS)
 
 
@@ -111,6 +114,7 @@ dev-watch:
 
 
 dev-watch-slow:
+	PATH=./third-parties/wapiti:$$PATH \
 	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings -vv $(ARGS)
 
 
@@ -123,6 +127,18 @@ dev-remove-dist:
 
 dev-build-dist:
 	$(PYTHON) setup.py sdist bdist_wheel
+
+
+dev-install-wapiti:
+	mkdir -p ./third-parties
+	rm -rf ./third-parties/wapiti
+	curl --location -q "$(WAPITI_SOURCE_DOWNLOAD_URL)" -o ./third-parties/wapiti.tar.gz
+	ls -lh ./third-parties/wapiti.tar.gz
+	mkdir -p ./third-parties/wapiti
+	tar --strip-components 1 -C ./third-parties/wapiti -xvf ./third-parties/wapiti.tar.gz
+	rm ./third-parties/wapiti.tar.gz
+	cd ./third-parties/wapiti \
+		&& make
 
 
 build:

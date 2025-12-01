@@ -10,6 +10,7 @@ from keras.layers import (
 )
 
 import delft.sequenceLabelling.wrapper
+from delft.utilities.crf_wrapper_default import CRFModelWrapperDefault
 from delft.utilities.crf_layer import ChainCRF
 from delft.sequenceLabelling.models import BaseModel
 from delft.sequenceLabelling.models import get_model as _get_model, BidLSTM_CRF_FEATURES
@@ -22,15 +23,20 @@ LOGGER = logging.getLogger(__name__)
 
 class CustomModel(BaseModel):
     def __init__(
-            self, config, ntags,
-            require_casing: bool = False,
-            use_crf: bool = False,
-            supports_features: bool = False,
-            require_features_indices_input: bool = False,
-            stateful: bool = False):
+        self,
+        config,
+        ntags,
+        require_casing: bool = False,
+        use_crf: bool = False,
+        use_chain_crf: bool = False,
+        supports_features: bool = False,
+        require_features_indices_input: bool = False,
+        stateful: bool = False
+    ):
         super().__init__(config, ntags)
         self.require_casing = require_casing
         self.use_crf = use_crf
+        self.use_chain_crf = use_chain_crf
         self.supports_features = supports_features
         self.require_features_indices_input = require_features_indices_input
         self.stateful = stateful
@@ -56,8 +62,12 @@ class CustomBidLSTM_CRF(CustomModel):
 
     def __init__(self, config: ModelConfig, ntags=None):
         super().__init__(
-            config, ntags,
-            require_casing=False, use_crf=True, supports_features=True,
+            config,
+            ntags,
+            require_casing=False,
+            use_crf=True,
+            use_chain_crf=True,
+            supports_features=True,
             stateful=config.stateful
         )
 
@@ -172,8 +182,12 @@ class CustomBidLSTM_CRF_FEATURES(CustomModel):
 
     def __init__(self, config, ntags=None):
         super().__init__(
-            config, ntags,
-            require_casing=False, use_crf=True, supports_features=True,
+            config,
+            ntags,
+            require_casing=False,
+            use_crf=True,
+            use_chain_crf=False,
+            supports_features=True,
             require_features_indices_input=True
         )
 
@@ -237,13 +251,22 @@ class CustomBidLSTM_CRF_FEATURES(CustomModel):
         x = Dropout(config.dropout)(x)
         x = Dense(config.num_word_lstm_units, activation='tanh')(x)
         x = Dense(ntags)(x)
-        self.crf = ChainCRF()
-        pred = self.crf(x)
 
-        self.model = Model(
+        base_model = Model(
             inputs=[word_input, char_input, features_input, length_input],
-            outputs=[pred]
+            outputs=[x]
         )
+
+        self.model = CRFModelWrapperDefault(base_model, ntags)
+
+        input_shapes = [
+            (None, None, config.word_embedding_size),      # word_input
+            (None, None, config.max_char_length),          # char_input
+            (None, None, len(config.features_indices)),    # features_input
+            (None, None, 1),                               # length_input
+        ]
+        self.model.build(input_shape=input_shapes)
+
         self.config = config
 
 
@@ -308,6 +331,7 @@ def get_model(config: ModelConfig, preprocessor, ntags=None):
 
     model = _create_model(model_class, config, ntags=ntags)
     config.use_crf = model.use_crf
+    config.use_chain_crf = model.use_chain_crf
     preprocessor.return_casing = model.require_casing
     if config.use_features and not model.supports_features:
         LOGGER.warning('features enabled but not supported by model (disabling)')

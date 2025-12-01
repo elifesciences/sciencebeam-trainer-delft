@@ -464,6 +464,7 @@ class Sequence(_Sequence):
                 self.model_config.concatenated_embeddings_token_count
             ),
             char_embed_size=self.model_config.char_embedding_size,
+            use_chain_crf=self.model_config.use_chain_crf,
             is_deprecated_padded_batch_text_list_enabled=(
                 self.model_config.is_deprecated_padded_batch_text_list_enabled
             ),
@@ -537,7 +538,13 @@ class Sequence(_Sequence):
                 )
 
                 # Build the evaluator and evaluate the model
-                scorer = Scorer(test_generator, self.p, evaluation=True)
+                scorer = Scorer(
+                    test_generator,
+                    self.p,
+                    evaluation=True,
+                    use_crf=self.model_config.use_crf,
+                    use_chain_crf=self.model_config.use_chain_crf
+                )
                 scorer.model = self.models[i]
                 scorer.on_epoch_end(epoch=-1)
                 f1 = scorer.f1

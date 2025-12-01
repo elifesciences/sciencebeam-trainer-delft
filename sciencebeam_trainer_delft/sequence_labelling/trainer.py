@@ -6,6 +6,7 @@ import numpy as np
 
 from keras.callbacks import ProgbarLogger
 
+from delft.utilities.crf_layer import ChainCRF
 from delft.sequenceLabelling.evaluation import (
     f1_score,
     accuracy_score,
@@ -51,6 +52,8 @@ class SafeProgbarLogger(ProgbarLogger):
 
 def get_callbacks(
     model_saver: ModelSaver,
+    use_crf: bool,  # only required for Scorer (valid passed in)
+    use_chain_crf: bool,  # only required for Scorer (valid passed in)
     log_dir: str = None,
     log_period: int = 1,
     valid: tuple = (),
@@ -73,7 +76,11 @@ def get_callbacks(
     callbacks = []
 
     if valid:
-        callbacks.append(Scorer(*valid))  # pylint: disable=no-value-for-parameter
+        callbacks.append(Scorer(  # pylint: disable=no-value-for-parameter
+            *valid,
+            use_crf=use_crf,
+            use_chain_crf=use_chain_crf
+        ))  # pylint: disable=no-value-for-parameter
 
     if early_stopping:
         # Note: ensure we are not restoring weights
@@ -110,39 +117,92 @@ class PredictedResults(NamedTuple):
     y_true: T_Batch_Labels
 
 
-def get_model_results(model, valid_batches: list, preprocessor=None) -> PredictedResults:
+def get_model_results(
+    model,
+    valid_batches: list,
+    preprocessor=None, *,
+    use_crf: bool = False,
+    use_chain_crf: bool = False
+) -> PredictedResults:
+    """
+    Compute y_pred / y_true in label form (strings) for evaluation.
+
+    - Non‑CRF or ChainCRF (use_crf=False or use_chain_crf=True):
+        * labels and preds are dense/one‑hot → argmax over last axis.
+    - TFA CRF wrapper (use_crf=True and use_chain_crf=False):
+        * labels and preds are sparse integer indices → no argmax.
+    """
+    y_pred = []
+    y_true = []
     valid_steps = len(valid_batches)
+
     for i, (data, label) in enumerate(valid_batches):
         if i == valid_steps:
             break
-        y_true_batch = label
-        y_true_batch = np.argmax(y_true_batch, -1)
-        sequence_lengths = data[-1]  # shape of (batch_size, 1)
-        sequence_lengths = np.reshape(sequence_lengths, (-1,))
 
-        y_pred_batch = model.predict_on_batch(data)
-        y_pred_batch = np.argmax(y_pred_batch, -1)
+        sequence_lengths = np.reshape(data[-1], (-1,))  # shape (batch_size,)
 
+        # ----- labels -----
+        y_true_batch = np.asarray(label)
+
+        if not use_crf or use_chain_crf:
+            # non‑CRF or ChainCRF: one‑hot / logits → argmax to get indices
+            if y_true_batch.ndim >= 2:
+                y_true_batch = np.argmax(y_true_batch, axis=-1)
+        # else: TFA CRF: y_true_batch already integer indices
+
+        # normalise to list of 1D sequences
+        if y_true_batch.ndim == 2:
+            y_true_seqs = list(y_true_batch)
+        elif y_true_batch.ndim == 1:
+            y_true_seqs = [np.atleast_1d(y) for y in y_true_batch]
+        else:
+            y_true_seqs = [np.atleast_1d(y_true_batch[0])]
+
+        # ----- predictions -----
+        y_pred_batch = np.asarray(model.predict_on_batch(data))
+
+        if not use_crf or use_chain_crf:
+            # non‑CRF or ChainCRF: model outputs logits / one‑hot
+            if y_pred_batch.ndim >= 2:
+                y_pred_batch = np.argmax(y_pred_batch, axis=-1)
+        # else: TFA CRF: y_pred_batch already integer indices (decoded sequence)
+
+        if y_pred_batch.ndim == 2:
+            y_pred_seqs = list(y_pred_batch)
+        elif y_pred_batch.ndim == 1:
+            y_pred_seqs = [np.atleast_1d(y) for y in y_pred_batch]
+        else:
+            y_pred_seqs = [np.atleast_1d(y_pred_batch[0])]
+
+        # ----- map indices -> tag strings with sequence length -----
         y_pred_batch = [
-            preprocessor.inverse_transform(y[:l]) for y, l in zip(y_pred_batch, sequence_lengths)
+            preprocessor.inverse_transform(y[:l])
+            for y, l in zip(y_pred_seqs, sequence_lengths)
         ]
         y_true_batch = [
-            preprocessor.inverse_transform(y[:l]) for y, l in zip(y_true_batch, sequence_lengths)
+            preprocessor.inverse_transform(y[:l])
+            for y, l in zip(y_true_seqs, sequence_lengths)
         ]
 
         if i == 0:
             y_pred = y_pred_batch
             y_true = y_true_batch
         else:
-            y_pred = y_pred + y_pred_batch
-            y_true = y_true + y_true_batch
+            y_pred += y_pred_batch
+            y_true += y_true_batch
+
     return PredictedResults(y_pred=y_pred, y_true=y_true)
 
 
 class Scorer(_Scorer):
     def on_epoch_end(self, epoch: int, logs: dict = None):
         prediction_results = get_model_results(
-            self.model, self.valid_batches, preprocessor=self.p
+            model=self.model,
+            valid_batches=self.valid_batches,
+            preprocessor=self.p,
+            use_crf=self.use_crf,
+            use_chain_crf=self.use_chain_crf
         )
         y_pred = prediction_results.y_pred
         y_true = prediction_results.y_true
@@ -183,12 +243,19 @@ class Trainer(_Trainer):
         assert self.model is not None
         self.model.summary()
 
-        if self.model_config.use_crf:
+        LOGGER.debug('Training model with config: %s', vars(self.model_config))
+        if self.model_config.use_crf and not self.model_config.use_chain_crf:
+            LOGGER.debug('Compiling model with CRF loss')
+            self.model.compile(optimizer='adam')
+        elif self.model_config.use_crf and self.model_config.use_chain_crf:
+            LOGGER.debug('Compiling model with Chain CRF loss')
+            chain_crf: ChainCRF = self.model.crf  # type: ignore
             self.model.compile(
-                loss=self.model.crf.loss,
+                loss=chain_crf.loss,
                 optimizer='adam'
             )
         else:
+            LOGGER.debug('Compiling model with categorical crossentropy loss')
             self.model.compile(
                 loss='categorical_crossentropy',
                 optimizer='adam'
@@ -222,6 +289,7 @@ class Trainer(_Trainer):
                 self.model_config.concatenated_embeddings_token_count
             ),
             char_embed_size=self.model_config.char_embedding_size,
+            use_chain_crf=self.model_config.use_chain_crf,
             is_deprecated_padded_batch_text_list_enabled=(
                 self.model_config.is_deprecated_padded_batch_text_list_enabled
             ),
@@ -262,6 +330,8 @@ class Trainer(_Trainer):
 
             callbacks = get_callbacks(
                 model_saver=self.model_saver,
+                use_crf=self.model_config.use_crf,
+                use_chain_crf=self.model_config.use_chain_crf,
                 log_dir=self.checkpoint_path,
                 log_period=self.training_config.checkpoint_epoch_interval,
                 early_stopping=True,
@@ -285,6 +355,8 @@ class Trainer(_Trainer):
 
             callbacks = get_callbacks(
                 model_saver=self.model_saver,
+                use_crf=self.model_config.use_crf,
+                use_chain_crf=self.model_config.use_chain_crf,
                 log_dir=self.checkpoint_path,
                 early_stopping=False,
                 meta=self.get_meta()

@@ -337,25 +337,27 @@ def get_concatenated_embeddings_token_count(
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
     def __init__(
-            self,
-            x: List[Union[str, List[str]]],
-            y: Optional[List[List[str]]],
-            preprocessor: Preprocessor,
-            batch_size: int = 24,
-            input_window_stride: int = None,
-            stateful: bool = True,
-            char_embed_size: int = 25,
-            use_word_embeddings: bool = None,
-            embeddings: Embeddings = None,
-            max_sequence_length: int = None,
-            tokenize: bool = False,
-            shuffle: bool = True,
-            features: List[List[List[str]]] = None,
-            additional_token_feature_indices: List[int] = None,
-            text_feature_indices: List[int] = None,
-            concatenated_embeddings_token_count: int = None,
-            is_deprecated_padded_batch_text_list_enabled: bool = False,
-            name: str = None):
+        self,
+        x: List[Union[str, List[str]]],
+        y: Optional[List[List[str]]],
+        preprocessor: Preprocessor,
+        batch_size: int = 24,
+        input_window_stride: int = None,
+        stateful: bool = True,
+        char_embed_size: int = 25,
+        use_word_embeddings: bool = None,
+        embeddings: Embeddings = None,
+        max_sequence_length: int = None,
+        tokenize: bool = False,
+        shuffle: bool = True,
+        features: List[List[List[str]]] = None,
+        additional_token_feature_indices: List[int] = None,
+        text_feature_indices: List[int] = None,
+        concatenated_embeddings_token_count: int = None,
+        is_deprecated_padded_batch_text_list_enabled: bool = False,
+        name: str = None,
+        use_chain_crf: bool = False
+    ):
         'Initialization'
         if use_word_embeddings is None:
             use_word_embeddings = embeddings is not None
@@ -392,6 +394,7 @@ class DataGenerator(keras.utils.Sequence):
         self.batch_window_indices_and_offset = None
         self.window_indices_and_offset = None
         self.name = name
+        self.use_chain_crf = use_chain_crf
         if self.shuffle:
             # do we need to shuffle here?, the input was already shuffled
             self._shuffle_dataset()
@@ -632,7 +635,10 @@ class DataGenerator(keras.utils.Sequence):
                 batch_y = truncate_batch_values(batch_y, self.max_sequence_length)
 
             batches, batch_y = self.preprocessor.transform(
-                padded_batch_text_list, batch_y, extend=extend
+                padded_batch_text_list,
+                batch_y,
+                extend=extend,
+                label_indices=not self.use_chain_crf
             )
         else:
             batches = self.preprocessor.transform(
@@ -652,19 +658,43 @@ class DataGenerator(keras.utils.Sequence):
             LOGGER.debug('extend: %s', extend)
             try:
                 batch_features = self.preprocessor.transform_features(sub_f, extend=extend)
-                batch_features = left_pad_batch_values(batch_features, max_length_x)
+                batch_features = left_pad_batch_values(
+                    batch_features,
+                    max_length_x,
+                    dtype=np.float32
+                )
             except TypeError:
                 batch_features = left_pad_batch_values(
                     self.preprocessor.transform_features(sub_f),
-                    max_length_x
+                    max_length_x,
+                    dtype=np.float32
                 )
-            LOGGER.debug('batch_features.shape: %s', batch_features.shape)
+            LOGGER.debug(
+                'batch_features: shape=%s (dtype=%s)',
+                batch_features.shape,
+                batch_features.dtype
+            )
+            if batch_features.dtype == np.object0:
+                LOGGER.warning(
+                    'invalid object type of batch_features sample data[0]: %s',
+                    batch_features[0][0:min(2, len(batch_features[0]))]
+                )
             inputs.append(batch_features)
         inputs.append(batch_l)
 
         if LOGGER.isEnabledFor(logging.DEBUG):
-            LOGGER.debug('inputs shapes: %s', [
-                np.asarray(x).shape for x in inputs
-            ])
+            input_nparrays = [
+                np.asarray(x)
+                for x in inputs
+            ]
+            LOGGER.debug('inputs shapes: %s', [x.shape for x in input_nparrays])
+            LOGGER.debug('inputs dtype: %s', [x.dtype for x in input_nparrays])
+            for index, input_array in enumerate(input_nparrays):
+                if input_array.dtype == np.object0:
+                    LOGGER.warning(
+                        'invalid object type inputs[%d] sample data[0]: %s',
+                        index,
+                        input_array[0][0:min(2, len(input_array[0]))]
+                    )
 
         return inputs, batch_y

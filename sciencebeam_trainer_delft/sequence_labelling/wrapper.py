@@ -117,8 +117,9 @@ def get_default_stateful() -> Optional[bool]:
 
 
 def get_features_preprocessor(
-        model_config: ModelConfig,
-        features: np.array = None) -> T_FeaturesPreprocessor:
+    model_config: ModelConfig,
+    features: np.ndarray = None
+) -> T_FeaturesPreprocessor:
     if not model_config.use_features:
         LOGGER.info('features not enabled')
         return None
@@ -144,8 +145,9 @@ def get_features_preprocessor(
 
 
 def get_preprocessor(
-        model_config: ModelConfig,
-        features: np.array = None) -> Preprocessor:
+    model_config: ModelConfig,
+    features: np.ndarray = None
+) -> Preprocessor:
     feature_preprocessor = get_features_preprocessor(model_config, features=features)
     return Preprocessor(
         max_char_length=model_config.max_char_length,
@@ -309,9 +311,14 @@ class Sequence(_Sequence):
             self.embeddings.clean_ELMo_cache()
 
     def train(  # pylint: disable=arguments-differ
-            self, x_train, y_train, x_valid=None, y_valid=None,
-            features_train: np.array = None,
-            features_valid: np.array = None):
+        self,
+        x_train,
+        y_train,
+        x_valid=None,
+        y_valid=None,
+        features_train: np.ndarray = None,
+        features_valid: np.ndarray = None
+    ):
         # TBD if valid is None, segment train to get one
         dataset_fransformer = self.dataset_transformer_factory()
         x_train, y_train, features_train = dataset_fransformer.fit_transform(
@@ -390,9 +397,15 @@ class Sequence(_Sequence):
         )
 
     def train_nfold(  # pylint: disable=arguments-differ
-            self, x_train, y_train, x_valid=None, y_valid=None, fold_number=10,
-            features_train: np.array = None,
-            features_valid: np.array = None):
+        self,
+        x_train,
+        y_train,
+        x_valid=None,
+        y_valid=None,
+        fold_number=10,
+        features_train: np.ndarray = None,
+        features_valid: np.ndarray = None
+    ):
         if x_valid is not None and y_valid is not None:
             x_all = np.concatenate((x_train, x_valid), axis=0)
             y_all = np.concatenate((y_train, y_valid), axis=0)
@@ -439,7 +452,11 @@ class Sequence(_Sequence):
                 self.embeddings.clean_ELMo_cache()
 
     def eval(  # pylint: disable=arguments-differ
-            self, x_test, y_test, features: np.array = None):
+        self,
+        x_test,
+        y_test,
+        features: np.ndarray = None
+    ):
         should_eval_nfold = (
             self.model_config.fold_number > 1
             and self.models
@@ -514,7 +531,11 @@ class Sequence(_Sequence):
         print(classification_result.get_formatted_report(digits=4))
 
     def eval_nfold(  # pylint: disable=arguments-differ
-            self, x_test, y_test, features: np.array = None):
+        self,
+        x_test,
+        y_test,
+        features: np.ndarray = None
+    ):
         if self.models is not None:
             total_f1 = 0
             best_f1 = 0

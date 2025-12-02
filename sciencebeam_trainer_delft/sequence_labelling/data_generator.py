@@ -522,9 +522,10 @@ class DataGenerator(keras.utils.Sequence):
         )
 
     def to_batch_embedding_vector(
-            self,
-            batch_tokens: List[List[str]],
-            max_length: int) -> np.array:
+        self,
+        batch_tokens: List[List[str]],
+        max_length: int
+    ) -> np.ndarray:
         if not self.use_word_embeddings:
             return to_dummy_batch_embedding_vector(batch_tokens, max_length)
         assert self.embeddings is not None
@@ -534,10 +535,11 @@ class DataGenerator(keras.utils.Sequence):
             return to_batch_embedding_vector(batch_tokens, self.embeddings, max_length)
 
     def to_concatenated_batch_vector_from_batch_text_list(
-            self,
-            batch_text_list: List[List[str]],
-            max_length: int,
-            text_is_token: bool) -> np.array:
+        self,
+        batch_text_list: List[List[str]],
+        max_length: int,
+        text_is_token: bool
+    ) -> np.ndarray:
         return to_concatenated_batch_vector_from_batch_text_list(
             self.to_batch_embedding_vector,
             batch_text_list,

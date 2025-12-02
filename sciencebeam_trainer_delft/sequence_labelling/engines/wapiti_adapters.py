@@ -43,7 +43,9 @@ def translate_tags_IOB_to_grobid(tag: str) -> str:
 
 
 def iter_doc_formatted_input_data(
-        x_doc: np.array, features_doc: np.array) -> Iterable[str]:
+    x_doc: np.ndarray,
+    features_doc: np.ndarray
+) -> Iterable[str]:
     for x_token, f_token in zip(x_doc, features_doc):
         try:
             yield format_feature_line([x_token] + list(f_token))
@@ -57,7 +59,9 @@ def iter_doc_formatted_input_data(
 
 
 def iter_formatted_input_data(
-        x: np.array, features: np.array) -> Iterable[str]:
+    x: np.ndarray,
+    features: np.ndarray
+) -> Iterable[str]:
     return (
         line + '\n'
         for x_doc, f_doc in zip(x, features)
@@ -65,7 +69,7 @@ def iter_formatted_input_data(
     )
 
 
-def write_wapiti_input_data(fp: IO, x: np.array, features: np.array):
+def write_wapiti_input_data(fp: IO, x: np.ndarray, features: np.ndarray):
     fp.writelines(iter_formatted_input_data(
         x, features
     ))
@@ -151,10 +155,11 @@ class WapitiModelAdapter:
         return os.path.basename(os.path.dirname(self.model_file_path))
 
     def iter_tag_using_model(
-            self,
-            x: np.array,
-            features: np.array,
-            output_format: str = None) -> Iterable[List[Tuple[str, str]]]:
+        self,
+        x: np.ndarray,
+        features: np.ndarray,
+        output_format: str = None
+    ) -> Iterable[List[Tuple[str, str]]]:
         # Note: this method doesn't currently seem to work reliable and needs to be investigated
         #   The evaluation always shows zero.
         assert not output_format, 'output_format not supported'
@@ -170,10 +175,11 @@ class WapitiModelAdapter:
             )
 
     def iter_tag_using_wrapper(
-            self,
-            x: np.array,
-            features: np.array,
-            output_format: str = None) -> Iterable[List[Tuple[str, str]]]:
+        self,
+        x: np.ndarray,
+        features: np.ndarray,
+        output_format: str = None
+    ) -> Iterable[List[Tuple[str, str]]]:
         assert not output_format, 'output_format not supported'
         with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
             data_path = Path(temp_dir).joinpath('input.data')
@@ -192,21 +198,23 @@ class WapitiModelAdapter:
                 yield from iter_read_tagged_result(output_data_fp)
 
     def iter_tag(
-            self,
-            x: np.array,
-            features: np.array,
-            output_format: str = None) -> Iterable[List[Tuple[str, str]]]:
+        self,
+        x: np.ndarray,
+        features: np.ndarray,
+        output_format: str = None
+    ) -> Iterable[List[Tuple[str, str]]]:
         return self.iter_tag_using_wrapper(x, features, output_format)
 
     def tag(
-            self,
-            x: np.array,
-            features: np.array,
-            output_format: str = None) -> List[List[Tuple[str, str]]]:
+        self,
+        x: np.ndarray,
+        features: np.ndarray,
+        output_format: str = None
+    ) -> List[List[Tuple[str, str]]]:
         assert not output_format, 'output_format not supported'
         return list(self.iter_tag(x, features))
 
-    def eval(self, x_test, y_test, features: np.array = None):
+    def eval(self, x_test, y_test, features: np.ndarray = None):
         self.eval_single(x_test, y_test, features=features)
 
     @property
@@ -250,7 +258,10 @@ class WapitiModelAdapter:
 
 
 def iter_doc_formatted_training_data(
-        x_doc: np.array, y_doc: np.array, features_doc: np.array) -> Iterable[str]:
+    x_doc: np.ndarray,
+    y_doc: np.ndarray,
+    features_doc: np.ndarray
+) -> Iterable[str]:
     for x_token, y_token, f_token in zip(x_doc, y_doc, features_doc):
         yield format_feature_line([x_token] + f_token + [translate_tags_IOB_to_grobid(y_token)])
     # blank lines to mark the end of the document
@@ -259,7 +270,10 @@ def iter_doc_formatted_training_data(
 
 
 def iter_formatted_training_data(
-        x: np.array, y: np.array, features: np.array) -> Iterable[str]:
+    x: np.ndarray,
+    y: np.ndarray,
+    features: np.ndarray
+) -> Iterable[str]:
     return (
         line + '\n'
         for x_doc, y_doc, f_doc in zip(x, y, features)
@@ -267,7 +281,7 @@ def iter_formatted_training_data(
     )
 
 
-def write_wapiti_train_data(fp: IO, x: np.array, y: np.array, features: np.array):
+def write_wapiti_train_data(fp: IO, x: np.ndarray, y: np.ndarray, features: np.ndarray):
     fp.writelines(iter_formatted_training_data(
         x, y, features
     ))
@@ -299,13 +313,14 @@ class WapitiModelTrainAdapter:
         self.training_config = TrainingConfig(initial_epoch=0)
 
     def train(
-            self,
-            x_train: np.array,
-            y_train: np.array,
-            x_valid: np.array = None,
-            y_valid: np.array = None,
-            features_train: np.array = None,
-            features_valid: np.array = None):
+        self,
+        x_train: np.ndarray,
+        y_train: np.ndarray,
+        x_valid: np.ndarray = None,
+        y_valid: np.ndarray = None,
+        features_train: np.ndarray = None,
+        features_valid: np.ndarray = None
+    ):
         local_template_path = self.download_manager.download_if_url(self.template_path)
         LOGGER.info('local_template_path: %s', local_template_path)
         if not self.temp_model_path:

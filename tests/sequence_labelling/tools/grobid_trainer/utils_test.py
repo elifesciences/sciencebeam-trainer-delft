@@ -179,12 +179,12 @@ def _load_data_and_labels_crf_file_mock():
         yield mock
 
 
-def _mock_shuffle_array(a: np.array) -> np.array:
+def _mock_shuffle_array(a: np.ndarray) -> np.ndarray:
     # reverse array
     return a[::-1]
 
 
-def _mock_shuffle_arrays(arrays: List[np.array], **_) -> np.array:
+def _mock_shuffle_arrays(arrays: List[np.ndarray], **_) -> np.ndarray:
     return [_mock_shuffle_array(a) for a in arrays]
 
 

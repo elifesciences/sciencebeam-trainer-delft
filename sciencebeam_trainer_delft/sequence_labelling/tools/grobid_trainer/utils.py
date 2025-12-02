@@ -85,7 +85,7 @@ def get_default_training_data(model: str) -> str:
     return 'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
 
 
-def log_data_info(x: np.array, y: np.array, features: np.array):
+def log_data_info(x: np.ndarray, y: np.ndarray, features: np.ndarray):
     LOGGER.info('x sample: %s (y: %s)', x[:1][:10], y[:1][:1])
     LOGGER.info(
         'feature dimensions of first sample, word: %s',
@@ -94,7 +94,9 @@ def log_data_info(x: np.array, y: np.array, features: np.array):
 
 
 def _load_data_and_labels_crf_files(
-        input_paths: List[str], limit: int = None) -> Tuple[np.array, np.array, np.array]:
+    input_paths: List[str],
+    limit: int = None
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     if len(input_paths) == 1:
         return load_data_and_labels_crf_file(input_paths[0], limit=limit)
     x_list = []
@@ -112,7 +114,7 @@ def _load_data_and_labels_crf_files(
     return np.concatenate(x_list), np.concatenate(y_list), np.concatenate(features_list)
 
 
-def get_clean_features_mask(features_all: np.array) -> List[bool]:
+def get_clean_features_mask(features_all: np.ndarray) -> List[bool]:
     feature_lengths = Counter((
         len(features_vector)
         for features_doc in features_all
@@ -128,7 +130,7 @@ def get_clean_features_mask(features_all: np.array) -> List[bool]:
     ]
 
 
-def get_clean_x_y_features(x: np.array, y: np.array, features: np.array):
+def get_clean_x_y_features(x: np.ndarray, y: np.ndarray, features: np.ndarray):
     clean_features_mask = get_clean_features_mask(features)
     if sum(clean_features_mask) != len(clean_features_mask):
         LOGGER.info(

@@ -237,9 +237,14 @@ class Trainer(_Trainer):
         super().__init__(*args, training_config=training_config, **kwargs)
 
     def train(  # pylint: disable=arguments-differ
-            self, x_train, y_train, x_valid, y_valid,
-            features_train: np.array = None,
-            features_valid: np.array = None):
+        self,
+        x_train,
+        y_train,
+        x_valid,
+        y_valid,
+        features_train: np.ndarray = None,
+        features_valid: np.ndarray = None
+    ):
         assert self.model is not None
         self.model.summary()
 
@@ -300,12 +305,16 @@ class Trainer(_Trainer):
         )
 
     def train_model(  # pylint: disable=arguments-differ
-            self, local_model,
-            x_train, y_train,
-            x_valid=None, y_valid=None,
-            max_epoch: int = 50,
-            features_train: np.array = None,
-            features_valid: np.array = None):
+        self,
+        local_model,
+        x_train,
+        y_train,
+        x_valid=None,
+        y_valid=None,
+        max_epoch: int = 50,
+        features_train: np.ndarray = None,
+        features_valid: np.ndarray = None
+    ):
         """ parameter model local_model must be compiled before calling this method
             this model will be returned with trained weights """
         # todo: if valid set if None, create it as random segment of the shuffled train set

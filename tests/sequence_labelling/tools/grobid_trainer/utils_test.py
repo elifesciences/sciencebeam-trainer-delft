@@ -65,7 +65,7 @@ EMBEDDING_1 = {
 }
 
 
-RESOURCE_REGISTRY_1 = {
+RESOURCE_REGISTRY_1: dict = {
     'embedding-lmdb-path': None,
     'embeddings': [EMBEDDING_1],
     'embeddings-contextualized': []

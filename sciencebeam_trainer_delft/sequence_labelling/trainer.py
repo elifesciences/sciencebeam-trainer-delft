@@ -17,9 +17,8 @@ from delft.sequenceLabelling.evaluation import (
 from delft.sequenceLabelling.trainer import Trainer as _Trainer
 from delft.sequenceLabelling.trainer import Scorer as _Scorer
 from delft.sequenceLabelling.models import BaseModel
-from pyparsing import Opt
 
-from sciencebeam_trainer_delft.sequence_labelling.utils.types import (
+from sciencebeam_trainer_delft.sequence_labelling.typing import (
     T_Batch_Tokens,
     T_Batch_Features,
     T_Batch_Labels
@@ -308,10 +307,10 @@ class Trainer(_Trainer):
     def train_model(  # pylint: disable=arguments-differ
         self,
         local_model,
-        x_train,
-        y_train,
-        x_valid=None,
-        y_valid=None,
+        x_train: T_Batch_Tokens,
+        y_train: T_Batch_Labels,
+        x_valid: Optional[T_Batch_Tokens] = None,
+        y_valid: Optional[T_Batch_Labels] = None,
         max_epoch: int = 50,
         features_train: Optional[T_Batch_Features] = None,
         features_valid: Optional[T_Batch_Features] = None
@@ -351,7 +350,10 @@ class Trainer(_Trainer):
                 meta=self.get_meta()
             )
         else:
-            x_train = np.concatenate((x_train, x_valid), axis=0)
+            x_train = np.concatenate(
+                (np.asarray(x_train), x_valid),
+                axis=0
+            )
             y_train = np.concatenate((y_train, y_valid), axis=0)
             features_all = None
             if features_train is not None:

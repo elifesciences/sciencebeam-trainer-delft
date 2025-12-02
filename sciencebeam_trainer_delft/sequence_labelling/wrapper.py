@@ -455,7 +455,7 @@ class Sequence(_Sequence):
         self,
         x_test,
         y_test,
-        features: np.ndarray = None
+        features: Optional[np.ndarray] = None
     ):
         should_eval_nfold = (
             self.model_config.fold_number > 1
@@ -491,10 +491,11 @@ class Sequence(_Sequence):
         )
 
     def get_evaluation_result(
-            self,
-            x_test: List[List[str]],
-            y_test: List[List[str]],
-            features: List[List[List[str]]] = None) -> ClassificationResult:
+        self,
+        x_test: List[List[str]],
+        y_test: List[List[str]],
+        features: Optional[Union[np.ndarray, List[List[List[str]]]]] = None
+    ) -> ClassificationResult:
         self._require_model()
         if self.model_config.use_features and features is None:
             raise ValueError('features required')
@@ -519,10 +520,11 @@ class Sequence(_Sequence):
         return ClassificationResult(y_pred=y_pred, y_true=y_true)
 
     def eval_single(  # pylint: disable=arguments-differ
-            self,
-            x_test: List[List[str]],
-            y_test: List[List[str]],
-            features: List[List[List[str]]] = None):
+        self,
+        x_test: List[List[str]],
+        y_test: List[List[str]],
+        features: Optional[Union[np.ndarray, List[List[List[str]]]]] = None
+    ):
         classification_result = self.get_evaluation_result(
             x_test=x_test,
             y_test=y_test,

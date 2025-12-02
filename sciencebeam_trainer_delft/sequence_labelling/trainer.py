@@ -17,6 +17,7 @@ from delft.sequenceLabelling.evaluation import (
 from delft.sequenceLabelling.trainer import Trainer as _Trainer
 from delft.sequenceLabelling.trainer import Scorer as _Scorer
 from delft.sequenceLabelling.models import BaseModel
+from pyparsing import Opt
 
 from sciencebeam_trainer_delft.sequence_labelling.utils.types import (
     T_Batch_Tokens,
@@ -312,8 +313,8 @@ class Trainer(_Trainer):
         x_valid=None,
         y_valid=None,
         max_epoch: int = 50,
-        features_train: np.ndarray = None,
-        features_valid: np.ndarray = None
+        features_train: Optional[T_Batch_Features] = None,
+        features_valid: Optional[T_Batch_Features] = None
     ):
         """ parameter model local_model must be compiled before calling this method
             this model will be returned with trained weights """
@@ -404,6 +405,12 @@ class Trainer(_Trainer):
             the n models are stored in self.models, and self.model left unset at this stage """
         fold_count = len(self.models)
         fold_size = len(x_train) // fold_count
+
+        train_x: T_Batch_Tokens
+        train_y: T_Batch_Labels
+        train_features: Optional[T_Batch_Features]
+        val_y: Optional[T_Batch_Labels]
+        val_features: Optional[T_Batch_Features]
 
         for fold_id in range(0, fold_count):
             print(

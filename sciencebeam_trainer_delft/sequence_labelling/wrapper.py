@@ -11,6 +11,7 @@ from delft.sequenceLabelling.preprocess import Preprocessor, FeaturesPreprocesso
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.config import TrainingConfig as DelftTrainingConfig
 
+from sciencebeam_trainer_delft.sequence_labelling.typing import T_Batch_Features
 from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
@@ -118,8 +119,8 @@ def get_default_stateful() -> Optional[bool]:
 
 def get_features_preprocessor(
     model_config: ModelConfig,
-    features: np.ndarray = None
-) -> T_FeaturesPreprocessor:
+    features: Optional[T_Batch_Features] = None
+) -> Optional[T_FeaturesPreprocessor]:
     if not model_config.use_features:
         LOGGER.info('features not enabled')
         return None
@@ -146,9 +147,12 @@ def get_features_preprocessor(
 
 def get_preprocessor(
     model_config: ModelConfig,
-    features: np.ndarray = None
+    features: Optional[T_Batch_Features] = None
 ) -> Preprocessor:
-    feature_preprocessor = get_features_preprocessor(model_config, features=features)
+    feature_preprocessor = get_features_preprocessor(
+        model_config,
+        features=features
+    )
     return Preprocessor(
         max_char_length=model_config.max_char_length,
         feature_preprocessor=feature_preprocessor

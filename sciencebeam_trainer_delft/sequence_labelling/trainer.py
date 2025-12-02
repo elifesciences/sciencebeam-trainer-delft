@@ -357,6 +357,7 @@ class Trainer(_Trainer):
             y_train = np.concatenate((y_train, y_valid), axis=0)
             features_all = None
             if features_train is not None:
+                assert features_valid is not None
                 features_all = np.concatenate((features_train, features_valid), axis=0)
             training_generator = self.create_data_generator(
                 x_train, y_train,

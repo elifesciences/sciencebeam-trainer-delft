@@ -158,7 +158,7 @@ def get_preprocessor(
 def prepare_preprocessor(
     X, y,
     model_config: ModelConfig,
-    features: Optional[List[List[List[str]]]] = None
+    features: Optional[Union[np.ndarray, List[List[List[str]]]]] = None
 ):
     preprocessor = get_preprocessor(model_config, features=features)
     batch_text_list_iterable = iter_batch_text_list(
@@ -403,8 +403,8 @@ class Sequence(_Sequence):
         x_valid=None,
         y_valid=None,
         fold_number=10,
-        features_train: np.ndarray = None,
-        features_valid: np.ndarray = None
+        features_train: Optional[np.ndarray] = None,
+        features_valid: Optional[np.ndarray] = None
     ):
         if x_valid is not None and y_valid is not None:
             x_all = np.concatenate((x_train, x_valid), axis=0)

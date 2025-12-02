@@ -195,10 +195,11 @@ def iter_batch_text_from_text_features(
 
 
 def iter_batch_text_list(
-        batch_tokens: List[List[str]],
-        batch_features: Optional[List[List[List[str]]]],
-        additional_token_feature_indices: Optional[List[int]],
-        text_feature_indices: Optional[List[int]]) -> Iterable[List[str]]:
+    batch_tokens: List[List[str]],
+    batch_features: Optional[Union[np.ndarray, List[List[List[str]]]]],
+    additional_token_feature_indices: Optional[List[int]],
+    text_feature_indices: Optional[List[int]]
+) -> Iterable[List[str]]:
     if additional_token_feature_indices and text_feature_indices:
         raise ValueError('both, additional token and text features, not supported')
     if additional_token_feature_indices:

@@ -113,7 +113,12 @@ def get_transformed_features(sentence_features: List[str]):
     return np.stack([get_transformed_feature(feature) for feature in sentence_features])
 
 
-def preprocess_transform(X, y=None, extend=False):
+def preprocess_transform(
+    X,
+    y=None,
+    extend=False,
+    label_indices=False  # pylint: disable=unused-argument
+):
     X_extend = X
     if extend:
         LOGGER.debug('extending X: %s', X)

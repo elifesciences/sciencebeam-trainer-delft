@@ -76,6 +76,11 @@ class ModelConfig(_ModelConfig):
     @classmethod
     def load(cls, file):
         variables = json.load(file)
+        if 'use_chain_crf' not in variables and variables.get('use_crf', False):
+            variables['use_chain_crf'] = True
+        if 'architecture' not in variables and variables.get('model_type'):
+            variables['architecture'] = variables.get('model_type')
+            del variables['model_type']
         self = cls()
         # model version is assumed to the first version if not saved
         self.model_version = FIRST_MODEL_VERSION

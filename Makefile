@@ -115,7 +115,7 @@ dev-watch:
 
 dev-watch-slow:
 	PATH=./third-parties/wapiti:$$PATH \
-	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings -vv $(ARGS)
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings -vv --maxfail=1 $(ARGS)
 
 
 dev-test: dev-lint dev-pytest

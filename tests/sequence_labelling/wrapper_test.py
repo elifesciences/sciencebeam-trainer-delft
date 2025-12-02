@@ -120,7 +120,7 @@ class TestSequenceEndToEnd:
             MODEL_NAME_1,
             **model_kwargs  # type: ignore
         )
-        model_wrapper.train(**train_kwargs)
+        model_wrapper.train(**train_kwargs)  # type: ignore
         layer_name = 'word_lstm'
         expected_weights_list = get_layer_by_name(model_wrapper.model, layer_name).get_weights()
         model_wrapper.save(str(tmp_path))
@@ -133,7 +133,7 @@ class TestSequenceEndToEnd:
             ),
             **model_kwargs  # type: ignore
         )
-        model_wrapper_2.train(**train_kwargs)
+        model_wrapper_2.train(**train_kwargs)  # type: ignore
         actual_weights_list = get_layer_by_name(model_wrapper_2.model, layer_name).get_weights()
         assert len(actual_weights_list) == len(expected_weights_list)
         for i, (actual_weights, expected_weights) in enumerate(

@@ -162,7 +162,7 @@ def get_preprocessor(
 def prepare_preprocessor(
     X, y,
     model_config: ModelConfig,
-    features: Optional[Union[np.ndarray, List[List[List[str]]]]] = None
+    features: Optional[T_Batch_Features] = None
 ):
     preprocessor = get_preprocessor(model_config, features=features)
     batch_text_list_iterable = iter_batch_text_list(

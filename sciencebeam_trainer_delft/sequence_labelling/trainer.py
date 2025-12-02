@@ -350,15 +350,13 @@ class Trainer(_Trainer):
                 meta=self.get_meta()
             )
         else:
-            x_train = np.concatenate(
-                (np.asarray(x_train), x_valid),
-                axis=0
-            )
-            y_train = np.concatenate((y_train, y_valid), axis=0)
+            if x_valid is not None and y_valid is not None:
+                x_train = np.concatenate((x_train, x_valid), axis=0)
+                y_train = np.concatenate((y_train, y_valid), axis=0)
             features_all = None
             if features_train is not None:
-                assert features_valid is not None
-                features_all = np.concatenate((features_train, features_valid), axis=0)
+                if features_valid is not None:
+                    features_all = np.concatenate((features_train, features_valid), axis=0)
             training_generator = self.create_data_generator(
                 x_train, y_train,
                 shuffle=True,

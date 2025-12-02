@@ -204,6 +204,20 @@ class ModelSaver(_BaseModelSaverLoader):
         )
 
 
+def migrate_legacy_preprocessor_state_if_necessary(
+    preprocessor: DelftWordPreprocessor
+) -> DelftWordPreprocessor:
+    if not hasattr(preprocessor, "indice_tag") and hasattr(preprocessor, "vocab_tag"):
+        vocab_tag = preprocessor.vocab_tag
+        assert isinstance(vocab_tag, dict)
+        preprocessor.indice_tag = {i: t for t, i in vocab_tag.items()}
+        LOGGER.info('migrated legacy preprocessor vocab_tag to indice_tag')
+    if not hasattr(preprocessor, "return_bert_embeddings"):
+        preprocessor.return_bert_embeddings = False
+        LOGGER.info('migrated legacy preprocessor to add return_bert_embeddings=False')
+    return preprocessor
+
+
 class ModelLoader(_BaseModelSaverLoader):
     def __init__(
             self,
@@ -235,7 +249,14 @@ class ModelLoader(_BaseModelSaverLoader):
     def load_preprocessor_from_pickle_file(self, filepath: str):
         LOGGER.info('loading preprocessor pickle from %s', filepath)
         with open_file(filepath, 'rb') as fp:
-            return joblib.load(fp)
+            preprocessor = joblib.load(fp)
+            LOGGER.info(
+                'preprocessor loaded from pickle: type=%s',
+                type(preprocessor)
+            )
+            return migrate_legacy_preprocessor_state_if_necessary(
+                preprocessor
+            )
 
     def load_preprocessor_from_json_file(self, filepath: str):
         LOGGER.info('loading preprocessor json from %s', filepath)

@@ -179,13 +179,25 @@ def _load_data_and_labels_crf_file_mock():
         yield mock
 
 
-def _mock_shuffle_array(a: np.ndarray) -> np.ndarray:
+def get_mock_shuffled_array(a: np.ndarray) -> np.ndarray:
     # reverse array
     return a[::-1]
 
 
-def _mock_shuffle_arrays(arrays: List[np.ndarray], **_) -> np.ndarray:
-    return [_mock_shuffle_array(a) for a in arrays]
+def _mock_shuffle_array(a: np.ndarray):
+    a[:] = get_mock_shuffled_array(a)
+
+
+def _mock_shuffle_arrays(arrays: List[np.ndarray], **_) -> None:
+    for a in arrays:
+        _mock_shuffle_array(a)
+
+
+def get_mock_shuffle_arrays(arrays: List[np.ndarray], **_) -> List[np.ndarray]:
+    return [
+        get_mock_shuffled_array(a)
+        for a in arrays
+    ]
 
 
 @pytest.fixture(name='shuffle_arrays_mock')
@@ -338,9 +350,9 @@ class TestGrobidTrainerUtils:
             assert (input_arrays[0] == x_unshuffled).all()
             assert (input_arrays[1] == y_unshuffled).all()
             assert (input_arrays[2] == f_unshuffled).all()
-            assert (x == _mock_shuffle_arrays(x)).all()
-            assert (y == _mock_shuffle_arrays(y)).all()
-            assert (f == _mock_shuffle_arrays(f)).all()
+            assert (x == get_mock_shuffle_arrays(x)).all()
+            assert (y == get_mock_shuffle_arrays(y)).all()
+            assert (f == get_mock_shuffle_arrays(f)).all()
 
     @pytest.mark.slow
     @pytest.mark.very_slow

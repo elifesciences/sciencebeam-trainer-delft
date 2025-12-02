@@ -272,7 +272,7 @@ class Sequence(_Sequence):
         LOGGER.info('training_config: %s', vars(self.training_config))
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
-        self._load_exception = None
+        self._load_exception: Optional[Exception] = None
         self.p: Optional[Preprocessor] = None
         self.model: Optional[BaseModel] = None
         self.models: List[BaseModel] = []

@@ -1,9 +1,12 @@
-from typing import List, Sequence
+from typing import List, Optional, Sequence
 
 import numpy as np
 
 
-def concatenate_or_none(arrays: Sequence[np.ndarray], **kwargs) -> np.ndarray:
+def concatenate_or_none(
+    arrays: Sequence[Optional[np.ndarray]],
+    **kwargs
+) -> Optional[np.ndarray]:
     if arrays[0] is None:
         return None
     return np.concatenate(arrays, **kwargs)

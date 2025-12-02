@@ -109,7 +109,6 @@ class TestSequenceEndToEnd:
             char_lstm_units=4,
             word_lstm_units=5,
             max_sequence_length=6,
-            return_chars=False,
             multiprocessing=False,
             max_epoch=1
         )

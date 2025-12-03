@@ -115,7 +115,7 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         unrolled_token_lengths = []
         for y_doc, features_doc in zip_longest(
             y if y is not None else [],  # type: ignore
-            features,
+            features,  # type: ignore
             fillvalue=[]
         ):
             x_doc_transformed = []
@@ -186,8 +186,8 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
             assert self._saved_x is not None
             assert self._saved_features is not None
             assert self._unrolled_token_lengths is not None
-            for x_doc, features_doc, y_doc, unrolled_token_lengths_doc in zip(
-                self._saved_x, self._saved_features, y, self._unrolled_token_lengths
+            for x_doc, features_doc, y_doc, unrolled_token_lengths_doc in zip(  # type: ignore
+                self._saved_x, self._saved_features, y, self._unrolled_token_lengths  # type: ignore
             ):
                 if LOGGER.isEnabledFor(logging.DEBUG):
                     LOGGER.debug('unrolled_token_lengths_doc: %s', unrolled_token_lengths_doc)

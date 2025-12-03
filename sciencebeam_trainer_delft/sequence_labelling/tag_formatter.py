@@ -2,11 +2,16 @@ import json
 import difflib
 import logging
 from xml.sax.saxutils import escape as xml_escape
-from typing import Optional, Union, Iterable, List, Tuple
+from typing import Optional, Sequence, Union, Iterable, List, Tuple
 
 import numpy as np
 
 from delft.sequenceLabelling.evaluation import get_entities
+
+from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Label_Array_Or_List,
+    T_Batch_Token_Array_Or_List
+)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -38,7 +43,10 @@ class CustomJsonEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def get_tag_result(texts: List[List[str]], labels: List[List[str]]):
+def get_tag_result(
+    texts: T_Batch_Token_Array_Or_List,
+    labels: T_Batch_Label_Array_Or_List
+) -> Sequence[Sequence[Tuple[str, str]]]:
     return [
         list(zip(doc_texts, doc_labels))
         for doc_texts, doc_labels in zip(texts, labels)

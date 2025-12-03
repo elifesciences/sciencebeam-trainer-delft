@@ -781,14 +781,15 @@ def wapiti_eval_model(
 
 
 def do_tag_input(
-        model: Union[Sequence, WapitiModelAdapter],
-        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
-        tag_output_path: Optional[str] = None,
-        input_paths: List[str] = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        download_manager: DownloadManager = None):
+    model: Union[Sequence, WapitiModelAdapter],
+    tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+    tag_output_path: Optional[str] = None,
+    input_paths: List[str] = None,
+    limit: int = None,
+    shuffle_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    download_manager: DownloadManager = None
+):
     x_all, y_all, features_all = load_data_and_labels(
         input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,

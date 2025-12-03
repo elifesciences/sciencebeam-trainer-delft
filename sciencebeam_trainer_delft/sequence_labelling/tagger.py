@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
@@ -182,7 +182,10 @@ class Tagger:
         LOGGER.debug('Model config: %r', self.model_config)
 
     def iter_tag(
-        self, texts, output_format, features=None,
+        self,
+        texts: Sequence[str],
+        output_format,
+        features=None,
         tag_transformed: bool = False
     ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
         assert isinstance(texts, list)

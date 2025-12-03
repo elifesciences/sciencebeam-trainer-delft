@@ -15,8 +15,6 @@ from sciencebeam_trainer_delft.sequence_labelling.typing import (
     T_Batch_Features_Array_Or_List,
     T_Batch_Label_Array_Or_List,
     T_Batch_Label_List,
-    T_Batch_Token_Array,
-    T_Batch_Features_Array,
     T_Batch_Label_Array,
     T_Batch_Token_Array_Or_List
 )
@@ -100,10 +98,14 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
 
     def fit_transform(
         self,
-        x: T_Batch_Token_Array,
-        y: Optional[T_Batch_Label_Array],
-        features: Optional[T_Batch_Features_Array]
-    ) -> Tuple[T_Batch_Token_Array, Optional[T_Batch_Label_Array], T_Batch_Features_Array]:
+        x: T_Batch_Token_Array_Or_List,
+        y: Optional[T_Batch_Label_Array_Or_List],
+        features: Optional[T_Batch_Features_Array_Or_List]
+    ) -> Tuple[
+        T_Batch_Token_Array_Or_List,
+        Optional[T_Batch_Label_Array_Or_List],
+        T_Batch_Features_Array_Or_List
+    ]:
         assert features is not None
         x_transformed = []
         _y_transformed = []
@@ -154,14 +156,14 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         self._saved_x = x
         self._saved_features = features
         self._unrolled_token_lengths = unrolled_token_lengths
-        # Note: all of the arrays should be arrays due to the typing of the input
+        # Note: convert back to ndarray of object to match input type
         if isinstance(x, np.ndarray):
             x_transformed = np.asarray(x_transformed, dtype='object')  # type: ignore
         if isinstance(y, np.ndarray):
             y_transformed = np.asarray(y_transformed, dtype='object')  # type: ignore
         if isinstance(features, np.ndarray):
             features_transformed = np.asarray(features_transformed, dtype='object')  # type: ignore
-        return x_transformed, y_transformed, features_transformed  # type: ignore
+        return x_transformed, y_transformed, features_transformed
 
     def inverse_transform(
         self,

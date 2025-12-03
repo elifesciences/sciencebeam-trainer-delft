@@ -9,7 +9,7 @@ def concatenate_or_none(
 ) -> Optional[np.ndarray]:
     if arrays[0] is None:
         return None
-    return np.concatenate(arrays, **kwargs)
+    return np.concatenate(arrays, **kwargs)  # type: ignore
 
 
 # https://stackoverflow.com/a/51526109/8676953

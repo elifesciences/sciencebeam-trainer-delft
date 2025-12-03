@@ -350,9 +350,9 @@ class TestGrobidTrainerUtils:
             assert (input_arrays[0] == x_unshuffled).all()
             assert (input_arrays[1] == y_unshuffled).all()
             assert (input_arrays[2] == f_unshuffled).all()
-            assert (x == get_mock_shuffle_arrays(x)).all()
-            assert (y == get_mock_shuffle_arrays(y)).all()
-            assert (f == get_mock_shuffle_arrays(f)).all()
+            assert (x == get_mock_shuffle_arrays(x.tolist())).all()
+            assert (y == get_mock_shuffle_arrays(y.tolist())).all()
+            assert (f == get_mock_shuffle_arrays(f.tolist())).all()
 
     @pytest.mark.slow
     @pytest.mark.very_slow

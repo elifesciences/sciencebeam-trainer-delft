@@ -3,6 +3,10 @@ from typing import Optional, Tuple, List
 import pandas as pd
 import numpy as np
 
+from sciencebeam_trainer_delft.text_classification.typing import (
+    T_Batch_Text_Array,
+    T_Batch_Text_Classes_Array
+)
 from sciencebeam_trainer_delft.utils.io import auto_uploading_output_file
 
 
@@ -37,7 +41,7 @@ def save_data_frame(
 
 def get_texts_and_classes_from_data_frame(
     df: pd.DataFrame
-) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+) -> Tuple[T_Batch_Text_Array, T_Batch_Text_Classes_Array, List[str]]:
     """
     Load texts and classes from a file in csv format using pandas dataframe:
 
@@ -68,9 +72,10 @@ def get_texts_and_classes_from_data_frame(
 
 
 def load_texts_and_classes_pandas(
-        filepath: str,
-        limit: int = None,
-        **kwargs) -> Tuple[List[str], List[List[str]], List[str]]:
+    filepath: str,
+    limit: int = None,
+    **kwargs
+) -> Tuple[T_Batch_Text_Array, T_Batch_Text_Classes_Array, List[str]]:
     """
     Load texts and classes from a file in csv format using pandas dataframe:
 

@@ -9,6 +9,10 @@ import pandas as pd
 import delft.textClassification.models
 import delft.textClassification.wrapper
 
+from sciencebeam_trainer_delft.text_classification.typing import (
+    T_Batch_Text_Array,
+    T_Batch_Text_Classes_Array
+)
 from sciencebeam_trainer_delft.text_classification.wrapper import Classifier
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 # from sciencebeam_trainer_delft.utils.models.Attention import Attention
@@ -68,9 +72,10 @@ def load_input_data_frame(
 
 
 def load_input_data(
-        input_paths: List[str],
-        download_manager: DownloadManager,
-        limit: int = None) -> Tuple[List[str], List[List[str]], List[str]]:
+    input_paths: List[str],
+    download_manager: DownloadManager,
+    limit: int = None
+) -> Tuple[T_Batch_Text_Array, T_Batch_Text_Classes_Array, List[str]]:
     assert len(input_paths) == 1
     LOGGER.info('loading data: %s', input_paths)
     downloaded_input_paths = get_downloaded_input_paths(
@@ -89,7 +94,7 @@ def load_label_data(
     input_paths: List[str],
     download_manager: DownloadManager,
     limit: int = None
-) -> Tuple[np.ndarray, List[str]]:
+) -> Tuple[T_Batch_Text_Classes_Array, List[str]]:
     assert len(input_paths) == 1
     LOGGER.info('loading data: %s', input_paths)
     downloaded_input_paths = get_downloaded_input_paths(
@@ -110,12 +115,13 @@ def _patch_delft():
 
 
 def train(
-        app_config: AppConfig,
-        model_config: ModelConfig,
-        training_config: TrainingConfig,
-        train_input_texts: List[str],
-        train_input_labels: List[List[str]],
-        model_path: str):
+    app_config: AppConfig,
+    model_config: ModelConfig,
+    training_config: TrainingConfig,
+    train_input_texts: T_Batch_Text_Array,
+    train_input_labels: T_Batch_Text_Classes_Array,
+    model_path: str
+):
 
     _patch_delft()
 
@@ -166,10 +172,11 @@ def predict(
 
 
 def evaluate(
-        app_config: AppConfig,
-        eval_input_texts: List[str],
-        eval_input_labels: List[List[str]],
-        model_path: str):
+    app_config: AppConfig,
+    eval_input_texts: T_Batch_Text_Array,
+    eval_input_labels: T_Batch_Text_Classes_Array,
+    model_path: str
+):
     model = Classifier(
         download_manager=app_config.download_manager,
         embedding_manager=app_config.embedding_manager

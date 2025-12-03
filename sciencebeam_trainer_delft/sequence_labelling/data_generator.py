@@ -25,7 +25,7 @@ LOGGER = logging.getLogger(__name__)
 NBSP = '\u00A0'
 
 
-def left_pad_batch_values(batch_values: np.array, max_sequence_length: int, dtype=None):
+def left_pad_batch_values(batch_values: np.ndarray, max_sequence_length: int, dtype=None):
     if dtype is None:
         dtype = batch_values.dtype
     batch_size = len(batch_values)

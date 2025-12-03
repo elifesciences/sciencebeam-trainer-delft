@@ -31,7 +31,7 @@ apt-get install libsqlite3-dev
 ```
 
 ```bash
-PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install --force 3.7.9
+PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install --force 3.9.17
 ```
 
 ## Example Notebooks

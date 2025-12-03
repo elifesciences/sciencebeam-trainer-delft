@@ -100,7 +100,7 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         x: T_Batch_Tokens,
         y: Optional[T_Batch_Labels],
         features: Optional[T_Batch_Features]
-    ):
+    ) -> Tuple[T_Batch_Tokens, Optional[T_Batch_Labels], T_Batch_Features]:
         assert features is not None
         x_transformed = []
         _y_transformed = []
@@ -151,13 +151,14 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         self._saved_x = x
         self._saved_features = features
         self._unrolled_token_lengths = unrolled_token_lengths
+        # Note: all of the arrays should be arrays due to the typing of the input
         if isinstance(x, np.ndarray):
-            x_transformed = np.asarray(x_transformed, dtype='object')
+            x_transformed = np.asarray(x_transformed, dtype='object')  # type: ignore
         if isinstance(y, np.ndarray):
-            y_transformed = np.asarray(y_transformed, dtype='object')
+            y_transformed = np.asarray(y_transformed, dtype='object')  # type: ignore
         if isinstance(features, np.ndarray):
-            features_transformed = np.asarray(features_transformed, dtype='object')
-        return x_transformed, y_transformed, features_transformed
+            features_transformed = np.asarray(features_transformed, dtype='object')  # type: ignore
+        return x_transformed, y_transformed, features_transformed  # type: ignore
 
     def inverse_transform(
         self,

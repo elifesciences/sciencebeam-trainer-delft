@@ -95,6 +95,12 @@ def get_feature_preprocessor_for_json(feature_preprocessor_json: dict) -> T_Feat
 def get_preprocessor_for_json(preprocessor_json: dict) -> DelftWordPreprocessor:
     preprocessor = from_json(preprocessor_json, DelftWordPreprocessor)
     LOGGER.debug('preprocessor type: %s', type(preprocessor))
+    if isinstance(preprocessor, DelftWordPreprocessor):
+        if isinstance(preprocessor.indice_tag, dict):
+            preprocessor.indice_tag = _convert_keys(
+                preprocessor.indice_tag,
+                int
+            )
     if isinstance(preprocessor, str):
         LOGGER.debug('preprocessor: %r', preprocessor)
     if isinstance(preprocessor.feature_preprocessor, dict):

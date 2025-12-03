@@ -88,7 +88,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer --help
 ### Using Docker Image
 
 ```bash
-docker run --rm elifesciences/sciencebeam-trainer-delft_unstable \
+docker run --rm ghcr.io/elifesciences/sciencebeam-trainer-delft_unstable \
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer --help
 ```
 

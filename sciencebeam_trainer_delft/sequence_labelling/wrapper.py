@@ -11,7 +11,11 @@ from delft.sequenceLabelling.preprocess import Preprocessor, FeaturesPreprocesso
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.config import TrainingConfig as DelftTrainingConfig
 
-from sciencebeam_trainer_delft.sequence_labelling.typing import T_Batch_Features_Array, T_Batch_Label_Array, T_Batch_Token_Array
+from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Features_Array,
+    T_Batch_Label_Array,
+    T_Batch_Token_Array
+)
 from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none

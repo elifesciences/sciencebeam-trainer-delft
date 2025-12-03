@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import NamedTuple, Optional
+from typing import List, NamedTuple, Optional
 
 import numpy as np
 
@@ -25,7 +25,8 @@ from sciencebeam_trainer_delft.sequence_labelling.typing import (
     T_Batch_Label_List,
     T_Batch_Tokens,
     T_Batch_Features,
-    T_Batch_Labels
+    T_Batch_Labels,
+    T_Document_Label_List
 )
 from sciencebeam_trainer_delft.utils.keras.callbacks import ResumableEarlyStopping
 
@@ -137,8 +138,8 @@ def get_model_results(
     - TFA CRF wrapper (use_crf=True and use_chain_crf=False):
         * labels and preds are sparse integer indices → no argmax.
     """
-    y_pred = []
-    y_true = []
+    y_pred: List[T_Document_Label_List] = []
+    y_true: List[T_Document_Label_List] = []
     valid_steps = len(valid_batches)
 
     for i, (data, label) in enumerate(valid_batches):
@@ -181,21 +182,21 @@ def get_model_results(
             y_pred_seqs = [np.atleast_1d(y_pred_batch[0])]
 
         # ----- map indices -> tag strings with sequence length -----
-        y_pred_batch = [
+        y_pred_batch_list: List[T_Document_Label_List] = [
             preprocessor.inverse_transform(y[:l])
             for y, l in zip(y_pred_seqs, sequence_lengths)
         ]
-        y_true_batch = [
+        y_true_batch_list: List[T_Document_Label_List] = [
             preprocessor.inverse_transform(y[:l])
             for y, l in zip(y_true_seqs, sequence_lengths)
         ]
 
         if i == 0:
-            y_pred = y_pred_batch
-            y_true = y_true_batch
+            y_pred = y_pred_batch_list
+            y_true = y_true_batch_list
         else:
-            y_pred += y_pred_batch
-            y_true += y_true_batch
+            y_pred += y_pred_batch_list
+            y_true += y_true_batch_list
 
     return PredictedResults(y_pred=y_pred, y_true=y_true)
 

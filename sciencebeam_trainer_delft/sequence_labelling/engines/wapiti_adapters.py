@@ -319,10 +319,10 @@ class WapitiModelTrainAdapter:
         self,
         x_train: np.ndarray,
         y_train: np.ndarray,
-        x_valid: np.ndarray = None,
-        y_valid: np.ndarray = None,
-        features_train: np.ndarray = None,
-        features_valid: np.ndarray = None
+        x_valid: Optional[np.ndarray],
+        y_valid: Optional[np.ndarray],
+        features_train: T_Batch_Features,
+        features_valid: Optional[T_Batch_Features]
     ):
         local_template_path = self.download_manager.download_if_url(self.template_path)
         LOGGER.info('local_template_path: %s', local_template_path)
@@ -335,6 +335,8 @@ class WapitiModelTrainAdapter:
                     fp, x=x_train, y=y_train, features=features_train
                 )
                 if x_valid is not None:
+                    assert y_valid is not None
+                    assert features_valid is not None
                     write_wapiti_train_data(
                         fp, x=x_valid, y=y_valid, features=features_valid
                     )

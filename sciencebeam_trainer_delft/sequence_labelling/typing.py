@@ -1,4 +1,4 @@
-from typing import Sequence, TypeVar, Union
+from typing import Optional, Sequence, TypeVar, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -34,4 +34,17 @@ T_Batch_Label_Type_Var = TypeVar(
 T_Batch_Features_Type_Var = TypeVar(
     'T_Batch_Features_Type_Var',
     bound=T_Batch_Features_Array_Or_List
+)
+
+T_Optional_Batch_Token_Type_Var = TypeVar(
+    'T_Optional_Batch_Token_Type_Var',
+    bound=Optional[T_Batch_Token_Array_Or_List]
+)
+T_Optional_Batch_Label_Type_Var = TypeVar(
+    'T_Optional_Batch_Label_Type_Var',
+    bound=Optional[T_Batch_Label_Array_Or_List]
+)
+T_Optional_Batch_Features_Type_Var = TypeVar(
+    'T_Optional_Batch_Features_Type_Var',
+    bound=Optional[T_Batch_Features_Array_Or_List]
 )

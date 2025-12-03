@@ -8,6 +8,7 @@ from typing import Callable, Dict, Optional
 import joblib
 
 from delft.sequenceLabelling.models import Model
+import delft.sequenceLabelling.preprocess as delft_preprocess
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
     Preprocessor as DelftWordPreprocessor
@@ -204,6 +205,11 @@ class ModelSaver(_BaseModelSaverLoader):
         )
 
 
+def install_legacy_preprocessor_class_for_pickle() -> None:
+    if not hasattr(delft_preprocess, "WordPreprocessor"):
+        setattr(delft_preprocess, "WordPreprocessor", DelftWordPreprocessor)
+
+
 def migrate_legacy_preprocessor_state_if_necessary(
     preprocessor: DelftWordPreprocessor
 ) -> DelftWordPreprocessor:
@@ -247,6 +253,7 @@ class ModelLoader(_BaseModelSaverLoader):
             )
 
     def load_preprocessor_from_pickle_file(self, filepath: str):
+        install_legacy_preprocessor_class_for_pickle()
         LOGGER.info('loading preprocessor pickle from %s', filepath)
         with open_file(filepath, 'rb') as fp:
             preprocessor = joblib.load(fp)

@@ -11,7 +11,10 @@ from delft.sequenceLabelling.reader import (
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import ClassificationResult
-from sciencebeam_trainer_delft.sequence_labelling.typing import T_Batch_Features, T_Batch_Tokens
+from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Features_Array,
+    T_Batch_Token_Array
+)
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.io import copy_file
 
@@ -215,7 +218,7 @@ class WapitiModelAdapter:
         assert not output_format, 'output_format not supported'
         return list(self.iter_tag(x, features))
 
-    def eval(self, x_test, y_test, features: T_Batch_Features):
+    def eval(self, x_test, y_test, features: T_Batch_Features_Array):
         self.eval_single(x_test, y_test, features=features)
 
     @property
@@ -226,9 +229,9 @@ class WapitiModelAdapter:
 
     def get_evaluation_result(
         self,
-        x_test: T_Batch_Tokens,
+        x_test: T_Batch_Token_Array,
         y_test: List[List[str]],
-        features: T_Batch_Features
+        features: T_Batch_Features_Array
     ) -> ClassificationResult:
         tag_result = self.tag(x_test, features)
         y_true = [
@@ -248,9 +251,9 @@ class WapitiModelAdapter:
 
     def eval_single(
         self,
-        x_test: T_Batch_Tokens,
+        x_test: T_Batch_Token_Array,
         y_test: List[List[str]],
-        features: T_Batch_Features
+        features: T_Batch_Features_Array
     ):
         classification_result = self.get_evaluation_result(
             x_test=x_test,
@@ -321,8 +324,8 @@ class WapitiModelTrainAdapter:
         y_train: np.ndarray,
         x_valid: Optional[np.ndarray],
         y_valid: Optional[np.ndarray],
-        features_train: T_Batch_Features,
-        features_valid: Optional[T_Batch_Features]
+        features_train: T_Batch_Features_Array,
+        features_valid: Optional[T_Batch_Features_Array]
     ):
         local_template_path = self.download_manager.download_if_url(self.template_path)
         LOGGER.info('local_template_path: %s', local_template_path)
@@ -371,9 +374,9 @@ class WapitiModelTrainAdapter:
 
     def get_evaluation_result(
         self,
-        x_test: T_Batch_Tokens,
+        x_test: T_Batch_Token_Array,
         y_test: List[List[str]],
-        features: T_Batch_Features
+        features: T_Batch_Features_Array
     ) -> ClassificationResult:
         return self.get_model_adapter().get_evaluation_result(
             x_test, y_test, features=features
@@ -383,7 +386,7 @@ class WapitiModelTrainAdapter:
         self,
         x_test: List[List[str]],
         y_test: List[List[str]],
-        features: T_Batch_Features
+        features: T_Batch_Features_Array
     ):
         self.get_model_adapter().eval(
             x_test, y_test, features=features

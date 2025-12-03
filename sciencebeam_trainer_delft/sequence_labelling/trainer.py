@@ -23,9 +23,9 @@ from delft.sequenceLabelling.models import BaseModel
 
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
     T_Batch_Label_List,
-    T_Batch_Tokens,
-    T_Batch_Features,
-    T_Batch_Labels,
+    T_Batch_Token_Array,
+    T_Batch_Features_Array,
+    T_Batch_Label_Array,
     T_Document_Label_List
 )
 from sciencebeam_trainer_delft.utils.keras.callbacks import ResumableEarlyStopping
@@ -313,13 +313,13 @@ class Trainer(_Trainer):
     def train_model(  # pylint: disable=arguments-differ
         self,
         local_model,
-        x_train: T_Batch_Tokens,
-        y_train: T_Batch_Labels,
-        x_valid: Optional[T_Batch_Tokens] = None,
-        y_valid: Optional[T_Batch_Labels] = None,
+        x_train: T_Batch_Token_Array,
+        y_train: T_Batch_Label_Array,
+        x_valid: Optional[T_Batch_Token_Array] = None,
+        y_valid: Optional[T_Batch_Label_Array] = None,
         max_epoch: int = 50,
-        features_train: Optional[T_Batch_Features] = None,
-        features_valid: Optional[T_Batch_Features] = None
+        features_train: Optional[T_Batch_Features_Array] = None,
+        features_valid: Optional[T_Batch_Features_Array] = None
     ):
         """ parameter model local_model must be compiled before calling this method
             this model will be returned with trained weights """
@@ -401,23 +401,23 @@ class Trainer(_Trainer):
 
     def train_nfold(  # pylint: disable=arguments-differ
         self,
-        x_train: T_Batch_Tokens,
-        y_train: T_Batch_Labels,
-        x_valid: Optional[T_Batch_Tokens] = None,
-        y_valid: Optional[T_Batch_Labels] = None,
-        features_train: Optional[T_Batch_Features] = None,
-        features_valid: Optional[T_Batch_Features] = None
+        x_train: T_Batch_Token_Array,
+        y_train: T_Batch_Label_Array,
+        x_valid: Optional[T_Batch_Token_Array] = None,
+        y_valid: Optional[T_Batch_Label_Array] = None,
+        features_train: Optional[T_Batch_Features_Array] = None,
+        features_valid: Optional[T_Batch_Features_Array] = None
     ):
         """ n-fold training for the instance model
             the n models are stored in self.models, and self.model left unset at this stage """
         fold_count = len(self.models)
         fold_size = len(x_train) // fold_count
 
-        train_x: T_Batch_Tokens
-        train_y: T_Batch_Labels
-        train_features: Optional[T_Batch_Features]
-        val_y: Optional[T_Batch_Labels]
-        val_features: Optional[T_Batch_Features]
+        train_x: T_Batch_Token_Array
+        train_y: T_Batch_Label_Array
+        train_features: Optional[T_Batch_Features_Array]
+        val_y: Optional[T_Batch_Label_Array]
+        val_features: Optional[T_Batch_Features_Array]
 
         for fold_id in range(0, fold_count):
             print(

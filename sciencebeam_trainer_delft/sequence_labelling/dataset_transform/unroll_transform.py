@@ -13,9 +13,9 @@ from sciencebeam_trainer_delft.sequence_labelling.dataset_transform import (
 
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
     T_Batch_Label_List,
-    T_Batch_Tokens,
-    T_Batch_Features,
-    T_Batch_Labels
+    T_Batch_Token_Array,
+    T_Batch_Features_Array,
+    T_Batch_Label_Array
 )
 
 
@@ -88,8 +88,8 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         #   (i.e. no need to add it if it is not used)
         self.unroll_text_feature_index = unroll_text_feature_index
         self.used_features_indices = used_features_indices
-        self._saved_x: Optional[T_Batch_Tokens] = None
-        self._saved_features: Optional[T_Batch_Features] = None
+        self._saved_x: Optional[T_Batch_Token_Array] = None
+        self._saved_features: Optional[T_Batch_Features_Array] = None
         self._unrolled_token_lengths: Optional[List[List[int]]] = None
 
     def tokenize(self, text: str) -> List[str]:
@@ -97,10 +97,10 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
 
     def fit_transform(
         self,
-        x: T_Batch_Tokens,
-        y: Optional[T_Batch_Labels],
-        features: Optional[T_Batch_Features]
-    ) -> Tuple[T_Batch_Tokens, Optional[T_Batch_Labels], T_Batch_Features]:
+        x: T_Batch_Token_Array,
+        y: Optional[T_Batch_Label_Array],
+        features: Optional[T_Batch_Features_Array]
+    ) -> Tuple[T_Batch_Token_Array, Optional[T_Batch_Label_Array], T_Batch_Features_Array]:
         assert features is not None
         x_transformed = []
         _y_transformed = []
@@ -162,13 +162,13 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
 
     def inverse_transform(
         self,
-        x: Optional[T_Batch_Tokens],
-        y: Optional[T_Batch_Labels],
-        features: Optional[T_Batch_Features]
+        x: Optional[T_Batch_Token_Array],
+        y: Optional[T_Batch_Label_Array],
+        features: Optional[T_Batch_Features_Array]
     ) -> Tuple[
-        Optional[T_Batch_Tokens],
-        Optional[Union[T_Batch_Labels, T_Batch_Label_List]],
-        Optional[T_Batch_Features]
+        Optional[T_Batch_Token_Array],
+        Optional[Union[T_Batch_Label_Array, T_Batch_Label_List]],
+        Optional[T_Batch_Features_Array]
     ]:
         if x is not None:
             x = self._saved_x

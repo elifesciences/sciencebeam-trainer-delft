@@ -158,14 +158,15 @@ def iter_predict_texts_with_sliding_window_if_enabled(
 
 class Tagger:
     def __init__(
-            self,
-            model,
-            model_config,
-            embeddings=None,
-            preprocessor=None,
-            dataset_transformer_factory: Optional[T_DatasetTransformerFactory] = None,
-            max_sequence_length: int = None,
-            input_window_stride: int = None):
+        self,
+        model,
+        model_config,
+        preprocessor: Preprocessor,
+        embeddings: Optional[Embeddings] = None,
+        dataset_transformer_factory: Optional[T_DatasetTransformerFactory] = None,
+        max_sequence_length: Optional[int] = None,
+        input_window_stride: Optional[int] = None
+    ):
         self.model = model
         self.preprocessor = preprocessor
         self.model_config = model_config

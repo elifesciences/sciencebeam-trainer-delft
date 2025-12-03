@@ -503,12 +503,15 @@ class Sequence(_Sequence):
         self._require_model()
         if self.model_config.use_features and features is None:
             raise ValueError('features required')
+        assert self.p is not None
         tagger = Tagger(
-            self.model, self.model_config, self.embeddings,
+            model=self.model,
+            model_config=self.model_config,
+            preprocessor=self.p,
+            embeddings=self.embeddings,
             dataset_transformer_factory=self.dataset_transformer_factory,
             max_sequence_length=self.eval_max_sequence_length,
             input_window_stride=self.eval_input_window_stride,
-            preprocessor=self.p
         )
         tag_result = tagger.tag(
             list(x_test),
@@ -613,12 +616,15 @@ class Sequence(_Sequence):
         self._require_model()
         if self.model_config.use_features and features is None:
             raise ValueError('features required')
+        assert self.p is not None
         tagger = Tagger(
-            self.model, self.model_config, self.embeddings,
+            model=self.model,
+            model_config=self.model_config,
+            preprocessor=self.p,
+            embeddings=self.embeddings,
             dataset_transformer_factory=self.dataset_transformer_factory,
             max_sequence_length=self.max_sequence_length,
-            input_window_stride=self.input_window_stride,
-            preprocessor=self.p
+            input_window_stride=self.input_window_stride
         )
         LOGGER.debug('tag_transformed: %s', self.tag_transformed)
         annotations: Union[dict, Iterable[List[Tuple[str, str]]]]

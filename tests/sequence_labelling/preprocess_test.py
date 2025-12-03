@@ -66,7 +66,7 @@ class TestWordPreprocessor:
 
 def _to_dense(a: np.ndarray):
     try:
-        return a.todense()
+        return a.todense()  # type: ignore
     except AttributeError:
         return a
 

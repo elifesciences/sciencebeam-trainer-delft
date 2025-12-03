@@ -12,10 +12,13 @@ from sciencebeam_trainer_delft.sequence_labelling.dataset_transform import (
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Features_Array_Or_List,
+    T_Batch_Label_Array_Or_List,
     T_Batch_Label_List,
     T_Batch_Token_Array,
     T_Batch_Features_Array,
-    T_Batch_Label_Array
+    T_Batch_Label_Array,
+    T_Batch_Token_Array_Or_List
 )
 
 
@@ -88,8 +91,8 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         #   (i.e. no need to add it if it is not used)
         self.unroll_text_feature_index = unroll_text_feature_index
         self.used_features_indices = used_features_indices
-        self._saved_x: Optional[T_Batch_Token_Array] = None
-        self._saved_features: Optional[T_Batch_Features_Array] = None
+        self._saved_x: Optional[T_Batch_Token_Array_Or_List] = None
+        self._saved_features: Optional[T_Batch_Features_Array_Or_List] = None
         self._unrolled_token_lengths: Optional[List[List[int]]] = None
 
     def tokenize(self, text: str) -> List[str]:
@@ -162,13 +165,13 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
 
     def inverse_transform(
         self,
-        x: Optional[T_Batch_Token_Array],
-        y: Optional[T_Batch_Label_Array],
-        features: Optional[T_Batch_Features_Array]
+        x: Optional[T_Batch_Token_Array_Or_List],
+        y: Optional[T_Batch_Label_Array_Or_List],
+        features: Optional[T_Batch_Features_Array_Or_List]
     ) -> Tuple[
-        Optional[T_Batch_Token_Array],
+        Optional[T_Batch_Token_Array_Or_List],
         Optional[Union[T_Batch_Label_Array, T_Batch_Label_List]],
-        Optional[T_Batch_Features_Array]
+        Optional[T_Batch_Features_Array_Or_List]
     ]:
         if x is not None:
             x = self._saved_x

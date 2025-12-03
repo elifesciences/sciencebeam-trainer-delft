@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Tuple, Union
+from typing import Callable, Optional, Tuple
 
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
-    T_Batch_Label_List,
+    T_Batch_Features_Array_Or_List,
+    T_Batch_Label_Array_Or_List,
     T_Batch_Token_Array,
     T_Batch_Features_Array,
-    T_Batch_Label_Array
+    T_Batch_Label_Array,
+    T_Batch_Token_Array_Or_List
 )
 
 
@@ -26,13 +28,13 @@ class DatasetTransformer(ABC):
     @abstractmethod
     def inverse_transform(
         self,
-        x: Optional[T_Batch_Token_Array],
-        y: Optional[T_Batch_Label_Array],
-        features: Optional[T_Batch_Features_Array]
+        x: Optional[T_Batch_Token_Array_Or_List],
+        y: Optional[T_Batch_Label_Array_Or_List],
+        features: Optional[T_Batch_Features_Array_Or_List]
     ) -> Tuple[
-        Optional[T_Batch_Token_Array],
-        Optional[Union[T_Batch_Label_Array, T_Batch_Label_List]],
-        Optional[T_Batch_Features_Array]
+        Optional[T_Batch_Token_Array_Or_List],
+        Optional[T_Batch_Label_Array_Or_List],
+        Optional[T_Batch_Features_Array_Or_List]
     ]:
         pass
 
@@ -46,8 +48,8 @@ class DatasetTransformer(ABC):
 
     def inverse_transform_y(
         self,
-        y: T_Batch_Label_Array,
-    ) -> T_Batch_Label_Array:
+        y: T_Batch_Label_Array_Or_List,
+    ) -> T_Batch_Label_Array_Or_List:
         _, inverse_transformed_y, _ = self.inverse_transform(None, y, None)
         assert inverse_transformed_y is not None
         return inverse_transformed_y
@@ -64,9 +66,9 @@ class DummyDatasetTransformer(DatasetTransformer):
 
     def inverse_transform(
         self,
-        x: Optional[T_Batch_Token_Array],
-        y: Optional[T_Batch_Label_Array],
-        features: Optional[T_Batch_Features_Array]
+        x: Optional[T_Batch_Token_Array_Or_List],
+        y: Optional[T_Batch_Label_Array_Or_List],
+        features: Optional[T_Batch_Features_Array_Or_List]
     ):
         return x, y, features
 

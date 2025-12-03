@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Optional, Tuple, List
 
 import pandas as pd
 import numpy as np
@@ -17,9 +17,10 @@ def get_filepath_csv_separator(filepath: str):
 
 
 def load_data_frame(
-        filepath: str,
-        limit: int = None,
-        **kwargs) -> pd.DataFrame:
+    filepath: str,
+    limit: Optional[int] = None,
+    **kwargs
+) -> pd.DataFrame:
     sep = get_filepath_csv_separator(filepath)
     return pd.read_csv(filepath, nrows=limit, sep=sep, **kwargs)
 
@@ -90,9 +91,10 @@ def load_texts_and_classes_pandas(
 
 
 def load_classes_pandas(
-        filepath: str,
-        limit: int = None,
-        **kwargs) -> Tuple[List[List[str]], List[str]]:
+    filepath: str,
+    limit: Optional[int] = None,
+    **kwargs
+) -> Tuple[List[List[str]], List[str]]:
     """
     Load texts and classes from a file in csv format using pandas dataframe:
 

@@ -11,7 +11,7 @@ from delft.sequenceLabelling.preprocess import Preprocessor, FeaturesPreprocesso
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.config import TrainingConfig as DelftTrainingConfig
 
-from sciencebeam_trainer_delft.sequence_labelling.typing import T_Batch_Features_Array
+from sciencebeam_trainer_delft.sequence_labelling.typing import T_Batch_Features_Array, T_Batch_Label_Array, T_Batch_Token_Array
 from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
@@ -496,8 +496,8 @@ class Sequence(_Sequence):
 
     def get_evaluation_result(
         self,
-        x_test: List[List[str]],
-        y_test: List[List[str]],
+        x_test: T_Batch_Token_Array,
+        y_test: T_Batch_Label_Array,
         features: Optional[Union[np.ndarray, List[List[List[str]]]]] = None
     ) -> ClassificationResult:
         self._require_model()
@@ -528,9 +528,9 @@ class Sequence(_Sequence):
 
     def eval_single(  # pylint: disable=arguments-differ
         self,
-        x_test: List[List[str]],
-        y_test: List[List[str]],
-        features: Optional[Union[np.ndarray, List[List[List[str]]]]] = None
+        x_test: T_Batch_Token_Array,
+        y_test: T_Batch_Label_Array,
+        features: Optional[T_Batch_Features_Array] = None
     ):
         classification_result = self.get_evaluation_result(
             x_test=x_test,

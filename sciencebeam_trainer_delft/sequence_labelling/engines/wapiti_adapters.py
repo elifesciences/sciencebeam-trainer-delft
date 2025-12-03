@@ -13,6 +13,7 @@ from delft.sequenceLabelling.reader import (
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import ClassificationResult
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
     T_Batch_Features_Array,
+    T_Batch_Label_Array,
     T_Batch_Token_Array
 )
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
@@ -230,7 +231,7 @@ class WapitiModelAdapter:
     def get_evaluation_result(
         self,
         x_test: T_Batch_Token_Array,
-        y_test: List[List[str]],
+        y_test: T_Batch_Label_Array,
         features: T_Batch_Features_Array
     ) -> ClassificationResult:
         tag_result = self.tag(x_test, features)
@@ -252,7 +253,7 @@ class WapitiModelAdapter:
     def eval_single(
         self,
         x_test: T_Batch_Token_Array,
-        y_test: List[List[str]],
+        y_test: T_Batch_Label_Array,
         features: T_Batch_Features_Array
     ):
         classification_result = self.get_evaluation_result(
@@ -375,7 +376,7 @@ class WapitiModelTrainAdapter:
     def get_evaluation_result(
         self,
         x_test: T_Batch_Token_Array,
-        y_test: List[List[str]],
+        y_test: T_Batch_Label_Array,
         features: T_Batch_Features_Array
     ) -> ClassificationResult:
         return self.get_model_adapter().get_evaluation_result(

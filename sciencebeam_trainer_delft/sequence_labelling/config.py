@@ -81,6 +81,8 @@ class ModelConfig(_ModelConfig):
         if 'architecture' not in variables and variables.get('model_type'):
             variables['architecture'] = variables.get('model_type')
             del variables['model_type']
+        if variables.get('use_chain_crf') and variables['architecture'] == 'BidLSTM_CRF':
+            variables['architecture'] = 'BidLSTM_ChainCRF'
         self = cls()
         # model version is assumed to the first version if not saved
         self.model_version = FIRST_MODEL_VERSION

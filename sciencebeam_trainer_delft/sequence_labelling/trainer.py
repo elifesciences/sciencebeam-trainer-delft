@@ -6,6 +6,9 @@ import numpy as np
 
 from keras.callbacks import ProgbarLogger
 
+from delft.sequenceLabelling.preprocess import (
+    Preprocessor as DelftWordPreprocessor
+)
 from delft.utilities.crf_layer import ChainCRF
 from delft.sequenceLabelling.evaluation import (
     f1_score,
@@ -19,6 +22,7 @@ from delft.sequenceLabelling.trainer import Scorer as _Scorer
 from delft.sequenceLabelling.models import BaseModel
 
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Label_List,
     T_Batch_Tokens,
     T_Batch_Features,
     T_Batch_Labels
@@ -113,14 +117,15 @@ def get_callbacks(
 
 
 class PredictedResults(NamedTuple):
-    y_pred: T_Batch_Labels
-    y_true: T_Batch_Labels
+    y_pred: T_Batch_Label_List
+    y_true: T_Batch_Label_List
 
 
 def get_model_results(
     model,
     valid_batches: list,
-    preprocessor=None, *,
+    preprocessor: DelftWordPreprocessor,
+    *,
     use_crf: bool = False,
     use_chain_crf: bool = False
 ) -> PredictedResults:

@@ -1,7 +1,7 @@
 import logging
 from collections import Counter
 from itertools import zip_longest
-from typing import List, Optional
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -12,6 +12,7 @@ from sciencebeam_trainer_delft.sequence_labelling.dataset_transform import (
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Label_List,
     T_Batch_Tokens,
     T_Batch_Features,
     T_Batch_Labels
@@ -163,7 +164,11 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         x: Optional[T_Batch_Tokens],
         y: Optional[T_Batch_Labels],
         features: Optional[T_Batch_Features]
-    ):
+    ) -> Tuple[
+        Optional[T_Batch_Tokens],
+        Optional[Union[T_Batch_Labels, T_Batch_Label_List]],
+        Optional[T_Batch_Features]
+    ]:
         if x is not None:
             x = self._saved_x
         if features is not None:
@@ -204,5 +209,7 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
                     index += unrolled_token_length
                 inverse_transformed_y.append(inverse_transformed_y_doc)
         if isinstance(y, np.ndarray):
-            inverse_transformed_y = np.asarray(inverse_transformed_y, dtype='object')
+            # convert to ndarray of object to match input type
+            inverse_transformed_y_array = np.asarray(inverse_transformed_y, dtype='object')
+            return x, inverse_transformed_y_array, features
         return x, inverse_transformed_y, features

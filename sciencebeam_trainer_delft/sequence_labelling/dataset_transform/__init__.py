@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional, Tuple, Union
 
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Label_List,
     T_Batch_Tokens,
     T_Batch_Features,
     T_Batch_Labels
@@ -24,7 +25,11 @@ class DatasetTransformer(ABC):
         x: Optional[T_Batch_Tokens],
         y: Optional[T_Batch_Labels],
         features: Optional[T_Batch_Features]
-    ) -> Tuple[Optional[T_Batch_Tokens], Optional[T_Batch_Labels], Optional[T_Batch_Features]]:
+    ) -> Tuple[
+        Optional[T_Batch_Tokens],
+        Optional[Union[T_Batch_Labels, T_Batch_Label_List]],
+        Optional[T_Batch_Features]
+    ]:
         pass
 
     def fit_transform_x_and_features(

@@ -94,7 +94,7 @@ def load_classes_pandas(
     filepath: str,
     limit: Optional[int] = None,
     **kwargs
-) -> Tuple[List[List[str]], List[str]]:
+) -> Tuple[np.ndarray, List[str]]:
     """
     Load texts and classes from a file in csv format using pandas dataframe:
 

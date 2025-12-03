@@ -1,6 +1,6 @@
 import logging
 import json
-from typing import List, Type, Union
+from typing import Dict, List, Mapping, Type, Union
 
 from keras.models import Model
 from keras.layers import (
@@ -275,7 +275,7 @@ DEFAULT_MODEL_NAMES = [
     BidLSTM_CRF_FEATURES.name
 ]
 
-MODEL_MAP = {
+MODEL_MAP: Dict[str, Type[CustomModel]] = {
     'CustomBidLSTM_CRF': CustomBidLSTM_CRF,
     CustomBidLSTM_CRF_FEATURES.name: CustomBidLSTM_CRF_FEATURES
 }

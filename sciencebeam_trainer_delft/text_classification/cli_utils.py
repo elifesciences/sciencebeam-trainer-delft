@@ -145,9 +145,10 @@ def train(
 
 
 def predict(
-        app_config: AppConfig,
-        eval_input_texts: List[str],
-        model_path: str):
+    app_config: AppConfig,
+    eval_input_texts: np.ndarray,
+    model_path: str
+) -> dict:
     model = Classifier(
         download_manager=app_config.download_manager,
         embedding_manager=app_config.embedding_manager

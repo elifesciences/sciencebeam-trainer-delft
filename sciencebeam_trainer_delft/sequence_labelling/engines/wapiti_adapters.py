@@ -215,7 +215,7 @@ class WapitiModelAdapter:
         assert not output_format, 'output_format not supported'
         return list(self.iter_tag(x, features))
 
-    def eval(self, x_test, y_test, features: Optional[T_Batch_Features] = None):
+    def eval(self, x_test, y_test, features: T_Batch_Features):
         self.eval_single(x_test, y_test, features=features)
 
     @property
@@ -383,7 +383,7 @@ class WapitiModelTrainAdapter:
         self,
         x_test: List[List[str]],
         y_test: List[List[str]],
-        features: Optional[T_Batch_Features] = None
+        features: T_Batch_Features
     ):
         self.get_model_adapter().eval(
             x_test, y_test, features=features

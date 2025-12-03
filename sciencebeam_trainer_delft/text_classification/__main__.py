@@ -117,7 +117,7 @@ def add_train_arguments(
     )
     train_group.add_argument(
         "--architecture",
-        default='bidLstm',
+        default='bidLstm_simple',
         help="The desired architecture"
     )
     train_group.add_argument(

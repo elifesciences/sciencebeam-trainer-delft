@@ -1,7 +1,7 @@
 import logging
 from collections import Counter
 from itertools import zip_longest
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -13,10 +13,10 @@ from sciencebeam_trainer_delft.sequence_labelling.dataset_transform import (
 
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
     T_Batch_Features_Array_Or_List,
-    T_Batch_Label_Array_Or_List,
-    T_Batch_Label_List,
-    T_Batch_Label_Array,
-    T_Batch_Token_Array_Or_List
+    T_Batch_Features_Type_Var,
+    T_Batch_Label_Type_Var,
+    T_Batch_Token_Array_Or_List,
+    T_Batch_Token_Type_Var
 )
 
 
@@ -98,13 +98,13 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
 
     def fit_transform(
         self,
-        x: T_Batch_Token_Array_Or_List,
-        y: Optional[T_Batch_Label_Array_Or_List],
-        features: Optional[T_Batch_Features_Array_Or_List]
+        x: T_Batch_Token_Type_Var,
+        y: Optional[T_Batch_Label_Type_Var],
+        features: Optional[T_Batch_Features_Type_Var]
     ) -> Tuple[
-        T_Batch_Token_Array_Or_List,
-        Optional[T_Batch_Label_Array_Or_List],
-        T_Batch_Features_Array_Or_List
+        T_Batch_Token_Type_Var,
+        Optional[T_Batch_Label_Type_Var],
+        T_Batch_Features_Type_Var
     ]:
         assert features is not None
         x_transformed = []
@@ -163,22 +163,22 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
             y_transformed = np.asarray(y_transformed, dtype='object')  # type: ignore
         if isinstance(features, np.ndarray):
             features_transformed = np.asarray(features_transformed, dtype='object')  # type: ignore
-        return x_transformed, y_transformed, features_transformed
+        return x_transformed, y_transformed, features_transformed  # type: ignore
 
     def inverse_transform(
         self,
-        x: Optional[T_Batch_Token_Array_Or_List],
-        y: Optional[T_Batch_Label_Array_Or_List],
-        features: Optional[T_Batch_Features_Array_Or_List]
+        x: Optional[T_Batch_Token_Type_Var],
+        y: Optional[T_Batch_Label_Type_Var],
+        features: Optional[T_Batch_Features_Type_Var]
     ) -> Tuple[
-        Optional[T_Batch_Token_Array_Or_List],
-        Optional[Union[T_Batch_Label_Array, T_Batch_Label_List]],
-        Optional[T_Batch_Features_Array_Or_List]
+        Optional[T_Batch_Token_Type_Var],
+        Optional[T_Batch_Label_Type_Var],
+        Optional[T_Batch_Features_Type_Var]
     ]:
         if x is not None:
-            x = self._saved_x
+            x = self._saved_x  # type: ignore
         if features is not None:
-            features = self._saved_features
+            features = self._saved_features  # type: ignore
         inverse_transformed_y = None
         if y is not None:
             inverse_transformed_y = []
@@ -217,5 +217,5 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         if isinstance(y, np.ndarray):
             # convert to ndarray of object to match input type
             inverse_transformed_y_array = np.asarray(inverse_transformed_y, dtype='object')
-            return x, inverse_transformed_y_array, features
-        return x, inverse_transformed_y, features
+            return x, inverse_transformed_y_array, features  # type: ignore
+        return x, inverse_transformed_y, features  # type: ignore

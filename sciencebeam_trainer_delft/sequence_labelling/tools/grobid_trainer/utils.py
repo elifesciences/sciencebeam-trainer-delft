@@ -15,6 +15,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
+from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Features_Array,
+    T_Batch_Label_Array,
+    T_Batch_Token_Array
+)
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.io import (
@@ -96,7 +101,7 @@ def log_data_info(x: np.ndarray, y: np.ndarray, features: np.ndarray):
 def _load_data_and_labels_crf_files(
     input_paths: List[str],
     limit: int = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[T_Batch_Token_Array, T_Batch_Label_Array, T_Batch_Features_Array]:
     if len(input_paths) == 1:
         return load_data_and_labels_crf_file(input_paths[0], limit=limit)
     x_list = []
@@ -146,12 +151,13 @@ def get_clean_x_y_features(x: np.ndarray, y: np.ndarray, features: np.ndarray):
 
 
 def load_data_and_labels(
-        input_paths: List[str] = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        clean_features: bool = True,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        download_manager: DownloadManager = None):
+    input_paths: List[str] = None,
+    limit: int = None,
+    shuffle_input: bool = False,
+    clean_features: bool = True,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    download_manager: DownloadManager = None
+) -> Tuple[T_Batch_Token_Array, T_Batch_Label_Array, T_Batch_Features_Array]:
     assert download_manager
     assert input_paths
     LOGGER.info('loading data from: %s', input_paths)

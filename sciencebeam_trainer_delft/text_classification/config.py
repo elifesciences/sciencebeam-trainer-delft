@@ -38,8 +38,13 @@ class ModelConfig(_ModelConfig):
 
 class TrainingConfig(_TrainingConfig):
     def __init__(
-            self,
-            log_dir: str = None,
-            **kwargs):
+        self,
+        log_dir: str = None,
+        learning_rate: float = 0.001,
+        **kwargs
+    ):
         self.log_dir = log_dir
-        super().__init__(**kwargs)
+        super().__init__(
+            learning_rate=learning_rate,
+            **kwargs
+        )

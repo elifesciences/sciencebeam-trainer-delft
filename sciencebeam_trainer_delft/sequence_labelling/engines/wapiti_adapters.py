@@ -11,6 +11,7 @@ from delft.sequenceLabelling.reader import (
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import ClassificationResult
+from sciencebeam_trainer_delft.sequence_labelling.typing import T_Batch_Features
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.io import copy_file
 
@@ -214,7 +215,7 @@ class WapitiModelAdapter:
         assert not output_format, 'output_format not supported'
         return list(self.iter_tag(x, features))
 
-    def eval(self, x_test, y_test, features: np.ndarray = None):
+    def eval(self, x_test, y_test, features: Optional[T_Batch_Features] = None):
         self.eval_single(x_test, y_test, features=features)
 
     @property
@@ -224,10 +225,11 @@ class WapitiModelAdapter:
         }
 
     def get_evaluation_result(
-            self,
-            x_test: List[List[str]],
-            y_test: List[List[str]],
-            features: List[List[List[str]]] = None) -> ClassificationResult:
+        self,
+        x_test: List[List[str]],
+        y_test: List[List[str]],
+        features: Optional[T_Batch_Features] = None
+    ) -> ClassificationResult:
         tag_result = self.tag(x_test, features)
         y_true = [
             y_token
@@ -245,10 +247,11 @@ class WapitiModelAdapter:
         )
 
     def eval_single(
-            self,
-            x_test: List[List[str]],
-            y_test: List[List[str]],
-            features: List[List[List[str]]] = None):
+        self,
+        x_test: List[List[str]],
+        y_test: List[List[str]],
+        features: Optional[T_Batch_Features] = None
+    ):
         classification_result = self.get_evaluation_result(
             x_test=x_test,
             y_test=y_test,
@@ -365,19 +368,21 @@ class WapitiModelTrainAdapter:
         return self.get_model_adapter().model_summary_props
 
     def get_evaluation_result(
-            self,
-            x_test: List[List[str]],
-            y_test: List[List[str]],
-            features: List[List[List[str]]] = None) -> ClassificationResult:
+        self,
+        x_test: List[List[str]],
+        y_test: List[List[str]],
+        features: Optional[T_Batch_Features] = None
+    ) -> ClassificationResult:
         return self.get_model_adapter().get_evaluation_result(
             x_test, y_test, features=features
         )
 
     def eval(
-            self,
-            x_test: List[List[str]],
-            y_test: List[List[str]],
-            features: List[List[List[str]]] = None):
+        self,
+        x_test: List[List[str]],
+        y_test: List[List[str]],
+        features: Optional[T_Batch_Features] = None
+    ):
         self.get_model_adapter().eval(
             x_test, y_test, features=features
         )

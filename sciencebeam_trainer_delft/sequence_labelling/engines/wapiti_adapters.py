@@ -228,7 +228,7 @@ class WapitiModelAdapter:
         self,
         x_test: List[List[str]],
         y_test: List[List[str]],
-        features: Optional[T_Batch_Features] = None
+        features: T_Batch_Features
     ) -> ClassificationResult:
         tag_result = self.tag(x_test, features)
         y_true = [
@@ -250,7 +250,7 @@ class WapitiModelAdapter:
         self,
         x_test: List[List[str]],
         y_test: List[List[str]],
-        features: Optional[T_Batch_Features] = None
+        features: T_Batch_Features
     ):
         classification_result = self.get_evaluation_result(
             x_test=x_test,
@@ -373,7 +373,7 @@ class WapitiModelTrainAdapter:
         self,
         x_test: List[List[str]],
         y_test: List[List[str]],
-        features: Optional[T_Batch_Features] = None
+        features: T_Batch_Features
     ) -> ClassificationResult:
         return self.get_model_adapter().get_evaluation_result(
             x_test, y_test, features=features

@@ -1,6 +1,6 @@
 import logging
 import json
-from typing import Dict, List, Mapping, Type, Union
+from typing import Dict, List, Type, Union
 
 from keras.models import Model
 from keras.layers import (

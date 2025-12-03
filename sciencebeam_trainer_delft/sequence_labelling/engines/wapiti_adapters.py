@@ -11,7 +11,7 @@ from delft.sequenceLabelling.reader import (
 )
 
 from sciencebeam_trainer_delft.sequence_labelling.evaluation import ClassificationResult
-from sciencebeam_trainer_delft.sequence_labelling.typing import T_Batch_Features
+from sciencebeam_trainer_delft.sequence_labelling.typing import T_Batch_Features, T_Batch_Tokens
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.io import copy_file
 
@@ -226,7 +226,7 @@ class WapitiModelAdapter:
 
     def get_evaluation_result(
         self,
-        x_test: List[List[str]],
+        x_test: T_Batch_Tokens,
         y_test: List[List[str]],
         features: T_Batch_Features
     ) -> ClassificationResult:
@@ -248,7 +248,7 @@ class WapitiModelAdapter:
 
     def eval_single(
         self,
-        x_test: List[List[str]],
+        x_test: T_Batch_Tokens,
         y_test: List[List[str]],
         features: T_Batch_Features
     ):
@@ -371,7 +371,7 @@ class WapitiModelTrainAdapter:
 
     def get_evaluation_result(
         self,
-        x_test: List[List[str]],
+        x_test: T_Batch_Tokens,
         y_test: List[List[str]],
         features: T_Batch_Features
     ) -> ClassificationResult:

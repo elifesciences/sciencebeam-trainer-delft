@@ -3,6 +3,7 @@ import time
 from functools import partial
 from typing import List, Tuple
 
+import numpy as np
 import pandas as pd
 
 import delft.textClassification.models
@@ -85,9 +86,10 @@ def load_input_data(
 
 
 def load_label_data(
-        input_paths: List[str],
-        download_manager: DownloadManager,
-        limit: int = None) -> Tuple[List[List[str]], List[str]]:
+    input_paths: List[str],
+    download_manager: DownloadManager,
+    limit: int = None
+) -> Tuple[np.ndarray, List[str]]:
     assert len(input_paths) == 1
     LOGGER.info('loading data: %s', input_paths)
     downloaded_input_paths = get_downloaded_input_paths(

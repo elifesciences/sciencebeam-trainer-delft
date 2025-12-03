@@ -35,6 +35,10 @@ TAG_OUTPUT_FORMATS = [
     TagOutputFormats.XML_DIFF,
 ]
 
+T_Token_Label_Tuple = Tuple[str, str]
+T_Document_Token_Label_Tuple_List = Sequence[T_Token_Label_Tuple]
+T_Batch_Token_Label_Tuple_List = Sequence[T_Document_Token_Label_Tuple_List]
+
 
 class CustomJsonEncoder(json.JSONEncoder):
     def default(self, obj):  # pylint: disable=arguments-differ, method-hidden
@@ -46,7 +50,7 @@ class CustomJsonEncoder(json.JSONEncoder):
 def get_tag_result(
     texts: T_Batch_Token_Array_Or_List,
     labels: T_Batch_Label_Array_Or_List
-) -> Sequence[Sequence[Tuple[str, str]]]:
+) -> T_Batch_Token_Label_Tuple_List:
     return [
         list(zip(doc_texts, doc_labels))
         for doc_texts, doc_labels in zip(texts, labels)
@@ -153,7 +157,7 @@ def split_lines_with_line_feed(text: str, line_feed: str = '\n') -> List[str]:
 
 def iter_format_document_tag_result_as_data_unidiff(
     document_tag_result: List[Tuple[str, str]],
-    document_expected_tag_result: List[Tuple[str, str]],
+    document_expected_tag_result: T_Document_Token_Label_Tuple_List,
     document_features: List[List[str]],
     document_name: str
 ) -> Iterable[str]:
@@ -177,7 +181,7 @@ def iter_format_document_tag_result_as_data_unidiff(
 
 def iter_format_document_list_tag_result_as_data_unidiff(
     tag_result: Iterable[List[Tuple[str, str]]],
-    expected_tag_result: List[List[Tuple[str, str]]],
+    expected_tag_result: T_Batch_Token_Label_Tuple_List,
     features: np.ndarray,
     document_name_prefix: str
 ) -> Iterable[str]:
@@ -192,7 +196,7 @@ def iter_format_document_list_tag_result_as_data_unidiff(
 
 def iter_format_list_tag_result_as_data_unidiff(
     tag_result: Iterable[List[Tuple[str, str]]],
-    expected_tag_result: List[List[Tuple[str, str]]],
+    expected_tag_result: T_Batch_Token_Label_Tuple_List,
     texts: np.ndarray = None,  # pylint: disable=unused-argument
     features: np.ndarray = None,
     model_name: str = None  # pylint: disable=unused-argument
@@ -320,7 +324,7 @@ def iter_format_list_tag_result_as_xml_diff(
 def iter_format_list_tag_result(
         *args,
         output_format: str,
-        expected_tag_result: Optional[List[List[Tuple[str, str]]]] = None,
+        expected_tag_result: Optional[T_Batch_Token_Label_Tuple_List] = None,
         **kwargs) -> Iterable[str]:
     if output_format == TagOutputFormats.JSON:
         yield format_list_tag_result_as_json(*args, **kwargs)
@@ -356,7 +360,7 @@ def iter_format_list_tag_result(
 def iter_format_tag_result(
         tag_result: Union[dict, list, Iterable],
         output_format: str,
-        expected_tag_result: Optional[List[List[Tuple[str, str]]]] = None,
+        expected_tag_result: Optional[T_Batch_Token_Label_Tuple_List] = None,
         texts: np.ndarray = None,
         features: np.ndarray = None,
         model_name: str = None) -> Iterable[str]:

@@ -9,6 +9,7 @@ import numpy as np
 from delft.sequenceLabelling.evaluation import get_entities
 
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Features_Array,
     T_Batch_Label_Array_Or_List,
     T_Batch_Token_Array_Or_List
 )
@@ -182,7 +183,7 @@ def iter_format_document_tag_result_as_data_unidiff(
 def iter_format_document_list_tag_result_as_data_unidiff(
     tag_result: Iterable[List[Tuple[str, str]]],
     expected_tag_result: T_Batch_Token_Label_Tuple_List,
-    features: np.ndarray,
+    features: T_Batch_Features_Array,
     document_name_prefix: str
 ) -> Iterable[str]:
     for document_index, document_tag_result in enumerate(tag_result):
@@ -197,11 +198,12 @@ def iter_format_document_list_tag_result_as_data_unidiff(
 def iter_format_list_tag_result_as_data_unidiff(
     tag_result: Iterable[List[Tuple[str, str]]],
     expected_tag_result: T_Batch_Token_Label_Tuple_List,
-    texts: np.ndarray = None,  # pylint: disable=unused-argument
-    features: np.ndarray = None,
-    model_name: str = None  # pylint: disable=unused-argument
+    texts: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    features: Optional[T_Batch_Features_Array] = None,
+    model_name: Optional[str] = None
 ) -> Iterable[str]:
     assert expected_tag_result
+    assert features is not None
     document_name_prefix = 'document_'
     if model_name:
         document_name_prefix = model_name + '_' + document_name_prefix
@@ -307,7 +309,7 @@ def format_list_tag_result_as_xml(*args, **kwargs) -> str:
 
 def iter_format_list_tag_result_as_xml_diff(
     tag_result: Iterable[List[Tuple[str, str]]],
-    expected_tag_result: List[List[Tuple[str, str]]],
+    expected_tag_result: T_Batch_Token_Label_Tuple_List,
     texts: np.ndarray = None,  # pylint: disable=unused-argument
     features: np.ndarray = None,  # pylint: disable=unused-argument
     model_name: str = None  # pylint: disable=unused-argument

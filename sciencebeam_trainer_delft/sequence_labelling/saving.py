@@ -273,6 +273,7 @@ class ModelLoader(_BaseModelSaverLoader):
             )
 
     def load_preprocessor_from_json_file(self, filepath: str):
+        install_legacy_preprocessor_class_for_pickle()
         LOGGER.info('loading preprocessor json from %s', filepath)
         return get_preprocessor_for_json(json.loads(
             read_text(filepath)

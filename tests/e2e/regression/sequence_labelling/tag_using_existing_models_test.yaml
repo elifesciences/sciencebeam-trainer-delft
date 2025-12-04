@@ -39,3 +39,9 @@ test_tag_using_existing_model:
         regex: '.{40,}'
       - tag: abstract
         regex: '.{200,}'
+  - id: segmentation_sciencebeam_parser_2021_05_11
+    model_path: https://github.com/elifesciences/sciencebeam-models/releases/download/biorxiv-grobid/2021-05-11-delft-grobid-segmentation-biorxiv-10k-auto-v0.0.23-train-1966-e133.tar.gz
+    input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/2020-09-10-biorxiv-10k-segmentation-train-1928-auto-v0.0.9-delft.gz
+    expected_tags:
+      - tag: header
+        regex: '.{40,}'

@@ -31,3 +31,11 @@ test_tag_using_existing_model:
         regex: '.{40,}'
       - tag: abstract
         regex: '.{200,}'
+  - id: header_sciencebeam_parser_2020_10_04
+    model_path: https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/2020-10-04-delft-grobid-header-biorxiv-no-word-embedding.tar.gz
+    input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz
+    expected_tags:
+      - tag: title
+        regex: '.{40,}'
+      - tag: abstract
+        regex: '.{200,}'

@@ -1,5 +1,5 @@
 test_tag_using_existing_model:
-  - id: header_0_5_6
+  - id: header_grobid_0_5_6_bidlstm_crf
     model_path: https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/
     input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz
     expected_tags:
@@ -7,7 +7,7 @@ test_tag_using_existing_model:
         regex: '.{40,}'
       - tag: abstract
         regex: '.{200,}'
-  - id: header_0_6_0
+  - id: header_grobid_0_6_0_bidlstm_crf
     model_path: https://github.com/kermitt2/grobid/raw/0.6.0/grobid-home/models/header/
     input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz
     expected_tags:
@@ -15,7 +15,7 @@ test_tag_using_existing_model:
         regex: '.{40,}'
       - tag: abstract
         regex: '.{200,}'
-  - id: header_0_7_0
+  - id: header_grobid_0_7_0_bidlstm_crf
     model_path: https://github.com/kermitt2/grobid/raw/0.7.0/grobid-home/models/header-BidLSTM_CRF/
     input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz
     expected_tags:
@@ -23,7 +23,7 @@ test_tag_using_existing_model:
         regex: '.{40,}'
       - tag: abstract
         regex: '.{200,}'
-  - id: header_0_8_2
+  - id: header_grobid_0_8_2_bidlstm_crf
     model_path: https://github.com/kermitt2/grobid/raw/0.8.2/grobid-home/models/header-BidLSTM_CRF/
     input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz
     expected_tags:

@@ -57,3 +57,25 @@ test_tag_using_existing_model:
     expected_tags:
       - tag: paragraph
         regex: '.{40,}'
+  - id: figure_sciencebeam_parser_2021_05_11
+    model_path: https://github.com/elifesciences/sciencebeam-models/releases/download/biorxiv-grobid/2021-05-11-delft-grobid-figure-biorxiv-10k-auto-v0.0.18-train-1865-e219.tar.gz
+    input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-figure.train.gz
+    expected_tags: []
+  - id: table_sciencebeam_parser_2021_05_11
+    model_path: https://github.com/elifesciences/sciencebeam-models/releases/download/biorxiv-grobid/2021-05-11-delft-grobid-table-biorxiv-10k-auto-v0.0.18-train-1865-e569.tar.gz
+    input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-table.train.gz
+    expected_tags: []
+  - id: reference_segmenter_sciencebeam_parser_2020_10_04
+    model_path: https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/2020-10-04-delft-grobid-reference-segmenter-biorxiv-no-word-embedding.tar.gz
+    input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-reference-segmenter.train.gz
+    expected_tags:
+      - tag: reference
+        regex: '.{10,}'
+  - id: citation_sciencebeam_parser_2020_10_04
+    model_path: https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/2020-10-04-delft-grobid-citation-biorxiv-no-word-embedding.tar.gz
+    input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-citation.train.gz
+    expected_tags:
+      - tag: title
+        regex: '.{10,}'
+      - tag: author
+        regex: '.{10,}'

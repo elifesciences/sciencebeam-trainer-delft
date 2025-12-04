@@ -117,15 +117,15 @@ def get_preprocessor_for_json(preprocessor_json: dict) -> DelftWordPreprocessor:
     if isinstance(preprocessor, str):
         LOGGER.debug('preprocessor: %r', preprocessor)
     if isinstance(preprocessor, DelftWordPreprocessor):
+        if isinstance(preprocessor.feature_preprocessor, dict):
+            preprocessor.feature_preprocessor = get_feature_preprocessor_for_json(
+                preprocessor.feature_preprocessor
+            )
         if isinstance(preprocessor.indice_tag, dict):
             preprocessor.indice_tag = _convert_keys(
                 preprocessor.indice_tag,
                 int
             )
-    if isinstance(preprocessor.feature_preprocessor, dict):
-        preprocessor.feature_preprocessor = get_feature_preprocessor_for_json(
-            preprocessor.feature_preprocessor
-        )
     return preprocessor
 
 

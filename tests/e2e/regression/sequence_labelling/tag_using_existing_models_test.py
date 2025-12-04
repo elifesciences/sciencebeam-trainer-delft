@@ -4,10 +4,15 @@ import re
 from typing import Any, Sequence, TypedDict, Union
 import xml.etree.ElementTree as ET
 
+# from typing_extensions import NotRequired
+
 import pytest
 import yaml
 
-from sciencebeam_trainer_delft.sequence_labelling.tools.grobid_trainer.utils import tag_input
+from sciencebeam_trainer_delft.sequence_labelling.tools.grobid_trainer.utils import (
+    tag_input,
+    wapiti_tag_input
+)
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 
 from tests.test_utils import log_on_exception
@@ -47,6 +52,7 @@ class TagUsingExistingModelsTestCaseTypedDict(TypedDict):
     model_path: str
     input_path: str
     expected_tags: Sequence[ExpectedTagTypedDict]
+    # engine: NotRequired[Literal['wapiti', 'delft']]
 
 
 @pytest.fixture(name='download_manager', scope='session')
@@ -71,17 +77,28 @@ class TestTagUsingExistingModels:
     ):
         model_path = test_case['model_path']
         input_path = test_case['input_path']
+        engine = test_case.get('engine', 'delft')
         LOGGER.info('testing model: %s with input: %s', model_path, input_path)
         tag_output_path = tmp_path / 'tagged_output.xml'
-        tag_input(
-            model_name='dummy-model-name',
-            model_path=model_path,
-            input_paths=[input_path],
-            download_manager=download_manager,
-            limit=1,
-            tag_output_path=str(tag_output_path),
-            tag_output_format='xml'
-        )
+        if engine == 'wapiti':
+            wapiti_tag_input(
+                model_path=model_path,
+                input_paths=[input_path],
+                download_manager=download_manager,
+                limit=1,
+                tag_output_path=str(tag_output_path),
+                tag_output_format='xml'
+            )
+        else:
+            tag_input(
+                model_name='dummy-model-name',
+                model_path=model_path,
+                input_paths=[input_path],
+                download_manager=download_manager,
+                limit=1,
+                tag_output_path=str(tag_output_path),
+                tag_output_format='xml'
+            )
         tag_output_xml_str = tag_output_path.read_text(encoding='utf-8')
         assert tag_output_xml_str
         LOGGER.info('tagged output: %s', tag_output_xml_str[:500])

@@ -64,6 +64,11 @@ def migrate_legacy_preprocessor_state_if_necessary(
         assert isinstance(vocab_tag, dict)
         preprocessor.indice_tag = {i: t for t, i in vocab_tag.items()}
         LOGGER.info('migrated legacy preprocessor vocab_tag to indice_tag')
+    if hasattr(preprocessor, "indice_tag") and isinstance(preprocessor.indice_tag, dict):
+        preprocessor.indice_tag = _convert_keys(
+            preprocessor.indice_tag,
+            int
+        )
     if not hasattr(preprocessor, "return_bert_embeddings"):
         preprocessor.return_bert_embeddings = False
         LOGGER.info('migrated legacy preprocessor to add return_bert_embeddings=False')
@@ -121,11 +126,7 @@ def get_preprocessor_for_json(preprocessor_json: dict) -> DelftWordPreprocessor:
             preprocessor.feature_preprocessor = get_feature_preprocessor_for_json(
                 preprocessor.feature_preprocessor
             )
-        if isinstance(preprocessor.indice_tag, dict):
-            preprocessor.indice_tag = _convert_keys(
-                preprocessor.indice_tag,
-                int
-            )
+        preprocessor = migrate_legacy_preprocessor_state_if_necessary(preprocessor)
     return preprocessor
 
 

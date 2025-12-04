@@ -51,3 +51,9 @@ test_tag_using_existing_model:
     expected_tags:
       - tag: addrLine
         regex: '.{10,}'
+  - id: fulltext_sciencebeam_parser_2021_05_11
+    model_path: https://github.com/elifesciences/sciencebeam-models/releases/download/biorxiv-grobid/2021-05-11-delft-grobid-fulltext-biorxiv-10k-auto-v0.0.21-train-1986-e159.tar.gz
+    input_path: https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-fulltext.train.gz
+    expected_tags:
+      - tag: paragraph
+        regex: '.{40,}'

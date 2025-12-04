@@ -51,6 +51,25 @@ def _convert_keys(
     }
 
 
+def install_legacy_preprocessor_class_for_pickle() -> None:
+    if not hasattr(delft_preprocess, "WordPreprocessor"):
+        setattr(delft_preprocess, "WordPreprocessor", DelftWordPreprocessor)
+
+
+def migrate_legacy_preprocessor_state_if_necessary(
+    preprocessor: DelftWordPreprocessor
+) -> DelftWordPreprocessor:
+    if not hasattr(preprocessor, "indice_tag") and hasattr(preprocessor, "vocab_tag"):
+        vocab_tag = preprocessor.vocab_tag
+        assert isinstance(vocab_tag, dict)
+        preprocessor.indice_tag = {i: t for t, i in vocab_tag.items()}
+        LOGGER.info('migrated legacy preprocessor vocab_tag to indice_tag')
+    if not hasattr(preprocessor, "return_bert_embeddings"):
+        preprocessor.return_bert_embeddings = False
+        LOGGER.info('migrated legacy preprocessor to add return_bert_embeddings=False')
+    return preprocessor
+
+
 def get_feature_preprocessor_json(
         feature_preprocessor: T_FeaturesPreprocessor) -> dict:
     if not isinstance(feature_preprocessor, DelftFeaturesPreprocessor):
@@ -209,25 +228,6 @@ class ModelSaver(_BaseModelSaverLoader):
             checkpoint_directory=checkpoint_directory,
             epoch=epoch
         )
-
-
-def install_legacy_preprocessor_class_for_pickle() -> None:
-    if not hasattr(delft_preprocess, "WordPreprocessor"):
-        setattr(delft_preprocess, "WordPreprocessor", DelftWordPreprocessor)
-
-
-def migrate_legacy_preprocessor_state_if_necessary(
-    preprocessor: DelftWordPreprocessor
-) -> DelftWordPreprocessor:
-    if not hasattr(preprocessor, "indice_tag") and hasattr(preprocessor, "vocab_tag"):
-        vocab_tag = preprocessor.vocab_tag
-        assert isinstance(vocab_tag, dict)
-        preprocessor.indice_tag = {i: t for t, i in vocab_tag.items()}
-        LOGGER.info('migrated legacy preprocessor vocab_tag to indice_tag')
-    if not hasattr(preprocessor, "return_bert_embeddings"):
-        preprocessor.return_bert_embeddings = False
-        LOGGER.info('migrated legacy preprocessor to add return_bert_embeddings=False')
-    return preprocessor
 
 
 class ModelLoader(_BaseModelSaverLoader):

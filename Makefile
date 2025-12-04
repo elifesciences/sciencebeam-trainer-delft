@@ -55,7 +55,7 @@ PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 SLOW_PYTEST_ARGS = -m 'slow'
 
-WAPITI_SOURCE_DOWNLOAD_URL = https://github.com/kermitt2/Wapiti/archive/5f9a52351fddf21916008daa4becd41d56e7f608.tar.gz
+WAPITI_SOURCE_DOWNLOAD_URL = https://github.com/kermitt2/Wapiti/archive/a9c25d2bcccd60f1a54a7019689bd5229e866f00.tar.gz
 
 SYSTEM_PYTHON = python3
 

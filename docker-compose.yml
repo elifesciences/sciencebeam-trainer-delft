@@ -51,53 +51,53 @@ services:
     volumes:
       - data:/opt/sciencebeam-trainer-delft/data
 
-  # grobid with delft
-  grobid:
-    build:
-      context: .
-      dockerfile: Dockerfile.grobid
-      args:
-        base_image: ${BASE_GROBID_REPO}:${BASE_GROBID_TAG}
-    image: elifesciences/sciencebeam-trainer-delft-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
-    environment: *grobid-env
-    volumes:
-      - data:/data
-    ports:
-      - "${GROBID_PORT}:8070"
+  # # grobid with delft
+  # grobid:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.grobid
+  #     args:
+  #       base_image: ${BASE_GROBID_REPO}:${BASE_GROBID_TAG}
+  #   image: elifesciences/sciencebeam-trainer-delft-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
+  #   environment: *grobid-env
+  #   volumes:
+  #     - data:/data
+  #   ports:
+  #     - "${GROBID_PORT}:8070"
 
-  # trainer grobid with delft (base image)
-  trainer-grobid-base:
-    build:
-      context: .
-      dockerfile: Dockerfile.grobid
-      args:
-        base_image: ${BASE_TRAINER_GROBID_REPO}:${BASE_TRAINER_GROBID_TAG}
-        grobid_home: /opt/grobid-source/grobid-home
-        grobid_config: /opt/grobid-source/grobid-home/config/grobid.properties
-    image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
+  # # trainer grobid with delft (base image)
+  # trainer-grobid-base:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.grobid
+  #     args:
+  #       base_image: ${BASE_TRAINER_GROBID_REPO}:${BASE_TRAINER_GROBID_TAG}
+  #       grobid_home: /opt/grobid-source/grobid-home
+  #       grobid_config: /opt/grobid-source/grobid-home/config/grobid.properties
+  #   image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
 
-  # trainer grobid with delft
-  trainer-grobid:
-    build:
-      context: .
-      dockerfile: Dockerfile.trainer-grobid
-      args:
-        base_image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
-    image: elifesciences/sciencebeam-trainer-delft-trainer-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
-    depends_on:
-      - trainer-grobid-base
-    environment: *grobid-env
-    volumes:
-      - data:/data
+  # # trainer grobid with delft
+  # trainer-grobid:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.trainer-grobid
+  #     args:
+  #       base_image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
+  #   image: elifesciences/sciencebeam-trainer-delft-trainer-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
+  #   depends_on:
+  #     - trainer-grobid-base
+  #   environment: *grobid-env
+  #   volumes:
+  #     - data:/data
 
-  jupyter:
-    build:
-      context: .
-      dockerfile: Dockerfile.jupyter
-    image: elifesciences/sciencebeam-trainer-delft-jupyter:${IMAGE_TAG}
-    command: start-notebook.sh --NotebookApp.token=''
-    ports:
-      - "${SCIENCEBEAM_JUPYTER_PORT}:8888"
+  # jupyter:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.jupyter
+  #   image: elifesciences/sciencebeam-trainer-delft-jupyter:${IMAGE_TAG}
+  #   command: start-notebook.sh --NotebookApp.token=''
+  #   ports:
+  #     - "${SCIENCEBEAM_JUPYTER_PORT}:8888"
 
 volumes:
   data:

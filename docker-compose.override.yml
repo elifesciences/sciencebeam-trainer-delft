@@ -8,26 +8,26 @@ services:
       - ~/.config/gcloud:/root/.config/gcloud
       - ${LOCAL_DATA_DIR}:/opt/sciencebeam-trainer-delft/data
 
-  grobid:
-    volumes:
-      - ./sciencebeam_trainer_delft:/opt/sciencebeam-trainer-delft/sciencebeam_trainer_delft
-      - ./config/dev/grobid-service/config.yaml:/opt/grobid/grobid-service/config/config.yaml
-      - ./data/grobid-logs:/opt/grobid/logs
-      - ${LOCAL_DATA_DIR}:/data
-      - ./embedding-registry.json:/opt/sciencebeam-trainer-delft/embedding-registry.json
-      - ~/.config/gcloud:/root/.config/gcloud
+  # grobid:
+  #   volumes:
+  #     - ./sciencebeam_trainer_delft:/opt/sciencebeam-trainer-delft/sciencebeam_trainer_delft
+  #     - ./config/dev/grobid-service/config.yaml:/opt/grobid/grobid-service/config/config.yaml
+  #     - ./data/grobid-logs:/opt/grobid/logs
+  #     - ${LOCAL_DATA_DIR}:/data
+  #     - ./embedding-registry.json:/opt/sciencebeam-trainer-delft/embedding-registry.json
+  #     - ~/.config/gcloud:/root/.config/gcloud
 
-  trainer-grobid:
-    volumes:
-      - ./sciencebeam_trainer_delft:/opt/sciencebeam-trainer-delft/sciencebeam_trainer_delft
-      - ${LOCAL_DATA_DIR}:/data
-      - ./embedding-registry.json:/opt/sciencebeam-trainer-delft/embedding-registry.json
-      - ~/.config/gcloud:/root/.config/gcloud
+  # trainer-grobid:
+  #   volumes:
+  #     - ./sciencebeam_trainer_delft:/opt/sciencebeam-trainer-delft/sciencebeam_trainer_delft
+  #     - ${LOCAL_DATA_DIR}:/data
+  #     - ./embedding-registry.json:/opt/sciencebeam-trainer-delft/embedding-registry.json
+  #     - ~/.config/gcloud:/root/.config/gcloud
 
-  jupyter:
-    environment:
-      - NB_UID=${NB_UID}
-      - NB_GID=${NB_GID}
-    volumes:
-      - .:/home/jovyan/sciencebeam-trainer-delft
-      - ~/.config/gcloud:/home/jovyan/.config/gcloud
+  # jupyter:
+  #   environment:
+  #     - NB_UID=${NB_UID}
+  #     - NB_GID=${NB_GID}
+  #   volumes:
+  #     - .:/home/jovyan/sciencebeam-trainer-delft
+  #     - ~/.config/gcloud:/home/jovyan/.config/gcloud

@@ -3,7 +3,7 @@ name = "sciencebeam-trainer-delft"
 version = "0.0.0"
 description = "ScienceBeam Trainer DeLFT"
 readme = "README.md"
-requires-python = ">=3.9.17"
+requires-python = ">=3.9"
 dependencies = [
     "jsonpickle>=1.4.1",
 ]
@@ -30,4 +30,4 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["sciencebeam_trainer_delft"]
+include = ["sciencebeam_trainer_delft*"]

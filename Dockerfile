@@ -35,7 +35,7 @@ RUN uv venv "${VENV}"
 
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --active --locked --all-extras --all-groups
+RUN uv sync --active --frozen --all-extras --all-groups
 
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
 COPY README.md ./

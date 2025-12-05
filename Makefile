@@ -76,7 +76,7 @@ venv-create:
 
 
 dev-install:
-	$(UV) sync --active --locked --all-extras --all-groups
+	$(UV) sync --active --frozen --all-extras --all-groups
 
 
 dev-venv: venv-create dev-install

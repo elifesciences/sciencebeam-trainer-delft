@@ -30,4 +30,4 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["sciencebeam_trainer_delft"]
+include = ["sciencebeam_trainer_delft*"]

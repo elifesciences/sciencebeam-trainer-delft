@@ -1,8 +1,8 @@
-ARG base_image=
-FROM ${base_image}
+# ARG base_image=
+# FROM ${base_image}
 
-ENV GROBID__DELFT__TRAIN__MODULE=sciencebeam_trainer_delft/sequence_labelling/grobid_trainer.py
-ENV GROBID_MODELS_DIRECTORY=/opt/grobid-source/grobid-home/models
+# ENV GROBID__DELFT__TRAIN__MODULE=sciencebeam_trainer_delft/sequence_labelling/grobid_trainer.py
+# ENV GROBID_MODELS_DIRECTORY=/opt/grobid-source/grobid-home/models
 
-# reset entrypoint (we don't have tini in the trainer image)
-ENTRYPOINT ["/opt/sciencebeam-trainer-delft/entrypoint.sh"]
+# # reset entrypoint (we don't have tini in the trainer image)
+# ENTRYPOINT ["/opt/sciencebeam-trainer-delft/entrypoint.sh"]

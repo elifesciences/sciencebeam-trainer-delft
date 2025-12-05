@@ -256,17 +256,17 @@ class Trainer(_Trainer):
 
         LOGGER.debug('Training model with config: %s', vars(self.model_config))
         if self.model_config.use_crf and not self.model_config.use_chain_crf:
-            LOGGER.debug('Compiling model with CRF loss')
+            LOGGER.info('Compiling model with CRF loss')
             self.model.compile(optimizer='adam')
         elif self.model_config.use_crf and self.model_config.use_chain_crf:
-            LOGGER.debug('Compiling model with Chain CRF loss')
+            LOGGER.info('Compiling model with Chain CRF loss')
             chain_crf: ChainCRF = self.model.crf  # type: ignore
             self.model.compile(
                 loss=chain_crf.loss,
                 optimizer='adam'
             )
         else:
-            LOGGER.debug('Compiling model with categorical crossentropy loss')
+            LOGGER.info('Compiling model with categorical crossentropy loss')
             self.model.compile(
                 loss='categorical_crossentropy',
                 optimizer='adam'

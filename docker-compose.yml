@@ -1,5 +1,3 @@
-version: '3.4'
-
 x-grobid-env:
     &grobid-env
       - OVERRIDE_MODELS=${OVERRIDE_MODELS}

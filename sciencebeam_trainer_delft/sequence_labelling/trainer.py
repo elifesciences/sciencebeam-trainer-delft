@@ -4,12 +4,12 @@ from typing import List, NamedTuple, Optional
 
 import numpy as np
 
+import tensorflow as tf
 from keras.callbacks import ProgbarLogger
 
 from delft.sequenceLabelling.preprocess import (
     Preprocessor as DelftWordPreprocessor
 )
-from delft.utilities.crf_layer import ChainCRF
 from delft.sequenceLabelling.evaluation import (
     f1_score,
     accuracy_score,
@@ -256,21 +256,11 @@ class Trainer(_Trainer):
 
         LOGGER.debug('Training model with config: %s', vars(self.model_config))
         if self.model_config.use_crf and not self.model_config.use_chain_crf:
-            LOGGER.info('Compiling model with CRF loss')
-            self.model.compile(optimizer='adam')
-        elif self.model_config.use_crf and self.model_config.use_chain_crf:
-            LOGGER.info('Compiling model with Chain CRF loss')
-            chain_crf: ChainCRF = self.model.crf  # type: ignore
-            self.model.compile(
-                loss=chain_crf.loss,
-                optimizer='adam'
-            )
-        else:
-            LOGGER.info('Compiling model with categorical crossentropy loss')
-            self.model.compile(
-                loss='categorical_crossentropy',
-                optimizer='adam'
-            )
+            LOGGER.info('Enabling eager execution for CRF training')
+            # Note: this avoids "indicates an invalid graph that escaped type checking"
+            tf.config.run_functions_eagerly(True)
+        self.model = self.compile_model(self.model, len(x_train))
+
         self.model = self.train_model(
             self.model, x_train, y_train, x_valid, y_valid,
             self.training_config.max_epoch,

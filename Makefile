@@ -2,10 +2,10 @@ DOCKER_COMPOSE_DEV = docker-compose
 DOCKER_COMPOSE_CI = docker-compose -f docker-compose.yml
 DOCKER_COMPOSE = $(DOCKER_COMPOSE_DEV)
 
-VENV = venv
-PIP = VIRTUAL_ENV=./venv uv pip
-# PIP = $(VENV)/bin/pip
-PYTHON = $(VENV)/bin/python
+VENV = .venv
+UV = VIRTUAL_ENV=$(VENV) uv
+PIP = $(UV) pip
+PYTHON = PATH=$(VENV)/bin:$$PATH $(VENV)/bin/python
 
 BATCH_SIZE = 10
 MAX_EPOCH = 1
@@ -72,33 +72,26 @@ venv-clean:
 
 
 venv-create:
-	$(SYSTEM_PYTHON) -m venv $(VENV)
+	$(UV) venv $(VENV)
 
 
 dev-install:
-	$(PIP) install -r requirements.build.txt
-	$(PIP) install \
-		-r requirements.txt \
-		-r requirements.cpu.txt \
-		-r requirements.dev.txt \
-		-r requirements.delft.txt
-# 	$(PIP) install -r requirements.jep.txt
-# 	$(PIP) install -e . --no-deps
+	$(UV) sync --active --locked --all-extras --all-groups
 
 
 dev-venv: venv-create dev-install
 
 
 dev-flake8:
-	$(PYTHON) -m flake8 sciencebeam_trainer_delft tests setup.py
+	$(PYTHON) -m flake8 sciencebeam_trainer_delft tests
 
 
 dev-pylint:
-	$(PYTHON) -m pylint sciencebeam_trainer_delft tests setup.py
+	$(PYTHON) -m pylint sciencebeam_trainer_delft tests
 
 
 dev-mypy:
-	$(PYTHON) -m mypy --ignore-missing-imports sciencebeam_trainer_delft tests setup.py $(ARGS)
+	$(PYTHON) -m mypy --ignore-missing-imports sciencebeam_trainer_delft tests $(ARGS)
 
 
 dev-lint: dev-flake8 dev-pylint dev-mypy
@@ -119,14 +112,6 @@ dev-watch-slow:
 
 
 dev-test: dev-lint dev-pytest
-
-
-dev-remove-dist:
-	rm -rf ./dist
-
-
-dev-build-dist:
-	$(PYTHON) setup.py sdist bdist_wheel
 
 
 dev-install-wapiti:
@@ -154,15 +139,15 @@ shell-dev:
 
 
 pylint:
-	$(DELFT_DEV_RUN) pylint sciencebeam_trainer_delft tests setup.py
+	$(DELFT_DEV_RUN) pylint sciencebeam_trainer_delft tests
 
 
 flake8:
-	$(DELFT_DEV_RUN) flake8 sciencebeam_trainer_delft tests setup.py
+	$(DELFT_DEV_RUN) flake8 sciencebeam_trainer_delft tests
 
 
 mypy:
-	$(DELFT_DEV_RUN) mypy --ignore-missing-imports sciencebeam_trainer_delft tests setup.py
+	$(DELFT_DEV_RUN) mypy --ignore-missing-imports sciencebeam_trainer_delft tests
 
 
 pytest:
@@ -187,10 +172,6 @@ watch-slow:
 
 watch:
 	@$(MAKE) PYTEST_ARGS="$(PYTEST_ARGS) $(NOT_SLOW_PYTEST_ARGS)" .watch
-
-
-test-setup-install:
-	$(DELFT_RUN) python setup.py install
 
 
 lint: \

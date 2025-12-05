@@ -1,42 +1,40 @@
-version: '3.4'
-
-x-grobid-env:
-    &grobid-env
-      - OVERRIDE_MODELS=${OVERRIDE_MODELS}
-      - OVERRIDE_MODEL_1=${OVERRIDE_MODEL_1}
-      - OVERRIDE_MODEL_2=${OVERRIDE_MODEL_2}
-      - OVERRIDE_MODEL_3=${OVERRIDE_MODEL_3}
-      - OVERRIDE_MODEL_4=${OVERRIDE_MODEL_4}
-      - OVERRIDE_MODEL_5=${OVERRIDE_MODEL_5}
-      - OVERRIDE_MODEL_6=${OVERRIDE_MODEL_6}
-      - OVERRIDE_MODEL_7=${OVERRIDE_MODEL_7}
-      - OVERRIDE_PDFALTO=${OVERRIDE_PDFALTO}
-      - OVERRIDE_EMBEDDING_URL=${OVERRIDE_EMBEDDING_URL}
-      - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
-      - EMBEDDING_LMDB_PATH=${EMBEDDING_LMDB_PATH}
-      - PRELOAD_EMBEDDING=${PRELOAD_EMBEDDING}
-      - GROBID__HEADER__USE_HEURISTICS=${GROBID__HEADER__USE_HEURISTICS}
-      - GROBID__HEADER__USE_LABELED_ABSTRACT=${GROBID__HEADER__USE_LABELED_ABSTRACT}
-      - GROBID__FEATURES__REMOVE_LINE_NUMBERS=${GROBID__FEATURES__REMOVE_LINE_NUMBERS}
-      - GROBID__FEATURES__SEGMENTATION_WHOLE_LINE_FEATURE=${GROBID__FEATURES__SEGMENTATION_WHOLE_LINE_FEATURE}
-      - ORG__GROBID__MAX__CONNECTIONS=${ORG__GROBID__MAX__CONNECTIONS}
-      - SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH=${SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH}
-      - SCIENCEBEAM_DELFT_INPUT_WINDOW_STRIDE=${SCIENCEBEAM_DELFT_INPUT_WINDOW_STRIDE}
-      - SCIENCEBEAM_DELFT_BATCH_SIZE=${SCIENCEBEAM_DELFT_BATCH_SIZE}
-      - SCIENCEBEAM_DELFT_STATEFUL=${SCIENCEBEAM_DELFT_STATEFUL}
-      - SCIENCEBEAM_DELFT_TAGGING_DEBUG_OUT=${SCIENCEBEAM_DELFT_TAGGING_DEBUG_OUT}
-      - GROBID__3RDPARTY__PDF2XML__MEMORY__TIMEOUT__SEC=${GROBID__3RDPARTY__PDF2XML__MEMORY__TIMEOUT__SEC}
-      - GROBID__PDF__BLOCKS__MAX=${GROBID__PDF__BLOCKS__MAX}
-      - GROBID__PDF__TOKENS__MAX=${GROBID__PDF__TOKENS__MAX}
-      - GROBID__CRF__ENGINE=${GROBID__CRF__ENGINE}
-      - GROBID__CRF__ENGINE__SEGMENTATION=${GROBID__CRF__ENGINE__SEGMENTATION}
-      - GROBID__CRF__ENGINE__HEADER=${GROBID__CRF__ENGINE__HEADER}
-      - GROBID__CRF__ENGINE__AFFILIATION_ADDRESS=${GROBID__CRF__ENGINE__AFFILIATION_ADDRESS}
-      - GROBID__CRF__ENGINE__FULLTEXT=${GROBID__CRF__ENGINE__FULLTEXT}
-      - GROBID__CRF__ENGINE__REFERENCE_SEGMENTER=${GROBID__CRF__ENGINE__REFERENCE_SEGMENTER}
-      - GROBID__CRF__ENGINE__CITATION=${GROBID__CRF__ENGINE__CITATION}
-      - GROBID__CRF__ENGINE__FIGURE=${GROBID__CRF__ENGINE__FIGURE}
-      - GROBID__CRF__ENGINE__TABLE=${GROBID__CRF__ENGINE__TABLE}
+# x-grobid-env:
+#     &grobid-env
+#       - OVERRIDE_MODELS=${OVERRIDE_MODELS}
+#       - OVERRIDE_MODEL_1=${OVERRIDE_MODEL_1}
+#       - OVERRIDE_MODEL_2=${OVERRIDE_MODEL_2}
+#       - OVERRIDE_MODEL_3=${OVERRIDE_MODEL_3}
+#       - OVERRIDE_MODEL_4=${OVERRIDE_MODEL_4}
+#       - OVERRIDE_MODEL_5=${OVERRIDE_MODEL_5}
+#       - OVERRIDE_MODEL_6=${OVERRIDE_MODEL_6}
+#       - OVERRIDE_MODEL_7=${OVERRIDE_MODEL_7}
+#       - OVERRIDE_PDFALTO=${OVERRIDE_PDFALTO}
+#       - OVERRIDE_EMBEDDING_URL=${OVERRIDE_EMBEDDING_URL}
+#       - DISABLE_LMDB_CACHE=${DISABLE_LMDB_CACHE}
+#       - EMBEDDING_LMDB_PATH=${EMBEDDING_LMDB_PATH}
+#       - PRELOAD_EMBEDDING=${PRELOAD_EMBEDDING}
+#       - GROBID__HEADER__USE_HEURISTICS=${GROBID__HEADER__USE_HEURISTICS}
+#       - GROBID__HEADER__USE_LABELED_ABSTRACT=${GROBID__HEADER__USE_LABELED_ABSTRACT}
+#       - GROBID__FEATURES__REMOVE_LINE_NUMBERS=${GROBID__FEATURES__REMOVE_LINE_NUMBERS}
+#       - GROBID__FEATURES__SEGMENTATION_WHOLE_LINE_FEATURE=${GROBID__FEATURES__SEGMENTATION_WHOLE_LINE_FEATURE}
+#       - ORG__GROBID__MAX__CONNECTIONS=${ORG__GROBID__MAX__CONNECTIONS}
+#       - SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH=${SCIENCEBEAM_DELFT_MAX_SEQUENCE_LENGTH}
+#       - SCIENCEBEAM_DELFT_INPUT_WINDOW_STRIDE=${SCIENCEBEAM_DELFT_INPUT_WINDOW_STRIDE}
+#       - SCIENCEBEAM_DELFT_BATCH_SIZE=${SCIENCEBEAM_DELFT_BATCH_SIZE}
+#       - SCIENCEBEAM_DELFT_STATEFUL=${SCIENCEBEAM_DELFT_STATEFUL}
+#       - SCIENCEBEAM_DELFT_TAGGING_DEBUG_OUT=${SCIENCEBEAM_DELFT_TAGGING_DEBUG_OUT}
+#       - GROBID__3RDPARTY__PDF2XML__MEMORY__TIMEOUT__SEC=${GROBID__3RDPARTY__PDF2XML__MEMORY__TIMEOUT__SEC}
+#       - GROBID__PDF__BLOCKS__MAX=${GROBID__PDF__BLOCKS__MAX}
+#       - GROBID__PDF__TOKENS__MAX=${GROBID__PDF__TOKENS__MAX}
+#       - GROBID__CRF__ENGINE=${GROBID__CRF__ENGINE}
+#       - GROBID__CRF__ENGINE__SEGMENTATION=${GROBID__CRF__ENGINE__SEGMENTATION}
+#       - GROBID__CRF__ENGINE__HEADER=${GROBID__CRF__ENGINE__HEADER}
+#       - GROBID__CRF__ENGINE__AFFILIATION_ADDRESS=${GROBID__CRF__ENGINE__AFFILIATION_ADDRESS}
+#       - GROBID__CRF__ENGINE__FULLTEXT=${GROBID__CRF__ENGINE__FULLTEXT}
+#       - GROBID__CRF__ENGINE__REFERENCE_SEGMENTER=${GROBID__CRF__ENGINE__REFERENCE_SEGMENTER}
+#       - GROBID__CRF__ENGINE__CITATION=${GROBID__CRF__ENGINE__CITATION}
+#       - GROBID__CRF__ENGINE__FIGURE=${GROBID__CRF__ENGINE__FIGURE}
+#       - GROBID__CRF__ENGINE__TABLE=${GROBID__CRF__ENGINE__TABLE}
 
 services:
   # the main delft image that we are going to push
@@ -51,53 +49,53 @@ services:
     volumes:
       - data:/opt/sciencebeam-trainer-delft/data
 
-  # grobid with delft
-  grobid:
-    build:
-      context: .
-      dockerfile: Dockerfile.grobid
-      args:
-        base_image: ${BASE_GROBID_REPO}:${BASE_GROBID_TAG}
-    image: elifesciences/sciencebeam-trainer-delft-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
-    environment: *grobid-env
-    volumes:
-      - data:/data
-    ports:
-      - "${GROBID_PORT}:8070"
+  # # grobid with delft
+  # grobid:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.grobid
+  #     args:
+  #       base_image: ${BASE_GROBID_REPO}:${BASE_GROBID_TAG}
+  #   image: elifesciences/sciencebeam-trainer-delft-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
+  #   environment: *grobid-env
+  #   volumes:
+  #     - data:/data
+  #   ports:
+  #     - "${GROBID_PORT}:8070"
 
-  # trainer grobid with delft (base image)
-  trainer-grobid-base:
-    build:
-      context: .
-      dockerfile: Dockerfile.grobid
-      args:
-        base_image: ${BASE_TRAINER_GROBID_REPO}:${BASE_TRAINER_GROBID_TAG}
-        grobid_home: /opt/grobid-source/grobid-home
-        grobid_config: /opt/grobid-source/grobid-home/config/grobid.properties
-    image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
+  # # trainer grobid with delft (base image)
+  # trainer-grobid-base:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.grobid
+  #     args:
+  #       base_image: ${BASE_TRAINER_GROBID_REPO}:${BASE_TRAINER_GROBID_TAG}
+  #       grobid_home: /opt/grobid-source/grobid-home
+  #       grobid_config: /opt/grobid-source/grobid-home/config/grobid.properties
+  #   image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
 
-  # trainer grobid with delft
-  trainer-grobid:
-    build:
-      context: .
-      dockerfile: Dockerfile.trainer-grobid
-      args:
-        base_image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
-    image: elifesciences/sciencebeam-trainer-delft-trainer-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
-    depends_on:
-      - trainer-grobid-base
-    environment: *grobid-env
-    volumes:
-      - data:/data
+  # # trainer grobid with delft
+  # trainer-grobid:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.trainer-grobid
+  #     args:
+  #       base_image: elifesciences/sciencebeam-trainer-delft-trainer-grobid-base:${BASE_GROBID_TAG}-${IMAGE_TAG}
+  #   image: elifesciences/sciencebeam-trainer-delft-trainer-grobid:${BASE_GROBID_TAG}-${IMAGE_TAG}
+  #   depends_on:
+  #     - trainer-grobid-base
+  #   environment: *grobid-env
+  #   volumes:
+  #     - data:/data
 
-  jupyter:
-    build:
-      context: .
-      dockerfile: Dockerfile.jupyter
-    image: elifesciences/sciencebeam-trainer-delft-jupyter:${IMAGE_TAG}
-    command: start-notebook.sh --NotebookApp.token=''
-    ports:
-      - "${SCIENCEBEAM_JUPYTER_PORT}:8888"
+  # jupyter:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.jupyter
+  #   image: elifesciences/sciencebeam-trainer-delft-jupyter:${IMAGE_TAG}
+  #   command: start-notebook.sh --NotebookApp.token=''
+  #   ports:
+  #     - "${SCIENCEBEAM_JUPYTER_PORT}:8888"
 
 volumes:
   data:

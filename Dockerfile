@@ -31,41 +31,19 @@ WORKDIR ${PROJECT_FOLDER}
 ENV VENV=/opt/venv
 ENV VIRTUAL_ENV=${VENV} PYTHONUSERBASE=${VENV} PATH=${VENV}/bin:$PATH
 
-COPY requirements.build.txt ./
-RUN uv venv "${VENV}" \
-    && uv pip install -r requirements.build.txt
+RUN uv venv "${VENV}"
 
-COPY requirements.cpu.txt ./
-RUN uv pip install \
-    -r requirements.cpu.txt
 
-COPY requirements.txt ./
-RUN uv pip install \
-    -r requirements.cpu.txt \
-    -r requirements.txt
-
-COPY requirements.delft.txt ./
-RUN uv pip install \
-    -r requirements.cpu.txt \
-    -r requirements.txt \
-    -r requirements.delft.txt
-
-COPY requirements.dev.txt ./
-RUN uv pip install \
-    -r requirements.cpu.txt \
-    -r requirements.txt \
-    -r requirements.delft.txt \
-    -r requirements.dev.txt
+COPY pyproject.toml uv.lock ./
+RUN uv sync --active --locked --all-extras --all-groups
 
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
-COPY README.md MANIFEST.in setup.py ./
+COPY README.md ./
 
 COPY delft ./delft
 
 COPY .flake8 .pylintrc pytest.ini ./
 COPY tests ./tests
-
-COPY scripts/dev ./scripts/dev
 
 
 # python-dist-builder
@@ -73,8 +51,8 @@ FROM dev AS python-dist-builder
 
 ARG python_package_version
 RUN echo "Setting version to: $version" && \
-    ./scripts/dev/set-version.sh "$python_package_version"
-RUN python setup.py sdist && \
+    uv version "$python_package_version"
+RUN uv build && \
     ls -l dist
 
 
@@ -89,19 +67,19 @@ COPY --from=python-dist-builder /opt/sciencebeam-trainer-delft/dist /dist
 # lint-flake8
 FROM dev AS lint-flake8
 
-RUN python -m flake8 sciencebeam_trainer_delft tests setup.py
+RUN python -m flake8 sciencebeam_trainer_delft tests
 
 
 # lint-pylint
 FROM dev AS lint-pylint
 
-RUN python -m pylint sciencebeam_trainer_delft tests setup.py
+RUN python -m pylint sciencebeam_trainer_delft tests
 
 
 # lint-mypy
 FROM dev AS lint-mypy
 
-RUN python -m mypy --ignore-missing-imports sciencebeam_trainer_delft tests setup.py
+RUN python -m mypy --ignore-missing-imports sciencebeam_trainer_delft tests
 
 
 # pytest-not-slow

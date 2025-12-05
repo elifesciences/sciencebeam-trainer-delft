@@ -3,8 +3,13 @@ from typing import Dict, Iterable, List
 
 import numpy as np
 
+from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Features_Array,
+    T_Batch_Token_Array
+)
 
-def iter_flat_batch_tokens(batch_tokens: List[List[str]]):
+
+def iter_flat_batch_tokens(batch_tokens: T_Batch_Token_Array):
     return (
         token
         for doc_tokens in batch_tokens
@@ -12,7 +17,7 @@ def iter_flat_batch_tokens(batch_tokens: List[List[str]]):
     )
 
 
-def iter_flat_features(features: np.ndarray):
+def iter_flat_features(features: T_Batch_Features_Array):
     return (
         features_vector
         for features_doc in features

@@ -1,8 +1,12 @@
-from typing import Tuple, List
+from typing import Optional, Tuple, List
 
 import pandas as pd
 import numpy as np
 
+from sciencebeam_trainer_delft.text_classification.typing import (
+    T_Batch_Text_Array,
+    T_Batch_Text_Classes_Array
+)
 from sciencebeam_trainer_delft.utils.io import auto_uploading_output_file
 
 
@@ -17,9 +21,10 @@ def get_filepath_csv_separator(filepath: str):
 
 
 def load_data_frame(
-        filepath: str,
-        limit: int = None,
-        **kwargs) -> pd.DataFrame:
+    filepath: str,
+    limit: Optional[int] = None,
+    **kwargs
+) -> pd.DataFrame:
     sep = get_filepath_csv_separator(filepath)
     return pd.read_csv(filepath, nrows=limit, sep=sep, **kwargs)
 
@@ -35,7 +40,8 @@ def save_data_frame(
 
 
 def get_texts_and_classes_from_data_frame(
-        df: pd.DataFrame) -> Tuple[List[str], List[List[str]], List[str]]:
+    df: pd.DataFrame
+) -> Tuple[T_Batch_Text_Array, T_Batch_Text_Classes_Array, List[str]]:
     """
     Load texts and classes from a file in csv format using pandas dataframe:
 
@@ -66,9 +72,10 @@ def get_texts_and_classes_from_data_frame(
 
 
 def load_texts_and_classes_pandas(
-        filepath: str,
-        limit: int = None,
-        **kwargs) -> Tuple[List[str], List[List[str]], List[str]]:
+    filepath: str,
+    limit: int = None,
+    **kwargs
+) -> Tuple[T_Batch_Text_Array, T_Batch_Text_Classes_Array, List[str]]:
     """
     Load texts and classes from a file in csv format using pandas dataframe:
 
@@ -90,9 +97,10 @@ def load_texts_and_classes_pandas(
 
 
 def load_classes_pandas(
-        filepath: str,
-        limit: int = None,
-        **kwargs) -> Tuple[List[List[str]], List[str]]:
+    filepath: str,
+    limit: Optional[int] = None,
+    **kwargs
+) -> Tuple[np.ndarray, List[str]]:
     """
     Load texts and classes from a file in csv format using pandas dataframe:
 

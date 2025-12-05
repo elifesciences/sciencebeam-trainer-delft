@@ -252,8 +252,8 @@ class ClassificationResult:
 
 
 def classification_report(
-        y_true: Sequence[Union[str, List[str]]],
-        y_pred: Sequence[Union[str, List[str]]],
+        y_true: Sequence[Union[str, Sequence[str]]],
+        y_pred: Sequence[Union[str, Sequence[str]]],
         digits: int = 2,
         exclude_no_support: bool = False):
     return ClassificationResult(

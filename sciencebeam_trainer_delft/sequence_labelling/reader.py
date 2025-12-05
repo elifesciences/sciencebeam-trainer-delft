@@ -61,8 +61,9 @@ def iter_load_data_crf_lines(
 
 
 def load_data_and_labels_crf_lines(
-        lines: Iterable[str],
-        limit: int = None) -> Tuple[np.array, np.array, np.array]:
+    lines: Iterable[str],
+    limit: int = None
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Load data, features and label from a CRF matrix string
     the format is as follow:
@@ -99,8 +100,9 @@ def load_data_and_labels_crf_lines(
 
 
 def load_data_crf_lines(
-        lines: Iterable[str],
-        limit: int = None) -> Tuple[np.array, np.array]:
+    lines: Iterable[str],
+    limit: int = None
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Load data, features (no label!) from a CRF matrix file
     the format is as follow:
@@ -134,8 +136,9 @@ def load_data_crf_lines(
 
 
 def load_data_and_labels_crf_file(
-        filepath: str,
-        limit: int = None) -> Tuple[np.array, np.array, np.array]:
+    filepath: str,
+    limit: int = None
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     try:
         with open(filepath, 'r', encoding='utf-8') as fp:
             return load_data_and_labels_crf_lines(fp, limit=limit)
@@ -144,6 +147,7 @@ def load_data_and_labels_crf_file(
 
 
 def load_data_crf_string(
-        crf_string: str,
-        limit: int = None) -> Tuple[np.array, np.array]:
+    crf_string: str,
+    limit: int = None
+) -> Tuple[np.ndarray, np.ndarray]:
     return load_data_crf_lines(crf_string.splitlines(), limit=limit)

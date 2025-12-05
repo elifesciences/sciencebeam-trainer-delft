@@ -113,7 +113,12 @@ def get_transformed_features(sentence_features: List[str]):
     return np.stack([get_transformed_feature(feature) for feature in sentence_features])
 
 
-def preprocess_transform(X, y=None, extend=False):
+def preprocess_transform(
+    X,
+    y=None,
+    extend=False,
+    label_indices=False  # pylint: disable=unused-argument
+):
     X_extend = X
     if extend:
         LOGGER.debug('extending X: %s', X)
@@ -155,7 +160,6 @@ def _embeddings():
     embeddings = MagicMock(name='embeddings')
     embeddings.get_word_vector.side_effect = get_word_vector
     embeddings.use_ELMo = False
-    embeddings.use_BERT = False
     embeddings.embed_size = len(get_word_vector(WORD_1))
     return embeddings
 

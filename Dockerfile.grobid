@@ -57,7 +57,7 @@ COPY README.md MANIFEST.in setup.py ${PROJECT_FOLDER}/
 RUN pip install -e ${PROJECT_FOLDER} --no-deps
 
 # add embedding registry with download locations
-COPY config/embedding-registry.json ${PROJECT_FOLDER}/
+COPY delft ${PROJECT_FOLDER}/delft
 
 # disable python warnings (and fix logging)
 ENV PYTHONWARNINGS="ignore"

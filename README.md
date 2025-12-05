@@ -31,7 +31,7 @@ apt-get install libsqlite3-dev
 ```
 
 ```bash
-PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install --force 3.7.9
+PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install --force 3.9.17
 ```
 
 ## Example Notebooks
@@ -88,7 +88,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer --help
 ### Using Docker Image
 
 ```bash
-docker run --rm elifesciences/sciencebeam-trainer-delft_unstable \
+docker run --rm ghcr.io/elifesciences/sciencebeam-trainer-delft_unstable \
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer --help
 ```
 
@@ -102,7 +102,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="100" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --early-stopping-patience="3" \
     --max-epoch="50"
@@ -116,7 +116,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="100" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --early-stopping-patience="3" \
     --char-embedding-size="11" \
@@ -141,7 +141,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="100" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --early-stopping-patience="3" \
     --max-epoch="50"
@@ -155,7 +155,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="100" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --inputhttps://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --eval-input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --eval-limit="100" \
@@ -173,7 +173,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --no-embedding \
     --max-sequence-length="100" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --early-stopping-patience="3" \
     --max-epoch="50"
@@ -199,7 +199,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --no-embedding \
     --max-sequence-length="100" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --architecture="BidLSTM_CRF_FEATURES" \
     --use-features \
@@ -218,7 +218,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --no-embedding \
     --max-sequence-length="100" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --architecture="CustomBidLSTM_CRF_FEATURES" \
     --use-features \
@@ -237,7 +237,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --no-embedding \
     --max-sequence-length="100" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --architecture="CustomBidLSTM_CRF" \
     --use-features \
@@ -261,7 +261,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="10" \
     --no-embedding \
     --max-sequence-length="100" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-segmentation.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-segmentation.train.gz \
     --limit="100" \
     --architecture="CustomBidLSTM_CRF" \
     --use-features \
@@ -290,7 +290,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --additional-token-feature-indices="0" \
     --max-char-length="60" \
     --max-sequence-length="100" \
-    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-segmentation.train.gz" \
+    --input="https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-segmentation.train.gz" \
     --limit="100" \
     --early-stopping-patience="3" \
     --max-epoch="50"
@@ -383,7 +383,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --resume-train-model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --initial-epoch="10" \
     --batch-size="10" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --early-stopping-patience="3" \
     --max-epoch="50"
@@ -395,7 +395,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --resume-train-model-path="https://github.com/kermitt2/grobid/raw/0.5.6/grobid-home/models/header/" \
     --initial-epoch="10" \
     --batch-size="10" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --eval-input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --eval-limit="100" \
@@ -418,7 +418,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     header train \
     --auto-resume \
     --batch-size="10" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --checkpoint="./data/checkpoints/header-model" \
     --limit="100" \
     --early-stopping-patience="3" \
@@ -493,7 +493,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --batch-size="16" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="100" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --early-stopping-patience="3" \
     --max-epoch="50"
@@ -511,7 +511,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --max-sequence-length="100" \
     --input-window-stride="100" \
     --stateful \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --early-stopping-patience="3" \
     --max-epoch="50"
@@ -531,7 +531,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="100" \
     --input-window-stride="50" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="100" \
     --early-stopping-patience="3" \
     --max-epoch="50"
@@ -717,7 +717,7 @@ Currently you would need to either install [Wapiti](https://wapiti.limsi.fr/) an
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     header wapiti_train \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --wapiti-template=https://raw.githubusercontent.com/kermitt2/grobid/0.5.6/grobid-trainer/resources/dataset/header/crfpp-templates/header.template \
     --wapiti-install-source=https://github.com/kermitt2/Wapiti/archive/5f9a52351fddf21916008daa4becd41d56e7f608.tar.gz \
     --output="data/models" \
@@ -730,7 +730,7 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 ```bash
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     header wapiti_train_eval \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --eval-input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.test.gz \
     --wapiti-template=https://raw.githubusercontent.com/kermitt2/grobid/0.5.6/grobid-trainer/resources/dataset/header/crfpp-templates/header.template \
     --output="data/models" \
@@ -766,29 +766,20 @@ python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
 python -m sciencebeam_trainer_delft.sequence_labelling.grobid_trainer \
     input_info \
     --quiet \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz
 ```
 
 Result:
 
 ```text
-number of input sequences: 2538
-sequence lengths: {'q.00': 1, 'q.25': 61.0, 'q.50': 178.0, 'q.75': 300.75, 'q1.0': 6606}
-token lengths: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 7.0, 'q1.0': 142}
+number of input sequences: 744
+sequence lengths: {'q.00': 7, 'q.25': 233.75, 'q.50': 335.0, 'q.75': 509.5, 'q1.0': 3490}
+token lengths: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 7.0, 'q1.0': 96}
 number of features: 31
-inconsistent feature length counts: {31: 536893, 30: 12855}
-examples with feature length=31:
-die D Di Die Die e ie Die Die BLOCKSTART LINESTART NEWFONT HIGHERFONT 0 0 0 INITCAP NODIGIT 0 0 1 0 0 0 0 0 0 0 NOPUNCT 0 0
-abscheidung A Ab Abs Absc g ng ung dung BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0
-strömender s st str strö r er der nder BLOCKIN LINEIN SAMEFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 0 0 0 0 0 0 0 0 0 NOPUNCT 0 0
-examples with feature length=30:
-gudina G Gu Gud Gudi a na ina dina BLOCKSTART LINESTART LINEINDENT NEWFONT HIGHERFONT 0 0 0 INITCAP NODIGIT 0 0 0 0 0 0 0 0 NOPUNCT 0 0
-et e et et et t et et et BLOCKIN LINEIN LINEINDENT NEWFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 0 0 0 0 0 0 0 NOPUNCT 0 0
-al a al al al l al al al BLOCKIN LINEIN LINEINDENT SAMEFONT SAMEFONTSIZE 0 0 0 NOCAPS NODIGIT 0 1 0 0 0 0 0 0 NOPUNCT 0 0
-feature value lengths: {0: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 7.0, 'q1.0': 142}, 1: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 2: {'q.00': 1, 'q.25': 1.0, 'q.50': 2.0, 'q.75': 2.0, 'q1.0': 2}, 3: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 3.0, 'q1.0': 3}, 4: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 4.0, 'q1.0': 4}, 5: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 6: {'q.00': 1, 'q.25': 1.0, 'q.50': 2.0, 'q.75': 2.0, 'q1.0': 2}, 7: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 3.0, 'q1.0': 3}, 8: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 4.0, 'q1.0': 4}, 9: {'q.00': 7, 'q.25': 7.0, 'q.50': 7.0, 'q.75': 7.0, 'q1.0': 10}, 10: {'q.00': 6, 'q.25': 6.0, 'q.50': 6.0, 'q.75': 6.0, 'q1.0': 9}, 11: {'q.00': 7, 'q.25': 8.0, 'q.50': 8.0, 'q.75': 8.0, 'q1.0': 8}, 12: {'q.00': 9, 'q.25': 12.0, 'q.50': 12.0, 'q.75': 12.0, 'q1.0': 12}, 13: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 14: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 15: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 16: {'q.00': 6, 'q.25': 6.0, 'q.50': 6.0, 'q.75': 6.0, 'q1.0': 7}, 17: {'q.00': 7, 'q.25': 7.0, 'q.50': 7.0, 'q.75': 7.0, 'q1.0': 14}, 18: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 19: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 20: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 21: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 22: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 23: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 24: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 25: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 26: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 27: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 28: {'q.00': 3, 'q.25': 7.0, 'q.50': 7.0, 'q.75': 7.0, 'q1.0': 11}, 29: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 30: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}}
-feature counts: {0: 1000, 1: 247, 2: 1000, 3: 1000, 4: 1000, 5: 265, 6: 1000, 7: 1000, 8: 1000, 9: 3, 10: 3, 11: 2, 12: 3, 13: 2, 14: 2, 15: 2, 16: 3, 17: 3, 18: 2, 19: 2, 20: 2, 21: 1, 22: 1, 23: 2, 24: 2, 25: 1, 26: 2, 27: 2, 28: 8, 29: 1, 30: 1}
+feature value lengths: {0: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 7.0, 'q1.0': 96}, 1: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 2: {'q.00': 1, 'q.25': 1.0, 'q.50': 2.0, 'q.75': 2.0, 'q1.0': 2}, 3: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 3.0, 'q1.0': 3}, 4: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 4.0, 'q1.0': 4}, 5: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 6: {'q.00': 1, 'q.25': 1.0, 'q.50': 2.0, 'q.75': 2.0, 'q1.0': 2}, 7: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 3.0, 'q1.0': 3}, 8: {'q.00': 1, 'q.25': 1.0, 'q.50': 3.0, 'q.75': 4.0, 'q1.0': 4}, 9: {'q.00': 7, 'q.25': 7.0, 'q.50': 7.0, 'q.75': 7.0, 'q1.0': 10}, 10: {'q.00': 6, 'q.25': 6.0, 'q.50': 6.0, 'q.75': 6.0, 'q1.0': 9}, 11: {'q.00': 10, 'q.25': 11.0, 'q.50': 11.0, 'q.75': 11.0, 'q1.0': 11}, 12: {'q.00': 7, 'q.25': 8.0, 'q.50': 8.0, 'q.75': 8.0, 'q1.0': 8}, 13: {'q.00': 9, 'q.25': 12.0, 'q.50': 12.0, 'q.75': 12.0, 'q1.0': 12}, 14: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 15: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 16: {'q.00': 6, 'q.25': 6.0, 'q.50': 6.0, 'q.75': 6.0, 'q1.0': 7}, 17: {'q.00': 7, 'q.25': 7.0, 'q.50': 7.0, 'q.75': 7.0, 'q1.0': 14}, 18: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 19: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 20: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 21: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 22: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 23: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 24: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 25: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 26: {'q.00': 3, 'q.25': 7.0, 'q.50': 7.0, 'q.75': 7.0, 'q1.0': 11}, 27: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 28: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 29: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}, 30: {'q.00': 1, 'q.25': 1.0, 'q.50': 1.0, 'q.75': 1.0, 'q1.0': 1}}
+feature counts: {0: 1000, 1: 247, 2: 1000, 3: 1000, 4: 1000, 5: 245, 6: 1000, 7: 1000, 8: 1000, 9: 3, 10: 3, 11: 2, 12: 2, 13: 3, 14: 2, 15: 2, 16: 3, 17: 3, 18: 2, 19: 2, 20: 2, 21: 2, 22: 2, 23: 2, 24: 2, 25: 2, 26: 8, 27: 2, 28: 1, 29: 2, 30: 1}
 suggested feature indices: 9-30
-label counts: {'B-<title>': 2363, 'I-<title>': 24481, 'B-<author>': 2241, 'I-<author>': 25830, 'B-<reference>': 414, 'I-<reference>': 10121, 'B-<submission>': 409, 'I-<submission>': 3729, 'B-<abstract>': 1528, 'I-<abstract>': 269983, 'B-<affiliation>': 2782, 'I-<affiliation>': 23886, 'B-<address>': 2330, 'I-<address>': 13963, 'B-<date>': 658, 'I-<date>': 2204, 'B-<grant>': 105, 'I-<grant>': 4509, 'B-<email>': 891, 'I-<email>': 7796, 'B-<keyword>': 424, 'I-<keyword>': 7804, 'B-<entitle>': 24, 'I-<entitle>': 421, 'B-<pubnum>': 421, 'I-<pubnum>': 3755, 'B-<note>': 1823, 'I-<note>': 26033, 'B-<copyright>': 281, 'I-<copyright>': 5152, 'B-<date-submission>': 29, 'I-<date-submission>': 166, 'B-<intro>': 439, 'I-<intro>': 96944, 'B-<web>': 187, 'I-<web>': 3162, 'B-<phone>': 71, 'I-<phone>': 710, 'B-<dedication>': 22, 'I-<dedication>': 243, 'B-<degree>': 59, 'I-<degree>': 1355}
+label counts: {'B-<title>': 747, 'I-<title>': 9686, 'B-<author>': 1157, 'I-<author>': 24917, 'B-<affiliation>': 2562, 'I-<affiliation>': 24916, 'B-<address>': 2401, 'I-<address>': 13216, 'B-<email>': 719, 'I-<email>': 4791, 'O': 18460, 'B-<abstract>': 749, 'I-<abstract>': 145322, 'B-<keyword>': 379, 'I-<keyword>': 6027, 'B-<funding>': 105, 'I-<funding>': 4861, 'B-<doctype>': 298, 'I-<date>': 812, 'I-<pubnum>': 3870, 'B-<copyright>': 372, 'I-<copyright>': 12319, 'B-<group>': 19, 'I-<group>': 65, 'B-<meeting>': 41, 'I-<meeting>': 526, 'B-<reference>': 501, 'I-<reference>': 10058, 'B-<submission>': 323, 'I-<submission>': 3303, 'I-<doctype>': 620, 'B-<date>': 348, 'B-<editor>': 64, 'I-<editor>': 195, 'B-<pubnum>': 345, 'B-<web>': 75, 'I-<web>': 1041, 'B-<availability>': 41, 'I-<availability>': 1735}
 ```
 
 ### Other CLI Parameters
@@ -837,7 +828,7 @@ gcloud beta ai-platform jobs submit training \
     --batch-size="16" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="500" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="10000" \
     --early-stopping-patience="10" \
     --max-epoch="50"
@@ -858,7 +849,7 @@ Or using the project's wrapper script which provides some default values:
     --batch-size="16" \
     --embedding="https://github.com/elifesciences/sciencebeam-models/releases/download/v0.0.1/glove.6B.50d.txt.xz" \
     --max-sequence-length="500" \
-    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/v0.0.1/delft-grobid-0.5.6-header.train.gz \
+    --input=https://github.com/elifesciences/sciencebeam-datasets/releases/download/grobid-0.8.2/delft-grobid-0.8.2-header.train.gz \
     --limit="10000" \
     --early-stopping-patience="10" \
     --max-epoch="50"

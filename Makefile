@@ -3,7 +3,8 @@ DOCKER_COMPOSE_CI = docker-compose -f docker-compose.yml
 DOCKER_COMPOSE = $(DOCKER_COMPOSE_DEV)
 
 VENV = venv
-PIP = $(VENV)/bin/pip
+PIP = VIRTUAL_ENV=./venv uv pip
+# PIP = $(VENV)/bin/pip
 PYTHON = $(VENV)/bin/python
 
 BATCH_SIZE = 10
@@ -54,6 +55,8 @@ PYTEST_ARGS =
 NOT_SLOW_PYTEST_ARGS = -m 'not slow'
 SLOW_PYTEST_ARGS = -m 'slow'
 
+WAPITI_SOURCE_DOWNLOAD_URL = https://github.com/kermitt2/Wapiti/archive/a9c25d2bcccd60f1a54a7019689bd5229e866f00.tar.gz
+
 SYSTEM_PYTHON = python3
 
 ARGS =
@@ -74,12 +77,13 @@ venv-create:
 
 dev-install:
 	$(PIP) install -r requirements.build.txt
-	$(PIP) install -r requirements.txt
-	$(PIP) install -r requirements.cpu.txt
-	$(PIP) install -r requirements.dev.txt
-	$(PIP) install -r requirements.delft.txt --no-deps
-	$(PIP) install -r requirements.jep.txt
-	$(PIP) install -e . --no-deps
+	$(PIP) install \
+		-r requirements.txt \
+		-r requirements.cpu.txt \
+		-r requirements.dev.txt \
+		-r requirements.delft.txt
+# 	$(PIP) install -r requirements.jep.txt
+# 	$(PIP) install -e . --no-deps
 
 
 dev-venv: venv-create dev-install
@@ -101,15 +105,17 @@ dev-lint: dev-flake8 dev-pylint dev-mypy
 
 
 dev-pytest:
+	PATH=./third-parties/wapiti:$$PATH \
 	$(PYTHON) -m pytest -v -p no:cacheprovider $(ARGS)
 
 
 dev-watch:
-	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings $(NOT_SLOW_PYTEST_ARGS) $(ARGS)
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings -vv $(NOT_SLOW_PYTEST_ARGS) $(ARGS)
 
 
 dev-watch-slow:
-	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings $(ARGS)
+	PATH=./third-parties/wapiti:$$PATH \
+	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings -vv --maxfail=1 $(ARGS)
 
 
 dev-test: dev-lint dev-pytest
@@ -121,6 +127,18 @@ dev-remove-dist:
 
 dev-build-dist:
 	$(PYTHON) setup.py sdist bdist_wheel
+
+
+dev-install-wapiti:
+	mkdir -p ./third-parties
+	rm -rf ./third-parties/wapiti
+	curl --location -q "$(WAPITI_SOURCE_DOWNLOAD_URL)" -o ./third-parties/wapiti.tar.gz
+	ls -lh ./third-parties/wapiti.tar.gz
+	mkdir -p ./third-parties/wapiti
+	tar --strip-components 1 -C ./third-parties/wapiti -xvf ./third-parties/wapiti.tar.gz
+	rm ./third-parties/wapiti.tar.gz
+	cd ./third-parties/wapiti \
+		&& make
 
 
 build:
@@ -185,6 +203,18 @@ test: \
 	lint \
 	pytest \
 	test-setup-install
+
+
+docker-buildx-bake-build-all:
+	docker buildx bake \
+		--file docker-bake.hcl \
+		--set python-dist.args.python_package_version="$(VERSION)" \
+		lint-flake8 \
+		lint-pylint \
+		lint-mypy \
+		pytest-not-slow \
+		python-dist \
+		delft
 
 
 .grobid-common-args:

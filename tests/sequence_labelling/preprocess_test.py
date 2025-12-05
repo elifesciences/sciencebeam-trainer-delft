@@ -64,14 +64,14 @@ class TestWordPreprocessor:
         assert y_transformed == [[1, 0]]
 
 
-def _to_dense(a: np.array):
+def _to_dense(a: np.ndarray):
     try:
-        return a.todense()
+        return a.todense()  # type: ignore
     except AttributeError:
         return a
 
 
-def all_close(a: np.array, b: np.array):
+def all_close(a: np.ndarray, b: np.ndarray):
     return np.allclose(_to_dense(a), _to_dense(b))
 
 

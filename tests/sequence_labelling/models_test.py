@@ -26,7 +26,7 @@ def _model_config():
 
 class TestUpdatedImplicitModelConfigProps:
     def test_should_set_props_for_BidLSTM_CRF_FEATURES(self, model_config: ModelConfig):
-        model_config.model_type = BidLSTM_CRF_FEATURES.name
+        model_config.architecture = BidLSTM_CRF_FEATURES.name
         model_config.use_features = False
         model_config.use_features_indices_input = False
         updated_implicit_model_config_props(model_config)

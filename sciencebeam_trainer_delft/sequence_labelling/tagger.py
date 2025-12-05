@@ -1,12 +1,12 @@
 import datetime
 import logging
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
 from delft.utilities.Embeddings import Embeddings
 from delft.utilities.Tokenizer import tokenizeAndFilter
-from delft.sequenceLabelling.preprocess import WordPreprocessor
+from delft.sequenceLabelling.preprocess import Preprocessor
 
 from sciencebeam_trainer_delft.utils.progress_logger import logging_tqdm
 
@@ -33,7 +33,7 @@ def iter_batch_window_indices_and_offsets(
 def iter_predict_texts_with_sliding_window_if_enabled(
         texts: List[Union[str, List[str]]],
         model_config: ModelConfig,
-        preprocessor: WordPreprocessor,
+        preprocessor: Preprocessor,
         max_sequence_length: Optional[int],
         model,
         input_window_stride: int = None,
@@ -95,6 +95,7 @@ def iter_predict_texts_with_sliding_window_if_enabled(
         tokenize=should_tokenize,
         shuffle=False,
         features=features,
+        use_chain_crf=model_config.use_chain_crf,
         name='%s.predict_generator' % model_config.model_name
     )
 
@@ -157,14 +158,15 @@ def iter_predict_texts_with_sliding_window_if_enabled(
 
 class Tagger:
     def __init__(
-            self,
-            model,
-            model_config,
-            embeddings=None,
-            preprocessor=None,
-            dataset_transformer_factory: Optional[T_DatasetTransformerFactory] = None,
-            max_sequence_length: int = None,
-            input_window_stride: int = None):
+        self,
+        model,
+        model_config,
+        preprocessor: Preprocessor,
+        embeddings: Optional[Embeddings] = None,
+        dataset_transformer_factory: Optional[T_DatasetTransformerFactory] = None,
+        max_sequence_length: Optional[int] = None,
+        input_window_stride: Optional[int] = None
+    ):
         self.model = model
         self.preprocessor = preprocessor
         self.model_config = model_config
@@ -177,9 +179,13 @@ class Tagger:
             )
         else:
             self.dataset_transformer_factory = dataset_transformer_factory
+        LOGGER.debug('Model config: %r', self.model_config)
 
     def iter_tag(
-        self, texts, output_format, features=None,
+        self,
+        texts: Sequence[str],
+        output_format,
+        features=None,
         tag_transformed: bool = False
     ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
         assert isinstance(texts, list)
@@ -218,13 +224,14 @@ class Tagger:
 
             LOGGER.debug('tokens: %s', tokens)
 
-            tags = self._get_tags(pred)
+            is_sparse = self.model_config.use_crf and not self.model_config.use_chain_crf
+            tags = self._get_tags(pred, is_sparse=is_sparse)
             if not tag_transformed:
                 tags = dataset_transformer.inverse_transform_y([tags])[0]
             LOGGER.debug('tags: %s', tags)
 
             if output_format == 'json':
-                prob = self._get_prob(pred)
+                prob = self._get_prob(pred, is_sparse=is_sparse)
                 piece = {}
                 piece["text"] = text
                 piece["entities"] = self._build_json_response(
@@ -249,16 +256,31 @@ class Tagger:
         else:
             return result
 
-    def _get_tags(self, pred):
+    def _get_tags_dense(self, pred):
         pred = np.argmax(pred, -1)
         tags = self.preprocessor.inverse_transform(pred[0])
-
         return tags
 
-    def _get_prob(self, pred):
-        prob = np.max(pred, -1)[0]
+    def _get_tags_sparse(self, pred):
+        tags = self.preprocessor.inverse_transform(pred[0])
+        return tags
 
+    def _get_tags(self, pred, is_sparse: bool = False):
+        if is_sparse:
+            return self._get_tags_sparse(pred)
+        return self._get_tags_dense(pred)
+
+    def _get_prob_dense(self, pred):
+        prob = np.max(pred, -1)[0]
         return prob
+
+    def _get_prob_sparse(self, pred):
+        return [1.0] * len(pred[0])
+
+    def _get_prob(self, pred, is_sparse: bool = False):
+        if is_sparse:
+            return self._get_prob_sparse(pred)
+        return self._get_prob_dense(pred)
 
     def _build_json_response(self, tokens, tags, prob, offsets):
         res = {

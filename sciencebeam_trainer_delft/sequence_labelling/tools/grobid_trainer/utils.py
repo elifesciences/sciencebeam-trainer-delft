@@ -15,6 +15,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
+from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Features_Array,
+    T_Batch_Label_Array,
+    T_Batch_Token_Array
+)
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import shuffle_arrays
 from sciencebeam_trainer_delft.utils.io import (
@@ -78,14 +83,14 @@ DEFAULT_TAG_OUTPUT_FORMAT = TagOutputFormats.XML
 
 def set_random_seeds(random_seed: int):
     np.random.seed(random_seed)
-    tf.set_random_seed(random_seed)
+    tf.random.set_seed(random_seed)
 
 
 def get_default_training_data(model: str) -> str:
     return 'data/sequenceLabelling/grobid/' + model + '/' + model + '-060518.train'
 
 
-def log_data_info(x: np.array, y: np.array, features: np.array):
+def log_data_info(x: np.ndarray, y: np.ndarray, features: np.ndarray):
     LOGGER.info('x sample: %s (y: %s)', x[:1][:10], y[:1][:1])
     LOGGER.info(
         'feature dimensions of first sample, word: %s',
@@ -94,7 +99,9 @@ def log_data_info(x: np.array, y: np.array, features: np.array):
 
 
 def _load_data_and_labels_crf_files(
-        input_paths: List[str], limit: int = None) -> Tuple[np.array, np.array, np.array]:
+    input_paths: List[str],
+    limit: int = None
+) -> Tuple[T_Batch_Token_Array, T_Batch_Label_Array, T_Batch_Features_Array]:
     if len(input_paths) == 1:
         return load_data_and_labels_crf_file(input_paths[0], limit=limit)
     x_list = []
@@ -112,7 +119,7 @@ def _load_data_and_labels_crf_files(
     return np.concatenate(x_list), np.concatenate(y_list), np.concatenate(features_list)
 
 
-def get_clean_features_mask(features_all: np.array) -> List[bool]:
+def get_clean_features_mask(features_all: np.ndarray) -> List[bool]:
     feature_lengths = Counter((
         len(features_vector)
         for features_doc in features_all
@@ -128,7 +135,7 @@ def get_clean_features_mask(features_all: np.array) -> List[bool]:
     ]
 
 
-def get_clean_x_y_features(x: np.array, y: np.array, features: np.array):
+def get_clean_x_y_features(x: np.ndarray, y: np.ndarray, features: np.ndarray):
     clean_features_mask = get_clean_features_mask(features)
     if sum(clean_features_mask) != len(clean_features_mask):
         LOGGER.info(
@@ -144,12 +151,13 @@ def get_clean_x_y_features(x: np.array, y: np.array, features: np.array):
 
 
 def load_data_and_labels(
-        input_paths: List[str] = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        clean_features: bool = True,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        download_manager: DownloadManager = None):
+    input_paths: List[str] = None,
+    limit: int = None,
+    shuffle_input: bool = False,
+    clean_features: bool = True,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    download_manager: DownloadManager = None
+) -> Tuple[T_Batch_Token_Array, T_Batch_Label_Array, T_Batch_Features_Array]:
     assert download_manager
     assert input_paths
     LOGGER.info('loading data from: %s', input_paths)
@@ -301,7 +309,7 @@ def train(
         embeddings_name=embeddings_name,
         embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
-        model_type=architecture,
+        architecture=architecture,
         use_ELMo=use_ELMo,
         **kwargs
     )
@@ -542,7 +550,7 @@ def train_eval(
         embeddings_name=embeddings_name,
         embedding_manager=embedding_manager,
         max_sequence_length=max_sequence_length,
-        model_type=architecture,
+        architecture=architecture,
         use_ELMo=use_ELMo,
         batch_size=batch_size,
         fold_number=fold_count,
@@ -773,14 +781,15 @@ def wapiti_eval_model(
 
 
 def do_tag_input(
-        model: Union[Sequence, WapitiModelAdapter],
-        tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
-        tag_output_path: Optional[str] = None,
-        input_paths: List[str] = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        download_manager: DownloadManager = None):
+    model: Union[Sequence, WapitiModelAdapter],
+    tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
+    tag_output_path: Optional[str] = None,
+    input_paths: List[str] = None,
+    limit: int = None,
+    shuffle_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    download_manager: DownloadManager = None
+):
     x_all, y_all, features_all = load_data_and_labels(
         input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,

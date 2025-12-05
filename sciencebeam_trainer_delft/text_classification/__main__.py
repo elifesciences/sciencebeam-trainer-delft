@@ -117,7 +117,7 @@ def add_train_arguments(
     )
     train_group.add_argument(
         "--architecture",
-        default='bidLstm',
+        default='bidLstm_simple',
         help="The desired architecture"
     )
     train_group.add_argument(
@@ -273,7 +273,7 @@ class TrainSubCommand(BaseSubCommand):
             app_config=self.app_config,
             model_config=ModelConfig(
                 embeddings_name=embedding_name,
-                model_type=args.architecture,
+                architecture=args.architecture,
                 list_classes=list_classes
             ),
             training_config=TrainingConfig(
@@ -360,7 +360,7 @@ class TrainEvalSubCommand(BaseSubCommand):
             app_config=self.app_config,
             model_config=ModelConfig(
                 embeddings_name=embedding_name,
-                model_type=args.architecture,
+                architecture=args.architecture,
                 list_classes=list_classes
             ),
             training_config=TrainingConfig(

@@ -1,6 +1,6 @@
 import logging
 import warnings
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Callable
 
 from typing_extensions import Protocol
 
@@ -105,6 +105,10 @@ class ModelSaverCallback(Callback):
         self.save_best_only = save_best_only
         self.save_kwargs = save_kwargs or {}
         self.epochs_since_last_save = 0
+
+        # explicitly type the monitor comparison callable to avoid mypy
+        # inferring a specific numpy ufunc literal
+        self.monitor_op: Callable[[Any, Any], bool]
 
         if mode not in ['auto', 'min', 'max']:
             warnings.warn(

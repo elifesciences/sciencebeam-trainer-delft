@@ -3,14 +3,15 @@ import json
 import os
 from datetime import datetime
 from abc import ABC
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 import joblib
 
 from delft.sequenceLabelling.models import Model
+import delft.sequenceLabelling.preprocess as delft_preprocess
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
-    WordPreprocessor as DelftWordPreprocessor
+    Preprocessor as DelftWordPreprocessor
 )
 
 from sciencebeam_trainer_delft.utils.typing import T, U, V
@@ -48,6 +49,30 @@ def _convert_keys(
         convert_fn(key): value
         for key, value in d.items()
     }
+
+
+def install_legacy_preprocessor_class_for_pickle() -> None:
+    if not hasattr(delft_preprocess, "WordPreprocessor"):
+        setattr(delft_preprocess, "WordPreprocessor", DelftWordPreprocessor)
+
+
+def migrate_legacy_preprocessor_state_if_necessary(
+    preprocessor: DelftWordPreprocessor
+) -> DelftWordPreprocessor:
+    if not hasattr(preprocessor, "indice_tag") and hasattr(preprocessor, "vocab_tag"):
+        vocab_tag = preprocessor.vocab_tag
+        assert isinstance(vocab_tag, dict)
+        preprocessor.indice_tag = {i: t for t, i in vocab_tag.items()}
+        LOGGER.info('migrated legacy preprocessor vocab_tag to indice_tag')
+    if hasattr(preprocessor, "indice_tag") and isinstance(preprocessor.indice_tag, dict):
+        preprocessor.indice_tag = _convert_keys(
+            preprocessor.indice_tag,
+            int
+        )
+    if not hasattr(preprocessor, "return_bert_embeddings"):
+        preprocessor.return_bert_embeddings = False
+        LOGGER.info('migrated legacy preprocessor to add return_bert_embeddings=False')
+    return preprocessor
 
 
 def get_feature_preprocessor_json(
@@ -96,11 +121,32 @@ def get_preprocessor_for_json(preprocessor_json: dict) -> DelftWordPreprocessor:
     LOGGER.debug('preprocessor type: %s', type(preprocessor))
     if isinstance(preprocessor, str):
         LOGGER.debug('preprocessor: %r', preprocessor)
-    if isinstance(preprocessor.feature_preprocessor, dict):
-        preprocessor.feature_preprocessor = get_feature_preprocessor_for_json(
-            preprocessor.feature_preprocessor
-        )
+    if isinstance(preprocessor, DelftWordPreprocessor):
+        if isinstance(preprocessor.feature_preprocessor, dict):
+            preprocessor.feature_preprocessor = get_feature_preprocessor_for_json(
+                preprocessor.feature_preprocessor
+            )
+        preprocessor = migrate_legacy_preprocessor_state_if_necessary(preprocessor)
     return preprocessor
+
+
+class BytesOnlyWriter:
+    def __init__(self, raw_fp):
+        self._fp = raw_fp
+
+    def write(self, b):
+        # joblib / pickle may pass memoryview; convert to bytes on the fly
+        if isinstance(b, memoryview):
+            b = b.tobytes()
+        self._fp.write(b)
+
+    def flush(self):
+        if hasattr(self._fp, "flush"):
+            self._fp.flush()
+
+    def close(self):
+        if hasattr(self._fp, "close"):
+            self._fp.close()
 
 
 class ModelSaver(_BaseModelSaverLoader):
@@ -119,7 +165,8 @@ class ModelSaver(_BaseModelSaverLoader):
         LOGGER.info('preprocessor json saved to %s', filepath)
 
     def _save_preprocessor_pickle(self, preprocessor: DelftWordPreprocessor, filepath: str):
-        with open_file(filepath, 'wb') as fp:
+        with open_file(filepath, 'wb') as raw_fp:
+            fp = BytesOnlyWriter(raw_fp)
             joblib.dump(preprocessor, fp)
         LOGGER.info('preprocessor pickle saved to %s', filepath)
 
@@ -157,7 +204,13 @@ class ModelSaver(_BaseModelSaverLoader):
             json.dump(meta, fp, sort_keys=False, indent=4)
         LOGGER.info('updated checkpoints meta: %s', filepath)
 
-    def save_to(self, directory: str, model: Model, meta: dict = None):
+    def save_to(
+        self,
+        directory: str,
+        model: Model,
+        meta: dict = None,
+        weight_file: Optional[str] = None
+    ):
         os.makedirs(directory, exist_ok=True)
         self._save_preprocessor_json(
             self.preprocessor, os.path.join(directory, self.preprocessor_json_file)
@@ -166,7 +219,7 @@ class ModelSaver(_BaseModelSaverLoader):
             self.preprocessor, os.path.join(directory, self.preprocessor_pickle_file)
         )
         self._save_model_config(self.model_config, os.path.join(directory, self.config_file))
-        self._save_model(model, os.path.join(directory, self.weight_file))
+        self._save_model(model, os.path.join(directory, weight_file or self.weight_file))
         if meta:
             self._save_meta(meta, os.path.join(directory, self.meta_file))
 
@@ -207,11 +260,20 @@ class ModelLoader(_BaseModelSaverLoader):
             )
 
     def load_preprocessor_from_pickle_file(self, filepath: str):
+        install_legacy_preprocessor_class_for_pickle()
         LOGGER.info('loading preprocessor pickle from %s', filepath)
         with open_file(filepath, 'rb') as fp:
-            return joblib.load(fp)
+            preprocessor = joblib.load(fp)
+            LOGGER.info(
+                'preprocessor loaded from pickle: type=%s',
+                type(preprocessor)
+            )
+            return migrate_legacy_preprocessor_state_if_necessary(
+                preprocessor
+            )
 
     def load_preprocessor_from_json_file(self, filepath: str):
+        install_legacy_preprocessor_class_for_pickle()
         LOGGER.info('loading preprocessor json from %s', filepath)
         return get_preprocessor_for_json(json.loads(
             read_text(filepath)
@@ -225,9 +287,14 @@ class ModelLoader(_BaseModelSaverLoader):
         with open_file(filepath, 'r') as fp:
             return ModelConfig.load(fp)
 
-    def load_model_from_directory(self, directory: str, model: Model):
+    def load_model_from_directory(
+        self,
+        directory: str,
+        model: Model,
+        weight_file: Optional[str] = None
+    ):
         return self.load_model_from_file(
-            os.path.join(directory, self.weight_file),
+            os.path.join(directory, weight_file or self.weight_file),
             model=model
         )
 

@@ -11,6 +11,10 @@ from sklearn.metrics import (
     recall_score
 )
 
+from sciencebeam_trainer_delft.text_classification.typing import (
+    T_Batch_Text_Classes_Array
+)
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,8 +22,8 @@ LOGGER = logging.getLogger(__name__)
 class ClassificationResult:
     def __init__(
         self,
-        y_true: List[List[str]],
-        y_pred: List[List[str]],
+        y_true: T_Batch_Text_Classes_Array,
+        y_pred: T_Batch_Text_Classes_Array,
         label_names: List[str]
     ):
         y_true_array: np.ndarray = np.asarray(y_true)

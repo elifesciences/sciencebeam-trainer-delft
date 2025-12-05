@@ -24,7 +24,7 @@ class _BaseModelSaverLoader(ABC):
     def get_model_weights_filename(self, model_path: str, model_config: ModelConfig):
         return os.path.join(
             model_path,
-            model_config.model_type + "." + self.weight_file
+            model_config.architecture + "." + self.weight_file
         )
 
 

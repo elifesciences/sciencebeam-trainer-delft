@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Optional, Tuple
+from typing import Callable, Tuple
 
 from sciencebeam_trainer_delft.sequence_labelling.typing import (
-    T_Batch_Tokens,
-    T_Batch_Features,
-    T_Batch_Labels
+    T_Batch_Label_Type_Var,
+    T_Batch_Token_Type_Var,
+    T_Optional_Batch_Features_Type_Var,
+    T_Optional_Batch_Label_Type_Var,
+    T_Optional_Batch_Token_Type_Var
 )
 
 
@@ -12,33 +14,41 @@ class DatasetTransformer(ABC):
     @abstractmethod
     def fit_transform(
         self,
-        x: T_Batch_Tokens,
-        y: Optional[T_Batch_Labels],
-        features: Optional[T_Batch_Features]
-    ) -> Tuple[T_Batch_Tokens, Optional[T_Batch_Labels], Optional[T_Batch_Features]]:
+        x: T_Batch_Token_Type_Var,
+        y: T_Optional_Batch_Label_Type_Var,
+        features: T_Optional_Batch_Features_Type_Var
+    ) -> Tuple[
+        T_Batch_Token_Type_Var,
+        T_Optional_Batch_Label_Type_Var,
+        T_Optional_Batch_Features_Type_Var
+    ]:
         pass
 
     @abstractmethod
     def inverse_transform(
         self,
-        x: Optional[T_Batch_Tokens],
-        y: Optional[T_Batch_Labels],
-        features: Optional[T_Batch_Features]
-    ) -> Tuple[Optional[T_Batch_Tokens], Optional[T_Batch_Labels], Optional[T_Batch_Features]]:
+        x: T_Optional_Batch_Token_Type_Var,
+        y: T_Optional_Batch_Label_Type_Var,
+        features: T_Optional_Batch_Features_Type_Var
+    ) -> Tuple[
+        T_Optional_Batch_Token_Type_Var,
+        T_Optional_Batch_Label_Type_Var,
+        T_Optional_Batch_Features_Type_Var
+    ]:
         pass
 
     def fit_transform_x_and_features(
         self,
-        x: T_Batch_Tokens,
-        features: Optional[T_Batch_Features]
+        x: T_Batch_Token_Type_Var,
+        features: T_Optional_Batch_Features_Type_Var
     ):
         x, _, features = self.fit_transform(x, None, features)
         return x, features
 
     def inverse_transform_y(
         self,
-        y: T_Batch_Labels,
-    ) -> T_Batch_Labels:
+        y: T_Batch_Label_Type_Var,
+    ) -> T_Batch_Label_Type_Var:
         _, inverse_transformed_y, _ = self.inverse_transform(None, y, None)
         assert inverse_transformed_y is not None
         return inverse_transformed_y
@@ -47,18 +57,26 @@ class DatasetTransformer(ABC):
 class DummyDatasetTransformer(DatasetTransformer):
     def fit_transform(
         self,
-        x: T_Batch_Tokens,
-        y: Optional[T_Batch_Labels],
-        features: Optional[T_Batch_Features]
-    ):
+        x: T_Batch_Token_Type_Var,
+        y: T_Optional_Batch_Label_Type_Var,
+        features: T_Optional_Batch_Features_Type_Var
+    ) -> Tuple[
+        T_Batch_Token_Type_Var,
+        T_Optional_Batch_Label_Type_Var,
+        T_Optional_Batch_Features_Type_Var
+    ]:
         return x, y, features
 
     def inverse_transform(
         self,
-        x: Optional[T_Batch_Tokens],
-        y: Optional[T_Batch_Labels],
-        features: Optional[T_Batch_Features]
-    ):
+        x: T_Optional_Batch_Token_Type_Var,
+        y: T_Optional_Batch_Label_Type_Var,
+        features: T_Optional_Batch_Features_Type_Var
+    ) -> Tuple[
+        T_Optional_Batch_Token_Type_Var,
+        T_Optional_Batch_Label_Type_Var,
+        T_Optional_Batch_Features_Type_Var
+    ]:
         return x, y, features
 
 

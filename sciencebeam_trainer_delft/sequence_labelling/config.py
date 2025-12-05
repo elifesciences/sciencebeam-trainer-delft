@@ -76,6 +76,13 @@ class ModelConfig(_ModelConfig):
     @classmethod
     def load(cls, file):
         variables = json.load(file)
+        if 'use_chain_crf' not in variables and variables.get('use_crf', False):
+            variables['use_chain_crf'] = True
+        if 'architecture' not in variables and variables.get('model_type'):
+            variables['architecture'] = variables.get('model_type')
+            del variables['model_type']
+        if variables.get('use_chain_crf') and variables['architecture'] == 'BidLSTM_CRF':
+            variables['architecture'] = 'BidLSTM_ChainCRF'
         self = cls()
         # model version is assumed to the first version if not saved
         self.model_version = FIRST_MODEL_VERSION
@@ -111,12 +118,13 @@ class TrainingConfig(_TrainingConfig):
     def __init__(
             self,
             *args,
+            learning_rate=0.001,
             initial_epoch: int = None,
             input_window_stride: int = None,
             checkpoint_epoch_interval: int = 1,
             initial_meta: Optional[dict] = None,
             **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, learning_rate=learning_rate, **kwargs)
         self.initial_epoch = initial_epoch
         self.input_window_stride = input_window_stride
         self.checkpoint_epoch_interval = checkpoint_epoch_interval

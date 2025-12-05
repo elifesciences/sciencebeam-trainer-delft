@@ -43,11 +43,12 @@ class TagDebugReporter:
         ))
 
     def report_tag_results(
-            self,
-            texts: np.array,
-            features: np.array,
-            annotations,
-            model_name: str):
+        self,
+        texts: np.ndarray,
+        features: np.ndarray,
+        annotations,
+        model_name: str
+    ):
         base_filename_prefix = self.get_base_output_name(model_name=model_name)
         with exclusive_prefixed_file(base_filename_prefix, '.json') as json_fp:
             output_file = json_fp.name

@@ -1,4 +1,4 @@
-FROM python:3.7.10-buster AS dev
+FROM ghcr.io/astral-sh/uv:python3.9-bookworm AS dev
 
 # # install gcloud to make it easier to access cloud storage
 # RUN mkdir -p /usr/local/gcloud \
@@ -28,27 +28,39 @@ ENV PROJECT_FOLDER=/opt/sciencebeam-trainer-delft
 
 WORKDIR ${PROJECT_FOLDER}
 
-ENV PATH=/root/.local/bin:${PATH}
+ENV VENV=/opt/venv
+ENV VIRTUAL_ENV=${VENV} PYTHONUSERBASE=${VENV} PATH=${VENV}/bin:$PATH
 
 COPY requirements.build.txt ./
-RUN pip install --user -r requirements.build.txt
-
-COPY requirements.txt ./
-RUN pip install --user -r requirements.txt
+RUN uv venv "${VENV}" \
+    && uv pip install -r requirements.build.txt
 
 COPY requirements.cpu.txt ./
-RUN pip install --user -r requirements.cpu.txt
+RUN uv pip install \
+    -r requirements.cpu.txt
+
+COPY requirements.txt ./
+RUN uv pip install \
+    -r requirements.cpu.txt \
+    -r requirements.txt
 
 COPY requirements.delft.txt ./
-RUN pip install --user -r requirements.delft.txt --no-deps
+RUN uv pip install \
+    -r requirements.cpu.txt \
+    -r requirements.txt \
+    -r requirements.delft.txt
 
 COPY requirements.dev.txt ./
-RUN pip install -r requirements.dev.txt
+RUN uv pip install \
+    -r requirements.cpu.txt \
+    -r requirements.txt \
+    -r requirements.delft.txt \
+    -r requirements.dev.txt
 
 COPY sciencebeam_trainer_delft ./sciencebeam_trainer_delft
 COPY README.md MANIFEST.in setup.py ./
 
-COPY config/embedding-registry.json ./
+COPY delft ./delft
 
 COPY .flake8 .pylintrc pytest.ini ./
 COPY tests ./tests

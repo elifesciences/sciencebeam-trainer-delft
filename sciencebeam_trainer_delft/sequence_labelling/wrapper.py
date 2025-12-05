@@ -7,10 +7,15 @@ from typing import Callable, Iterable, List, Optional, Tuple, Union, cast
 import numpy as np
 
 from delft.sequenceLabelling.models import BaseModel
-from delft.sequenceLabelling.preprocess import WordPreprocessor, FeaturesPreprocessor
+from delft.sequenceLabelling.preprocess import Preprocessor, FeaturesPreprocessor
 from delft.sequenceLabelling.wrapper import Sequence as _Sequence
 from delft.sequenceLabelling.config import TrainingConfig as DelftTrainingConfig
 
+from sciencebeam_trainer_delft.sequence_labelling.typing import (
+    T_Batch_Features_Array,
+    T_Batch_Label_Array,
+    T_Batch_Token_Array
+)
 from sciencebeam_trainer_delft.utils.typing import T
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 from sciencebeam_trainer_delft.utils.numpy import concatenate_or_none
@@ -71,7 +76,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 DEFAUT_MODEL_PATH = 'data/models/sequenceLabelling/'
-DEFAULT_EMBEDDINGS_PATH = './embedding-registry.json'
+DEFAULT_EMBEDDINGS_PATH = 'delft/resources-registry.json'
 
 
 DEFAUT_BATCH_SIZE = 10
@@ -117,8 +122,9 @@ def get_default_stateful() -> Optional[bool]:
 
 
 def get_features_preprocessor(
-        model_config: ModelConfig,
-        features: np.array = None) -> T_FeaturesPreprocessor:
+    model_config: ModelConfig,
+    features: Optional[T_Batch_Features_Array] = None
+) -> Optional[T_FeaturesPreprocessor]:
     if not model_config.use_features:
         LOGGER.info('features not enabled')
         return None
@@ -144,10 +150,14 @@ def get_features_preprocessor(
 
 
 def get_preprocessor(
-        model_config: ModelConfig,
-        features: np.array = None) -> WordPreprocessor:
-    feature_preprocessor = get_features_preprocessor(model_config, features=features)
-    return WordPreprocessor(
+    model_config: ModelConfig,
+    features: Optional[T_Batch_Features_Array] = None
+) -> Preprocessor:
+    feature_preprocessor = get_features_preprocessor(
+        model_config,
+        features=features
+    )
+    return Preprocessor(
         max_char_length=model_config.max_char_length,
         feature_preprocessor=feature_preprocessor
     )
@@ -156,7 +166,7 @@ def get_preprocessor(
 def prepare_preprocessor(
     X, y,
     model_config: ModelConfig,
-    features: Optional[List[List[List[str]]]] = None
+    features: Optional[T_Batch_Features_Array] = None
 ):
     preprocessor = get_preprocessor(model_config, features=features)
     batch_text_list_iterable = iter_batch_text_list(
@@ -164,7 +174,7 @@ def prepare_preprocessor(
         additional_token_feature_indices=model_config.additional_token_feature_indices,
         text_feature_indices=model_config.text_feature_indices
     )
-    if isinstance(preprocessor, WordPreprocessor):
+    if isinstance(preprocessor, Preprocessor):
         LOGGER.info('fitting preprocessor (faster)')
         faster_preprocessor_fit(preprocessor, batch_text_list_iterable, y)
     else:
@@ -209,6 +219,13 @@ class Sequence(_Sequence):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
         LOGGER.debug('Sequence, args=%s, kwargs=%s', args, kwargs)
+        if (
+            embedding_registry_path is not None
+            and embedding_registry_path != DEFAULT_EMBEDDINGS_PATH
+        ):
+            raise AssertionError(
+                f'custom embedding_registry_path not supported: {repr(embedding_registry_path)} '
+            )
         self.embedding_registry_path = embedding_registry_path or DEFAULT_EMBEDDINGS_PATH
         if embedding_manager is None:
             embedding_manager = EmbeddingManager(
@@ -263,8 +280,8 @@ class Sequence(_Sequence):
         LOGGER.info('training_config: %s', vars(self.training_config))
         self.multiprocessing = multiprocessing
         self.tag_debug_reporter = get_tag_debug_reporter_if_enabled()
-        self._load_exception = None
-        self.p: Optional[WordPreprocessor] = None
+        self._load_exception: Optional[Exception] = None
+        self.p: Optional[Preprocessor] = None
         self.model: Optional[BaseModel] = None
         self.models: List[BaseModel] = []
 
@@ -300,13 +317,16 @@ class Sequence(_Sequence):
             return
         if self.embeddings.use_ELMo:
             self.embeddings.clean_ELMo_cache()
-        if self.embeddings.use_BERT:
-            self.embeddings.clean_BERT_cache()
 
     def train(  # pylint: disable=arguments-differ
-            self, x_train, y_train, x_valid=None, y_valid=None,
-            features_train: np.array = None,
-            features_valid: np.array = None):
+        self,
+        x_train,
+        y_train,
+        x_valid=None,
+        y_valid=None,
+        features_train: np.ndarray = None,
+        features_valid: np.ndarray = None
+    ):
         # TBD if valid is None, segment train to get one
         dataset_fransformer = self.dataset_transformer_factory()
         x_train, y_train, features_train = dataset_fransformer.fit_transform(
@@ -385,9 +405,15 @@ class Sequence(_Sequence):
         )
 
     def train_nfold(  # pylint: disable=arguments-differ
-            self, x_train, y_train, x_valid=None, y_valid=None, fold_number=10,
-            features_train: np.array = None,
-            features_valid: np.array = None):
+        self,
+        x_train,
+        y_train,
+        x_valid=None,
+        y_valid=None,
+        fold_number=10,
+        features_train: Optional[np.ndarray] = None,
+        features_valid: Optional[np.ndarray] = None
+    ):
         if x_valid is not None and y_valid is not None:
             x_all = np.concatenate((x_train, x_valid), axis=0)
             y_all = np.concatenate((y_train, y_valid), axis=0)
@@ -432,11 +458,13 @@ class Sequence(_Sequence):
         if self.embeddings:
             if self.embeddings.use_ELMo:
                 self.embeddings.clean_ELMo_cache()
-            if self.embeddings.use_BERT:
-                self.embeddings.clean_BERT_cache()
 
     def eval(  # pylint: disable=arguments-differ
-            self, x_test, y_test, features: np.array = None):
+        self,
+        x_test,
+        y_test,
+        features: Optional[np.ndarray] = None
+    ):
         should_eval_nfold = (
             self.model_config.fold_number > 1
             and self.models
@@ -461,6 +489,7 @@ class Sequence(_Sequence):
                 self.model_config.concatenated_embeddings_token_count
             ),
             char_embed_size=self.model_config.char_embedding_size,
+            use_chain_crf=self.model_config.use_chain_crf,
             is_deprecated_padded_batch_text_list_enabled=(
                 self.model_config.is_deprecated_padded_batch_text_list_enabled
             ),
@@ -470,19 +499,23 @@ class Sequence(_Sequence):
         )
 
     def get_evaluation_result(
-            self,
-            x_test: List[List[str]],
-            y_test: List[List[str]],
-            features: List[List[List[str]]] = None) -> ClassificationResult:
+        self,
+        x_test: T_Batch_Token_Array,
+        y_test: T_Batch_Label_Array,
+        features: Optional[Union[np.ndarray, List[List[List[str]]]]] = None
+    ) -> ClassificationResult:
         self._require_model()
         if self.model_config.use_features and features is None:
             raise ValueError('features required')
+        assert self.p is not None
         tagger = Tagger(
-            self.model, self.model_config, self.embeddings,
+            model=self.model,
+            model_config=self.model_config,
+            preprocessor=self.p,
+            embeddings=self.embeddings,
             dataset_transformer_factory=self.dataset_transformer_factory,
             max_sequence_length=self.eval_max_sequence_length,
             input_window_stride=self.eval_input_window_stride,
-            preprocessor=self.p
         )
         tag_result = tagger.tag(
             list(x_test),
@@ -498,10 +531,11 @@ class Sequence(_Sequence):
         return ClassificationResult(y_pred=y_pred, y_true=y_true)
 
     def eval_single(  # pylint: disable=arguments-differ
-            self,
-            x_test: List[List[str]],
-            y_test: List[List[str]],
-            features: List[List[List[str]]] = None):
+        self,
+        x_test: T_Batch_Token_Array,
+        y_test: T_Batch_Label_Array,
+        features: Optional[T_Batch_Features_Array] = None
+    ):
         classification_result = self.get_evaluation_result(
             x_test=x_test,
             y_test=y_test,
@@ -510,7 +544,11 @@ class Sequence(_Sequence):
         print(classification_result.get_formatted_report(digits=4))
 
     def eval_nfold(  # pylint: disable=arguments-differ
-            self, x_test, y_test, features: np.array = None):
+        self,
+        x_test,
+        y_test,
+        features: np.ndarray = None
+    ):
         if self.models is not None:
             total_f1 = 0
             best_f1 = 0
@@ -534,7 +572,13 @@ class Sequence(_Sequence):
                 )
 
                 # Build the evaluator and evaluate the model
-                scorer = Scorer(test_generator, self.p, evaluation=True)
+                scorer = Scorer(
+                    test_generator,
+                    self.p,
+                    evaluation=True,
+                    use_crf=self.model_config.use_crf,
+                    use_chain_crf=self.model_config.use_chain_crf
+                )
                 scorer.model = self.models[i]
                 scorer.on_epoch_end(epoch=-1)
                 f1 = scorer.f1
@@ -576,12 +620,15 @@ class Sequence(_Sequence):
         self._require_model()
         if self.model_config.use_features and features is None:
             raise ValueError('features required')
+        assert self.p is not None
         tagger = Tagger(
-            self.model, self.model_config, self.embeddings,
+            model=self.model,
+            model_config=self.model_config,
+            preprocessor=self.p,
+            embeddings=self.embeddings,
             dataset_transformer_factory=self.dataset_transformer_factory,
             max_sequence_length=self.max_sequence_length,
-            input_window_stride=self.input_window_stride,
-            preprocessor=self.p
+            input_window_stride=self.input_window_stride
         )
         LOGGER.debug('tag_transformed: %s', self.tag_transformed)
         annotations: Union[dict, Iterable[List[Tuple[str, str]]]]
@@ -643,7 +690,7 @@ class Sequence(_Sequence):
     def model_summary_props(self) -> dict:
         return {
             'model_type': 'delft',
-            'architecture': self.model_config.model_type,
+            'architecture': self.model_config.architecture,
             'model_config': vars(self.model_config)
         }
 
@@ -659,11 +706,9 @@ class Sequence(_Sequence):
             return None
         embedding_name = self.embedding_manager.ensure_available(embedding_name)
         LOGGER.info('embedding_name: %s', embedding_name)
-        embeddings = Embeddings(
+        embeddings = self.embedding_manager.get_embeddings_for_name(
             embedding_name,
-            path=self.embedding_registry_path,
-            use_ELMo=model_config.use_ELMo,
-            use_BERT=model_config.use_BERT
+            use_ELMo=model_config.use_ELMo
         )
         if not embeddings.embed_size > 0:
             raise AssertionError(
@@ -676,17 +721,22 @@ class Sequence(_Sequence):
             'training_config': vars(self.training_config)
         }
 
-    def save(self, dir_path=None):
+    def save(self, dir_path=None, weight_file: Optional[str] = None):
         # create subfolder for the model if not already exists
         directory = self._get_model_directory(dir_path)
         os.makedirs(directory, exist_ok=True)
-        self.get_model_saver().save_to(directory, model=self.model, meta=self.get_meta())
+        self.get_model_saver().save_to(
+            directory,
+            model=self.model,
+            meta=self.get_meta(),
+            weight_file=weight_file
+        )
 
-    def load(self, dir_path=None):
+    def load(self, dir_path=None, weight_file: Optional[str] = None):
         directory = None
         try:
             directory = self._get_model_directory(dir_path)
-            self.load_from(directory)
+            self.load_from(directory, weight_file=weight_file)
         except Exception as exc:
             self._load_exception = exc
             LOGGER.exception('failed to load model from %r', directory, exc_info=exc)
@@ -701,7 +751,7 @@ class Sequence(_Sequence):
         copy_directory_with_source_meta(dir_path, local_dir_path)
         return local_dir_path
 
-    def load_from(self, directory: str):
+    def load_from(self, directory: str, weight_file: Optional[str] = None):
         model_loader = ModelLoader(download_manager=self.download_manager)
         directory = self.download_model(directory)
         self.model_path = directory
@@ -721,5 +771,9 @@ class Sequence(_Sequence):
         # (and supports that)
         self.model_config.stateful = is_model_stateful(self.model)
         # load weights
-        model_loader.load_model_from_directory(directory, model=self.model)
+        model_loader.load_model_from_directory(
+            directory,
+            model=self.model,
+            weight_file=weight_file
+        )
         self.update_dataset_transformer_factor()

@@ -9,7 +9,6 @@ from delft.textClassification.wrapper import (
 
 from sciencebeam_trainer_delft.utils.download_manager import DownloadManager
 
-from sciencebeam_trainer_delft.embedding.embedding import Embeddings
 from sciencebeam_trainer_delft.embedding.manager import EmbeddingManager
 
 from sciencebeam_trainer_delft.text_classification.config import ModelConfig
@@ -22,7 +21,7 @@ from sciencebeam_trainer_delft.text_classification.saving import (
 LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_EMBEDDINGS_PATH = './embedding-registry.json'
+DEFAULT_EMBEDDINGS_PATH = 'delft/resources-registry.json'
 
 
 class Classifier(_Classifier):
@@ -59,7 +58,7 @@ class Classifier(_Classifier):
                     self.model,
                     os.path.join(
                         model_path,
-                        self.model_config.model_type + "." + self.weight_file
+                        self.model_config.architecture + "." + self.weight_file
                     )
                 )
             else:
@@ -73,7 +72,7 @@ class Classifier(_Classifier):
                         self.models[i],
                         os.path.join(
                             model_path,
-                            self.model_config.model_type + ".model{0}_weights.hdf5".format(i)
+                            self.model_config.architecture + ".model{0}_weights.hdf5".format(i)
                         )
                     )
                 LOGGER.info('nfolds model saved')
@@ -82,11 +81,9 @@ class Classifier(_Classifier):
         embedding_name = model_config.embeddings_name
         embedding_name = self.embedding_manager.ensure_available(embedding_name)
         LOGGER.info('embedding_name: %s', embedding_name)
-        embeddings = Embeddings(
+        embeddings = self.embedding_manager.get_embeddings_for_name(
             embedding_name,
-            path=self.embedding_registry_path,
-            use_ELMo=model_config.use_ELMo,
-            use_BERT=model_config.use_BERT
+            use_ELMo=model_config.use_ELMo
         )
         if not embeddings.embed_size > 0:
             raise AssertionError(
@@ -109,7 +106,7 @@ class Classifier(_Classifier):
             loader.load_model_weights_from_file(
                 os.path.join(
                     model_path,
-                    self.model_config.model_type + "." + self.weight_file
+                    self.model_config.architecture + "." + self.weight_file
                 ),
                 self.model
             )
@@ -120,7 +117,7 @@ class Classifier(_Classifier):
                 loader.load_model_weights_from_file(
                     os.path.join(
                         model_path,
-                        self.model_config.model_type + ".model{0}_weights.hdf5".format(i)
+                        self.model_config.architecture + ".model{0}_weights.hdf5".format(i)
                     ),
                     local_model
                 )

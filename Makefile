@@ -3,7 +3,8 @@ DOCKER_COMPOSE_CI = docker-compose -f docker-compose.yml
 DOCKER_COMPOSE = $(DOCKER_COMPOSE_DEV)
 
 VENV = .venv
-PIP = VIRTUAL_ENV=$(VENV) uv pip
+UV = VIRTUAL_ENV=$(VENV) uv
+PIP = $(UV) pip
 PYTHON = PATH=$(VENV)/bin:$$PATH $(VENV)/bin/python
 
 BATCH_SIZE = 10
@@ -71,16 +72,11 @@ venv-clean:
 
 
 venv-create:
-	$(SYSTEM_PYTHON) -m venv $(VENV)
+	$(UV) venv $(VENV)
 
 
 dev-install:
-	$(PIP) install -r requirements.build.txt
-	$(PIP) install \
-		-r requirements.txt \
-		-r requirements.cpu.txt \
-		-r requirements.dev.txt \
-		-r requirements.delft.txt
+	$(UV) sync --active --locked --all-extras --all-groups
 
 
 dev-venv: venv-create dev-install

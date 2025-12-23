@@ -120,8 +120,8 @@ class TestGrobidTrainer:
             main([
                 'header',
                 'train',
-                '--input=%s' % input_path,
-                '--save-input-to-and-exit=%s' % output_path
+                f'--input={input_path}',
+                f'--save-input-to-and-exit={output_path}'
             ])
 
             assert output_path.read_text() == 'some training data'
@@ -137,8 +137,8 @@ class TestGrobidTrainer:
             main([
                 'header',
                 'train',
-                '--input=%s' % input_path,
-                '--save-input-to-and-exit=%s' % output_path
+                f'--input={input_path}',
+                f'--save-input-to-and-exit={output_path}'
             ])
 
             with gzip.open(str(output_path), mode='rb') as fp:
@@ -149,8 +149,8 @@ class TestGrobidTrainer:
                 self, capsys):
             main([
                 'tag',
-                '--input=%s' % GROBID_HEADER_TEST_DATA_URL,
-                '--model-path=%s' % GROBID_HEADER_MODEL_URL,
+                f'--input={GROBID_HEADER_TEST_DATA_URL}',
+                f'--model-path={GROBID_HEADER_MODEL_URL}',
                 '--limit=1',
                 '--tag-output-format=xml'
             ])
@@ -168,11 +168,11 @@ class TestGrobidTrainer:
             eval_output_path = temp_dir / 'eval.json'
             main([
                 'eval',
-                '--input=%s' % GROBID_HEADER_TEST_DATA_URL,
-                '--model-path=%s' % GROBID_HEADER_MODEL_URL,
+                f'--input={GROBID_HEADER_TEST_DATA_URL}',
+                f'--model-path={GROBID_HEADER_MODEL_URL}',
                 '--limit=100',
                 '--eval-output-format=json',
-                '--eval-output-path=%s' % eval_output_path
+                f'--eval-output-path={eval_output_path}'
             ])
             eval_data = json.loads(eval_output_path.read_text())
             assert eval_data['scores']['<title>']['f1'] >= 0.5

@@ -13,7 +13,7 @@ def parse_number_range(expr: str) -> List[int]:
         return [int(expr)]
     if len(fragments) == 2:
         return list(range(int(fragments[0]), int(fragments[1]) + 1))
-    raise ValueError('invalid number range: %s' % fragments)
+    raise ValueError(f'invalid number range: {fragments}')
 
 
 def parse_number_ranges(expr: str) -> List[int]:

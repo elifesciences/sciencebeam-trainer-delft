@@ -11,7 +11,7 @@ from sciencebeam_trainer_delft.utils.download_manager import (
 
 
 EMBEDDING_NAME_1 = 'embedding1'
-EXTERNAL_TXT_URL_1 = 'http://host/%s.txt' % EMBEDDING_NAME_1
+EXTERNAL_TXT_URL_1 = f'http://host/{EMBEDDING_NAME_1}.txt'
 EXTERNAL_TXT_GZ_URL_1 = EXTERNAL_TXT_URL_1 + '.gz'
 
 

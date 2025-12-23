@@ -11,7 +11,7 @@ from sciencebeam_trainer_delft.embedding.cli import main
 
 EMBEDDING_NAME_1 = 'embedding1'
 
-EXTERNAL_TXT_URL_1 = 'http://host/%s.txt' % EMBEDDING_NAME_1
+EXTERNAL_TXT_URL_1 = f'http://host/{EMBEDDING_NAME_1}.txt'
 
 
 @pytest.fixture(name='embedding_registry_path')
@@ -62,7 +62,7 @@ class TestMain:
             embedding_manager: EmbeddingManager):
         main([
             'disable-lmdb-cache',
-            '--registry-path=%s' % embedding_registry_path
+            f'--registry-path={embedding_registry_path}'
         ])
         assert embedding_manager.get_embedding_lmdb_path() is None
 
@@ -72,7 +72,7 @@ class TestMain:
             embedding_manager: EmbeddingManager):
         main([
             'set-lmdb-path',
-            '--registry-path=%s' % embedding_registry_path,
+            f'--registry-path={embedding_registry_path}',
             '--lmdb-cache-path=data/updated-path'
         ])
         assert embedding_manager.get_embedding_lmdb_path() == 'data/updated-path'
@@ -87,8 +87,8 @@ class TestMain:
         })
         main([
             'override-embedding-url',
-            '--registry-path=%s' % embedding_registry_path,
-            '--override-url=%s=%s' % (EMBEDDING_NAME_1, EXTERNAL_TXT_URL_1)
+            f'--registry-path={embedding_registry_path}'
+            f'--override-url={EMBEDDING_NAME_1}={EXTERNAL_TXT_URL_1}'
         ])
         embedding_config = embedding_manager.get_embedding_config(EMBEDDING_NAME_1)
         assert embedding_config
@@ -101,8 +101,8 @@ class TestMain:
         embedding_manager_mock.ensure_available.return_value = EMBEDDING_NAME_1
         main([
             'preload',
-            '--registry-path=%s' % embedding_registry_path,
-            '--embedding=%s' % EMBEDDING_NAME_1
+            f'--registry-path={embedding_registry_path}',
+            f'--embedding={EMBEDDING_NAME_1}'
         ])
         embedding_manager_mock.ensure_available.assert_called_with(EMBEDDING_NAME_1)
         embedding_manager_mock.ensure_lmdb_cache_if_enabled.assert_called_with(EMBEDDING_NAME_1)

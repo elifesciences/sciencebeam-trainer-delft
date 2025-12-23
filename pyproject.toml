@@ -19,9 +19,9 @@ delft = [
 
 [dependency-groups]
 dev = [
-    "flake8==4.0.1",
-    "mypy==0.910",
-    "pylint==2.8.3",
+    "flake8>=4.0.1",
+    "mypy>=1.19.0",
+    "pylint>=3.3.9",
     "pytest==6.2.5",
     "pytest-watch==4.2.0",
     "types-pyyaml==6.0.12.20250915",

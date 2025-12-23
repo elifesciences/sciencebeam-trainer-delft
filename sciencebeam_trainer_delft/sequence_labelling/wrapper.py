@@ -710,7 +710,7 @@ class Sequence(_Sequence):
             embedding_name,
             use_ELMo=model_config.use_ELMo
         )
-        if not embeddings.embed_size > 0:
+        if embeddings.embed_size <= 0:
             raise AssertionError(
                 'invalid embedding size, embeddings not loaded? %s' % embedding_name
             )

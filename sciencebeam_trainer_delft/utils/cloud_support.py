@@ -1,3 +1,4 @@
+# pylint: disable=contextmanager-generator-missing-cleanup
 import os
 import logging
 from contextlib import contextmanager

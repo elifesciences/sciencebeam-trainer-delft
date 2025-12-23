@@ -1,3 +1,4 @@
+# pylint: disable=contextmanager-generator-missing-cleanup
 import logging
 import os
 import tarfile

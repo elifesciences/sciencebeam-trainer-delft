@@ -77,8 +77,7 @@ def iter_batch_window_indices_and_offset(
         sequence_lengths: List[int],
         window_stride: int,
         batch_size: int) -> Iterable[List[Tuple[int, int]]]:
-    if len(sequence_lengths) < batch_size:
-        batch_size = len(sequence_lengths)
+    batch_size = min(batch_size, len(sequence_lengths))
     next_sequence_indices = list(range(len(sequence_lengths)))
     batch_sequence_indices = next_sequence_indices[:batch_size]
     next_sequence_indices = next_sequence_indices[batch_size:]

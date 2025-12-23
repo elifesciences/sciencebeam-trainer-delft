@@ -74,11 +74,11 @@ class EmbeddingManager:
         self.min_lmdb_cache_size = min_lmdb_cache_size
 
     def _load(self) -> dict:
-        return json.loads(Path(self.path).read_text())
+        return json.loads(Path(self.path).read_text(encoding='utf-8'))
 
     def _save(self, registry_data: dict):
         LOGGER.debug('saving registry data: %s', registry_data)
-        return Path(self.path).write_text(json.dumps(registry_data, indent=4))
+        return Path(self.path).write_text(json.dumps(registry_data, indent=4), encoding='utf-8')
 
     def _get_registry_data(self) -> dict:
         try:

@@ -149,7 +149,7 @@ def _open_raw(filepath: str, mode: str) -> Iterator[IO]:
             with tempfile.TemporaryDirectory(suffix='download') as temp_dir:
                 temp_file = os.path.join(temp_dir, os.path.basename(filepath))
                 urlretrieve(filepath, temp_file)
-                with open(temp_file, mode=mode) as fp:
+                with open(temp_file, mode=mode, encoding='utf-8') as fp:
                     yield fp
         except HTTPError as error:
             if error.code == 404:
@@ -207,12 +207,12 @@ def list_files(directory_path: str) -> List[str]:
 
 
 @contextmanager
-def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
+def auto_uploading_output_file(filepath: str, mode: str = 'w', encoding='utf-8', **kwargs):
     if not is_external_location(filepath):
         file_dirname = os.path.dirname(filepath)
         if file_dirname:
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        with open(filepath, mode=mode, **kwargs) as fp:
+        with open(filepath, mode=mode, encoding=encoding, **kwargs) as fp:
             yield fp
             return
     with tempfile.TemporaryDirectory(suffix='-output') as temp_dir:
@@ -223,7 +223,7 @@ def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
             )
         )
         try:
-            with open(temp_file, mode=mode, **kwargs) as fp:
+            with open(temp_file, mode=mode, encoding=encoding, **kwargs) as fp:
                 yield fp
         finally:
             if os.path.exists(temp_file):

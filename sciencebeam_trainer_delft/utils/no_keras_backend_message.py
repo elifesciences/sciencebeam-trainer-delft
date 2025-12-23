@@ -3,5 +3,5 @@
 from contextlib import redirect_stderr
 import os
 
-with redirect_stderr(open(os.devnull, "w")):
+with redirect_stderr(open(os.devnull, "w", encoding='utf-8')):
     import keras  # noqa pylint: disable=unused-import

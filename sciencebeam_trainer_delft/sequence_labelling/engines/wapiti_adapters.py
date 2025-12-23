@@ -189,7 +189,7 @@ class WapitiModelAdapter:
         with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
             data_path = Path(temp_dir).joinpath('input.data')
             output_data_path = Path(temp_dir).joinpath('output.data')
-            with data_path.open(mode='w') as fp:
+            with data_path.open(mode='w', encoding='utf-8') as fp:
                 write_wapiti_input_data(
                     fp, x=x, features=features
                 )
@@ -199,7 +199,7 @@ class WapitiModelAdapter:
                 output_data_path=str(output_data_path),
                 output_only_labels=False
             )
-            with output_data_path.open(mode='r') as output_data_fp:
+            with output_data_path.open(mode='r', encoding='utf-8') as output_data_fp:
                 yield from iter_read_tagged_result(output_data_fp)
 
     def iter_tag(
@@ -334,7 +334,7 @@ class WapitiModelTrainAdapter:
             self.temp_model_path = '/tmp/model.wapiti'
         with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
             data_path = Path(temp_dir).joinpath('train.data')
-            with data_path.open(mode='w') as fp:
+            with data_path.open(mode='w', encoding='utf-8') as fp:
                 write_wapiti_train_data(
                     fp, x=x_train, y=y_train, features=features_train
                 )

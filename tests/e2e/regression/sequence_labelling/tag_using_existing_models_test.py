@@ -22,7 +22,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def load_test_data(filepath: Union[str, Path]) -> dict:
-    with open(filepath) as f:
+    with open(filepath, encoding='utf-8') as f:
         return yaml.safe_load(f)
 
 

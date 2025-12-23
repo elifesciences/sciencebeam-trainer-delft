@@ -57,7 +57,7 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
     LOGGER.debug('source_url: %s, target_directory: %s', source_url, target_directory)
     source_url_meta_file = get_source_url_meta_file_path(target_directory)
     current_source_url = (
-        source_url_meta_file.read_text().strip()
+        source_url_meta_file.read_text(encoding='utf-8').strip()
         if source_url_meta_file.exists()
         else None
     )
@@ -73,7 +73,7 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
             target_directory
         )
     LOGGER.debug('setting %s to %s', source_url_meta_file, source_url)
-    source_url_meta_file.write_text(source_url)
+    source_url_meta_file.write_text(source_url, encoding='utf-8')
     return result
 
 

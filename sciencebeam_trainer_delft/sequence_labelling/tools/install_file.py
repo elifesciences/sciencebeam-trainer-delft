@@ -22,7 +22,7 @@ def install_file(source_file_path: str, target_file_path: str, force: bool):
     _target_file_path.parent.mkdir(parents=True, exist_ok=True)
     _target_source_url_file_path = Path(target_file_path + SOURCE_URL_META_FILENAME_EXT)
     if not force and _target_source_url_file_path.exists():
-        current_source_url = _target_source_url_file_path.read_text().strip()
+        current_source_url = _target_source_url_file_path.read_text(encoding='utf-8').strip()
         if current_source_url == str(source_file_path):
             LOGGER.debug(
                 'current source_url of %s already (skipping): %s',
@@ -30,7 +30,7 @@ def install_file(source_file_path: str, target_file_path: str, force: bool):
             )
             return
     copy_file(str(source_file_path), str(target_file_path))
-    _target_source_url_file_path.write_text(str(source_file_path))
+    _target_source_url_file_path.write_text(str(source_file_path), encoding='utf-8')
 
 
 def parse_args(argv: List[str] = None) -> argparse.Namespace:

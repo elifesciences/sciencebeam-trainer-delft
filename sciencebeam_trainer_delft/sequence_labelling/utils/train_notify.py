@@ -80,7 +80,7 @@ class TrainNotificationManager:
             'text': message
         }
         LOGGER.info('sending notification: %r (url: %r)', message, self.notification_url)
-        requests.post(self.notification_url, json=data)
+        requests.post(self.notification_url, json=data, timeout=60)
 
     def notify_error(self, model_path: str, error: str):
         self.send_notification(

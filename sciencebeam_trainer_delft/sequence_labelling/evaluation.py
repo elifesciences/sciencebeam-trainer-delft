@@ -36,7 +36,7 @@ EVALUATION_OUTPUT_FORMATS = [
 
 # copied from https://stackoverflow.com/a/57915246/8676953
 class NpJsonEncoder(json.JSONEncoder):
-    def default(self, obj):  # pylint: disable=arguments-differ, method-hidden
+    def default(self, obj):  # pylint: disable=arguments-renamed, method-hidden
         if isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):

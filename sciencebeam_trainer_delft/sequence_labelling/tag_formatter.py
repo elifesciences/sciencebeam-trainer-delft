@@ -42,7 +42,7 @@ T_Batch_Token_Label_Tuple_List = Sequence[T_Document_Token_Label_Tuple_List]
 
 
 class CustomJsonEncoder(json.JSONEncoder):
-    def default(self, obj):  # pylint: disable=arguments-differ, method-hidden
+    def default(self, obj):  # pylint: disable=arguments-renamed, method-hidden
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)

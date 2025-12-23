@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import keras.backend as K
 
@@ -14,11 +15,12 @@ class ModelWithMetadataCheckpoint(ModelSaverCallback):
     """Similar to ModelCheckpoint but saves model metadata such as the config.
     """
     def __init__(
-            self, base_path: str,
-            model_saver: ModelSaver,
-            add_checkpoint_meta: bool = True,
-            meta: dict = None,
-            **kwargs):
+        self, base_path: str,
+        model_saver: ModelSaver,
+        add_checkpoint_meta: bool = True,
+        meta: Optional[dict] = None,
+        **kwargs
+    ):
         self.base_path = base_path
         self.model_saver = model_saver
         self.add_checkpoint_meta = add_checkpoint_meta

@@ -131,9 +131,10 @@ class WapitiModelAdapter:
 
     @staticmethod
     def load_from(
-            model_path: str,
-            download_manager: DownloadManager,
-            wapiti_binary_path: str = None) -> 'WapitiModelAdapter':
+        model_path: str,
+        download_manager: DownloadManager,
+        wapiti_binary_path: Optional[str] = None
+    ) -> 'WapitiModelAdapter':
         model_file_path = os.path.join(model_path, 'model.wapiti.gz')
         local_model_file_path = None
         try:
@@ -163,7 +164,7 @@ class WapitiModelAdapter:
         self,
         x: np.ndarray,
         features: np.ndarray,
-        output_format: str = None
+        output_format: Optional[str] = None
     ) -> Iterable[List[Tuple[str, str]]]:
         # Note: this method doesn't currently seem to work reliable and needs to be investigated
         #   The evaluation always shows zero.
@@ -183,7 +184,7 @@ class WapitiModelAdapter:
         self,
         x: np.ndarray,
         features: np.ndarray,
-        output_format: str = None
+        output_format: Optional[str] = None
     ) -> Iterable[List[Tuple[str, str]]]:
         assert not output_format, 'output_format not supported'
         with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
@@ -206,7 +207,7 @@ class WapitiModelAdapter:
         self,
         x: np.ndarray,
         features: np.ndarray,
-        output_format: str = None
+        output_format: Optional[str] = None
     ) -> Iterable[List[Tuple[str, str]]]:
         return self.iter_tag_using_wrapper(x, features, output_format)
 
@@ -214,7 +215,7 @@ class WapitiModelAdapter:
         self,
         x: np.ndarray,
         features: np.ndarray,
-        output_format: str = None
+        output_format: Optional[str] = None
     ) -> List[List[Tuple[str, str]]]:
         assert not output_format, 'output_format not supported'
         return list(self.iter_tag(x, features))
@@ -296,15 +297,16 @@ def write_wapiti_train_data(fp: IO, x: np.ndarray, y: np.ndarray, features: np.n
 
 class WapitiModelTrainAdapter:
     def __init__(
-            self,
-            model_name: str,
-            template_path: str,
-            temp_model_path: str,
-            max_epoch: int,
-            download_manager: DownloadManager,
-            gzip_enabled: bool = False,
-            wapiti_binary_path: str = None,
-            wapiti_train_args: dict = None):
+        self,
+        model_name: str,
+        template_path: str,
+        temp_model_path: str,
+        max_epoch: int,
+        download_manager: DownloadManager,
+        gzip_enabled: bool = False,
+        wapiti_binary_path: Optional[str] = None,
+        wapiti_train_args: Optional[dict] = None
+    ):
         self.model_name = model_name
         self.template_path = template_path
         self.temp_model_path = temp_model_path
@@ -393,11 +395,11 @@ class WapitiModelTrainAdapter:
             x_test, y_test, features=features
         )
 
-    def get_model_output_path(self, output_path: str = None) -> str:
+    def get_model_output_path(self, output_path: Optional[str] = None) -> str:
         assert output_path, "output_path required"
         return os.path.join(output_path, self.model_name)
 
-    def save(self, output_path: str = None):
+    def save(self, output_path: Optional[str] = None):
         model_output_path = self.get_model_output_path(output_path)
         assert self.temp_model_path, "temp_model_path required"
         if not Path(self.temp_model_path).exists():

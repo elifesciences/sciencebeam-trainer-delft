@@ -73,7 +73,7 @@ def get_texts_and_classes_from_data_frame(
 
 def load_texts_and_classes_pandas(
     filepath: str,
-    limit: int = None,
+    limit: Optional[int] = None,
     **kwargs
 ) -> Tuple[T_Batch_Text_Array, T_Batch_Text_Classes_Array, List[str]]:
     """

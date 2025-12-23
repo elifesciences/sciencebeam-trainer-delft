@@ -1,7 +1,7 @@
 import logging
 import re
 from itertools import islice
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 
@@ -101,7 +101,7 @@ def load_data_and_labels_crf_lines(
 
 def load_data_crf_lines(
     lines: Iterable[str],
-    limit: int = None
+    limit: Optional[int] = None
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Load data, features (no label!) from a CRF matrix file
@@ -137,7 +137,7 @@ def load_data_crf_lines(
 
 def load_data_and_labels_crf_file(
     filepath: str,
-    limit: int = None
+    limit: Optional[int] = None
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     try:
         with open(filepath, 'r', encoding='utf-8') as fp:
@@ -148,6 +148,6 @@ def load_data_and_labels_crf_file(
 
 def load_data_crf_string(
     crf_string: str,
-    limit: int = None
+    limit: Optional[int] = None
 ) -> Tuple[np.ndarray, np.ndarray]:
     return load_data_crf_lines(crf_string.splitlines(), limit=limit)

@@ -233,8 +233,9 @@ class ModelSaver(_BaseModelSaverLoader):
 
 class ModelLoader(_BaseModelSaverLoader):
     def __init__(
-            self,
-            download_manager: DownloadManager = None):
+        self,
+        download_manager: Optional[DownloadManager] = None
+    ):
         if download_manager is None:
             download_manager = DownloadManager()
         self.download_manager = download_manager

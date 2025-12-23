@@ -1,5 +1,5 @@
 import json
-from typing import IO
+from typing import IO, Optional
 
 from delft.textClassification.config import (
     ModelConfig as _ModelConfig,
@@ -16,9 +16,10 @@ class DefaultConfig:
 
 class AppConfig:
     def __init__(
-            self,
-            download_manager: DownloadManager = None,
-            embedding_manager: EmbeddingManager = None):
+        self,
+        download_manager: Optional[DownloadManager] = None,
+        embedding_manager: Optional[EmbeddingManager] = None
+    ):
         self.download_manager = download_manager
         self.embedding_manager = embedding_manager
 
@@ -39,7 +40,7 @@ class ModelConfig(_ModelConfig):
 class TrainingConfig(_TrainingConfig):
     def __init__(
         self,
-        log_dir: str = None,
+        log_dir: Optional[str] = None,
         learning_rate: float = 0.001,
         **kwargs
     ):

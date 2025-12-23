@@ -3,6 +3,7 @@ from datetime import datetime
 from abc import ABC
 import json
 import os
+from typing import Optional
 
 from keras.models import Model
 
@@ -68,7 +69,7 @@ class ModelSaver(_BaseModelSaverLoader):
             json.dump(meta, fp, sort_keys=False, indent=4)
         LOGGER.info('updated checkpoints meta: %s', filepath)
 
-    def save_to(self, directory: str, model: Model, meta: dict = None):
+    def save_to(self, directory: str, model: Model, meta: Optional[dict] = None):
         self.save_model_config(self.model_config, os.path.join(directory, self.config_file))
         self.save_model_weights(
             model,
@@ -87,8 +88,9 @@ class ModelSaver(_BaseModelSaverLoader):
 
 class ModelLoader(_BaseModelSaverLoader):
     def __init__(
-            self,
-            download_manager: DownloadManager = None):
+        self,
+        download_manager: Optional[DownloadManager] = None
+    ):
         if download_manager is None:
             download_manager = DownloadManager()
         self.download_manager = download_manager

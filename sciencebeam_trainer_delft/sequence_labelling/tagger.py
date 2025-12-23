@@ -184,7 +184,7 @@ class Tagger:
     def iter_tag(
         self,
         texts: Sequence[str],
-        output_format,
+        output_format: Optional[str],
         features=None,
         tag_transformed: bool = False
     ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:

@@ -1,7 +1,7 @@
 import logging
 import math
 import os
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 from sklearn.metrics import log_loss, roc_auc_score
@@ -22,9 +22,10 @@ LOGGER = logging.getLogger(__name__)
 
 
 def get_callbacks(
-        model_saver: ModelSaver,
-        log_dir: str = None,
-        meta: dict = None) -> List[Callback]:
+    model_saver: ModelSaver,
+    log_dir: Optional[str] = None,
+    meta: Optional[dict] = None
+) -> List[Callback]:
     callbacks = []
 
     if log_dir:
@@ -46,19 +47,20 @@ def get_callbacks(
 
 
 def train_model(  # pylint: disable=too-many-statements
-        model: Model,
-        list_classes: List[str],
-        batch_size: int,  # pylint: disable=unused-argument
-        max_epoch: int,
-        use_roc_auc: bool,
-        class_weights,
-        training_generator,
-        validation_generator,
-        val_y,
-        use_ELMo=False,
-        multiprocessing: bool = True,
-        nb_workers: int = 6,
-        callbacks: List[Callback] = None):
+    model: Model,
+    list_classes: List[str],
+    batch_size: int,  # pylint: disable=unused-argument
+    max_epoch: int,
+    use_roc_auc: bool,
+    class_weights,
+    training_generator,
+    validation_generator,
+    val_y,
+    use_ELMo=False,
+    multiprocessing: bool = True,
+    nb_workers: int = 6,
+    callbacks: Optional[List[Callback]] = None
+):
     best_loss = -1.0
     best_roc_auc = -1.0
     best_weights = None

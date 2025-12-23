@@ -1,6 +1,7 @@
 import json
 import logging
 from pathlib import Path
+from typing import Optional
 
 from delft.sequenceLabelling.preprocess import (
     FeaturesPreprocessor as DelftFeaturesPreprocessor,
@@ -31,7 +32,7 @@ SAMPLE_Y = [['label1']]
 
 
 class DummyModel(BaseModel):
-    def __init__(self, config, ntags: int = None, data: bytes = b'dummy data'):
+    def __init__(self, config, ntags: Optional[int] = None, data: bytes = b'dummy data'):
         super().__init__(config, ntags)
         self.data = data
 

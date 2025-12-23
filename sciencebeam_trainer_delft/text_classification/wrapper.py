@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Optional
 
 from delft.textClassification.models import getModel
 
@@ -26,11 +27,12 @@ DEFAULT_EMBEDDINGS_PATH = 'delft/resources-registry.json'
 
 class Classifier(_Classifier):
     def __init__(
-            self,
-            download_manager: DownloadManager = None,
-            embedding_registry_path: str = None,
-            embedding_manager: EmbeddingManager = None,
-            **kwargs):
+        self,
+        download_manager: Optional[DownloadManager] = None,
+        embedding_registry_path: Optional[str] = None,
+        embedding_manager: Optional[EmbeddingManager] = None,
+        **kwargs
+    ):
         self.embedding_registry_path = embedding_registry_path or DEFAULT_EMBEDDINGS_PATH
         if download_manager is None:
             download_manager = DownloadManager()

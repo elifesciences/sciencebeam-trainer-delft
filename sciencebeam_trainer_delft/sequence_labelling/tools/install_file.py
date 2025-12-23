@@ -33,7 +33,7 @@ def install_file(source_file_path: str, target_file_path: str, force: bool):
     _target_source_url_file_path.write_text(str(source_file_path), encoding='utf-8')
 
 
-def parse_args(argv: List[str] = None) -> argparse.Namespace:
+def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Install file")
     parser.add_argument('--source', required=True, help='Source file url or path')
     parser.add_argument('--target', required=True, help='Target file path')
@@ -46,7 +46,7 @@ def run(args: argparse.Namespace):
     install_file(source_file_path=args.source, target_file_path=args.target, force=args.force)
 
 
-def main(argv: List[str] = None):
+def main(argv: Optional[Sequence[str]] = None):
     args = parse_args(argv)
     process_default_args(args)
     run(args)

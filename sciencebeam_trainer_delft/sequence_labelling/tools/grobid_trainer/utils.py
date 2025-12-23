@@ -100,7 +100,7 @@ def log_data_info(x: np.ndarray, y: np.ndarray, features: np.ndarray):
 
 def _load_data_and_labels_crf_files(
     input_paths: List[str],
-    limit: int = None
+    limit: Optional[int] = None
 ) -> Tuple[T_Batch_Token_Array, T_Batch_Label_Array, T_Batch_Features_Array]:
     if len(input_paths) == 1:
         return load_data_and_labels_crf_file(input_paths[0], limit=limit)
@@ -151,12 +151,12 @@ def get_clean_x_y_features(x: np.ndarray, y: np.ndarray, features: np.ndarray):
 
 
 def load_data_and_labels(
-    input_paths: List[str] = None,
-    limit: int = None,
+    input_paths: Optional[List[str]] = None,
+    limit: Optional[int] = None,
     shuffle_input: bool = False,
     clean_features: bool = True,
     random_seed: int = DEFAULT_RANDOM_SEED,
-    download_manager: DownloadManager = None
+    download_manager: Optional[DownloadManager] = None
 ) -> Tuple[T_Batch_Token_Array, T_Batch_Label_Array, T_Batch_Features_Array]:
     assert download_manager
     assert input_paths
@@ -194,14 +194,15 @@ def notify_model_train_start(
 
 
 def do_train(
-        model: Union[Sequence, WapitiModelTrainAdapter],
-        input_paths: List[str] = None,
-        output_path: str = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        train_notification_manager: TrainNotificationManager = None,
-        download_manager: DownloadManager = None):
+    model: Union[Sequence, WapitiModelTrainAdapter],
+    input_paths: Optional[List[str]] = None,
+    output_path: Optional[str] = None,
+    limit: Optional[int] = None,
+    shuffle_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    train_notification_manager: Optional[TrainNotificationManager] = None,
+    download_manager: Optional[DownloadManager] = None
+):
     x_all, y_all, features_all = load_data_and_labels(
         input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
@@ -243,10 +244,11 @@ def do_train(
 
 
 def do_train_with_error_notification(
-        model: Union[Sequence, WapitiModelTrainAdapter],
-        output_path: str = None,
-        train_notification_manager: TrainNotificationManager = None,
-        **kwargs):
+    model: Union[Sequence, WapitiModelTrainAdapter],
+    output_path: Optional[str] = None,
+    train_notification_manager: Optional[TrainNotificationManager] = None,
+    **kwargs
+):
     model_path = model.get_model_output_path(output_path)
     try:
         do_train(
@@ -283,21 +285,22 @@ def process_resume_train_model_params(
 
 # train a GROBID model with all available data
 def train(
-        model_name: str,
-        embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
-        input_paths: List[str] = None,
-        output_path: str = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        max_sequence_length: int = 100,
-        max_epoch=100,
-        resume_train_model_path: str = None,
-        auto_resume: bool = False,
-        train_notification_manager: TrainNotificationManager = None,
-        download_manager: DownloadManager = None,
-        embedding_manager: EmbeddingManager = None,
-        **kwargs):
+    model_name: str,
+    embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
+    input_paths: Optional[List[str]] = None,
+    output_path: Optional[str] = None,
+    limit: Optional[int] = None,
+    shuffle_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    max_sequence_length: int = 100,
+    max_epoch=100,
+    resume_train_model_path: Optional[str] = None,
+    auto_resume: bool = False,
+    train_notification_manager: Optional[TrainNotificationManager] = None,
+    download_manager: Optional[DownloadManager] = None,
+    embedding_manager: Optional[EmbeddingManager] = None,
+    **kwargs
+):
 
     model_name = get_model_name(
         model_name, output_path=output_path, use_ELMo=use_ELMo
@@ -332,19 +335,20 @@ def train(
 
 
 def wapiti_train(
-        model_name: str,
-        template_path: str,
-        output_path: str,
-        download_manager: DownloadManager,
-        input_paths: List[str] = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        max_epoch: int = 100,
-        train_notification_manager: TrainNotificationManager = None,
-        gzip_enabled: bool = False,
-        wapiti_binary_path: str = None,
-        wapiti_train_args: dict = None):
+    model_name: str,
+    template_path: str,
+    output_path: str,
+    download_manager: DownloadManager,
+    input_paths: Optional[List[str]] = None,
+    limit: Optional[int] = None,
+    shuffle_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    max_epoch: int = 100,
+    train_notification_manager: Optional[TrainNotificationManager] = None,
+    gzip_enabled: bool = False,
+    wapiti_binary_path: Optional[str] = None,
+    wapiti_train_args: Optional[dict] = None
+):
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
         model = WapitiModelTrainAdapter(
@@ -370,11 +374,12 @@ def wapiti_train(
 
 
 def output_classification_result(
-        classification_result: ClassificationResult,
-        eval_output_args: Optional[dict],
-        eval_input_paths: List[str] = None,
-        model_path: str = None,
-        model_summary_props: dict = None):
+    classification_result: ClassificationResult,
+    eval_output_args: Optional[dict],
+    eval_input_paths: Optional[List[str]] = None,
+    model_path: Optional[str] = None,
+    model_summary_props: Optional[dict] = None
+):
     eval_output_args = eval_output_args or dict()
     assert eval_output_args is not None
     output_format = eval_output_args.get('eval_output_args')
@@ -408,18 +413,19 @@ def output_classification_result(
 
 
 def do_train_eval(
-        model: Union[Sequence, WapitiModelTrainAdapter],
-        input_paths: List[str] = None,
-        output_path: str = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        eval_input_paths: List[str] = None,
-        eval_limit: int = None,
-        eval_output_args: dict = None,
-        fold_count: int = 1,
-        train_notification_manager: TrainNotificationManager = None,
-        download_manager: DownloadManager = None):
+    model: Union[Sequence, WapitiModelTrainAdapter],
+    input_paths: Optional[List[str]] = None,
+    output_path: Optional[str] = None,
+    limit: Optional[int] = None,
+    shuffle_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    eval_input_paths: Optional[List[str]] = None,
+    eval_limit: Optional[int] = None,
+    eval_output_args: Optional[dict] = None,
+    fold_count: int = 1,
+    train_notification_manager: Optional[TrainNotificationManager] = None,
+    download_manager: Optional[DownloadManager] = None
+):
     x_all, y_all, features_all = load_data_and_labels(
         input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
@@ -498,10 +504,11 @@ def do_train_eval(
 
 
 def do_train_eval_with_error_notification(
-        model: Union[Sequence, WapitiModelTrainAdapter],
-        output_path: str = None,
-        train_notification_manager: TrainNotificationManager = None,
-        **kwargs):
+    model: Union[Sequence, WapitiModelTrainAdapter],
+    output_path: Optional[str] = None,
+    train_notification_manager: Optional[TrainNotificationManager] = None,
+    **kwargs
+):
     model_path = model.get_model_output_path(output_path)
     try:
         do_train_eval(
@@ -521,24 +528,29 @@ def do_train_eval_with_error_notification(
 
 # split data, train a GROBID model and evaluate it
 def train_eval(
-        model_name: str,
-        embeddings_name, architecture='BidLSTM_CRF', use_ELMo=False,
-        input_paths: List[str] = None,
-        output_path: str = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        eval_input_paths: List[str] = None,
-        eval_limit: int = None,
-        eval_output_args: dict = None,
-        max_sequence_length: int = 100,
-        fold_count=1, max_epoch=100, batch_size=20,
-        resume_train_model_path: str = None,
-        auto_resume: bool = False,
-        train_notification_manager: TrainNotificationManager = None,
-        download_manager: DownloadManager = None,
-        embedding_manager: EmbeddingManager = None,
-        **kwargs):
+    model_name: str,
+    embeddings_name,
+    architecture='BidLSTM_CRF',
+    use_ELMo=False,
+    input_paths: Optional[List[str]] = None,
+    output_path: Optional[str] = None,
+    limit: Optional[int] = None,
+    shuffle_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    eval_input_paths: Optional[List[str]] = None,
+    eval_limit: Optional[int] = None,
+    eval_output_args: Optional[dict] = None,
+    max_sequence_length: int = 100,
+    fold_count=1,
+    max_epoch=100,
+    batch_size=20,
+    resume_train_model_path: Optional[str] = None,
+    auto_resume: bool = False,
+    train_notification_manager: Optional[TrainNotificationManager] = None,
+    download_manager: Optional[DownloadManager] = None,
+    embedding_manager: Optional[EmbeddingManager] = None,
+    **kwargs
+):
 
     model_name = get_model_name(
         model_name, output_path=output_path, use_ELMo=use_ELMo
@@ -579,23 +591,24 @@ def train_eval(
 
 
 def wapiti_train_eval(
-        model_name: str,
-        template_path: str,
-        download_manager: DownloadManager,
-        input_paths: List[str] = None,
-        output_path: str = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        eval_input_paths: List[str] = None,
-        eval_limit: int = None,
-        eval_output_args: dict = None,
-        fold_count: int = 1,
-        max_epoch: int = 100,
-        train_notification_manager: TrainNotificationManager = None,
-        gzip_enabled: bool = False,
-        wapiti_binary_path: str = None,
-        wapiti_train_args: dict = None):
+    model_name: str,
+    template_path: str,
+    download_manager: DownloadManager,
+    input_paths: Optional[List[str]] = None,
+    output_path: Optional[str] = None,
+    limit: Optional[int] = None,
+    shuffle_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    eval_input_paths: Optional[List[str]] = None,
+    eval_limit: Optional[int] = None,
+    eval_output_args: Optional[dict] = None,
+    fold_count: int = 1,
+    max_epoch: int = 100,
+    train_notification_manager: Optional[TrainNotificationManager] = None,
+    gzip_enabled: bool = False,
+    wapiti_binary_path: Optional[str] = None,
+    wapiti_train_args: Optional[dict] = None
+):
     assert fold_count == 1, 'only fold_count == 1 supported'
     with tempfile.TemporaryDirectory(suffix='-wapiti') as temp_dir:
         temp_model_path = os.path.join(temp_dir, 'model.wapiti')
@@ -625,14 +638,15 @@ def wapiti_train_eval(
 
 
 def do_eval_model(
-        model: Union[Sequence, WapitiModelAdapter],
-        input_paths: List[str] = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        split_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        eval_output_args: dict = None,
-        download_manager: DownloadManager = None):
+    model: Union[Sequence, WapitiModelAdapter],
+    input_paths: Optional[List[str]] = None,
+    limit: Optional[int] = None,
+    shuffle_input: bool = False,
+    split_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    eval_output_args: Optional[dict] = None,
+    download_manager: Optional[DownloadManager] = None
+):
     x_all, y_all, features_all = load_data_and_labels(
         input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
         random_seed=random_seed,
@@ -664,10 +678,11 @@ def do_eval_model(
 
 
 def get_model_name(
-        model_name: str,
-        use_ELMo: bool = False,
-        output_path: str = None,
-        model_path: str = None):
+    model_name: str,
+    use_ELMo: bool = False,
+    output_path: Optional[str] = None,
+    model_path: Optional[str] = None
+):
     if output_path or model_path:
         pass
     else:
@@ -679,15 +694,16 @@ def get_model_name(
 
 
 def load_delft_model(
-        model_name: str,
-        use_ELMo: bool = False,
-        output_path: str = None,
-        model_path: str = None,
-        max_sequence_length: Optional[int] = 100,
-        fold_count: int = 1,
-        batch_size: int = 20,
-        embedding_manager: EmbeddingManager = None,
-        **kwargs):
+    model_name: str,
+    use_ELMo: bool = False,
+    output_path: Optional[str] = None,
+    model_path: Optional[str] = None,
+    max_sequence_length: Optional[int] = 100,
+    fold_count: int = 1,
+    batch_size: int = 20,
+    embedding_manager: Optional[EmbeddingManager] = None,
+    **kwargs
+):
     model = Sequence(
         get_model_name(
             model_name,
@@ -709,22 +725,23 @@ def load_delft_model(
 
 
 def eval_model(
-        model_name: str,
-        use_ELMo: bool = False,
-        input_paths: List[str] = None,
-        output_path: str = None,
-        model_path: str = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        split_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        max_sequence_length: int = 100,
-        fold_count: int = 1,
-        batch_size: int = 20,
-        eval_output_args: dict = None,
-        download_manager: DownloadManager = None,
-        embedding_manager: EmbeddingManager = None,
-        **kwargs):
+    model_name: str,
+    use_ELMo: bool = False,
+    input_paths: Optional[List[str]] = None,
+    output_path: Optional[str] = None,
+    model_path: Optional[str] = None,
+    limit: Optional[int] = None,
+    shuffle_input: bool = False,
+    split_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    max_sequence_length: int = 100,
+    fold_count: int = 1,
+    batch_size: int = 20,
+    eval_output_args: Optional[dict] = None,
+    download_manager: Optional[DownloadManager] = None,
+    embedding_manager: Optional[EmbeddingManager] = None,
+    **kwargs
+):
 
     model = load_delft_model(
         model_name=model_name,
@@ -751,16 +768,17 @@ def eval_model(
 
 
 def wapiti_eval_model(
-        model_path: str,
-        download_manager: DownloadManager,
-        input_paths: List[str] = None,
-        limit: int = None,
-        shuffle_input: bool = False,
-        split_input: bool = False,
-        random_seed: int = DEFAULT_RANDOM_SEED,
-        fold_count: int = 1,
-        eval_output_args: dict = None,
-        wapiti_binary_path: str = None):
+    model_path: str,
+    download_manager: DownloadManager,
+    input_paths: Optional[List[str]] = None,
+    limit: Optional[int] = None,
+    shuffle_input: bool = False,
+    split_input: bool = False,
+    random_seed: int = DEFAULT_RANDOM_SEED,
+    fold_count: int = 1,
+    eval_output_args: Optional[dict] = None,
+    wapiti_binary_path: Optional[str] = None
+):
     assert fold_count == 1, 'only fold_count == 1 supported'
 
     model = WapitiModelAdapter.load_from(
@@ -784,11 +802,11 @@ def do_tag_input(
     model: Union[Sequence, WapitiModelAdapter],
     tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
     tag_output_path: Optional[str] = None,
-    input_paths: List[str] = None,
-    limit: int = None,
+    input_paths: Optional[List[str]] = None,
+    limit: Optional[int] = None,
     shuffle_input: bool = False,
     random_seed: int = DEFAULT_RANDOM_SEED,
-    download_manager: DownloadManager = None
+    download_manager: Optional[DownloadManager] = None
 ):
     x_all, y_all, features_all = load_data_and_labels(
         input_paths=input_paths, limit=limit, shuffle_input=shuffle_input,
@@ -849,19 +867,19 @@ def tag_input(
     tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
     tag_output_path: Optional[str] = None,
     use_ELMo: bool = False,
-    input_paths: List[str] = None,
-    output_path: str = None,
-    model_path: str = None,
-    limit: int = None,
+    input_paths: Optional[List[str]] = None,
+    output_path: Optional[str] = None,
+    model_path: Optional[str] = None,
+    limit: Optional[int] = None,
     shuffle_input: bool = False,
     random_seed: int = DEFAULT_RANDOM_SEED,
-    max_sequence_length: int = None,
-    input_window_stride: int = None,
-    stateful: bool = None,
+    max_sequence_length: Optional[int] = None,
+    input_window_stride: Optional[int] = None,
+    stateful: Optional[bool] = None,
     fold_count: int = 1,
     batch_size: int = 20,
-    download_manager: DownloadManager = None,
-    embedding_manager: EmbeddingManager = None,
+    download_manager: Optional[DownloadManager] = None,
+    embedding_manager: Optional[EmbeddingManager] = None,
     **kwargs
 ):
 
@@ -896,11 +914,11 @@ def wapiti_tag_input(
     download_manager: DownloadManager,
     tag_output_format: str = DEFAULT_TAG_OUTPUT_FORMAT,
     tag_output_path: Optional[str] = None,
-    input_paths: List[str] = None,
-    limit: int = None,
+    input_paths: Optional[List[str]] = None,
+    limit: Optional[int] = None,
     random_seed: int = DEFAULT_RANDOM_SEED,
     shuffle_input: bool = False,
-    wapiti_binary_path: str = None
+    wapiti_binary_path: Optional[str] = None
 ):
     model: WapitiModelAdapter = WapitiModelAdapter.load_from(
         model_path,
@@ -920,9 +938,10 @@ def wapiti_tag_input(
 
 
 def print_input_info(
-        input_paths: List[str],
-        limit: int = None,
-        download_manager: DownloadManager = None):
+    input_paths: List[str],
+    limit: Optional[int] = None,
+    download_manager: Optional[DownloadManager] = None
+):
     x_all, y_all, features_all = load_data_and_labels(
         input_paths=input_paths, limit=limit,
         download_manager=download_manager,

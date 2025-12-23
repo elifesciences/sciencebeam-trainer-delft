@@ -59,13 +59,13 @@ def get_callbacks(
     model_saver: ModelSaver,
     use_crf: bool,  # only required for Scorer (valid passed in)
     use_chain_crf: bool,  # only required for Scorer (valid passed in)
-    log_dir: str = None,
+    log_dir: Optional[str] = None,
     log_period: int = 1,
     valid: tuple = (),
     early_stopping: bool = True,
     early_stopping_patience: int = 5,
     initial_meta: Optional[dict] = None,
-    meta: dict = None
+    meta: Optional[dict] = None
 ):
     """
     Get callbacks.
@@ -202,7 +202,7 @@ def get_model_results(
 
 
 class Scorer(_Scorer):
-    def on_epoch_end(self, epoch: int, logs: dict = None):
+    def on_epoch_end(self, epoch: int, logs: Optional[dict] = None):
         prediction_results = get_model_results(
             model=self.model,
             valid_batches=self.valid_batches,
@@ -248,8 +248,8 @@ class Trainer(_Trainer):
         y_train,
         x_valid,
         y_valid,
-        features_train: np.ndarray = None,
-        features_valid: np.ndarray = None
+        features_train: Optional[np.ndarray] = None,
+        features_valid: Optional[np.ndarray] = None
     ):
         assert self.model is not None
         self.model.summary()

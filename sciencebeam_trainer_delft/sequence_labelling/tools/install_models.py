@@ -128,7 +128,7 @@ def parse_model_source_expr(model_source_expr: str) -> Dict[str, str]:
     return parse_dict(model_source_expr, delimiter='|')
 
 
-def parse_args(argv: List[str] = None) -> argparse.Namespace:
+def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Install model(s)"
     )
@@ -179,7 +179,7 @@ def run(args: argparse.Namespace):
     )
 
 
-def main(argv: List[str] = None):
+def main(argv: Optional[Sequence[str]] = None):
     args = parse_args(argv)
     process_default_args(args)
     run(args)

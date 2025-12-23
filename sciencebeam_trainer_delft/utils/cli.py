@@ -33,7 +33,7 @@ def process_default_args(args: argparse.Namespace):
 def default_main(
         parse_args: Callable[[Optional[List[str]]], argparse.Namespace],
         run: Callable[[argparse.Namespace], None],
-        argv: List[str] = None):
+        argv: Optional[Sequence[str]] = None):
     LOGGER.debug('argv: %s', argv)
     args = parse_args(argv)
     process_default_args(args)
@@ -86,7 +86,7 @@ class SubCommandProcessor:
         self.add_sub_command_parsers(parser)
         return parser
 
-    def parse_args(self, argv: List[str] = None) -> argparse.Namespace:
+    def parse_args(self, argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         return self.get_parser().parse_args(argv)
 
     def add_sub_command_parsers(
@@ -118,7 +118,7 @@ class SubCommandProcessor:
         sub_command = self.sub_command_by_name[getattr(args, self.command_dest)]
         sub_command.run(args)
 
-    def main(self, argv: List[str] = None):
+    def main(self, argv: Optional[Sequence[str]] = None):
         args = self.parse_args(argv)
         process_default_args(args)
         self.run(args)

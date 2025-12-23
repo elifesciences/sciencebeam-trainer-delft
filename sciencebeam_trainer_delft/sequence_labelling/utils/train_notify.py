@@ -105,10 +105,11 @@ class TrainNotificationManager:
         )
 
     def notify_success(
-            self,
-            model_path: str,
-            last_checkpoint_path: str = None,
-            classification_result: ClassificationResult = None):
+        self,
+        model_path: str,
+        last_checkpoint_path: Optional[str] = None,
+        classification_result: Optional[ClassificationResult] = None
+    ):
         if classification_result is None:
             self.send_notification(
                 self.notification_train_success_message,
@@ -171,14 +172,16 @@ def notify_train_start(
 
 
 def notify_train_success(
-        train_notification_manager: TrainNotificationManager = None,
-        **kwargs):
+    train_notification_manager: Optional[TrainNotificationManager] = None,
+    **kwargs
+):
     if train_notification_manager is not None:
         train_notification_manager.notify_success(**kwargs)
 
 
 def notify_train_error(
-        train_notification_manager: TrainNotificationManager = None,
-        **kwargs):
+    train_notification_manager: Optional[TrainNotificationManager] = None,
+    **kwargs
+):
     if train_notification_manager is not None:
         train_notification_manager.notify_error(**kwargs)

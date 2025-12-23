@@ -1,6 +1,6 @@
 import argparse
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional, Sequence
 
 from sciencebeam_trainer_delft.utils.misc import parse_dict, merge_dicts
 
@@ -139,7 +139,7 @@ SUB_COMMANDS = [
 ]
 
 
-def main(argv: List[str] = None):
+def main(argv: Optional[Sequence[str]] = None):
     processor = SubCommandProcessor(
         SUB_COMMANDS,
         description='Manage Embeddings'

@@ -39,7 +39,7 @@ class TestWordPreprocessor:
         LOGGER.debug('y_transformed: %s', y_transformed)
         for c in 'Word1':
             assert c in preprocessor.vocab_char
-        for case in {'numeric', 'allLower', 'allUpper', 'initialUpper'}:
+        for case in ['numeric', 'allLower', 'allUpper', 'initialUpper']:
             assert case in preprocessor.vocab_case
         assert 'label1' in preprocessor.vocab_tag
         assert len(X_transformed) == 1

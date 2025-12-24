@@ -4,7 +4,7 @@ import os
 import pickle
 from pathlib import Path
 from shutil import rmtree
-from typing import Dict, List
+from typing import Dict, List, Optional, Sequence
 
 from sciencebeam_trainer_delft.utils.misc import parse_dict, merge_dicts
 from sciencebeam_trainer_delft.utils.io import (
@@ -57,7 +57,7 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
     LOGGER.debug('source_url: %s, target_directory: %s', source_url, target_directory)
     source_url_meta_file = get_source_url_meta_file_path(target_directory)
     current_source_url = (
-        source_url_meta_file.read_text().strip()
+        source_url_meta_file.read_text(encoding='utf-8').strip()
         if source_url_meta_file.exists()
         else None
     )
@@ -73,7 +73,7 @@ def copy_directory_with_source_meta(source_url: str, target_directory: str, forc
             target_directory
         )
     LOGGER.debug('setting %s to %s', source_url_meta_file, source_url)
-    source_url_meta_file.write_text(source_url)
+    source_url_meta_file.write_text(source_url, encoding='utf-8')
     return result
 
 
@@ -128,7 +128,7 @@ def parse_model_source_expr(model_source_expr: str) -> Dict[str, str]:
     return parse_dict(model_source_expr, delimiter='|')
 
 
-def parse_args(argv: List[str] = None) -> argparse.Namespace:
+def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Install model(s)"
     )
@@ -179,7 +179,7 @@ def run(args: argparse.Namespace):
     )
 
 
-def main(argv: List[str] = None):
+def main(argv: Optional[Sequence[str]] = None):
     args = parse_args(argv)
     process_default_args(args)
     run(args)

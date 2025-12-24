@@ -109,7 +109,7 @@ class WapitiModel:
 
 
 class WapitiWrapper:
-    def __init__(self, wapiti_binary_path: str = None):
+    def __init__(self, wapiti_binary_path: Optional[str] = None):
         self.wapiti_binary_path = wapiti_binary_path or 'wapiti'
 
     def check_available(self):

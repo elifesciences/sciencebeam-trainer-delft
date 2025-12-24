@@ -9,6 +9,12 @@ disable=
     too-many-instance-attributes,
     too-many-public-methods,
     no-else-return,
-    no-self-use,
     duplicate-code,
+    consider-using-f-string,
+    redundant-u-string-prefix,
+    too-many-positional-arguments,
+    use-dict-literal,
+    superfluous-parens,
+    use-implicit-booleaness-not-comparison,
+    unnecessary-dunder-call,
     fixme

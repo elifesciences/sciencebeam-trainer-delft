@@ -77,8 +77,7 @@ def iter_batch_window_indices_and_offset(
         sequence_lengths: List[int],
         window_stride: int,
         batch_size: int) -> Iterable[List[Tuple[int, int]]]:
-    if len(sequence_lengths) < batch_size:
-        batch_size = len(sequence_lengths)
+    batch_size = min(batch_size, len(sequence_lengths))
     next_sequence_indices = list(range(len(sequence_lengths)))
     batch_sequence_indices = next_sequence_indices[:batch_size]
     next_sequence_indices = next_sequence_indices[batch_size:]
@@ -112,16 +111,17 @@ def get_batch_window_indices_and_offset(
     ))
 
 
-def get_chunk_at_offset(sequence: list, offset: int, max_sequence_length: int = None):
+def get_chunk_at_offset(sequence: list, offset: int, max_sequence_length: Optional[int] = None):
     if not max_sequence_length:
         return sequence[offset:]
     return sequence[offset:min(len(sequence), offset + max_sequence_length)]
 
 
 def take_with_offset(
-        sequences: list,
-        indices_and_offset: List[Tuple[int, int]],
-        max_sequence_length: int = None) -> list:
+    sequences: list,
+    indices_and_offset: List[Tuple[int, int]],
+    max_sequence_length: Optional[int] = None
+) -> list:
     return [
         get_chunk_at_offset(sequences[index], offset, max_sequence_length)
         for index, offset in indices_and_offset
@@ -323,9 +323,10 @@ def to_batch_casing(
 
 
 def get_concatenated_embeddings_token_count(
-        concatenated_embeddings_token_count: int = None,
-        additional_token_feature_indices: List[int] = None,
-        use_word_embeddings: bool = True) -> int:
+    concatenated_embeddings_token_count: Optional[int] = None,
+    additional_token_feature_indices: Optional[List[int]] = None,
+    use_word_embeddings: bool = True
+) -> int:
     if not use_word_embeddings:
         return 0
     return (
@@ -343,20 +344,20 @@ class DataGenerator(keras.utils.Sequence):
         y: Optional[List[List[str]]],
         preprocessor: Preprocessor,
         batch_size: int = 24,
-        input_window_stride: int = None,
+        input_window_stride: Optional[int] = None,
         stateful: bool = True,
         char_embed_size: int = 25,
-        use_word_embeddings: bool = None,
-        embeddings: Embeddings = None,
-        max_sequence_length: int = None,
+        use_word_embeddings: Optional[bool] = None,
+        embeddings: Optional[Embeddings] = None,
+        max_sequence_length: Optional[int] = None,
         tokenize: bool = False,
         shuffle: bool = True,
-        features: List[List[List[str]]] = None,
-        additional_token_feature_indices: List[int] = None,
-        text_feature_indices: List[int] = None,
-        concatenated_embeddings_token_count: int = None,
+        features: Optional[List[List[List[str]]]] = None,
+        additional_token_feature_indices: Optional[List[int]] = None,
+        text_feature_indices: Optional[List[int]] = None,
+        concatenated_embeddings_token_count: Optional[int] = None,
         is_deprecated_padded_batch_text_list_enabled: bool = False,
-        name: str = None,
+        name: Optional[str] = None,
         use_chain_crf: bool = False
     ):
         'Initialization'

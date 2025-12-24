@@ -67,7 +67,7 @@ class TransferLearningSource:
     @staticmethod
     def from_config(
         transfer_learning_config: Optional[TransferLearningConfig],
-        download_manager: DownloadManager = None
+        download_manager: Optional[DownloadManager] = None
     ) -> Optional['TransferLearningSource']:
         if not transfer_learning_config:
             LOGGER.info('no transfer learning config specified')

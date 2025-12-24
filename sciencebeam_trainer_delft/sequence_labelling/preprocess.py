@@ -1,7 +1,7 @@
 import logging
 import itertools
 from functools import partial
-from typing import Any, Dict, List, Iterable, Set, Tuple, Union
+from typing import Any, Dict, List, Iterable, Optional, Set, Tuple, Union
 
 import numpy as np
 
@@ -30,8 +30,8 @@ LOGGER = logging.getLogger(__name__)
 
 def to_dict(
     value_list_batch: List[list],
-    feature_indices: Set[int] = None,
-    exclude_features_indices: Set[int] = None
+    feature_indices: Optional[Set[int]] = None,
+    exclude_features_indices: Optional[Set[int]] = None
 ) -> Iterable[dict]:
     # Note: keeping `feature_indices` name for pickle compatibility
     #   (also matches upstream for `to_dict`)
@@ -219,8 +219,8 @@ def _fit_transformer_with_progress_logging(
 class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
     def __init__(
         self,
-        features_indices: Iterable[int] = None,
-        continuous_features_indices: Iterable[int] = None
+        features_indices: Optional[Iterable[int]] = None,
+        continuous_features_indices: Optional[Iterable[int]] = None
     ):
         self.features_indices = features_indices
         self.continuous_features_indices = continuous_features_indices
@@ -232,8 +232,8 @@ class FeaturesPreprocessor(BaseEstimator, TransformerMixin):
 
     @staticmethod
     def _create_pipeline(
-        features_indices: Iterable[int] = None,
-        continuous_features_indices: Iterable[int] = None
+        features_indices: Optional[Iterable[int]] = None,
+        continuous_features_indices: Optional[Iterable[int]] = None
     ):
         features_indices_set = None
         if features_indices:

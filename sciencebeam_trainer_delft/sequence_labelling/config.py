@@ -18,26 +18,27 @@ NOT_SET = -1
 
 class ModelConfig(_ModelConfig):
     def __init__(
-            self,
-            *args,
-            use_word_embeddings: bool = True,
-            use_features: bool = False,
-            continuous_features_indices: List[int] = None,
-            max_feature_size: int = 50,
-            additional_token_feature_indices: List[int] = None,
-            text_feature_indices: List[int] = None,
-            unroll_text_feature_index: Optional[int] = None,
-            concatenated_embeddings_token_count: int = None,
-            use_features_indices_input: bool = False,
-            char_input_mask_zero: bool = False,
-            char_input_dropout: float = DEFAULT_CHAR_INPUT_DROPOUT,
-            char_lstm_dropout: float = DEFAULT_CHAR_LSTM_DROPOUT,
-            stateful: bool = False,
-            model_version: int = MODEL_VERSION,
-            # deprecated
-            feature_indices: List[int] = None,
-            feature_embedding_size: int = NOT_SET,
-            **kwargs):
+        self,
+        *args,
+        use_word_embeddings: bool = True,
+        use_features: bool = False,
+        continuous_features_indices: Optional[List[int]] = None,
+        max_feature_size: int = 50,
+        additional_token_feature_indices: Optional[List[int]] = None,
+        text_feature_indices: Optional[List[int]] = None,
+        unroll_text_feature_index: Optional[int] = None,
+        concatenated_embeddings_token_count: Optional[int] = None,
+        use_features_indices_input: bool = False,
+        char_input_mask_zero: bool = False,
+        char_input_dropout: float = DEFAULT_CHAR_INPUT_DROPOUT,
+        char_lstm_dropout: float = DEFAULT_CHAR_LSTM_DROPOUT,
+        stateful: bool = False,
+        model_version: int = MODEL_VERSION,
+        # deprecated
+        feature_indices: Optional[List[int]] = None,
+        feature_embedding_size: int = NOT_SET,
+        **kwargs
+    ):
         if feature_indices:
             kwargs['features_indices'] = feature_indices
         if feature_embedding_size != NOT_SET:
@@ -116,14 +117,15 @@ class ModelConfig(_ModelConfig):
 
 class TrainingConfig(_TrainingConfig):
     def __init__(
-            self,
-            *args,
-            learning_rate=0.001,
-            initial_epoch: int = None,
-            input_window_stride: int = None,
-            checkpoint_epoch_interval: int = 1,
-            initial_meta: Optional[dict] = None,
-            **kwargs):
+        self,
+        *args,
+        learning_rate=0.001,
+        initial_epoch: Optional[int] = None,
+        input_window_stride: Optional[int] = None,
+        checkpoint_epoch_interval: int = 1,
+        initial_meta: Optional[dict] = None,
+        **kwargs
+    ):
         super().__init__(*args, learning_rate=learning_rate, **kwargs)
         self.initial_epoch = initial_epoch
         self.input_window_stride = input_window_stride

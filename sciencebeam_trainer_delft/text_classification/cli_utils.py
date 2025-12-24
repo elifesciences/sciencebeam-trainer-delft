@@ -1,7 +1,7 @@
 import logging
 import time
 from functools import partial
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -54,9 +54,10 @@ def get_downloaded_input_paths(
 
 
 def load_input_data_frame(
-        input_paths: List[str],
-        download_manager: DownloadManager,
-        limit: int = None) -> pd.DataFrame:
+    input_paths: List[str],
+    download_manager: DownloadManager,
+    limit: Optional[int] = None
+) -> pd.DataFrame:
     assert len(input_paths) == 1
     LOGGER.info('loading data: %s', input_paths)
     downloaded_input_paths = get_downloaded_input_paths(
@@ -74,7 +75,7 @@ def load_input_data_frame(
 def load_input_data(
     input_paths: List[str],
     download_manager: DownloadManager,
-    limit: int = None
+    limit: Optional[int] = None
 ) -> Tuple[T_Batch_Text_Array, T_Batch_Text_Classes_Array, List[str]]:
     assert len(input_paths) == 1
     LOGGER.info('loading data: %s', input_paths)
@@ -93,7 +94,7 @@ def load_input_data(
 def load_label_data(
     input_paths: List[str],
     download_manager: DownloadManager,
-    limit: int = None
+    limit: Optional[int] = None
 ) -> Tuple[T_Batch_Text_Classes_Array, List[str]]:
     assert len(input_paths) == 1
     LOGGER.info('loading data: %s', input_paths)

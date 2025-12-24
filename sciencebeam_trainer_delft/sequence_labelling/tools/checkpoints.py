@@ -4,7 +4,7 @@ import logging
 import json
 import os
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 from tqdm.auto import tqdm
 
@@ -140,6 +140,7 @@ def checkpoint_summary(
     checkpoint_meta_map_sorted_by_f1 = get_checkpoint_meta_map_sorted_by_f1(
         checkpoint_meta_map
     )
+    assert last_checkpoint is not None
     checkpoint_summary_list = get_checkpoint_summary_list(
         checkpoint_meta_map_sorted_by_f1=checkpoint_meta_map_sorted_by_f1,
         last_checkpoint=last_checkpoint,
@@ -152,7 +153,7 @@ def checkpoint_summary(
     print(formatted_summary)
 
 
-def parse_args(argv: List[str] = None) -> argparse.Namespace:
+def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Checkpoints related summary"
     )
@@ -197,7 +198,7 @@ def run(args: argparse.Namespace):
     )
 
 
-def main(argv: List[str] = None):
+def main(argv: Optional[Sequence[str]] = None):
     args = parse_args(argv)
     process_default_args(args)
     run(args)

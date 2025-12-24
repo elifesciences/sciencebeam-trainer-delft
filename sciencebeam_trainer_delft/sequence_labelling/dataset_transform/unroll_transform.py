@@ -40,8 +40,8 @@ def strip_tag_prefix(tag: Optional[str]) -> str:
     return tag or ''
 
 
-def get_next_transform_token_y(token_y: str) -> str:
-    if token_y and token_y.startswith('B-'):
+def get_next_transform_token_y(token_y: Optional[str]) -> Optional[str]:
+    if token_y is not None and token_y.startswith('B-'):
         return 'I-' + token_y[2:]
     return token_y
 
@@ -113,7 +113,7 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         features_transformed = []
         line_status_enabled: Optional[bool] = None
         unrolled_token_lengths = []
-        for y_doc, features_doc in zip_longest(
+        for y_doc, features_doc in zip_longest(  # type: ignore[var-annotated]
             y if y is not None else [],  # type: ignore
             features,  # type: ignore
             fillvalue=[]
@@ -123,6 +123,7 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
             features_doc_transformed = []
             unrolled_token_lengths_doc = []
             for features_row, y_row in zip_longest(features_doc, y_doc, fillvalue=None):
+                assert features_row is not None
                 text = features_row[self.unroll_text_feature_index]
                 if line_status_enabled is None:
                     line_status_enabled = (

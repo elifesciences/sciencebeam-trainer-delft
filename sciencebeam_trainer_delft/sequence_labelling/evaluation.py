@@ -2,7 +2,7 @@ import logging
 import json
 from itertools import groupby
 from collections import defaultdict, OrderedDict
-from typing import Iterator, List, Union, Tuple, Sequence, cast
+from typing import Iterator, List, Optional, Union, Tuple, Sequence, cast
 
 import numpy as np
 
@@ -36,7 +36,7 @@ EVALUATION_OUTPUT_FORMATS = [
 
 # copied from https://stackoverflow.com/a/57915246/8676953
 class NpJsonEncoder(json.JSONEncoder):
-    def default(self, obj):  # pylint: disable=arguments-differ, method-hidden
+    def default(self, obj):  # pylint: disable=arguments-renamed, method-hidden
         if isinstance(obj, np.integer):
             return int(obj)
         elif isinstance(obj, np.floating):
@@ -230,7 +230,7 @@ class ClassificationResult:
             'micro_averages': self.micro_averages
         }
 
-    def get_json_formatted_report(self, meta: dict = None):
+    def get_json_formatted_report(self, meta: Optional[dict] = None):
         dict_report = self.get_dict_formatted_report()
         if meta:
             dict_report['meta'] = meta

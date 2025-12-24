@@ -12,16 +12,16 @@ from .test_data import TEST_DATA_PATH
 
 EMBEDDING_NAME_1 = 'embedding1'
 EMBEDDING_ALIAS_1 = 'alias1'
-EXTERNAL_TXT_URL_1 = 'http://host/%s.txt' % EMBEDDING_NAME_1
+EXTERNAL_TXT_URL_1 = f'http://host/{EMBEDDING_NAME_1}.txt'
 EXTERNAL_TXT_GZ_URL_1 = EXTERNAL_TXT_URL_1 + '.gz'
-EXTERNAL_MDB_URL_1 = 'http://host/%s.mdb' % EMBEDDING_NAME_1
+EXTERNAL_MDB_URL_1 = f'http://host/{EMBEDDING_NAME_1}.mdb'
 EXTERNAL_MDB_GZ_URL_1 = EXTERNAL_MDB_URL_1 + '.gz'
-DOWNLOAD_FILENAME_1 = 'xyz-%s.txt' % EMBEDDING_NAME_1
+DOWNLOAD_FILENAME_1 = f'xyz-{EMBEDDING_NAME_1}.txt'
 
 
 EMBEDDING_1 = {
     'name': EMBEDDING_NAME_1,
-    'path': str(Path(TEST_DATA_PATH).joinpath('%s.txt' % EMBEDDING_NAME_1)),
+    'path': str(Path(TEST_DATA_PATH).joinpath(f'{EMBEDDING_NAME_1}.txt')),
     'url': EXTERNAL_TXT_URL_1,
     'type': 'glove',
     'format': 'vec',

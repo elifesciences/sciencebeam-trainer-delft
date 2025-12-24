@@ -4,7 +4,7 @@
 import logging
 import argparse
 from argparse import _ActionsContainer as ArgParseActionsContainer
-from typing import List
+from typing import List, Optional
 
 from sciencebeam_trainer_delft.utils.misc import parse_number_ranges
 
@@ -58,8 +58,9 @@ DEFAULT_TAG_OUTPUT_FORMAT = TagOutputFormats.XML
 
 
 def add_common_arguments(
-        parser: argparse.ArgumentParser,
-        max_sequence_length_default: int = None):
+    parser: argparse.ArgumentParser,
+    max_sequence_length_default: Optional[int] = None
+):
     input_group = parser.add_argument_group('input')
     input_group.add_argument(
         "--input",

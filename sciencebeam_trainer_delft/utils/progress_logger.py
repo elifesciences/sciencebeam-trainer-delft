@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from tqdm import tqdm
 
@@ -8,13 +9,14 @@ LOGGER = logging.getLogger()
 
 class logging_tqdm(tqdm):
     def __init__(
-            self,
-            *args,
-            logger: logging.Logger = None,
-            mininterval: float = 1,
-            bar_format: str = '{desc}{percentage:3.0f}%{r_bar}',
-            desc: str = 'progress: ',
-            **kwargs):
+        self,
+        *args,
+        logger: Optional[logging.Logger] = None,
+        mininterval: float = 1,
+        bar_format: str = '{desc}{percentage:3.0f}%{r_bar}',
+        desc: str = 'progress: ',
+        **kwargs
+    ):
         self._logger = logger
         super().__init__(
             *args,

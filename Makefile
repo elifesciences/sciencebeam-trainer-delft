@@ -16,7 +16,6 @@ CHECKPOINT_OUTPUT =
 
 DELFT_RUN = $(DOCKER_COMPOSE) run --rm delft
 DELFT_DEV_RUN = $(DELFT_RUN)
-PYTEST_WATCH = $(DELFT_DEV_RUN) pytest-watch
 RUN_PYTHON = $(DELFT_RUN) python
 TRAINER_GROBID_RUN = $(DOCKER_COMPOSE) run --rm --no-deps trainer-grobid
 
@@ -103,12 +102,22 @@ dev-pytest:
 
 
 dev-watch:
-	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings -vv $(NOT_SLOW_PYTEST_ARGS) $(ARGS)
+	$(PYTHON) -m pytest_watcher \
+		--runner=$(VENV)/bin/python \
+		. \
+		-m pytest \
+		$(NOT_SLOW_PYTEST_ARGS) \
+		-p no:cacheprovider -p no:warnings $(ARGS)
 
 
 dev-watch-slow:
 	PATH=./third-parties/wapiti:$$PATH \
-	$(PYTHON) -m pytest_watch -- -p no:cacheprovider -p no:warnings -vv --maxfail=1 $(ARGS)
+		$(PYTHON) -m pytest_watcher \
+		--runner=$(VENV)/bin/python \
+		. \
+		-m pytest \
+		$(SLOW_PYTEST_ARGS) \
+		-p no:cacheprovider -p no:warnings -vv --maxfail=1 $(ARGS)
 
 
 dev-test: dev-lint dev-pytest
@@ -160,18 +169,6 @@ pytest-not-slow:
 
 pytest-slow:
 	@$(MAKE) PYTEST_ARGS="$(PYTEST_ARGS) $(SLOW_PYTEST_ARGS)" pytest
-
-
-.watch:
-	$(PYTEST_WATCH) -- -p no:cacheprovider -p no:warnings $(PYTEST_ARGS)
-
-
-watch-slow:
-	@$(MAKE) .watch
-
-
-watch:
-	@$(MAKE) PYTEST_ARGS="$(PYTEST_ARGS) $(NOT_SLOW_PYTEST_ARGS)" .watch
 
 
 lint: \

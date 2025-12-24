@@ -3,6 +3,7 @@ import os
 import time
 from functools import partial
 from typing import Callable, Iterable, List, Optional, Tuple, Union, cast
+from typing import Sequence as TypingSequence
 
 import numpy as np
 
@@ -191,31 +192,33 @@ def prepare_preprocessor(
     return preprocessor
 
 
-def get_model_directory(model_name: str, dir_path: str = None):
+def get_model_directory(model_name: str, dir_path: Optional[str] = None):
     return os.path.join(dir_path or DEFAUT_MODEL_PATH, model_name)
 
 
 class Sequence(_Sequence):
     def __init__(
-            self, *args,
-            use_features: bool = False,
-            features_indices: List[int] = None,
-            features_embedding_size: int = None,
-            multiprocessing: bool = False,
-            embedding_registry_path: str = None,
-            embedding_manager: EmbeddingManager = None,
-            config_props: dict = None,
-            training_props: dict = None,
-            max_sequence_length: int = None,
-            input_window_stride: int = None,
-            eval_max_sequence_length: int = None,
-            eval_input_window_stride: int = None,
-            batch_size: int = None,
-            eval_batch_size: int = None,
-            stateful: bool = None,
-            transfer_learning_config: TransferLearningConfig = None,
-            tag_transformed: bool = False,
-            **kwargs):
+        self,
+        *args,
+        use_features: bool = False,
+        features_indices: Optional[List[int]] = None,
+        features_embedding_size: Optional[int] = None,
+        multiprocessing: bool = False,
+        embedding_registry_path: Optional[str] = None,
+        embedding_manager: Optional[EmbeddingManager] = None,
+        config_props: Optional[dict] = None,
+        training_props: Optional[dict] = None,
+        max_sequence_length: Optional[int] = None,
+        input_window_stride: Optional[int] = None,
+        eval_max_sequence_length: Optional[int] = None,
+        eval_input_window_stride: Optional[int] = None,
+        batch_size: Optional[int] = None,
+        eval_batch_size: Optional[int] = None,
+        stateful: Optional[bool] = None,
+        transfer_learning_config: Optional[TransferLearningConfig] = None,
+        tag_transformed: bool = False,
+        **kwargs
+    ):
         # initialise logging if not already initialised
         logging.basicConfig(level='INFO')
         LOGGER.debug('Sequence, args=%s, kwargs=%s', args, kwargs)
@@ -324,8 +327,8 @@ class Sequence(_Sequence):
         y_train,
         x_valid=None,
         y_valid=None,
-        features_train: np.ndarray = None,
-        features_valid: np.ndarray = None
+        features_train: Optional[np.ndarray] = None,
+        features_valid: Optional[np.ndarray] = None
     ):
         # TBD if valid is None, segment train to get one
         dataset_fransformer = self.dataset_transformer_factory()
@@ -547,7 +550,7 @@ class Sequence(_Sequence):
         self,
         x_test,
         y_test,
-        features: np.ndarray = None
+        features: Optional[np.ndarray] = None
     ):
         if self.models is not None:
             total_f1 = 0
@@ -613,8 +616,8 @@ class Sequence(_Sequence):
             print(reports[best_index])
 
     def iter_tag(
-        self, texts, output_format, features=None
-    ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
+        self, texts, output_format: Optional[str], features=None
+    ) -> Union[dict, Iterable[TypingSequence[Tuple[str, str]]]]:
         # annotate a list of sentences, return the list of annotations in the
         # specified output_format
         self._require_model()
@@ -631,7 +634,7 @@ class Sequence(_Sequence):
             input_window_stride=self.input_window_stride
         )
         LOGGER.debug('tag_transformed: %s', self.tag_transformed)
-        annotations: Union[dict, Iterable[List[Tuple[str, str]]]]
+        annotations: Union[dict, Iterable[TypingSequence[Tuple[str, str]]]]
         if output_format == 'json':
             start_time = time.time()
             annotations = tagger.tag(
@@ -643,7 +646,7 @@ class Sequence(_Sequence):
             assert isinstance(annotations, dict)
             annotations["runtime"] = runtime
         else:
-            annotations = tagger.iter_tag(
+            annotations = tagger.iter_tag(  # type: ignore
                 list(texts), output_format,
                 features=features,
                 tag_transformed=self.tag_transformed
@@ -661,7 +664,11 @@ class Sequence(_Sequence):
             )
         return annotations
 
-    def tag(self, *args, **kwargs) -> Union[dict, List[List[Tuple[str, str]]]]:
+    def tag(
+        self,
+        *args,
+        **kwargs
+    ) -> Union[dict, TypingSequence[TypingSequence[Tuple[str, str]]]]:
         iterable_or_dict = self.iter_tag(*args, **kwargs)
         if isinstance(iterable_or_dict, dict):
             return iterable_or_dict
@@ -694,10 +701,10 @@ class Sequence(_Sequence):
             'model_config': vars(self.model_config)
         }
 
-    def get_model_output_path(self, dir_path: str = None) -> str:
+    def get_model_output_path(self, dir_path: Optional[str] = None) -> str:
         return get_model_directory(model_name=self.model_config.model_name, dir_path=dir_path)
 
-    def _get_model_directory(self, dir_path: str = None) -> str:
+    def _get_model_directory(self, dir_path: Optional[str] = None) -> str:
         return self.get_model_output_path(dir_path=dir_path)
 
     def get_embedding_for_model_config(self, model_config: ModelConfig):
@@ -710,7 +717,7 @@ class Sequence(_Sequence):
             embedding_name,
             use_ELMo=model_config.use_ELMo
         )
-        if not embeddings.embed_size > 0:
+        if embeddings.embed_size <= 0:
             raise AssertionError(
                 'invalid embedding size, embeddings not loaded? %s' % embedding_name
             )

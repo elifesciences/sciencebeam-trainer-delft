@@ -174,8 +174,9 @@ class TestMain:
         source_path.joinpath(MODEL_FILE_1).write_bytes(MODEL_DATA_1)
         target_directory = models_path.joinpath(MODEL_NAME_1)
         main([
-            '--model-base-path=%s' % models_path,
-            '--install', '%s=%s' % (MODEL_NAME_1, source_path)
+            f'--model-base-path={models_path}',
+            '--install',
+            f'{MODEL_NAME_1}={source_path}'
         ])
         assert (
             target_directory.joinpath(MODEL_FILE_1).read_bytes()
@@ -195,8 +196,9 @@ class TestMain:
             out_fp.write(MODEL_DATA_1)
         target_directory = models_path.joinpath(MODEL_NAME_1)
         main([
-            '--model-base-path=%s' % models_path,
-            '--install', '%s=%s' % (MODEL_NAME_1, source_path)
+            f'--model-base-path={models_path}',
+            '--install',
+            f'{MODEL_NAME_1}={source_path}'
         ])
         assert (
             target_directory.joinpath(MODEL_FILE_1).read_bytes()
@@ -219,8 +221,9 @@ class TestMain:
         existing_file.write_text('existing file')
         assert existing_file.exists()
         main([
-            '--model-base-path=%s' % models_path,
-            '--install', '%s=%s' % (MODEL_NAME_1, source_path)
+            f'--model-base-path={models_path}',
+            '--install',
+            f'{MODEL_NAME_1}={source_path}'
         ])
         assert not existing_file.exists()
         assert (
@@ -240,7 +243,8 @@ class TestMain:
         source_path.joinpath(MODEL_PICKLE_FILE_1).write_bytes(MODEL_DATA_1)
         with pytest.raises(UnpicklingError):
             main([
-                '--model-base-path=%s' % models_path,
-                '--install', '%s=%s' % (MODEL_NAME_1, source_path),
+                f'--model-base-path={models_path}',
+                '--install',
+                f'{MODEL_NAME_1}={source_path}',
                 '--validate-pickles'
             ])

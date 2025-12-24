@@ -1,3 +1,4 @@
+# pylint: disable=contextmanager-generator-missing-cleanup
 import logging
 import os
 import tarfile
@@ -10,7 +11,7 @@ from gzip import GzipFile
 from lzma import LZMAFile
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
-from typing import List, IO, Iterator
+from typing import List, IO, Iterator, Optional
 
 from six import string_types, text_type
 
@@ -61,7 +62,7 @@ class CompressionWrapper(ABC):
         pass
 
     @abstractmethod
-    def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
+    def wrap_fileobj(self, filename: str, fileobj: IO, mode: Optional[str] = None):
         pass
 
     @contextmanager
@@ -92,7 +93,7 @@ class GzipCompressionWrapper(CompressionWrapper):
     def strip_compression_filename_ext(self, filepath: str):
         return strip_gzip_filename_ext(filepath)
 
-    def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
+    def wrap_fileobj(self, filename: str, fileobj: IO, mode: Optional[str] = None):
         return ClosingGzipFile(filename=filename, fileobj=fileobj, mode=mode)
 
     @contextmanager
@@ -113,7 +114,7 @@ class XzCompressionWrapper(CompressionWrapper):
     def strip_compression_filename_ext(self, filepath: str):
         return strip_xz_filename_ext(filepath)
 
-    def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
+    def wrap_fileobj(self, filename: str, fileobj: IO, mode: Optional[str] = None):
         return LZMAFile(filename=fileobj, mode=mode or 'r')
 
 
@@ -121,7 +122,7 @@ class DummyCompressionWrapper(CompressionWrapper):
     def strip_compression_filename_ext(self, filepath: str):
         return filepath
 
-    def wrap_fileobj(self, filename: str, fileobj: IO, mode: str = None):
+    def wrap_fileobj(self, filename: str, fileobj: IO, mode: Optional[str] = None):
         return fileobj
 
 
@@ -149,7 +150,8 @@ def _open_raw(filepath: str, mode: str) -> Iterator[IO]:
             with tempfile.TemporaryDirectory(suffix='download') as temp_dir:
                 temp_file = os.path.join(temp_dir, os.path.basename(filepath))
                 urlretrieve(filepath, temp_file)
-                with open(temp_file, mode=mode) as fp:
+                encoding: Optional[str] = 'utf-8' if 'b' not in mode else None
+                with open(temp_file, mode=mode, encoding=encoding) as fp:
                     yield fp
         except HTTPError as error:
             if error.code == 404:
@@ -164,7 +166,7 @@ def _open_raw(filepath: str, mode: str) -> Iterator[IO]:
 
 
 @contextmanager
-def open_file(filepath: str, mode: str, compression_wrapper: CompressionWrapper = None):
+def open_file(filepath: str, mode: str, compression_wrapper: Optional[CompressionWrapper] = None):
     if compression_wrapper is None:
         compression_wrapper = get_compression_wrapper(filepath)
     LOGGER.debug(
@@ -207,12 +209,12 @@ def list_files(directory_path: str) -> List[str]:
 
 
 @contextmanager
-def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
+def auto_uploading_output_file(filepath: str, mode: str = 'w', encoding='utf-8', **kwargs):
     if not is_external_location(filepath):
         file_dirname = os.path.dirname(filepath)
         if file_dirname:
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        with open(filepath, mode=mode, **kwargs) as fp:
+        with open(filepath, mode=mode, encoding=encoding, **kwargs) as fp:
             yield fp
             return
     with tempfile.TemporaryDirectory(suffix='-output') as temp_dir:
@@ -223,7 +225,7 @@ def auto_uploading_output_file(filepath: str, mode: str = 'w', **kwargs):
             )
         )
         try:
-            with open(temp_file, mode=mode, **kwargs) as fp:
+            with open(temp_file, mode=mode, encoding=encoding, **kwargs) as fp:
                 yield fp
         finally:
             if os.path.exists(temp_file):

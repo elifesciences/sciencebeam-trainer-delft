@@ -115,7 +115,12 @@ def convert_wapiti_model_result_to_document_tagged_result(
 
 
 class WapitiModelAdapter:
-    def __init__(self, wapiti_wrapper: WapitiWrapper, model_file_path: str, model_path: str = None):
+    def __init__(
+        self,
+        wapiti_wrapper: WapitiWrapper,
+        model_file_path: str,
+        model_path: Optional[str] = None
+    ):
         self.wapiti_wrapper = wapiti_wrapper
         self.model_file_path = model_file_path
         self.model_path = model_path
@@ -131,9 +136,10 @@ class WapitiModelAdapter:
 
     @staticmethod
     def load_from(
-            model_path: str,
-            download_manager: DownloadManager,
-            wapiti_binary_path: str = None) -> 'WapitiModelAdapter':
+        model_path: str,
+        download_manager: DownloadManager,
+        wapiti_binary_path: Optional[str] = None
+    ) -> 'WapitiModelAdapter':
         model_file_path = os.path.join(model_path, 'model.wapiti.gz')
         local_model_file_path = None
         try:
@@ -163,7 +169,7 @@ class WapitiModelAdapter:
         self,
         x: np.ndarray,
         features: np.ndarray,
-        output_format: str = None
+        output_format: Optional[str] = None
     ) -> Iterable[List[Tuple[str, str]]]:
         # Note: this method doesn't currently seem to work reliable and needs to be investigated
         #   The evaluation always shows zero.
@@ -183,13 +189,13 @@ class WapitiModelAdapter:
         self,
         x: np.ndarray,
         features: np.ndarray,
-        output_format: str = None
+        output_format: Optional[str] = None
     ) -> Iterable[List[Tuple[str, str]]]:
         assert not output_format, 'output_format not supported'
         with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
             data_path = Path(temp_dir).joinpath('input.data')
             output_data_path = Path(temp_dir).joinpath('output.data')
-            with data_path.open(mode='w') as fp:
+            with data_path.open(mode='w', encoding='utf-8') as fp:
                 write_wapiti_input_data(
                     fp, x=x, features=features
                 )
@@ -199,14 +205,14 @@ class WapitiModelAdapter:
                 output_data_path=str(output_data_path),
                 output_only_labels=False
             )
-            with output_data_path.open(mode='r') as output_data_fp:
+            with output_data_path.open(mode='r', encoding='utf-8') as output_data_fp:
                 yield from iter_read_tagged_result(output_data_fp)
 
     def iter_tag(
         self,
         x: np.ndarray,
         features: np.ndarray,
-        output_format: str = None
+        output_format: Optional[str] = None
     ) -> Iterable[List[Tuple[str, str]]]:
         return self.iter_tag_using_wrapper(x, features, output_format)
 
@@ -214,7 +220,7 @@ class WapitiModelAdapter:
         self,
         x: np.ndarray,
         features: np.ndarray,
-        output_format: str = None
+        output_format: Optional[str] = None
     ) -> List[List[Tuple[str, str]]]:
         assert not output_format, 'output_format not supported'
         return list(self.iter_tag(x, features))
@@ -296,15 +302,16 @@ def write_wapiti_train_data(fp: IO, x: np.ndarray, y: np.ndarray, features: np.n
 
 class WapitiModelTrainAdapter:
     def __init__(
-            self,
-            model_name: str,
-            template_path: str,
-            temp_model_path: str,
-            max_epoch: int,
-            download_manager: DownloadManager,
-            gzip_enabled: bool = False,
-            wapiti_binary_path: str = None,
-            wapiti_train_args: dict = None):
+        self,
+        model_name: str,
+        template_path: str,
+        temp_model_path: str,
+        max_epoch: int,
+        download_manager: DownloadManager,
+        gzip_enabled: bool = False,
+        wapiti_binary_path: Optional[str] = None,
+        wapiti_train_args: Optional[dict] = None
+    ):
         self.model_name = model_name
         self.template_path = template_path
         self.temp_model_path = temp_model_path
@@ -334,7 +341,7 @@ class WapitiModelTrainAdapter:
             self.temp_model_path = '/tmp/model.wapiti'
         with tempfile.TemporaryDirectory(suffix='wapiti') as temp_dir:
             data_path = Path(temp_dir).joinpath('train.data')
-            with data_path.open(mode='w') as fp:
+            with data_path.open(mode='w', encoding='utf-8') as fp:
                 write_wapiti_train_data(
                     fp, x=x_train, y=y_train, features=features_train
                 )
@@ -393,11 +400,11 @@ class WapitiModelTrainAdapter:
             x_test, y_test, features=features
         )
 
-    def get_model_output_path(self, output_path: str = None) -> str:
+    def get_model_output_path(self, output_path: Optional[str] = None) -> str:
         assert output_path, "output_path required"
         return os.path.join(output_path, self.model_name)
 
-    def save(self, output_path: str = None):
+    def save(self, output_path: Optional[str] = None):
         model_output_path = self.get_model_output_path(output_path)
         assert self.temp_model_path, "temp_model_path required"
         if not Path(self.temp_model_path).exists():

@@ -208,7 +208,7 @@ class ModelSaver(_BaseModelSaverLoader):
         self,
         directory: str,
         model: Model,
-        meta: dict = None,
+        meta: Optional[dict] = None,
         weight_file: Optional[str] = None
     ):
         os.makedirs(directory, exist_ok=True)
@@ -233,8 +233,9 @@ class ModelSaver(_BaseModelSaverLoader):
 
 class ModelLoader(_BaseModelSaverLoader):
     def __init__(
-            self,
-            download_manager: DownloadManager = None):
+        self,
+        download_manager: Optional[DownloadManager] = None
+    ):
         if download_manager is None:
             download_manager = DownloadManager()
         self.download_manager = download_manager

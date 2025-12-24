@@ -4,7 +4,7 @@
 import logging
 import argparse
 from abc import abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 import sciencebeam_trainer_delft.utils.no_warn_if_disabled  # noqa, pylint: disable=unused-import
 import sciencebeam_trainer_delft.utils.no_keras_backend_message  # noqa, pylint: disable=unused-import
@@ -490,7 +490,10 @@ def get_subcommand_processor():
     return SubCommandProcessor(SUB_COMMANDS, command_dest='action')
 
 
-def parse_args(argv: List[str] = None, subcommand_processor: SubCommandProcessor = None):
+def parse_args(
+    argv: Optional[Sequence[str]] = None,
+    subcommand_processor: Optional[SubCommandProcessor] = None
+):
     parser = create_argument_parser()
     if subcommand_processor is None:
         subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
@@ -503,7 +506,7 @@ def parse_args(argv: List[str] = None, subcommand_processor: SubCommandProcessor
     return args
 
 
-def run(args: argparse.Namespace, subcommand_processor: SubCommandProcessor = None):
+def run(args: argparse.Namespace, subcommand_processor: Optional[SubCommandProcessor] = None):
     if subcommand_processor is None:
         subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')
     try:
@@ -513,7 +516,7 @@ def run(args: argparse.Namespace, subcommand_processor: SubCommandProcessor = No
         raise
 
 
-def main(argv: List[str] = None):
+def main(argv: Optional[Sequence[str]] = None):
     subcommand_processor = get_subcommand_processor()
     args = parse_args(argv, subcommand_processor=subcommand_processor)
     if args.quiet:

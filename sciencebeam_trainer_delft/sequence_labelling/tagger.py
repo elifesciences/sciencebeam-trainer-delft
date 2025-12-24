@@ -31,14 +31,15 @@ def iter_batch_window_indices_and_offsets(
 
 
 def iter_predict_texts_with_sliding_window_if_enabled(
-        texts: List[Union[str, List[str]]],
-        model_config: ModelConfig,
-        preprocessor: Preprocessor,
-        max_sequence_length: Optional[int],
-        model,
-        input_window_stride: int = None,
-        embeddings: Embeddings = None,
-        features: List[List[List[str]]] = None):
+    texts: List[Union[str, List[str]]],
+    model_config: ModelConfig,
+    preprocessor: Preprocessor,
+    max_sequence_length: Optional[int],
+    model,
+    input_window_stride: Optional[int] = None,
+    embeddings: Optional[Embeddings] = None,
+    features: Optional[List[List[List[str]]]] = None
+):
     if not texts:
         LOGGER.info('passed in empty texts, model: %s', model_config.model_name)
         return
@@ -184,10 +185,10 @@ class Tagger:
     def iter_tag(
         self,
         texts: Sequence[str],
-        output_format,
+        output_format: Optional[str],
         features=None,
         tag_transformed: bool = False
-    ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
+    ) -> Iterable[Union[dict, Sequence[Tuple[str, str]]]]:
         assert isinstance(texts, list)
 
         dataset_transformer = self.dataset_transformer_factory()
@@ -244,7 +245,7 @@ class Tagger:
 
     def tag(
         self, texts, output_format, features=None, **kwargs
-    ) -> Union[dict, List[List[Tuple[str, str]]]]:
+    ) -> Union[dict, Sequence[Sequence[Tuple[str, str]]]]:
         result = list(self.iter_tag(texts, output_format, features, **kwargs))
         if output_format == 'json':
             return {
@@ -254,7 +255,7 @@ class Tagger:
                 "texts": result
             }
         else:
-            return result
+            return result  # type: ignore
 
     def _get_tags_dense(self, pred):
         pred = np.argmax(pred, -1)

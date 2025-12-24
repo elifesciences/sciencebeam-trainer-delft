@@ -113,7 +113,7 @@ class UnrollingTextFeatureDatasetTransformer(DatasetTransformer):
         features_transformed = []
         line_status_enabled: Optional[bool] = None
         unrolled_token_lengths = []
-        for y_doc, features_doc in zip_longest(
+        for y_doc, features_doc in zip_longest(  # type: ignore[var-annotated]
             y if y is not None else [],  # type: ignore
             features,  # type: ignore
             fillvalue=[]

@@ -150,7 +150,8 @@ def _open_raw(filepath: str, mode: str) -> Iterator[IO]:
             with tempfile.TemporaryDirectory(suffix='download') as temp_dir:
                 temp_file = os.path.join(temp_dir, os.path.basename(filepath))
                 urlretrieve(filepath, temp_file)
-                with open(temp_file, mode=mode, encoding='utf-8') as fp:
+                encoding: Optional[str] = 'utf-8' if 'b' not in mode else None
+                with open(temp_file, mode=mode, encoding=encoding) as fp:
                     yield fp
         except HTTPError as error:
             if error.code == 404:

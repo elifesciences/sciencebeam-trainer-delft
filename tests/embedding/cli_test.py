@@ -87,7 +87,7 @@ class TestMain:
         })
         main([
             'override-embedding-url',
-            f'--registry-path={embedding_registry_path}'
+            f'--registry-path={embedding_registry_path}',
             f'--override-url={EMBEDDING_NAME_1}={EXTERNAL_TXT_URL_1}'
         ])
         embedding_config = embedding_manager.get_embedding_config(EMBEDDING_NAME_1)

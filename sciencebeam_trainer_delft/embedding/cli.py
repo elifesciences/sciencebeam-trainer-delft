@@ -1,6 +1,6 @@
 import argparse
 import logging
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, Optional, Sequence
 
 from sciencebeam_trainer_delft.utils.misc import parse_dict, merge_dicts
 

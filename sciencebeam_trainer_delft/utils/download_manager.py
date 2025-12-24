@@ -2,6 +2,7 @@ import logging
 import os
 from hashlib import md5
 from pathlib import Path
+from typing import Optional
 
 from sciencebeam_trainer_delft.utils.io import (
     copy_file,
@@ -34,10 +35,11 @@ class DownloadManager:
         return os.path.exists(download_file)
 
     def download(
-            self, file_url: str,
-            local_file: str = None,
-            auto_uncompress: bool = True,
-            skip_if_downloaded: bool = True) -> str:
+        self, file_url: str,
+        local_file: Optional[str] = None,
+        auto_uncompress: bool = True,
+        skip_if_downloaded: bool = True
+    ) -> str:
         download_file = (
             local_file or self.get_local_file(file_url, auto_uncompress=auto_uncompress)
         )

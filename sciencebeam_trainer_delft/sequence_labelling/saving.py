@@ -208,7 +208,7 @@ class ModelSaver(_BaseModelSaverLoader):
         self,
         directory: str,
         model: Model,
-        meta: dict = None,
+        meta: Optional[dict] = None,
         weight_file: Optional[str] = None
     ):
         os.makedirs(directory, exist_ok=True)

@@ -31,14 +31,15 @@ def iter_batch_window_indices_and_offsets(
 
 
 def iter_predict_texts_with_sliding_window_if_enabled(
-        texts: List[Union[str, List[str]]],
-        model_config: ModelConfig,
-        preprocessor: Preprocessor,
-        max_sequence_length: Optional[int],
-        model,
-        input_window_stride: int = None,
-        embeddings: Embeddings = None,
-        features: List[List[List[str]]] = None):
+    texts: List[Union[str, List[str]]],
+    model_config: ModelConfig,
+    preprocessor: Preprocessor,
+    max_sequence_length: Optional[int],
+    model,
+    input_window_stride: Optional[int] = None,
+    embeddings: Optional[Embeddings] = None,
+    features: Optional[List[List[List[str]]]] = None
+):
     if not texts:
         LOGGER.info('passed in empty texts, model: %s', model_config.model_name)
         return

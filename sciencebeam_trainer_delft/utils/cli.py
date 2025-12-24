@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 from abc import abstractmethod, ABC
-from typing import List, Callable, Optional, Sequence
+from typing import Callable, Optional, Sequence
 
 
 LOGGER = logging.getLogger(__name__)
@@ -31,9 +31,10 @@ def process_default_args(args: argparse.Namespace):
 
 
 def default_main(
-        parse_args: Callable[[Optional[List[str]]], argparse.Namespace],
-        run: Callable[[argparse.Namespace], None],
-        argv: Optional[Sequence[str]] = None):
+    parse_args: Callable[[Optional[Sequence[str]]], argparse.Namespace],
+    run: Callable[[argparse.Namespace], None],
+    argv: Optional[Sequence[str]] = None
+):
     LOGGER.debug('argv: %s', argv)
     args = parse_args(argv)
     process_default_args(args)
@@ -66,10 +67,11 @@ class SubCommand(ABC):
 
 class SubCommandProcessor:
     def __init__(
-            self,
-            sub_commands: Sequence[SubCommand],
-            description: str = None,
-            command_dest: str = 'command'):
+        self,
+        sub_commands: Sequence[SubCommand],
+        description: Optional[str] = None,
+        command_dest: str = 'command'
+    ):
         self.sub_commands = sub_commands
         self.sub_command_by_name = {
             sub_command.name: sub_command

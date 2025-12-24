@@ -2,7 +2,7 @@ import logging
 import json
 from itertools import groupby
 from collections import defaultdict, OrderedDict
-from typing import Iterator, List, Union, Tuple, Sequence, cast
+from typing import Iterator, List, Optional, Union, Tuple, Sequence, cast
 
 import numpy as np
 
@@ -230,7 +230,7 @@ class ClassificationResult:
             'micro_averages': self.micro_averages
         }
 
-    def get_json_formatted_report(self, meta: dict = None):
+    def get_json_formatted_report(self, meta: Optional[dict] = None):
         dict_report = self.get_dict_formatted_report()
         if meta:
             dict_report['meta'] = meta

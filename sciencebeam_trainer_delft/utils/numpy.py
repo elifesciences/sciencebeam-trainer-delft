@@ -13,7 +13,7 @@ def concatenate_or_none(
 
 
 # https://stackoverflow.com/a/51526109/8676953
-def shuffle_arrays(arrays: List[np.ndarray], random_seed: int = None):
+def shuffle_arrays(arrays: List[np.ndarray], random_seed: Optional[int] = None):
     """Shuffles arrays in-place, in the same order, along axis=0
 
     Parameters:

@@ -490,7 +490,10 @@ def get_subcommand_processor():
     return SubCommandProcessor(SUB_COMMANDS, command_dest='action')
 
 
-def parse_args(argv: Optional[Sequence[str]] = None, subcommand_processor: Optional[SubCommandProcessor] = None):
+def parse_args(
+    argv: Optional[Sequence[str]] = None,
+    subcommand_processor: Optional[SubCommandProcessor] = None
+):
     parser = create_argument_parser()
     if subcommand_processor is None:
         subcommand_processor = SubCommandProcessor(SUB_COMMANDS, command_dest='action')

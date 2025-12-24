@@ -91,13 +91,14 @@ class ModelSaverCallback(Callback):
     """Similar to ModelCheckpoint but leaves the actual saving to the save_fn.
     """
     def __init__(
-            self,
-            save_fn: Optional[SaveFunctionProtocol],
-            monitor: str = 'val_loss',
-            mode: str = 'auto',
-            period: int = 1,
-            save_best_only: bool = False,
-            save_kwargs: dict = None):
+        self,
+        save_fn: Optional[SaveFunctionProtocol],
+        monitor: str = 'val_loss',
+        mode: str = 'auto',
+        period: int = 1,
+        save_best_only: bool = False,
+        save_kwargs: Optional[dict] = None
+    ):
         super().__init__()
         self.monitor = monitor
         self.save_fn = save_fn

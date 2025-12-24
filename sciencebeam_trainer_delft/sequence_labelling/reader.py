@@ -62,7 +62,7 @@ def iter_load_data_crf_lines(
 
 def load_data_and_labels_crf_lines(
     lines: Iterable[str],
-    limit: int = None
+    limit: Optional[int] = None
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Load data, features and label from a CRF matrix string

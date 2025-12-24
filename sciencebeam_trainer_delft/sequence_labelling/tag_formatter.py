@@ -63,10 +63,11 @@ def format_json_tag_result_as_json(tag_result: dict) -> str:
 
 
 def format_list_tag_result_as_json(
-        tag_result: Iterable[List[Tuple[str, str]]],
-        texts: np.ndarray = None,
-        features: np.ndarray = None,
-        model_name: str = None) -> str:
+    tag_result: Iterable[List[Tuple[str, str]]],
+    texts: Optional[np.ndarray] = None,
+    features: Optional[np.ndarray] = None,
+    model_name: Optional[str] = None
+) -> str:
     output_props = {
         'model': model_name,
         'texts': np.array(texts).tolist(),
@@ -97,9 +98,9 @@ def to_data_lines(*args, **kwargs) -> List[str]:
 
 def iter_format_list_tag_result_as_data(
     tag_result: Iterable[List[Tuple[str, str]]],
-    texts: np.ndarray = None,  # pylint: disable=unused-argument
-    features: np.ndarray = None,
-    model_name: str = None  # pylint: disable=unused-argument
+    texts: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    features: Optional[np.ndarray] = None,
+    model_name: Optional[str] = None  # pylint: disable=unused-argument
 ) -> Iterable[str]:
     assert features is not None
     data_text_iterable = iter_to_data_lines(
@@ -224,9 +225,9 @@ def iter_to_flat_text(texts: np.ndarray) -> Iterable[str]:
 
 def iter_format_list_tag_result_as_text(
     tag_result: Iterable[List[Tuple[str, str]]],  # pylint: disable=unused-argument
-    texts: np.ndarray = None,
-    features: np.ndarray = None,  # pylint: disable=unused-argument
-    model_name: str = None  # pylint: disable=unused-argument
+    texts: Optional[np.ndarray] = None,
+    features: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    model_name: Optional[str] = None  # pylint: disable=unused-argument
 ) -> Iterable[str]:
     assert texts is not None
     yield from iter_to_flat_text(texts=texts)
@@ -239,7 +240,7 @@ def get_xml_tag_for_annotation_label(annotation_label: str) -> str:
 def iter_add_untagged_token_spans(
     entity_chunks: Iterable[Tuple[str, int, int]],
     token_count: int,
-    untagged_chunk_type: str = None
+    untagged_chunk_type: Optional[str] = None
 ) -> Iterable[Tuple[Optional[str], int, int]]:
     prev_chunk_end_excl = 0
     for chunk_type, chunk_start, chunk_end in entity_chunks:
@@ -292,9 +293,9 @@ def iter_annotations_xml_text(
 
 def iter_format_list_tag_result_as_xml(
     tag_result: Iterable[List[Tuple[str, str]]],
-    texts: np.ndarray = None,  # pylint: disable=unused-argument
-    features: np.ndarray = None,  # pylint: disable=unused-argument
-    model_name: str = None  # pylint: disable=unused-argument
+    texts: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    features: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    model_name: Optional[str] = None  # pylint: disable=unused-argument
 ) -> Iterable[str]:
     yield '<xml>\n'
     yield from iter_annotations_xml_text(
@@ -310,9 +311,9 @@ def format_list_tag_result_as_xml(*args, **kwargs) -> str:
 def iter_format_list_tag_result_as_xml_diff(
     tag_result: Iterable[List[Tuple[str, str]]],
     expected_tag_result: T_Batch_Token_Label_Tuple_List,
-    texts: np.ndarray = None,  # pylint: disable=unused-argument
-    features: np.ndarray = None,  # pylint: disable=unused-argument
-    model_name: str = None  # pylint: disable=unused-argument
+    texts: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    features: Optional[np.ndarray] = None,  # pylint: disable=unused-argument
+    model_name: Optional[str] = None  # pylint: disable=unused-argument
 ) -> Iterable[str]:
     assert expected_tag_result
     actual_xml = format_list_tag_result_as_xml(tag_result)
@@ -360,12 +361,13 @@ def iter_format_list_tag_result(
 
 
 def iter_format_tag_result(
-        tag_result: Union[dict, list, Iterable],
-        output_format: str,
-        expected_tag_result: Optional[T_Batch_Token_Label_Tuple_List] = None,
-        texts: np.ndarray = None,
-        features: np.ndarray = None,
-        model_name: str = None) -> Iterable[str]:
+    tag_result: Union[dict, list, Iterable],
+    output_format: str,
+    expected_tag_result: Optional[T_Batch_Token_Label_Tuple_List] = None,
+    texts: Optional[np.ndarray] = None,
+    features: Optional[np.ndarray] = None,
+    model_name: Optional[str] = None
+) -> Iterable[str]:
     if isinstance(tag_result, dict):
         assert output_format == TagOutputFormats.JSON
         yield format_json_tag_result_as_json(tag_result)

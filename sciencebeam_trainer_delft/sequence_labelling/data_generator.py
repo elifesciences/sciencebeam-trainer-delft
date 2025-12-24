@@ -111,16 +111,17 @@ def get_batch_window_indices_and_offset(
     ))
 
 
-def get_chunk_at_offset(sequence: list, offset: int, max_sequence_length: int = None):
+def get_chunk_at_offset(sequence: list, offset: int, max_sequence_length: Optional[int] = None):
     if not max_sequence_length:
         return sequence[offset:]
     return sequence[offset:min(len(sequence), offset + max_sequence_length)]
 
 
 def take_with_offset(
-        sequences: list,
-        indices_and_offset: List[Tuple[int, int]],
-        max_sequence_length: int = None) -> list:
+    sequences: list,
+    indices_and_offset: List[Tuple[int, int]],
+    max_sequence_length: Optional[int] = None
+) -> list:
     return [
         get_chunk_at_offset(sequences[index], offset, max_sequence_length)
         for index, offset in indices_and_offset
@@ -322,9 +323,10 @@ def to_batch_casing(
 
 
 def get_concatenated_embeddings_token_count(
-        concatenated_embeddings_token_count: int = None,
-        additional_token_feature_indices: List[int] = None,
-        use_word_embeddings: bool = True) -> int:
+    concatenated_embeddings_token_count: Optional[int] = None,
+    additional_token_feature_indices: Optional[List[int]] = None,
+    use_word_embeddings: bool = True
+) -> int:
     if not use_word_embeddings:
         return 0
     return (
@@ -353,7 +355,7 @@ class DataGenerator(keras.utils.Sequence):
         features: Optional[List[List[List[str]]]] = None,
         additional_token_feature_indices: Optional[List[int]] = None,
         text_feature_indices: Optional[List[int]] = None,
-        concatenated_embeddings_token_count: int = None,
+        concatenated_embeddings_token_count: Optional[int] = None,
         is_deprecated_padded_batch_text_list_enabled: bool = False,
         name: Optional[str] = None,
         use_chain_crf: bool = False

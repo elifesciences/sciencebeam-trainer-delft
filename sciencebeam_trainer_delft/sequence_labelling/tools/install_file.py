@@ -1,7 +1,7 @@
 import argparse
 import logging
 from pathlib import Path
-from typing import List
+from typing import Optional, Sequence
 
 from sciencebeam_trainer_delft.utils.io import copy_file
 

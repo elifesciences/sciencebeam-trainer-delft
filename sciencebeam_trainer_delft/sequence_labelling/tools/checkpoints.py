@@ -4,7 +4,7 @@ import logging
 import json
 import os
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 from tqdm.auto import tqdm
 
@@ -140,6 +140,7 @@ def checkpoint_summary(
     checkpoint_meta_map_sorted_by_f1 = get_checkpoint_meta_map_sorted_by_f1(
         checkpoint_meta_map
     )
+    assert last_checkpoint is not None
     checkpoint_summary_list = get_checkpoint_summary_list(
         checkpoint_meta_map_sorted_by_f1=checkpoint_meta_map_sorted_by_f1,
         last_checkpoint=last_checkpoint,

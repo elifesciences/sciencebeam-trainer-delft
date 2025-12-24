@@ -4,7 +4,7 @@ import os
 import pickle
 from pathlib import Path
 from shutil import rmtree
-from typing import Dict, List
+from typing import Dict, List, Optional, Sequence
 
 from sciencebeam_trainer_delft.utils.misc import parse_dict, merge_dicts
 from sciencebeam_trainer_delft.utils.io import (

@@ -23,10 +23,11 @@ def reset_logging(**kwargs):
 
 class TeeStreamToLineWriter:
     def __init__(
-            self,
-            *line_writers: Callable[[str], None],
-            raw_fp: IO = None,
-            append_line_feed: bool = False):
+        self,
+        *line_writers: Callable[[str], None],
+        raw_fp: Optional[IO] = None,
+        append_line_feed: bool = False
+    ):
         self.line_writers = line_writers
         self.raw_fp = raw_fp
         self.line_buffer = StringIO()
@@ -156,10 +157,11 @@ def flush_logging_handlers(handlers: List[logging.Handler]):
 
 @contextmanager
 def tee_logging_lines_to(
-        *line_writers: Callable[[str], None],
-        logger: logging.Logger = None,
-        formatter: logging.Formatter = None,
-        **kwargs):
+    *line_writers: Callable[[str], None],
+    logger: Optional[logging.Logger] = None,
+    formatter: Optional[logging.Formatter] = None,
+    **kwargs
+):
     if logger is None:
         logger = logging.root
     if formatter is None:

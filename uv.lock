@@ -1565,7 +1565,6 @@ dev = [
     { name = "pytest-watcher" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
-    { name = "types-six" },
 ]
 
 [package.metadata]
@@ -1586,7 +1585,6 @@ dev = [
     { name = "pytest-watcher", specifier = ">=0.6.0" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
     { name = "types-requests", specifier = ">=2.27.5" },
-    { name = "types-six", specifier = ">=1.16.9" },
 ]
 
 [[package]]
@@ -2014,15 +2012,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/68/c1/a95d0899d0f8d638744cd2ee244f541cd2d3a296c8883c96f670038246fe/types-requests-2.27.5.tar.gz", hash = "sha256:a67dc1a8512312b8cb89f3ba95f9a0e69ef3436ae77c9bd4f328cd88f17adda2", size = 9645, upload-time = "2022-01-10T03:20:38.102Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1b/5e/0d3b542d1416684d3188b2533383542dd9e79c3dcdca9974d90986e3609b/types_requests-2.27.5-py3-none-any.whl", hash = "sha256:9c9390b18b222956155af6678570f452edafa3bb94bd5a4efe67da1105aa128c", size = 11844, upload-time = "2022-01-10T03:20:37.208Z" },
-]
-
-[[package]]
-name = "types-six"
-version = "1.16.9"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/91/fb/5e27e5be75b26805676d55111e9bb23409bae2660943712c7ff2ecfa1286/types-six-1.16.9.tar.gz", hash = "sha256:04da8bad920aea300e13d99c8948fd0914abdfc5d9421bad636137f9829dcbf6", size = 11458, upload-time = "2022-01-08T15:20:32.597Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/28/feb881d6b5aea0e63c10c8fd68e49453b0eb0ea733d337feef3befc6ef61/types_six-1.16.9-py2.py3-none-any.whl", hash = "sha256:da5748f10eec44accbd393e7f5a834991aff8f37522472166fbc8233cc735b84", size = 24216, upload-time = "2022-01-08T15:20:31.702Z" },
 ]
 
 [[package]]

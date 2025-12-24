@@ -5,8 +5,6 @@ from contextlib import contextmanager
 from tempfile import TemporaryDirectory, mkdtemp
 from pathlib import Path
 
-from six import string_types
-
 from sciencebeam_trainer_delft.utils.io import copy_file, path_join
 
 
@@ -14,7 +12,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def _is_cloud_location(filepath):
-    return isinstance(filepath, string_types) and filepath.startswith('gs://')
+    return isinstance(filepath, str) and filepath.startswith('gs://')
 
 
 def _copy_file_to_cloud(source_filepath, target_filepath, overwrite=True):

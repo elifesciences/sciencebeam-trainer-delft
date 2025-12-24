@@ -89,6 +89,7 @@ class SubCommandProcessor:
         return parser
 
     def parse_args(self, argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+        LOGGER.debug('argv: %r', argv)
         return self.get_parser().parse_args(argv)
 
     def add_sub_command_parsers(

@@ -4,7 +4,6 @@ from unittest.mock import patch, MagicMock
 from typing import Iterator
 
 import pytest
-from py._path.local import LocalPath
 
 import tensorflow as tf
 
@@ -33,9 +32,9 @@ def patch_magicmock():
 
 
 @pytest.fixture
-def temp_dir(tmpdir: LocalPath):
-    # convert to standard Path
-    return Path(str(tmpdir))
+def temp_dir(tmp_path: Path) -> Path:
+    # no longer need to convert to standard Path (remove this fixture)
+    return tmp_path
 
 
 @pytest.fixture(scope='session', autouse=True)

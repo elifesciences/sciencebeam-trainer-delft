@@ -23,7 +23,7 @@ dev = [
     "mypy>=1.19.0",
     "pylint>=3.3.9",
     "pytest>=8.4.2",
-    "pytest-watch==4.2.0",
+    "pytest-watcher>=0.6.0",
     "types-pyyaml==6.0.12.20250915",
     "types-requests==2.27.5",
     "types-six==1.16.9",
@@ -31,3 +31,10 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["sciencebeam_trainer_delft*"]
+
+[tool.pytest-watcher]
+now = true
+clear = false
+delay = 0.2
+runner = ".venv/bin/python"
+runner_args = ["-m", "pytest"]

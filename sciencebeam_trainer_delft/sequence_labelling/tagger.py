@@ -188,7 +188,7 @@ class Tagger:
         output_format: Optional[str],
         features=None,
         tag_transformed: bool = False
-    ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
+    ) -> Iterable[Union[dict, Sequence[Tuple[str, str]]]]:
         assert isinstance(texts, list)
 
         dataset_transformer = self.dataset_transformer_factory()
@@ -245,7 +245,7 @@ class Tagger:
 
     def tag(
         self, texts, output_format, features=None, **kwargs
-    ) -> Union[dict, List[List[Tuple[str, str]]]]:
+    ) -> Union[dict, Sequence[Sequence[Tuple[str, str]]]]:
         result = list(self.iter_tag(texts, output_format, features, **kwargs))
         if output_format == 'json':
             return {
@@ -255,7 +255,7 @@ class Tagger:
                 "texts": result
             }
         else:
-            return result
+            return result  # type: ignore
 
     def _get_tags_dense(self, pred):
         pred = np.argmax(pred, -1)

@@ -3,6 +3,7 @@ import os
 import time
 from functools import partial
 from typing import Callable, Iterable, List, Optional, Tuple, Union, cast
+from typing import Sequence as TypingSequence
 
 import numpy as np
 
@@ -616,7 +617,7 @@ class Sequence(_Sequence):
 
     def iter_tag(
         self, texts, output_format: Optional[str], features=None
-    ) -> Union[dict, Iterable[List[Tuple[str, str]]]]:
+    ) -> Union[dict, Iterable[TypingSequence[Tuple[str, str]]]]:
         # annotate a list of sentences, return the list of annotations in the
         # specified output_format
         self._require_model()
@@ -633,7 +634,7 @@ class Sequence(_Sequence):
             input_window_stride=self.input_window_stride
         )
         LOGGER.debug('tag_transformed: %s', self.tag_transformed)
-        annotations: Union[dict, Iterable[List[Tuple[str, str]]]]
+        annotations: Union[dict, Iterable[TypingSequence[Tuple[str, str]]]]
         if output_format == 'json':
             start_time = time.time()
             annotations = tagger.tag(
@@ -645,7 +646,7 @@ class Sequence(_Sequence):
             assert isinstance(annotations, dict)
             annotations["runtime"] = runtime
         else:
-            annotations = tagger.iter_tag(
+            annotations = tagger.iter_tag(  # type: ignore
                 list(texts), output_format,
                 features=features,
                 tag_transformed=self.tag_transformed
@@ -663,7 +664,11 @@ class Sequence(_Sequence):
             )
         return annotations
 
-    def tag(self, *args, **kwargs) -> Union[dict, List[List[Tuple[str, str]]]]:
+    def tag(
+        self,
+        *args,
+        **kwargs
+    ) -> Union[dict, TypingSequence[TypingSequence[Tuple[str, str]]]]:
         iterable_or_dict = self.iter_tag(*args, **kwargs)
         if isinstance(iterable_or_dict, dict):
             return iterable_or_dict

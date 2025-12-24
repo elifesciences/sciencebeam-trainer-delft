@@ -26,7 +26,6 @@ dev = [
     "pytest-watcher>=0.6.0",
     "types-pyyaml>=6.0.12.20250915",
     "types-requests>=2.27.5",
-    "types-six>=1.16.9",
 ]
 
 [tool.setuptools.packages.find]
